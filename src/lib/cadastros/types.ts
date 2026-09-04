@@ -33,6 +33,7 @@ export type Produto = BaseEntity & {
 };
 
 export type Cliente = BaseEntity & {
+  codigo: string;
   tipo: TipoPessoa;
   nome: string;
   nomeFantasia: string;
@@ -53,6 +54,7 @@ export type Cliente = BaseEntity & {
 };
 
 export type Fornecedor = BaseEntity & {
+  codigo: string;
   tipo: TipoPessoa;
   razaoSocial: string;
   nomeFantasia: string;
@@ -75,6 +77,7 @@ export type Fornecedor = BaseEntity & {
 };
 
 export type Transportadora = BaseEntity & {
+  codigo: string;
   razaoSocial: string;
   nomeFantasia: string;
   cnpj: string;
@@ -91,6 +94,7 @@ export type Transportadora = BaseEntity & {
 };
 
 export type Motorista = BaseEntity & {
+  codigo: string;
   nome: string;
   cpf: string;
   rg: string;
@@ -102,6 +106,7 @@ export type Motorista = BaseEntity & {
 };
 
 export type Veiculo = BaseEntity & {
+  codigo: string;
   placa: string;
   renavam: string;
   marca: string;
@@ -116,6 +121,7 @@ export type Veiculo = BaseEntity & {
 };
 
 export type Usuario = BaseEntity & {
+  codigo: string;
   nome: string;
   email: string;
   login: string;

@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Eye, Pencil, Power, Trash2, CheckCircle2, XCircle } from "lucide-react";
+import { Eye, Pencil, Power, Trash2, CheckCircle2, XCircle, Loader2, RefreshCcw } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FilterBar } from "@/components/ui/FilterBar";
 import { DataTable } from "@/components/ui/DataTable";
 import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Button } from "@/components/ui/Button";
 import { EntityDrawer } from "@/components/cadastro/EntityDrawer";
 import { RelatedList } from "@/components/cadastro/RelatedList";
 import { AuditTrail } from "@/components/cadastro/AuditTrail";
-import { listAudit } from "@/lib/cadastros/audit";
-import type { BaseEntity } from "@/lib/cadastros/types";
+import type { AuditEntry, BaseEntity } from "@/lib/cadastros/types";
 import type { CadastroConfig } from "@/lib/cadastros/config-types";
 import type { EntityFormMode } from "@/components/cadastro/EntityForm";
 
@@ -23,6 +23,10 @@ type DrawerState = {
   values: Record<string, unknown>;
   errors: Record<string, string>;
 };
+
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
 
 export function CadastroPage<T extends BaseEntity>({ config }: { config: CadastroConfig<T> }) {
   const items = useSyncExternalStore(
@@ -36,9 +40,66 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; tone: "success" | "danger" } | null>(null);
 
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+
+  const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+
+  // Carregando: busca os dados desta entidade e de qualquer cadastro do
+  // qual ela dependa (ex.: nome da transportadora na lista de motoristas)
+  // antes de considerar a tela pronta. O estado "carregando" é ligado por
+  // quem dispara o efeito (montagem inicial já começa com loading=true;
+  // o botão "Tentar novamente" liga antes de incrementar reloadToken) —
+  // o efeito em si só reage ao resultado, sem setState síncrono no topo.
   useEffect(() => {
-    config.repository.hydrate();
-  }, [config.repository]);
+    let cancelled = false;
+    Promise.all([config.repository.hydrate(), ...(config.dependsOn ?? []).map((repo) => repo.hydrate())])
+      .then(() => {
+        if (!cancelled) setLoadError(null);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) setLoadError(errorMessage(error, "Não foi possível carregar os dados."));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [config, reloadToken]);
+
+  function retryLoad() {
+    setLoading(true);
+    setLoadError(null);
+    setReloadToken((n) => n + 1);
+  }
+
+  // Histórico de auditoria — buscado sob demanda quando o painel de
+  // visualização é aberto (openView liga auditLoading antes de montar o
+  // drawer; este efeito só reage à conclusão da busca).
+  useEffect(() => {
+    if (drawer?.mode !== "view" || !drawer.editingId) return;
+    let cancelled = false;
+    fetch(`/api/audit-logs?entity=${encodeURIComponent(config.entityLabel)}&entityId=${drawer.editingId}`)
+      .then((res) => res.json())
+      .then((body: { success: boolean; data?: AuditEntry[] }) => {
+        if (!cancelled && body.success && body.data) setAuditEntries(body.data);
+      })
+      .catch(() => {
+        // histórico é informativo — uma falha aqui não deve travar a tela
+      })
+      .finally(() => {
+        if (!cancelled) setAuditLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [drawer?.mode, drawer?.editingId, config.entityLabel]);
 
   function showToast(text: string, tone: "success" | "danger" = "success") {
     setToast({ text, tone });
@@ -81,6 +142,8 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
     const item = config.repository.get(id);
     if (!item) return;
     setDrawer({ mode: "view", editingId: id, values: { ...item }, errors: {} });
+    setAuditEntries([]);
+    setAuditLoading(true);
   }
 
   function openEdit(id: string) {
@@ -94,6 +157,7 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
   }
 
   function closeDrawer() {
+    if (saving) return;
     setDrawer(null);
   }
 
@@ -101,47 +165,64 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
     setDrawer((prev) => (prev ? { ...prev, values: { ...prev.values, [key]: value } } : prev));
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!drawer) return;
     const errors = config.validate(drawer.values as Partial<T>, items, drawer.editingId);
     if (Object.keys(errors).length > 0) {
       setDrawer({ ...drawer, errors });
       return;
     }
-    if (drawer.mode === "create") {
-      config.repository.create(drawer.values as never);
-      showToast(`${config.entityLabel} criado com sucesso.`);
-    } else if (drawer.mode === "edit" && drawer.editingId) {
-      config.repository.update(drawer.editingId, drawer.values as Partial<T>);
-      showToast(`${config.entityLabel} atualizado com sucesso.`);
+    setSaving(true);
+    try {
+      if (drawer.mode === "create") {
+        await config.repository.create(drawer.values as Partial<T>);
+        showToast(`${config.entityLabel} criado com sucesso.`);
+      } else if (drawer.mode === "edit" && drawer.editingId) {
+        await config.repository.update(drawer.editingId, drawer.values as Partial<T>);
+        showToast(`${config.entityLabel} atualizado com sucesso.`);
+      }
+      setDrawer(null);
+    } catch (error) {
+      // Mantém o drawer aberto com os dados preenchidos para nova tentativa.
+      showToast(errorMessage(error, `Não foi possível salvar o ${config.entityNounLower}.`), "danger");
+    } finally {
+      setSaving(false);
     }
-    closeDrawer();
   }
 
-  function handleToggleStatus(id: string) {
-    const updated = config.repository.toggleStatus(id);
-    if (updated) {
-      showToast(
-        `${config.entityLabel} ${updated.status === "Ativo" ? "ativado" : "inativado"} com sucesso.`
-      );
+  async function handleToggleStatus(id: string) {
+    setPendingActionId(id);
+    try {
+      const updated = await config.repository.toggleStatus(id);
+      showToast(`${config.entityLabel} ${updated.status === "Ativo" ? "ativado" : "inativado"} com sucesso.`);
+    } catch (error) {
+      showToast(errorMessage(error, "Não foi possível atualizar o status."), "danger");
+    } finally {
+      setPendingActionId(null);
     }
   }
 
-  function handleDeleteConfirm() {
+  async function handleDeleteConfirm() {
     if (!confirmDeleteId) return;
-    const result = config.repository.remove(confirmDeleteId);
-    setConfirmDeleteId(null);
-    if (result.ok) {
-      showToast(`${config.entityLabel} excluído com sucesso.`);
-    } else {
-      showToast(result.reason, "danger");
+    setDeleting(true);
+    try {
+      const result = await config.repository.remove(confirmDeleteId);
+      if (result.ok) {
+        showToast(`${config.entityLabel} excluído com sucesso.`);
+        setConfirmDeleteId(null);
+      } else {
+        showToast(result.reason, "danger");
+        setConfirmDeleteId(null);
+      }
+    } catch (error) {
+      showToast(errorMessage(error, "Não foi possível excluir o registro."), "danger");
+      setConfirmDeleteId(null);
+    } finally {
+      setDeleting(false);
     }
   }
 
   const drawerItem = drawer?.editingId ? config.repository.get(drawer.editingId) : undefined;
-  const auditEntries = drawerItem
-    ? listAudit({ entidade: config.entityLabel, registro: config.labelOf(drawerItem) })
-    : [];
   const relatedGroups = drawerItem && config.relatedLists ? config.relatedLists(drawerItem) : [];
 
   return (
@@ -157,71 +238,95 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
         onPrimaryAction={openCreate}
       />
 
-      <FilterBar
-        filters={config.filters}
-        values={filterValues}
-        onChange={handleFilterChange}
-        onReset={handleReset}
-        resultCount={filteredRows.length}
-      />
+      {loadError ? (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-danger/40 bg-danger-soft/40 py-16 text-center">
+          <XCircle size={28} className="text-danger" />
+          <div>
+            <p className="text-sm font-medium text-ink">Não foi possível carregar os dados</p>
+            <p className="mt-1 text-sm text-ink-subtle">{loadError}</p>
+          </div>
+          <Button variant="secondary" onClick={retryLoad}>
+            <RefreshCcw size={15} />
+            Tentar novamente
+          </Button>
+        </div>
+      ) : loading ? (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border-strong bg-surface py-16 text-center">
+          <Loader2 size={26} className="animate-spin text-brand" />
+          <p className="text-sm text-ink-muted">Carregando {config.pageLabel.toLowerCase()}...</p>
+        </div>
+      ) : (
+        <>
+          <FilterBar
+            filters={config.filters}
+            values={filterValues}
+            onChange={handleFilterChange}
+            onReset={handleReset}
+            resultCount={filteredRows.length}
+          />
 
-      <DataTable
-        columns={config.columns}
-        rows={pagedRows}
-        renderActions={(row) => {
-          const id = String(row.id);
-          const status = String(row.status);
-          return (
-            <div className="flex items-center justify-end gap-1">
-              <button
-                onClick={() => openView(id)}
-                aria-label="Visualizar"
-                title="Visualizar"
-                className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-surface-hover hover:text-ink transition-colors"
-              >
-                <Eye size={16} />
-              </button>
-              <button
-                onClick={() => openEdit(id)}
-                aria-label="Editar"
-                title="Editar"
-                className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-surface-hover hover:text-ink transition-colors"
-              >
-                <Pencil size={16} />
-              </button>
-              <button
-                onClick={() => handleToggleStatus(id)}
-                aria-label={status === "Ativo" ? "Inativar" : "Ativar"}
-                title={status === "Ativo" ? "Inativar" : "Ativar"}
-                className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-surface-hover hover:text-ink transition-colors"
-              >
-                <Power size={16} />
-              </button>
-              <button
-                onClick={() => setConfirmDeleteId(id)}
-                aria-label="Excluir"
-                title="Excluir"
-                className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-danger-soft hover:text-danger transition-colors"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          );
-        }}
-      />
+          <DataTable
+            columns={config.columns}
+            rows={pagedRows}
+            renderActions={(row) => {
+              const id = String(row.id);
+              const status = String(row.status);
+              const isPending = pendingActionId === id;
+              return (
+                <div className="flex items-center justify-end gap-1">
+                  <button
+                    onClick={() => openView(id)}
+                    aria-label="Visualizar"
+                    title="Visualizar"
+                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-surface-hover hover:text-ink transition-colors"
+                  >
+                    <Eye size={16} />
+                  </button>
+                  <button
+                    onClick={() => openEdit(id)}
+                    aria-label="Editar"
+                    title="Editar"
+                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-surface-hover hover:text-ink transition-colors"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleToggleStatus(id)}
+                    disabled={isPending}
+                    aria-label={status === "Ativo" ? "Inativar" : "Ativar"}
+                    title={status === "Ativo" ? "Inativar" : "Ativar"}
+                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-surface-hover hover:text-ink transition-colors disabled:opacity-40"
+                  >
+                    {isPending ? <Loader2 size={16} className="animate-spin" /> : <Power size={16} />}
+                  </button>
+                  <button
+                    onClick={() => setConfirmDeleteId(id)}
+                    aria-label="Excluir"
+                    title="Excluir"
+                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-danger-soft hover:text-danger transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              );
+            }}
+          />
 
-      <Pagination
-        page={currentPage}
-        pageCount={pageCount}
-        totalItems={filteredRows.length}
-        pageSize={PAGE_SIZE}
-        onPageChange={setPage}
-      />
+          <Pagination
+            page={currentPage}
+            pageCount={pageCount}
+            totalItems={filteredRows.length}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+          />
+        </>
+      )}
 
       {drawer && (
         <EntityDrawer
           open
           mode={drawer.mode}
+          saving={saving}
           title={
             drawer.mode === "create"
               ? `Novo ${config.entityNounLower}`
@@ -248,7 +353,7 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
               {relatedGroups.map((group) => (
                 <RelatedList key={group.title} title={group.title} items={group.items} />
               ))}
-              <AuditTrail entries={auditEntries} />
+              <AuditTrail entries={auditEntries} loading={auditLoading} />
             </>
           }
         />
@@ -259,6 +364,8 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
         title={`Excluir ${config.entityNounLower}?`}
         description="Tem certeza que deseja excluir este registro? Essa ação não pode ser desfeita. Registros já vinculados a outros cadastros não podem ser excluídos — utilize a inativação nesses casos."
         confirmLabel="Excluir"
+        loadingLabel="Excluindo..."
+        loading={deleting}
         tone="danger"
         onConfirm={handleDeleteConfirm}
         onCancel={() => setConfirmDeleteId(null)}

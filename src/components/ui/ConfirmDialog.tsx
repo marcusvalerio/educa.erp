@@ -9,8 +9,10 @@ type ConfirmDialogProps = {
   title: string;
   description: string;
   confirmLabel?: string;
+  loadingLabel?: string;
   cancelLabel?: string;
   tone?: "danger" | "info";
+  loading?: boolean;
   onConfirm?: () => void;
   onCancel: () => void;
 };
@@ -20,8 +22,10 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel = "Confirmar",
+  loadingLabel,
   cancelLabel = "Cancelar",
   tone = "danger",
+  loading = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -51,15 +55,16 @@ export function ConfirmDialog({
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2">
-          <Button variant="secondary" onClick={onCancel}>
+          <Button variant="secondary" onClick={onCancel} disabled={loading}>
             {cancelLabel}
           </Button>
           {onConfirm && (
             <Button
               onClick={onConfirm}
+              disabled={loading}
               className={tone === "danger" ? "bg-danger hover:bg-danger/90 shadow-danger/20" : ""}
             >
-              {confirmLabel}
+              {loading ? (loadingLabel ?? "Aguarde...") : confirmLabel}
             </Button>
           )}
         </div>

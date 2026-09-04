@@ -11,14 +11,16 @@ function formatDateTime(iso: string) {
   });
 }
 
-export function AuditTrail({ entries }: { entries: AuditEntry[] }) {
+export function AuditTrail({ entries, loading = false }: { entries: AuditEntry[]; loading?: boolean }) {
   return (
     <div className="flex flex-col gap-2">
       <h4 className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-ink-subtle uppercase">
         <History size={13} />
         Histórico de alterações
       </h4>
-      {entries.length === 0 ? (
+      {loading ? (
+        <p className="text-sm text-ink-subtle">Carregando histórico...</p>
+      ) : entries.length === 0 ? (
         <p className="text-sm text-ink-subtle">Nenhuma movimentação registrada ainda.</p>
       ) : (
         <ul className="flex flex-col gap-1.5">

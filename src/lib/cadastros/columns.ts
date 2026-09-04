@@ -36,7 +36,7 @@ export function cnhDiasRestantes(validadeCnh: string): number {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
-function cnhAlertaTexto(validadeCnh: string): string {
+export function cnhAlertaTexto(validadeCnh: string): string {
   const dias = cnhDiasRestantes(validadeCnh);
   const formatted = date(validadeCnh);
   if (dias < 0) return `⚠ ${formatted} (vencida)`;
@@ -98,7 +98,7 @@ export const clienteFilters: FilterConfig[] = [
 export function clienteToRow(c: Cliente): Row {
   return {
     id: c.id,
-    codigo: c.id,
+    codigo: c.codigo,
     cliente: c.nome,
     documento: c.documento,
     tipo: c.tipo,
@@ -130,7 +130,7 @@ export const fornecedorFilters: FilterConfig[] = [
 export function fornecedorToRow(f: Fornecedor): Row {
   return {
     id: f.id,
-    codigo: f.id,
+    codigo: f.codigo,
     fornecedor: f.razaoSocial,
     documento: f.documento,
     cidadeUf: `${f.cidade}/${f.estado}`,
@@ -161,7 +161,7 @@ export const transportadoraFilters: FilterConfig[] = [
 export function transportadoraToRow(t: Transportadora): Row {
   return {
     id: t.id,
-    codigo: t.id,
+    codigo: t.codigo,
     transportadora: t.razaoSocial,
     cnpj: t.cnpj,
     cidadeUf: `${t.cidade}/${t.estado}`,
@@ -193,7 +193,7 @@ export function motoristaToRow(m: Motorista): Row {
   const transportadora = transportadorasRepository.get(m.transportadoraId);
   return {
     id: m.id,
-    codigo: m.id,
+    codigo: m.codigo,
     nome: m.nome,
     cnh: m.cnh,
     categoriaCnh: m.categoriaCnh,
@@ -227,7 +227,7 @@ export function veiculoToRow(v: Veiculo): Row {
   const motorista = motoristasRepository.get(v.motoristaPrincipalId);
   return {
     id: v.id,
-    codigo: v.id,
+    codigo: v.codigo,
     placa: v.placa,
     modelo: `${v.marca} ${v.modelo}`,
     tipo: v.tipo,
@@ -257,7 +257,7 @@ export const usuarioFilters: FilterConfig[] = [
 export function usuarioToRow(u: Usuario): Row {
   return {
     id: u.id,
-    codigo: u.id,
+    codigo: u.codigo,
     nome: u.nome,
     email: u.email,
     perfil: u.perfil,

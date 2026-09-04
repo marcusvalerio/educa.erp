@@ -20,6 +20,7 @@ type EntityDrawerProps = {
   onSave: () => void;
   onEdit: () => void;
   extras?: React.ReactNode;
+  saving?: boolean;
 };
 
 export function EntityDrawer({
@@ -35,6 +36,7 @@ export function EntityDrawer({
   onSave,
   onEdit,
   extras,
+  saving = false,
 }: EntityDrawerProps) {
   return (
     <Drawer
@@ -55,10 +57,12 @@ export function EntityDrawer({
           </div>
         ) : (
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={onClose}>
+            <Button variant="secondary" onClick={onClose} disabled={saving}>
               Cancelar
             </Button>
-            <Button onClick={onSave}>Salvar</Button>
+            <Button onClick={onSave} disabled={saving}>
+              {saving ? "Salvando..." : "Salvar"}
+            </Button>
           </div>
         )
       }

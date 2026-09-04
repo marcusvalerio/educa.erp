@@ -2,12 +2,23 @@
 
 Sistema de gestão empresarial e operações logísticas.
 
-## Fase 1 — Estrutura inicial dos módulos
+## Status do projeto
 
-Esta fase entrega a estrutura visual e de navegação completa do ERP: menu
-lateral, dashboard inicial e as telas principais de todos os módulos
-previstos, utilizando dados simulados. Não há banco de dados definitivo,
-autenticação real, integrações externas ou emissão fiscal real nesta etapa.
+- **Fase 1** — estrutura visual e de navegação completa (dashboard,
+  menu, 9 módulos, dados simulados).
+- **Fase 4** — módulo de Cadastros funcional (CRUD, validação,
+  relacionamentos, auditoria) — inicialmente com persistência em
+  `localStorage`.
+- **Fase 2** (atual) — persistência definitiva em **Supabase /
+  PostgreSQL**, API própria (`/api/*`) e repositório do cliente
+  reescrito para falar com ela. Ver **[docs/SUPABASE.md](docs/SUPABASE.md)**
+  para configurar o banco e **[docs/TESTING.md](docs/TESTING.md)** para o
+  roteiro de testes.
+
+Ainda não implementados (fases futuras): autenticação real (Fase 3),
+permissões por perfil, módulos de Comercial/Suprimentos/Logística/
+Financeiro/Fiscal além dos cadastros, emissão fiscal real, integrações
+externas.
 
 ### Módulos
 
@@ -18,6 +29,8 @@ Fiscal · Gestão · Configurações
 
 - [Next.js](https://nextjs.org) (App Router) + TypeScript
 - Tailwind CSS v4
+- [Supabase](https://supabase.com) (PostgreSQL) — banco de dados definitivo
+- [Zod](https://zod.dev) — validação server-side
 - [Recharts](https://recharts.org) para os gráficos do dashboard
 - [lucide-react](https://lucide.dev) para ícones
 - Fontes: [Inter](https://fonts.google.com/specimen/Inter) (texto) e
@@ -27,34 +40,56 @@ Fiscal · Gestão · Configurações
 
 ```bash
 npm install
+cp .env.local.example .env.local   # preencha com as credenciais do Supabase
 npm run dev
 ```
 
-Abra [http://localhost:3000](http://localhost:3000).
+Abra [http://localhost:3000](http://localhost:3000). Sem um projeto
+Supabase configurado, as rotas de `/cadastros/*` carregam mas as
+chamadas de API retornam erro — configure o banco primeiro
+(**[docs/SUPABASE.md](docs/SUPABASE.md)**).
 
 ```bash
-npm run build   # build de produção
+npm run build   # build de produção (inclui typecheck completo)
 npm run lint    # eslint
+npm test        # testes automatizados (validação + mapeamento de dados)
 ```
 
 ## Estrutura do projeto
 
 ```
 src/
-  app/                  rotas (App Router) — uma pasta por módulo/submódulo
+  app/
+    api/                 rotas REST (GET/POST/PATCH/DELETE) dos 8 cadastros + audit-logs
+    <módulo>/<página>/    rotas de UI (App Router) — uma pasta por módulo/submódulo
   components/
     layout/              Sidebar, Topbar, AppShell
-    ui/                   componentes reutilizáveis (tabela, filtros, cards, etc.)
+    ui/                   componentes reutilizáveis (tabela, filtros, drawer, etc.)
+    cadastro/             CadastroPage, EntityDrawer/Form, RelatedList, AuditTrail
     dashboard/            gráficos do dashboard
-    ModulePage.tsx        template genérico usado por todas as telas de listagem
-    ModuleLanding.tsx     template das páginas iniciais de cada módulo
   lib/
     nav.ts                estrutura do menu lateral
-    pages/                configuração (título, filtros, colunas) de cada tela
-    mock/                 geradores de dados simulados
+    pages/                configuração das telas mockadas (módulos ainda não migrados)
+    mock/                 geradores de dados simulados (dashboard e módulos futuros)
+    cadastros/             tipos, formulários, colunas, validação client-side, repository (fala com /api)
+    validations/           schemas Zod usados pelas rotas de API (server-side)
+    database/              mapeamento camelCase↔snake_case, acesso genérico às tabelas, auditoria
+    supabase/               clientes Supabase (browser, server SSR, admin/service-role)
+supabase/
+  migrations/             schema versionado (companies, 8 cadastros, audit_logs, RLS)
+  seed.sql                dados iniciais (gerado por scripts/generate-seed.mjs)
+scripts/
+  generate-seed.mjs        gera supabase/seed.sql a partir dos mesmos pools de dados da UI
+tests/                    testes automatizados (node --test via tsx)
+docs/
+  SUPABASE.md             como configurar o banco, arquitetura, RLS, verificação de persistência
+  TESTING.md              roteiro de testes manuais e automatizados
 ```
 
-A arquitetura foi pensada para receber, nas próximas fases, integração com
-banco de dados e regras de negócio reais sem necessidade de reconstrução:
-os dados hoje mockados em `src/lib/mock` e `src/lib/pages` são o ponto de
-substituição por chamadas a uma API/backend.
+A camada `src/lib/cadastros/repository.ts` mantém a mesma assinatura
+pública desde a Fase 4 (`list/get/create/update/toggleStatus/remove`) —
+por baixo, ela chama `/api/*`, que por sua vez fala com o Supabase. Os
+componentes de tela (`CadastroPage`, `EntityDrawer`, etc.) não sabem
+que existe um banco de dados por trás; trocar a implementação interna
+do repositório de novo (ex.: cache mais elaborado, GraphQL) não deve
+exigir tocar nas telas.

@@ -28,4 +28,11 @@ export type CadastroConfig<T extends BaseEntity> = {
   defaultValues: (list: T[]) => Partial<T>;
   labelOf: (item: T) => string;
   relatedLists?: (item: T) => RelatedGroup[];
+  // Repositórios de outros cadastros usados por toRow/relatedLists (ex.:
+  // nome da transportadora dentro da listagem de motoristas). A página
+  // aguarda a hidratação deles antes de considerar os dados prontos,
+  // evitando "—" temporários por causa da concorrência entre requisições.
+  // Tipado apenas pelo necessário (hydrate) para não colidir com a
+  // variância de Repository<T> ao aceitar repositórios de tipos diferentes.
+  dependsOn?: { hydrate: () => Promise<void> }[];
 };

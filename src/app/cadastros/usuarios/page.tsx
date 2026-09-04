@@ -1,9 +1,8 @@
-import { ModulePage } from "@/components/ModulePage";
-import { getPageConfig } from "@/lib/pages";
-import { notFound } from "next/navigation";
+"use client";
+
+import { CadastroPage } from "@/components/cadastro/CadastroPage";
+import { usuarioCadastroConfig } from "@/lib/cadastros/configs";
 
 export default function Page() {
-  const config = getPageConfig("cadastros", "usuarios");
-  if (!config) notFound();
-  return <ModulePage config={config} />;
+  return <CadastroPage config={usuarioCadastroConfig} />;
 }

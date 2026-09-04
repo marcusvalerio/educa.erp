@@ -14,6 +14,7 @@ const POSITIVE = new Set([
   "autorizada",
   "pago",
   "preenchido",
+  "cnh regular",
 ]);
 
 const NEGATIVE = new Set([
@@ -27,6 +28,9 @@ const NEGATIVE = new Set([
   "falhou",
   "divergência",
   "divergencia",
+  "cnh vencida",
+  "não encontrado",
+  "nao encontrado",
 ]);
 
 const WARNING = new Set([
@@ -48,6 +52,7 @@ const WARNING = new Set([
   "em contagem",
   "atenção",
   "atencao",
+  "cnh a vencer",
 ]);
 
 const INFO = new Set(["em andamento", "em separação", "em separacao", "ocupado"]);

@@ -8,9 +8,10 @@ type DataTableProps = {
   columns: ColumnConfig[];
   rows: Row[];
   emptyHint?: string;
+  renderActions?: (row: Row) => React.ReactNode;
 };
 
-export function DataTable({ columns, rows, emptyHint }: DataTableProps) {
+export function DataTable({ columns, rows, emptyHint, renderActions }: DataTableProps) {
   if (rows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border-strong bg-surface py-16 text-center">
@@ -50,7 +51,7 @@ export function DataTable({ columns, rows, emptyHint }: DataTableProps) {
         <tbody>
           {rows.map((row, i) => (
             <tr
-              key={i}
+              key={row.id ?? i}
               className="border-b border-border last:border-0 hover:bg-surface-hover/70 transition-colors"
             >
               {columns.map((col) => (
@@ -72,12 +73,16 @@ export function DataTable({ columns, rows, emptyHint }: DataTableProps) {
                 </td>
               ))}
               <td className="px-4 py-3 text-right">
-                <button
-                  className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-surface-hover hover:text-ink transition-colors"
-                  aria-label="Mais ações"
-                >
-                  <MoreHorizontal size={16} />
-                </button>
+                {renderActions ? (
+                  renderActions(row)
+                ) : (
+                  <button
+                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-surface-hover hover:text-ink transition-colors"
+                    aria-label="Mais ações"
+                  >
+                    <MoreHorizontal size={16} />
+                  </button>
+                )}
               </td>
             </tr>
           ))}

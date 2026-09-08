@@ -70,7 +70,16 @@ function createRepository<T extends BaseEntity>(resourcePath: string): Repositor
   }
 
   function hydrate(): Promise<void> {
-    if (!hydratePromise) hydratePromise = fetchAll();
+    if (!hydratePromise) {
+      // Se fetchAll() falhar, a promise cacheada precisa ser descartada —
+      // caso contrário, toda chamada futura a hydrate() (ex.: o botão
+      // "Tentar novamente") apenas reaproveitaria essa mesma promise já
+      // rejeitada, sem nunca disparar uma nova requisição de rede.
+      hydratePromise = fetchAll().catch((error: unknown) => {
+        hydratePromise = null;
+        throw error;
+      });
+    }
     return hydratePromise;
   }
 

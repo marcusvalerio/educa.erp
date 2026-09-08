@@ -372,12 +372,15 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
         onCancel={() => setConfirmDeleteId(null)}
       />
 
+      {/* z-[80]: acima do Drawer (z-[60]) e do ConfirmDialog (z-[70]) — o
+          toast precisa ficar visível mesmo quando reporta erro de uma ação
+          disparada com um desses dois abertos por cima do conteúdo da página. */}
       {toast && (
         <div
           className={
             toast.tone === "success"
-              ? "fixed right-6 bottom-6 z-50 flex items-center gap-2 rounded-lg bg-ink px-4 py-3 text-sm font-medium text-white shadow-lg"
-              : "fixed right-6 bottom-6 z-50 flex items-center gap-2 rounded-lg bg-danger px-4 py-3 text-sm font-medium text-white shadow-lg"
+              ? "fixed right-6 bottom-6 z-[80] flex items-center gap-2 rounded-lg bg-ink px-4 py-3 text-sm font-medium text-white shadow-lg"
+              : "fixed right-6 bottom-6 z-[80] flex items-center gap-2 rounded-lg bg-danger px-4 py-3 text-sm font-medium text-white shadow-lg"
           }
         >
           {toast.tone === "success" ? (

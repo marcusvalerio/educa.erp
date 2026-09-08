@@ -79,12 +79,12 @@ export function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap",
+        "inline-flex items-center gap-1.5 rounded-md px-2 py-[3px] text-[12px] font-medium whitespace-nowrap",
         TONE_CLASSES[t]
       )}
     >
       <span
-        className={clsx("h-1.5 w-1.5 rounded-full", {
+        className={clsx("h-[5px] w-[5px] rounded-full", {
           "bg-success": t === "success",
           "bg-danger": t === "danger",
           "bg-warning": t === "warning",

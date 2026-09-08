@@ -5,20 +5,19 @@ const moduleLabel = "Configurações";
 const moduleHref = "/configuracoes";
 
 const EMPRESA_ROWS = [
-  { campo: "Razão social", valor: "Educa ERP Soluções Logísticas Ltda.", categoria: "Identificação", status: "Preenchido" },
-  { campo: "Nome fantasia", valor: "Educa ERP", categoria: "Identificação", status: "Preenchido" },
+  { campo: "Razão social", valor: "ASTRA Soluções Logísticas Ltda.", categoria: "Identificação", status: "Preenchido" },
+  { campo: "Nome fantasia", valor: "ASTRA.ERP", categoria: "Identificação", status: "Preenchido" },
   { campo: "CNPJ", valor: "00.000.000/0001-00", categoria: "Identificação", status: "Preenchido" },
   { campo: "Inscrição estadual", valor: "000.000.000.000", categoria: "Fiscal", status: "Preenchido" },
   { campo: "Endereço matriz", valor: "Av. das Indústrias, 1200 - São Paulo/SP", categoria: "Endereço", status: "Preenchido" },
   { campo: "Regime tributário", valor: "Lucro Presumido", categoria: "Fiscal", status: "Preenchido" },
-  { campo: "E-mail corporativo", valor: "contato@educaerp.com.br", categoria: "Contato", status: "Preenchido" },
+  { campo: "E-mail corporativo", valor: "contato@astraerp.com.br", categoria: "Contato", status: "Preenchido" },
 ];
 
 const APARENCIA_ROWS = [
-  { item: "Tema", valor: "Claro (padrão ERP)", status: "Ativo" },
-  { item: "Cor de destaque", valor: "Azul institucional", status: "Ativo" },
-  { item: "Fonte de interface", valor: "Inter", status: "Ativo" },
-  { item: "Fonte de destaque", valor: "Supreme", status: "Ativo" },
+  { item: "Tema", valor: "Claro (padrão ASTRA)", status: "Ativo" },
+  { item: "Cor de destaque", valor: "Regal Blue / Smothe Blue", status: "Ativo" },
+  { item: "Fonte de interface", valor: "Satoshi", status: "Ativo" },
   { item: "Densidade da tabela", valor: "Confortável", status: "Ativo" },
   { item: "Menu lateral", valor: "Expandido", status: "Ativo" },
 ];

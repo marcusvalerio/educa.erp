@@ -124,6 +124,7 @@ export const produtoCadastroConfig: CadastroConfig<Produto> = {
       items: item.localizacaoPadrao ? [{ label: item.localizacaoPadrao }] : [],
     },
   ],
+  dependsOn: [fornecedoresRepository],
 };
 
 export const clienteCadastroConfig: CadastroConfig<Cliente> = {
@@ -218,6 +219,7 @@ export const fornecedorCadastroConfig: CadastroConfig<Fornecedor> = {
     },
     { title: "Pedidos de compra", items: [] },
   ],
+  dependsOn: [produtosRepository],
 };
 
 export const transportadoraCadastroConfig: CadastroConfig<Transportadora> = {
@@ -268,6 +270,7 @@ export const transportadoraCadastroConfig: CadastroConfig<Transportadora> = {
         .map((v) => ({ label: v.placa, sublabel: `${v.marca} ${v.modelo}` })),
     },
   ],
+  dependsOn: [motoristasRepository, veiculosRepository],
 };
 
 export const motoristaCadastroConfig: CadastroConfig<Motorista> = {
@@ -312,6 +315,7 @@ export const motoristaCadastroConfig: CadastroConfig<Motorista> = {
         .map((v) => ({ label: v.placa, sublabel: `${v.marca} ${v.modelo}` })),
     },
   ],
+  dependsOn: [transportadorasRepository, veiculosRepository],
 };
 
 export const veiculoCadastroConfig: CadastroConfig<Veiculo> = {
@@ -358,6 +362,7 @@ export const veiculoCadastroConfig: CadastroConfig<Veiculo> = {
         : [],
     },
   ],
+  dependsOn: [transportadorasRepository, motoristasRepository],
 };
 
 export const usuarioCadastroConfig: CadastroConfig<Usuario> = {
@@ -424,4 +429,5 @@ export const localEstoqueCadastroConfig: CadastroConfig<LocalEstoque> = {
         .map((p) => ({ label: p.descricao, sublabel: p.codigo })),
     },
   ],
+  dependsOn: [produtosRepository],
 };

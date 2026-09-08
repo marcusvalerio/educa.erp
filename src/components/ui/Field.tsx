@@ -19,7 +19,7 @@ type FieldProps = {
 };
 
 const inputClasses =
-  "w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-subtle focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 disabled:bg-surface-hover disabled:text-ink-muted";
+  "w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-[13.5px] text-ink placeholder:text-ink-subtle transition-colors duration-150 focus:border-brand focus:outline-none focus:ring-[3px] focus:ring-brand/12 disabled:bg-surface-hover disabled:text-ink-muted";
 
 export function Field({ field, value, error, readOnly, options, onChange }: FieldProps) {
   const span = SPAN_CLASSES[field.span ?? 1];

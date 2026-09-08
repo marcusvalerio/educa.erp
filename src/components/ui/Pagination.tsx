@@ -29,7 +29,7 @@ export function Pagination({ page, pageCount, totalItems, pageSize, onPageChange
         <button
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
-          className="flex h-8 w-8 items-center justify-center rounded-md border border-border-strong text-ink-muted hover:bg-surface-hover disabled:opacity-40 disabled:hover:bg-transparent"
+          className="flex h-8 w-8 items-center justify-center rounded-md border border-border-strong text-ink-muted transition-colors duration-150 hover:border-ink-subtle hover:bg-surface-hover disabled:opacity-40 disabled:hover:bg-transparent"
           aria-label="Página anterior"
         >
           <ChevronLeft size={15} />
@@ -43,9 +43,9 @@ export function Pagination({ page, pageCount, totalItems, pageSize, onPageChange
               <button
                 onClick={() => onPageChange(p)}
                 className={clsx(
-                  "flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium transition-colors",
+                  "flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium transition-colors duration-150",
                   p === page
-                    ? "bg-brand text-white"
+                    ? "bg-brand text-white shadow-raised"
                     : "text-ink-muted hover:bg-surface-hover hover:text-ink"
                 )}
               >
@@ -57,7 +57,7 @@ export function Pagination({ page, pageCount, totalItems, pageSize, onPageChange
         <button
           onClick={() => onPageChange(page + 1)}
           disabled={page === pageCount}
-          className="flex h-8 w-8 items-center justify-center rounded-md border border-border-strong text-ink-muted hover:bg-surface-hover disabled:opacity-40 disabled:hover:bg-transparent"
+          className="flex h-8 w-8 items-center justify-center rounded-md border border-border-strong text-ink-muted transition-colors duration-150 hover:border-ink-subtle hover:bg-surface-hover disabled:opacity-40 disabled:hover:bg-transparent"
           aria-label="Próxima página"
         >
           <ChevronRight size={15} />

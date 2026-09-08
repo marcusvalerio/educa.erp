@@ -10,6 +10,7 @@ type StatCardProps = {
   trend: "up" | "down";
   icon: LucideIcon;
   accent: "brand" | "success" | "warning" | "info" | "danger";
+  featured?: boolean;
 };
 
 const ACCENT_CLASSES: Record<StatCardProps["accent"], string> = {
@@ -20,16 +21,34 @@ const ACCENT_CLASSES: Record<StatCardProps["accent"], string> = {
   danger: "bg-danger-soft text-danger",
 };
 
-export function StatCard({ label, value, change, trend, icon: Icon, accent }: StatCardProps) {
+export function StatCard({ label, value, change, trend, icon: Icon, accent, featured = false }: StatCardProps) {
   return (
-    <Card className="p-5">
+    <Card
+      className={clsx(
+        "p-5 transition-shadow duration-200 hover:shadow-raised",
+        featured && "border-brand/15 bg-gradient-to-br from-brand-soft/60 to-surface"
+      )}
+    >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium tracking-wide text-ink-muted uppercase">{label}</p>
-          <p className="font-display mt-2 text-2xl font-semibold text-ink">{value}</p>
+          <p className="text-[11.5px] font-medium tracking-wide text-ink-muted uppercase">{label}</p>
+          <p
+            className={clsx(
+              "font-display mt-2 font-semibold tracking-tight text-ink",
+              featured ? "text-[2rem]" : "text-2xl"
+            )}
+          >
+            {value}
+          </p>
         </div>
-        <span className={clsx("flex h-9 w-9 items-center justify-center rounded-lg", ACCENT_CLASSES[accent])}>
-          <Icon size={18} />
+        <span
+          className={clsx(
+            "flex items-center justify-center rounded-[9px]",
+            featured ? "h-10 w-10" : "h-9 w-9",
+            ACCENT_CLASSES[accent]
+          )}
+        >
+          <Icon size={featured ? 19 : 17} strokeWidth={1.75} />
         </span>
       </div>
       <div

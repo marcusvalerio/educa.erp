@@ -14,11 +14,13 @@ type DataTableProps = {
 export function DataTable({ columns, rows, emptyHint, renderActions }: DataTableProps) {
   if (rows.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border-strong bg-surface py-16 text-center">
-        <Inbox size={28} className="text-ink-subtle" />
+      <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border-strong bg-surface py-16 text-center animate-fade-in">
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-hover">
+          <Inbox size={20} strokeWidth={1.5} className="text-ink-subtle" />
+        </span>
         <div>
-          <p className="text-sm font-medium text-ink">Nenhum registro encontrado</p>
-          <p className="mt-1 text-sm text-ink-subtle">
+          <p className="text-[13.5px] font-medium text-ink">Nenhum registro encontrado</p>
+          <p className="mt-1 text-[13px] text-ink-subtle">
             {emptyHint ?? "Ajuste os filtros para encontrar o que você procura."}
           </p>
         </div>
@@ -27,15 +29,15 @@ export function DataTable({ columns, rows, emptyHint, renderActions }: DataTable
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-surface">
-      <table className="w-full min-w-[720px] text-left text-sm">
+    <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-card">
+      <table className="w-full min-w-[720px] text-left text-[13.5px]">
         <thead>
-          <tr className="border-b border-border bg-surface-hover/60">
+          <tr className="border-b border-border bg-surface-sunken/50">
             {columns.map((col) => (
               <th
                 key={col.key}
                 className={clsx(
-                  "px-4 py-3 text-xs font-semibold tracking-wide text-ink-muted uppercase",
+                  "px-4 py-3 text-[11px] font-semibold tracking-wide text-ink-muted uppercase",
                   col.align === "right" && "text-right",
                   col.align === "center" && "text-center"
                 )}
@@ -43,7 +45,7 @@ export function DataTable({ columns, rows, emptyHint, renderActions }: DataTable
                 {col.label}
               </th>
             ))}
-            <th className="px-4 py-3 text-right text-xs font-semibold tracking-wide text-ink-muted uppercase">
+            <th className="px-4 py-3 text-right text-[11px] font-semibold tracking-wide text-ink-muted uppercase">
               Ações
             </th>
           </tr>
@@ -52,7 +54,7 @@ export function DataTable({ columns, rows, emptyHint, renderActions }: DataTable
           {rows.map((row, i) => (
             <tr
               key={row.id ?? i}
-              className="border-b border-border last:border-0 hover:bg-surface-hover/70 transition-colors"
+              className="group border-b border-border last:border-0 transition-colors duration-100 hover:bg-surface-hover/60"
             >
               {columns.map((col) => (
                 <td
@@ -74,13 +76,15 @@ export function DataTable({ columns, rows, emptyHint, renderActions }: DataTable
               ))}
               <td className="px-4 py-3 text-right">
                 {renderActions ? (
-                  renderActions(row)
+                  <div className="flex justify-end opacity-70 transition-opacity duration-100 group-hover:opacity-100">
+                    {renderActions(row)}
+                  </div>
                 ) : (
                   <button
-                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-surface-hover hover:text-ink transition-colors"
+                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle transition-colors duration-100 hover:bg-surface-hover hover:text-ink"
                     aria-label="Mais ações"
                   >
-                    <MoreHorizontal size={16} />
+                    <MoreHorizontal size={16} strokeWidth={1.75} />
                   </button>
                 )}
               </td>

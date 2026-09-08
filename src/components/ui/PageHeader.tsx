@@ -22,13 +22,13 @@ export function PageHeader({
       <Breadcrumb items={breadcrumb} />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+          <h1 className="font-display text-[1.6rem] font-semibold tracking-tight text-ink sm:text-[1.85rem]">
             {title}
           </h1>
-          <p className="mt-1.5 max-w-2xl text-sm text-ink-muted">{description}</p>
+          <p className="mt-1.5 max-w-2xl text-[13.5px] text-ink-muted">{description}</p>
         </div>
         <Button onClick={onPrimaryAction} className="shrink-0">
-          <Plus size={16} />
+          <Plus size={16} strokeWidth={2} />
           {primaryActionLabel}
         </Button>
       </div>

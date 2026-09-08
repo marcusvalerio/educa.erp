@@ -1,27 +1,22 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { AppShell } from "@/components/layout/AppShell";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
-  title: "Educa ERP — Gestão Logística",
+  title: "ASTRA.ERP — Gestão Logística",
   description:
-    "Sistema de gestão empresarial e operações logísticas — Fase 1: estrutura inicial dos módulos.",
+    "ASTRA.ERP — plataforma de gestão empresarial e operações logísticas.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} h-full antialiased`}>
+    <html lang="pt-BR" className="h-full antialiased">
       <head>
+        <link rel="preconnect" href="https://api.fontshare.com" />
+        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="" />
         <link
           rel="stylesheet"
-          href="https://api.fontshare.com/v2/css?f[]=supreme@400,500,600,700&display=swap"
+          href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap"
         />
       </head>
       <body className="h-full">

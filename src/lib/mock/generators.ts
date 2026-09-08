@@ -70,7 +70,7 @@ export function genUsuarios(seed: number, n = 14): Row[] {
     return {
       codigo: code("USR", i + 1),
       nome,
-      email: `${nome.split(" ")[0].toLowerCase()}.${nome.split(" ").at(-1)!.toLowerCase()}@educaerp.com.br`,
+      email: `${nome.split(" ")[0].toLowerCase()}.${nome.split(" ").at(-1)!.toLowerCase()}@astraerp.com.br`,
       perfil: pick(rnd, PERFIS_USUARIO),
       status: pick(rnd, STATUS_CADASTRO),
     };

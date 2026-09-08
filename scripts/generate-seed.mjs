@@ -137,8 +137,8 @@ lines.push("begin;\n");
 insert(
   "companies",
   ["id", "name", "legal_name", "document", "email", "phone", "address", "city", "state", "zip_code", "status"],
-  [COMPANY_ID, "Educa ERP", "Educa ERP Soluções Logísticas Ltda.", "12.345.678/0001-90",
-    "contato@educaerp.com.br", "(11) 4000-1000", "Av. das Indústrias, 1200", "São Paulo", "SP", "04571-000", "active"]
+  [COMPANY_ID, "ASTRA.ERP", "ASTRA Soluções Logísticas Ltda.", "12.345.678/0001-90",
+    "contato@astraerp.com.br", "(11) 4000-1000", "Av. das Indústrias, 1200", "São Paulo", "SP", "04571-000", "active"]
 );
 lines.push("");
 
@@ -277,7 +277,7 @@ for (let i = 0; i < 10; i++) {
   insert(
     "users",
     ["id", "company_id", "name", "email", "login", "role", "department", "status"],
-    [randomUUID(), COMPANY_ID, nome, `${primeiro}.${ultimo}@educaerp.com.br`, `${primeiro}.${ultimo}`,
+    [randomUUID(), COMPANY_ID, nome, `${primeiro}.${ultimo}@astraerp.com.br`, `${primeiro}.${ultimo}`,
       PERFIS[i % PERFIS.length], pick(rnd, DEPARTAMENTOS), rnd() > 0.1 ? "active" : "inactive"]
   );
 }

@@ -5,6 +5,7 @@ import { Eye, Pencil, Power, Trash2, CheckCircle2, XCircle, Loader2, RefreshCcw 
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FilterBar } from "@/components/ui/FilterBar";
 import { DataTable } from "@/components/ui/DataTable";
+import { TableSkeleton } from "@/components/ui/TableSkeleton";
 import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
@@ -251,9 +252,9 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
           </Button>
         </div>
       ) : loading ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border-strong bg-surface py-16 text-center">
-          <Loader2 size={26} className="animate-spin text-brand" />
-          <p className="text-sm text-ink-muted">Carregando {config.pageLabel.toLowerCase()}...</p>
+        <div className="flex flex-col gap-4 animate-fade-in">
+          <div className="h-[86px] animate-skeleton rounded-xl border border-border bg-surface-sunken/40" />
+          <TableSkeleton columns={config.columns.length} />
         </div>
       ) : (
         <>

@@ -7,6 +7,8 @@ export type ColumnConfig = {
   label: string;
   render?: "status" | "text";
   align?: ColumnAlign;
+  /** false desativa a ordenação por esta coluna quando a tabela oferece ordenação. */
+  sortable?: boolean;
 };
 
 export type FilterConfig =

@@ -1,31 +1,26 @@
 import clsx from "clsx";
-import { MoreHorizontal, Inbox } from "lucide-react";
+import { ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
 import type { ColumnConfig } from "@/lib/pages/types";
 import type { Row } from "@/lib/mock/generators";
 import { StatusBadge } from "./StatusBadge";
+import { EmptyState } from "./EmptyState";
+
+export type SortDir = "asc" | "desc";
 
 type DataTableProps = {
   columns: ColumnConfig[];
   rows: Row[];
   emptyHint?: string;
   renderActions?: (row: Row) => React.ReactNode;
+  /** Chave da coluna ordenada e direção atual — omitir desativa a UI de ordenação. */
+  sort?: { key: string; dir: SortDir };
+  onSortChange?: (key: string) => void;
+  onRowClick?: (row: Row) => void;
 };
 
-export function DataTable({ columns, rows, emptyHint, renderActions }: DataTableProps) {
+export function DataTable({ columns, rows, emptyHint, renderActions, sort, onSortChange, onRowClick }: DataTableProps) {
   if (rows.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border-strong bg-surface py-16 text-center animate-fade-in">
-        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-hover">
-          <Inbox size={20} strokeWidth={1.5} className="text-ink-subtle" />
-        </span>
-        <div>
-          <p className="text-[13.5px] font-medium text-ink">Nenhum registro encontrado</p>
-          <p className="mt-1 text-[13px] text-ink-subtle">
-            {emptyHint ?? "Ajuste os filtros para encontrar o que você procura."}
-          </p>
-        </div>
-      </div>
-    );
+    return <EmptyState description={emptyHint ?? "Ajuste os filtros para encontrar o que você procura."} />;
   }
 
   return (
@@ -33,28 +28,69 @@ export function DataTable({ columns, rows, emptyHint, renderActions }: DataTable
       <table className="w-full min-w-[720px] text-left text-[13.5px]">
         <thead>
           <tr className="border-b border-border bg-surface-sunken/50">
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                className={clsx(
-                  "px-4 py-3 text-[11px] font-semibold tracking-wide text-ink-muted uppercase",
-                  col.align === "right" && "text-right",
-                  col.align === "center" && "text-center"
-                )}
-              >
-                {col.label}
+            {columns.map((col) => {
+              const sortable = Boolean(onSortChange) && col.sortable !== false;
+              const active = sort?.key === col.key;
+              return (
+                <th
+                  key={col.key}
+                  className={clsx(
+                    "px-4 py-3 text-[11px] font-semibold tracking-wide text-ink-muted uppercase",
+                    col.align === "right" && "text-right",
+                    col.align === "center" && "text-center"
+                  )}
+                >
+                  {sortable ? (
+                    <button
+                      onClick={() => onSortChange?.(col.key)}
+                      className={clsx(
+                        "inline-flex items-center gap-1 transition-colors duration-100 hover:text-ink",
+                        col.align === "right" && "flex-row-reverse",
+                        active && "text-brand-ink"
+                      )}
+                    >
+                      {col.label}
+                      {active ? (
+                        sort?.dir === "asc" ? (
+                          <ArrowUp size={12} strokeWidth={2} />
+                        ) : (
+                          <ArrowDown size={12} strokeWidth={2} />
+                        )
+                      ) : (
+                        <ChevronsUpDown size={12} strokeWidth={2} className="text-ink-subtle/60" />
+                      )}
+                    </button>
+                  ) : (
+                    col.label
+                  )}
+                </th>
+              );
+            })}
+            {renderActions && (
+              <th className="px-4 py-3 text-right text-[11px] font-semibold tracking-wide text-ink-muted uppercase">
+                Ações
               </th>
-            ))}
-            <th className="px-4 py-3 text-right text-[11px] font-semibold tracking-wide text-ink-muted uppercase">
-              Ações
-            </th>
+            )}
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
             <tr
               key={row.id ?? i}
-              className="group border-b border-border last:border-0 transition-colors duration-100 hover:bg-surface-hover/60"
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+              onKeyDown={
+                onRowClick
+                  ? (e) => {
+                      if (e.key === "Enter") onRowClick(row);
+                    }
+                  : undefined
+              }
+              tabIndex={onRowClick ? 0 : undefined}
+              role={onRowClick ? "button" : undefined}
+              className={clsx(
+                "group border-b border-border last:border-0 transition-colors duration-100 hover:bg-surface-hover/60",
+                onRowClick && "cursor-pointer focus-visible:outline-none focus-visible:bg-surface-hover/60"
+              )}
             >
               {columns.map((col) => (
                 <td
@@ -74,20 +110,13 @@ export function DataTable({ columns, rows, emptyHint, renderActions }: DataTable
                   )}
                 </td>
               ))}
-              <td className="px-4 py-3 text-right">
-                {renderActions ? (
+              {renderActions && (
+                <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-end opacity-70 transition-opacity duration-100 group-hover:opacity-100">
                     {renderActions(row)}
                   </div>
-                ) : (
-                  <button
-                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle transition-colors duration-100 hover:bg-surface-hover hover:text-ink"
-                    aria-label="Mais ações"
-                  >
-                    <MoreHorizontal size={16} strokeWidth={1.75} />
-                  </button>
-                )}
-              </td>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

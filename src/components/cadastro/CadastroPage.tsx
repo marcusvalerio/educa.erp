@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Eye, Pencil, Power, Trash2, CheckCircle2, XCircle, Loader2, RefreshCcw } from "lucide-react";
+import { Eye, Pencil, Power, Trash2, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FilterBar } from "@/components/ui/FilterBar";
 import { DataTable } from "@/components/ui/DataTable";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
 import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Button } from "@/components/ui/Button";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { EntityDrawer } from "@/components/cadastro/EntityDrawer";
 import { RelatedList } from "@/components/cadastro/RelatedList";
 import { AuditTrail } from "@/components/cadastro/AuditTrail";
@@ -240,17 +240,7 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
       />
 
       {loadError ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-danger/40 bg-danger-soft/40 py-16 text-center">
-          <XCircle size={28} className="text-danger" />
-          <div>
-            <p className="text-sm font-medium text-ink">Não foi possível carregar os dados</p>
-            <p className="mt-1 text-sm text-ink-subtle">{loadError}</p>
-          </div>
-          <Button variant="secondary" onClick={retryLoad}>
-            <RefreshCcw size={15} />
-            Tentar novamente
-          </Button>
-        </div>
+        <ErrorState description={loadError} onRetry={retryLoad} />
       ) : loading ? (
         <div className="flex flex-col gap-4 animate-fade-in">
           <div className="h-[86px] animate-skeleton rounded-xl border border-border bg-surface-sunken/40" />
@@ -269,6 +259,7 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
           <DataTable
             columns={config.columns}
             rows={pagedRows}
+            onRowClick={(row) => openView(String(row.id))}
             renderActions={(row) => {
               const id = String(row.id);
               const status = String(row.status);

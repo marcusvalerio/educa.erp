@@ -79,13 +79,13 @@
   --ink-muted: #5c5c68;
   --ink-subtle: #86858f;
 
-  /* Sidebar — Regal Blue, com acento Smothe Blue no estado ativo */
-  --sidebar: #03284a;
-  --sidebar-hover: #0a3a63;
-  --sidebar-active: color-mix(in srgb, #0796d7 16%, transparent);
+  /* Sidebar — Regal Blue (identidade), acento Smothe Blue no estado ativo */
+  --sidebar: #03355e;
+  --sidebar-hover: color-mix(in srgb, #03355e 82%, white 18%);
+  --sidebar-active: color-mix(in srgb, #0796d7 18%, transparent);
   --sidebar-ink: #f2f0eb;
   --sidebar-ink-muted: #93aec4;
-  --sidebar-border: #0e3c62;
+  --sidebar-border: color-mix(in srgb, #03355e 70%, white 12%);
 
   /* Marca — Smothe Blue como interação, Regal Blue como identidade */
   --brand: #0796d7;

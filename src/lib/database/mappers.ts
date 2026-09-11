@@ -7,6 +7,11 @@ import type {
   Veiculo,
   Usuario,
   LocalEstoque,
+  CategoriaProduto,
+  MarcaProduto,
+  UnidadeMedida,
+  ConversaoUnidade,
+  ProdutoFornecedor,
   StatusCadastro,
   TipoPessoa,
 } from "@/lib/cadastros/types";
@@ -19,6 +24,11 @@ import type {
   VehicleRow,
   UserRow,
   WarehouseLocationRow,
+  ProductCategoryRow,
+  ProductBrandRow,
+  UnitRow,
+  UnitConversionRow,
+  ProductSupplierRow,
   DbStatus,
 } from "./schema";
 
@@ -84,6 +94,12 @@ export function productFromRow(row: ProductRow): Produto {
     fornecedorId: row.supplier_id ?? "",
     loteControlado: row.batch_controlled,
     validadeControlada: row.expiration_controlled,
+    categoriaId: row.category_id ?? "",
+    marcaId: row.brand_id ?? "",
+    unidadeId: row.unit_id ?? "",
+    precoCusto: Number(row.cost_price ?? 0),
+    precoVenda: Number(row.sale_price ?? 0),
+    precoMinimo: Number(row.min_price ?? 0),
   };
 }
 
@@ -109,6 +125,12 @@ export function productToRowFields(data: Partial<Produto>): Partial<ProductRow> 
     default_location_code: nullableText(data.localizacaoPadrao),
     batch_controlled: data.loteControlado,
     expiration_controlled: data.validadeControlada,
+    category_id: nullableText(data.categoriaId),
+    brand_id: nullableText(data.marcaId),
+    unit_id: nullableText(data.unidadeId),
+    cost_price: data.precoCusto,
+    sale_price: data.precoVenda,
+    min_price: data.precoMinimo,
     status: statusToDb(data.status),
   } as Record<string, unknown>) as Partial<ProductRow>;
 }
@@ -395,4 +417,114 @@ export function warehouseLocationToRowFields(data: Partial<LocalEstoque>): Parti
     capacity: data.capacidade,
     status: statusToDb(data.status),
   } as Record<string, unknown>) as Partial<WarehouseLocationRow>;
+}
+
+// ------------------------------------------------------ Categoria (produto)
+export function productCategoryFromRow(row: ProductCategoryRow): CategoriaProduto {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    nome: row.name,
+    categoriaPaiId: row.parent_id ?? "",
+  };
+}
+
+export function productCategoryToRowFields(data: Partial<CategoriaProduto>): Partial<ProductCategoryRow> {
+  return omitUndefined({
+    name: data.nome,
+    parent_id: nullableText(data.categoriaPaiId),
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<ProductCategoryRow>;
+}
+
+// ------------------------------------------------------------ Marca (produto)
+export function productBrandFromRow(row: ProductBrandRow): MarcaProduto {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    nome: row.name,
+  };
+}
+
+export function productBrandToRowFields(data: Partial<MarcaProduto>): Partial<ProductBrandRow> {
+  return omitUndefined({
+    name: data.nome,
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<ProductBrandRow>;
+}
+
+// ------------------------------------------------------- Unidade de medida
+export function unitFromRow(row: UnitRow): UnidadeMedida {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    codigo: row.code,
+    nome: row.name,
+    fracionavel: row.fractionable,
+  };
+}
+
+export function unitToRowFields(data: Partial<UnidadeMedida>): Partial<UnitRow> {
+  return omitUndefined({
+    code: data.codigo,
+    name: data.nome,
+    fractionable: data.fracionavel,
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<UnitRow>;
+}
+
+// ---------------------------------------------------- Conversão de unidade
+export function unitConversionFromRow(row: UnitConversionRow): ConversaoUnidade {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    unidadeOrigemId: row.from_unit_id,
+    unidadeDestinoId: row.to_unit_id,
+    fator: Number(row.factor),
+  };
+}
+
+export function unitConversionToRowFields(data: Partial<ConversaoUnidade>): Partial<UnitConversionRow> {
+  return omitUndefined({
+    from_unit_id: data.unidadeOrigemId,
+    to_unit_id: data.unidadeDestinoId,
+    factor: data.fator,
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<UnitConversionRow>;
+}
+
+// ------------------------------------------------- Fornecedor do produto
+export function productSupplierFromRow(row: ProductSupplierRow): ProdutoFornecedor {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    produtoId: row.product_id,
+    fornecedorId: row.supplier_id,
+    skuFornecedor: row.supplier_sku ?? "",
+    custo: Number(row.cost ?? 0),
+    prazoEntregaDias: Number(row.lead_time_days ?? 0),
+    preferencial: row.is_preferred,
+  };
+}
+
+export function productSupplierToRowFields(data: Partial<ProdutoFornecedor>): Partial<ProductSupplierRow> {
+  return omitUndefined({
+    product_id: data.produtoId,
+    supplier_id: data.fornecedorId,
+    supplier_sku: nullableText(data.skuFornecedor),
+    cost: data.custo,
+    lead_time_days: data.prazoEntregaDias,
+    is_preferred: data.preferencial,
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<ProductSupplierRow>;
 }

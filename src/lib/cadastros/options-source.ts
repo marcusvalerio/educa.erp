@@ -3,9 +3,19 @@ import {
   locaisEstoqueRepository,
   transportadorasRepository,
   motoristasRepository,
+  categoriasProdutoRepository,
+  marcasProdutoRepository,
+  unidadesMedidaRepository,
 } from "./repository";
 
-export type OptionsSourceKey = "fornecedores" | "locais" | "transportadoras" | "motoristas";
+export type OptionsSourceKey =
+  | "fornecedores"
+  | "locais"
+  | "transportadoras"
+  | "motoristas"
+  | "categorias-produto"
+  | "marcas-produto"
+  | "unidades-medida";
 
 export type SelectOption = { value: string; label: string };
 
@@ -31,6 +41,26 @@ export function resolveOptionsSource(key: OptionsSourceKey): SelectOption[] {
         .list()
         .filter((m) => m.status === "Ativo")
         .map((m) => ({ value: m.id, label: m.nome }));
+    case "categorias-produto":
+      return categoriasProdutoRepository
+        .list()
+        .filter((c) => c.status === "Ativo")
+        .map((c) => ({
+          value: c.id,
+          label: c.categoriaPaiId
+            ? `${categoriasProdutoRepository.get(c.categoriaPaiId)?.nome ?? "—"} / ${c.nome}`
+            : c.nome,
+        }));
+    case "marcas-produto":
+      return marcasProdutoRepository
+        .list()
+        .filter((m) => m.status === "Ativo")
+        .map((m) => ({ value: m.id, label: m.nome }));
+    case "unidades-medida":
+      return unidadesMedidaRepository
+        .list()
+        .filter((u) => u.status === "Ativo")
+        .map((u) => ({ value: u.id, label: `${u.codigo} — ${u.nome}` }));
     default:
       return [];
   }

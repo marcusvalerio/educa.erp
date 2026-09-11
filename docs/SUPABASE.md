@@ -47,8 +47,8 @@ npx supabase db push
 ```
 
 **Opção B — SQL Editor do painel Supabase:** abra cada arquivo de
-`supabase/migrations/` em ordem (`0001_...`, `0002_...`, `0003_...`,
-`0004_...`) e cole/rode no SQL Editor.
+`supabase/migrations/` em ordem (`0001_...` até `0007_...`) e cole/rode
+no SQL Editor.
 
 O banco pode ser reconstruído do zero a qualquer momento rodando as
 4 migrations em ordem — nada é criado manualmente pelo dashboard.
@@ -145,20 +145,25 @@ Pontos importantes:
   (`00000000-0000-0000-0000-000000000001`). A Fase 3 passará a
   resolver a empresa a partir do usuário autenticado.
 
-## 7. Row Level Security (RLS)
+## 7. Row Level Security (RLS) e RBAC — Fase 2b
 
-RLS está **habilitada em todas as tabelas de negócio**
-(`supabase/migrations/0004_rls_policies.sql`), mas **nenhuma policy é
-criada para os papéis `anon`/`authenticated`** nesta fase — ou seja,
-sem uma policy correspondente, o Postgres nega por padrão. Toda a
-leitura/escrita passa pelas rotas `/api/*`, que usam o cliente
-administrativo (`service_role`, que ignora RLS por definição).
+RLS deixou de ser "habilitada mas vazia": a partir das migrations
+`0005_rbac.sql`, `0006_rls_functions_and_policies.sql` e
+`0007_product_catalog.sql`, existem policies reais para `authenticated`
+em todas as tabelas de negócio, gated por permissão RBAC
+(`has_permission(company_id, 'modulo.acao')`) — nunca
+`using (true)`. `anon` continua sem nenhuma policy (nega tudo). As
+rotas `/api/*` continuam usando `service_role` para a escrita
+propriamente dita, mas agora exigem autenticação real + a permissão
+correspondente **antes** de chamar o repositório (`src/lib/api/
+handlers.ts`) — `service_role` deixou de ser a única barreira, porque
+a RLS no banco protege mesmo um acesso direto ao Supabase (fora da API
+do Next.js) com uma sessão de usuário comum.
 
-**O que muda na Fase 3:** com o Supabase Auth, cada usuário terá um
-JWT com claims (ex.: `company_id`), e serão criadas policies como
-`using (company_id = (auth.jwt() ->> 'company_id')::uuid)` — nesse
-ponto o acesso poderá passar a respeitar RLS diretamente do browser
-quando fizer sentido.
+Ver **docs/RBAC.md** para o modelo completo (usuários, papéis,
+permissões, bootstrap do primeiro admin) e `supabase/tests/rls_rbac.sql`
+para o roteiro de verificação automatizado (requer projeto Supabase
+real — não roda neste ambiente de desenvolvimento).
 
 ## 8. Transição do localStorage (Fase 4 → Fase 2)
 
@@ -206,17 +211,35 @@ Ver `docs/TESTING.md` para o roteiro de testes manuais/automatizados
 executados nesta fase (CRUD, relacionamentos, bloqueio de exclusão,
 alerta de CNH, paginação/filtros, tratamento de erros).
 
-## 11. O que fica para a Fase 3
+## 11. Fase 2b (concluída) e o que ainda fica para ciclos futuros
 
-- Autenticação real (Supabase Auth) e sessão no browser.
-- Substituir o `service_role` fixo nas rotas de API por um cliente no
-  contexto do usuário autenticado (`src/lib/supabase/server.ts` já
-  está pronto para isso).
-- Policies de RLS por `company_id`/usuário (hoje só habilitada, sem
-  policies de `anon`/`authenticated`).
-- Perfis e permissões por módulo/ação (a tabela `users` já tem
-  `role`/`department`; falta a aplicação impor essas permissões).
-- Vincular `public.users.auth_user_id` a `auth.users` de fato.
-- Auditoria com `user_id` real em vez de `actor_label = 'dev-system'`.
-- Suporte a múltiplas empresas (`company_id` dinâmico por sessão, em
-  vez do `DEFAULT_COMPANY_ID` fixo).
+Concluído nesta etapa (ver docs/RBAC.md para detalhes):
+
+- Autenticação real (Supabase Auth) com login (`/login`) e sessão no
+  browser (`src/proxy.ts` — Next.js 16 renomeou `middleware.ts`).
+- Policies de RLS reais por `company_id` + permissão RBAC (não mais
+  só habilitada e vazia).
+- RBAC completo: `roles`/`permissions`/`role_permissions`/
+  `user_companies`/`user_roles`, autorização imposta no backend
+  (`requireAccess` em `src/lib/api/handlers.ts`), não só escondendo
+  botões na UI.
+- `public.users.auth_user_id` vinculado de fato (via
+  `bootstrap_admin_user()` e `getAuthContext()`).
+- Auditoria com `user_id` real quando o usuário está autenticado.
+- `company_id` resolvido da sessão do usuário, não mais uma constante
+  fixa (`DEFAULT_COMPANY_ID` continua existindo só para seed/scripts).
+- Catálogo de produtos evoluído: categorias hierárquicas, marcas,
+  unidades + conversões, múltiplos fornecedores por produto — ver
+  seção de catálogo abaixo.
+
+Fica para ciclos futuros:
+
+- UI de administração de papéis/permissões (hoje só via API — ver
+  docs/RBAC.md §5).
+- Seletor de empresa/filial na UI (estrutura já suporta múltiplas
+  empresas por usuário; UI ainda assume a empresa "atual" da sessão).
+- Tabela de filiais (`branches`) e `branch_id` nas policies.
+- Estoque real (saldo por depósito/localização), comercial, compras,
+  financeiro e fiscal completos.
+- UI de variantes de produto e de múltiplos códigos de barra
+  (`product_variants`/`product_barcodes` já existem no banco).

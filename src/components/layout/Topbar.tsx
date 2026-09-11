@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Search, Bell } from "lucide-react";
+import { Menu, Search, Bell, LogOut } from "lucide-react";
 
 export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   return (
@@ -44,6 +44,16 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
             <span className="block text-[11.5px] text-ink-subtle">Administradora</span>
           </span>
         </button>
+        <form action="/api/auth/logout" method="post">
+          <button
+            type="submit"
+            aria-label="Sair"
+            title="Sair"
+            className="rounded-md p-2 text-ink-muted transition-colors duration-150 hover:bg-surface-hover hover:text-ink active:scale-95"
+          >
+            <LogOut size={17} strokeWidth={1.75} />
+          </button>
+        </form>
       </div>
     </header>
   );

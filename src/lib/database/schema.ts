@@ -28,6 +28,68 @@ export type ProductRow = {
   default_location_code: string | null;
   batch_controlled: boolean;
   expiration_controlled: boolean;
+  category_id: string | null;
+  brand_id: string | null;
+  unit_id: string | null;
+  cost_price: number | null;
+  sale_price: number | null;
+  min_price: number | null;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductCategoryRow = {
+  id: string;
+  company_id: string;
+  parent_id: string | null;
+  code: string;
+  name: string;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductBrandRow = {
+  id: string;
+  company_id: string;
+  name: string;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UnitRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  fractionable: boolean;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UnitConversionRow = {
+  id: string;
+  company_id: string;
+  from_unit_id: string;
+  to_unit_id: string;
+  factor: number;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductSupplierRow = {
+  id: string;
+  company_id: string;
+  product_id: string;
+  supplier_id: string;
+  supplier_sku: string | null;
+  cost: number | null;
+  lead_time_days: number | null;
+  is_preferred: boolean;
   status: DbStatus;
   created_at: string;
   updated_at: string;

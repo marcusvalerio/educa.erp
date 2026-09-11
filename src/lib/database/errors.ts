@@ -21,6 +21,14 @@ export function blockedByDependentsError(message: string) {
   return new ApiError("HAS_DEPENDENTS", message, 409);
 }
 
+export function unauthorizedError() {
+  return new ApiError("UNAUTHORIZED", "Autenticação necessária.", 401);
+}
+
+export function forbiddenError(permissionCode: string) {
+  return new ApiError("FORBIDDEN", `Você não tem permissão para esta operação (${permissionCode}).`, 403);
+}
+
 /**
  * Traduz erros do PostgreSQL/PostgREST em respostas amigáveis. Nunca
  * repassa a mensagem técnica original ao usuário final.

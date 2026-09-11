@@ -33,6 +33,12 @@ export const productSchema = z.object({
   fornecedorId: optionalText,
   loteControlado: z.coerce.boolean().optional().default(false),
   validadeControlada: z.coerce.boolean().optional().default(false),
+  categoriaId: optionalText,
+  marcaId: optionalText,
+  unidadeId: optionalText,
+  precoCusto: optionalNumber,
+  precoVenda: optionalNumber,
+  precoMinimo: optionalNumber,
   status: statusSchema.optional().default("Ativo"),
 });
 
@@ -147,6 +153,41 @@ export const warehouseLocationSchema = z.object({
   status: statusSchema.optional().default("Ativo"),
 });
 
+export const productCategorySchema = z.object({
+  nome: z.string().trim().min(1, "Informe o nome da categoria."),
+  categoriaPaiId: optionalText,
+  status: statusSchema.optional().default("Ativo"),
+});
+
+export const productBrandSchema = z.object({
+  nome: z.string().trim().min(1, "Informe o nome da marca."),
+  status: statusSchema.optional().default("Ativo"),
+});
+
+export const unitSchema = z.object({
+  codigo: z.string().trim().min(1, "Informe o código da unidade."),
+  nome: z.string().trim().min(1, "Informe o nome da unidade."),
+  fracionavel: z.coerce.boolean().optional().default(true),
+  status: statusSchema.optional().default("Ativo"),
+});
+
+export const unitConversionSchema = z.object({
+  unidadeOrigemId: z.string().trim().min(1, "Selecione a unidade de origem."),
+  unidadeDestinoId: z.string().trim().min(1, "Selecione a unidade de destino."),
+  fator: z.coerce.number().positive("O fator de conversão deve ser maior que zero."),
+  status: statusSchema.optional().default("Ativo"),
+});
+
+export const productSupplierSchema = z.object({
+  produtoId: z.string().trim().min(1, "Selecione o produto."),
+  fornecedorId: z.string().trim().min(1, "Selecione o fornecedor."),
+  skuFornecedor: optionalText,
+  custo: optionalNumber,
+  prazoEntregaDias: optionalNumber,
+  preferencial: z.coerce.boolean().optional().default(false),
+  status: statusSchema.optional().default("Ativo"),
+});
+
 export const schemasByEntity = {
   products: productSchema,
   customers: customerSchema,
@@ -156,6 +197,11 @@ export const schemasByEntity = {
   vehicles: vehicleSchema,
   users: userSchema,
   "warehouse-locations": warehouseLocationSchema,
+  "product-categories": productCategorySchema,
+  "product-brands": productBrandSchema,
+  units: unitSchema,
+  "unit-conversions": unitConversionSchema,
+  "product-suppliers": productSupplierSchema,
 } as const;
 
 export type EntityRoute = keyof typeof schemasByEntity;

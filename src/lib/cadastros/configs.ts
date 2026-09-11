@@ -19,6 +19,9 @@ import {
   veiculosRepository,
   usuariosRepository,
   locaisEstoqueRepository,
+  categoriasProdutoRepository,
+  marcasProdutoRepository,
+  unidadesMedidaRepository,
 } from "./repository";
 import {
   produtoColumns,
@@ -110,6 +113,12 @@ export const produtoCadastroConfig: CadastroConfig<Produto> = {
     fornecedorId: "",
     loteControlado: false,
     validadeControlada: false,
+    categoriaId: "",
+    marcaId: "",
+    unidadeId: "",
+    precoCusto: 0,
+    precoVenda: 0,
+    precoMinimo: 0,
     status: "Ativo",
   }),
   relatedLists: (item): RelatedGroup[] => [
@@ -124,7 +133,7 @@ export const produtoCadastroConfig: CadastroConfig<Produto> = {
       items: item.localizacaoPadrao ? [{ label: item.localizacaoPadrao }] : [],
     },
   ],
-  dependsOn: [fornecedoresRepository],
+  dependsOn: [fornecedoresRepository, categoriasProdutoRepository, marcasProdutoRepository, unidadesMedidaRepository],
 };
 
 export const clienteCadastroConfig: CadastroConfig<Cliente> = {

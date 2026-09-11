@@ -30,6 +30,42 @@ export type Produto = BaseEntity & {
   fornecedorId: string;
   loteControlado: boolean;
   validadeControlada: boolean;
+  categoriaId: string;
+  marcaId: string;
+  unidadeId: string;
+  precoCusto: number;
+  precoVenda: number;
+  precoMinimo: number;
+};
+
+export type CategoriaProduto = BaseEntity & {
+  nome: string;
+  categoriaPaiId: string;
+};
+
+export type MarcaProduto = BaseEntity & {
+  nome: string;
+};
+
+export type UnidadeMedida = BaseEntity & {
+  codigo: string;
+  nome: string;
+  fracionavel: boolean;
+};
+
+export type ConversaoUnidade = BaseEntity & {
+  unidadeOrigemId: string;
+  unidadeDestinoId: string;
+  fator: number;
+};
+
+export type ProdutoFornecedor = BaseEntity & {
+  produtoId: string;
+  fornecedorId: string;
+  skuFornecedor: string;
+  custo: number;
+  prazoEntregaDias: number;
+  preferencial: boolean;
 };
 
 export type Cliente = BaseEntity & {

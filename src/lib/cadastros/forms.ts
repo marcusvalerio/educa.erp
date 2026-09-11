@@ -41,6 +41,29 @@ export const produtoForm: FormSection[] = [
     ],
   },
   {
+    title: "Catálogo (categoria, marca e unidade relacionais)",
+    fields: [
+      {
+        key: "categoriaId",
+        label: "Categoria (catálogo)",
+        type: "select",
+        optionsSource: "categorias-produto",
+        span: 2,
+        helpText: "Substitui gradualmente o campo Categoria acima.",
+      },
+      { key: "marcaId", label: "Marca", type: "select", optionsSource: "marcas-produto", span: 1 },
+      { key: "unidadeId", label: "Unidade (catálogo)", type: "select", optionsSource: "unidades-medida", span: 1 },
+    ],
+  },
+  {
+    title: "Preços e custos",
+    fields: [
+      { key: "precoCusto", label: "Preço de custo", type: "number", step: 0.01, span: 1 },
+      { key: "precoVenda", label: "Preço de venda", type: "number", step: 0.01, span: 1 },
+      { key: "precoMinimo", label: "Preço mínimo", type: "number", step: 0.01, span: 1 },
+    ],
+  },
+  {
     title: "Dimensões e peso",
     fields: [
       { key: "peso", label: "Peso (kg)", type: "number", step: 0.01, span: 1 },

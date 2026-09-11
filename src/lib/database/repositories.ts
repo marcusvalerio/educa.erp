@@ -18,6 +18,16 @@ import {
   userToRowFields,
   warehouseLocationFromRow,
   warehouseLocationToRowFields,
+  productCategoryFromRow,
+  productCategoryToRowFields,
+  productBrandFromRow,
+  productBrandToRowFields,
+  unitFromRow,
+  unitToRowFields,
+  unitConversionFromRow,
+  unitConversionToRowFields,
+  productSupplierFromRow,
+  productSupplierToRowFields,
 } from "./mappers";
 
 export const productsTable = createTableRepository({
@@ -138,6 +148,86 @@ export const warehouseLocationsTable = createTableRepository({
   ],
 });
 
+export const productCategoriesTable = createTableRepository({
+  table: "product_categories",
+  entityLabel: "Categoria de produto",
+  searchColumns: ["code", "name"],
+  defaultSort: "created_at",
+  fromRow: productCategoryFromRow,
+  toRowFields: productCategoryToRowFields,
+  labelOf: (item) => item.nome,
+  dependents: [
+    {
+      table: "products",
+      column: "category_id",
+      matchValue: (item) => item.id,
+      message: "Esta categoria está vinculada a produtos cadastrados. Utilize a inativação.",
+    },
+    {
+      table: "product_categories",
+      column: "parent_id",
+      matchValue: (item) => item.id,
+      message: "Esta categoria possui subcategorias vinculadas. Utilize a inativação.",
+    },
+  ],
+});
+
+export const productBrandsTable = createTableRepository({
+  table: "product_brands",
+  entityLabel: "Marca de produto",
+  searchColumns: ["name"],
+  defaultSort: "created_at",
+  fromRow: productBrandFromRow,
+  toRowFields: productBrandToRowFields,
+  labelOf: (item) => item.nome,
+  dependents: [
+    {
+      table: "products",
+      column: "brand_id",
+      matchValue: (item) => item.id,
+      message: "Esta marca está vinculada a produtos cadastrados. Utilize a inativação.",
+    },
+  ],
+});
+
+export const unitsTable = createTableRepository({
+  table: "units",
+  entityLabel: "Unidade de medida",
+  searchColumns: ["code", "name"],
+  defaultSort: "created_at",
+  fromRow: unitFromRow,
+  toRowFields: unitToRowFields,
+  labelOf: (item) => item.codigo,
+  dependents: [
+    {
+      table: "products",
+      column: "unit_id",
+      matchValue: (item) => item.id,
+      message: "Esta unidade está vinculada a produtos cadastrados. Utilize a inativação.",
+    },
+  ],
+});
+
+export const unitConversionsTable = createTableRepository({
+  table: "unit_conversions",
+  entityLabel: "Conversão de unidade",
+  searchColumns: [],
+  defaultSort: "created_at",
+  fromRow: unitConversionFromRow,
+  toRowFields: unitConversionToRowFields,
+  labelOf: (item) => `${item.unidadeOrigemId} -> ${item.unidadeDestinoId}`,
+});
+
+export const productSuppliersTable = createTableRepository({
+  table: "product_suppliers",
+  entityLabel: "Fornecedor do produto",
+  searchColumns: ["supplier_sku"],
+  defaultSort: "created_at",
+  fromRow: productSupplierFromRow,
+  toRowFields: productSupplierToRowFields,
+  labelOf: (item) => item.produtoId,
+});
+
 export const tablesByEntity = {
   products: productsTable,
   customers: customersTable,
@@ -147,6 +237,11 @@ export const tablesByEntity = {
   vehicles: vehiclesTable,
   users: usersTable,
   "warehouse-locations": warehouseLocationsTable,
+  "product-categories": productCategoriesTable,
+  "product-brands": productBrandsTable,
+  units: unitsTable,
+  "unit-conversions": unitConversionsTable,
+  "product-suppliers": productSuppliersTable,
 } as const;
 
 export type EntityRoute = keyof typeof tablesByEntity;

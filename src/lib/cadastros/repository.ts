@@ -1,5 +1,19 @@
 import type { BaseEntity } from "./types";
-import type { Produto, Cliente, Fornecedor, Transportadora, Motorista, Veiculo, Usuario, LocalEstoque } from "./types";
+import type {
+  Produto,
+  Cliente,
+  Fornecedor,
+  Transportadora,
+  Motorista,
+  Veiculo,
+  Usuario,
+  LocalEstoque,
+  CategoriaProduto,
+  MarcaProduto,
+  UnidadeMedida,
+  ConversaoUnidade,
+  ProdutoFornecedor,
+} from "./types";
 
 // Camada de repositório — Fase 2.
 //
@@ -136,6 +150,11 @@ export const motoristasRepository = createRepository<Motorista>("drivers");
 export const veiculosRepository = createRepository<Veiculo>("vehicles");
 export const usuariosRepository = createRepository<Usuario>("users");
 export const locaisEstoqueRepository = createRepository<LocalEstoque>("warehouse-locations");
+export const categoriasProdutoRepository = createRepository<CategoriaProduto>("product-categories");
+export const marcasProdutoRepository = createRepository<MarcaProduto>("product-brands");
+export const unidadesMedidaRepository = createRepository<UnidadeMedida>("units");
+export const conversoesUnidadeRepository = createRepository<ConversaoUnidade>("unit-conversions");
+export const produtoFornecedoresRepository = createRepository<ProdutoFornecedor>("product-suppliers");
 
 export function hydrateAllCadastros(): Promise<void[]> {
   return Promise.all([
@@ -146,6 +165,9 @@ export function hydrateAllCadastros(): Promise<void[]> {
     veiculosRepository.hydrate(),
     clientesRepository.hydrate(),
     usuariosRepository.hydrate(),
+    categoriasProdutoRepository.hydrate(),
+    marcasProdutoRepository.hydrate(),
+    unidadesMedidaRepository.hydrate(),
     produtosRepository.hydrate(),
   ]);
 }

@@ -59,6 +59,28 @@ export type ConversaoUnidade = BaseEntity & {
   fator: number;
 };
 
+// ---------------------------------------------------------- Estoque/WMS
+export type TipoDeposito = "Padrão" | "Virtual";
+
+export type Deposito = BaseEntity & {
+  codigo: string;
+  nome: string;
+  tipo: TipoDeposito;
+  endereco: string;
+  cidade: string;
+  estado: string;
+  cep: string;
+};
+
+export type Lote = BaseEntity & {
+  produtoId: string;
+  numeroLote: string;
+  dataFabricacao: string;
+  dataValidade: string;
+  fornecedorId: string;
+  observacoes: string;
+};
+
 export type ProdutoFornecedor = BaseEntity & {
   produtoId: string;
   fornecedorId: string;

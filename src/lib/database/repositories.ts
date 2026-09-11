@@ -28,6 +28,10 @@ import {
   unitConversionToRowFields,
   productSupplierFromRow,
   productSupplierToRowFields,
+  warehouseFromRow,
+  warehouseToRowFields,
+  productLotFromRow,
+  productLotToRowFields,
 } from "./mappers";
 
 export const productsTable = createTableRepository({
@@ -228,6 +232,34 @@ export const productSuppliersTable = createTableRepository({
   labelOf: (item) => item.produtoId,
 });
 
+export const warehousesTable = createTableRepository({
+  table: "warehouses",
+  entityLabel: "Depósito",
+  searchColumns: ["code", "name"],
+  defaultSort: "created_at",
+  fromRow: warehouseFromRow,
+  toRowFields: warehouseToRowFields,
+  labelOf: (item) => item.nome,
+  dependents: [
+    {
+      table: "warehouse_locations",
+      column: "warehouse_id",
+      matchValue: (item) => item.id,
+      message: "Este depósito possui locais de estoque vinculados. Utilize a inativação.",
+    },
+  ],
+});
+
+export const productLotsTable = createTableRepository({
+  table: "product_lots",
+  entityLabel: "Lote de produto",
+  searchColumns: ["lot_number"],
+  defaultSort: "created_at",
+  fromRow: productLotFromRow,
+  toRowFields: productLotToRowFields,
+  labelOf: (item) => item.numeroLote,
+});
+
 export const tablesByEntity = {
   products: productsTable,
   customers: customersTable,
@@ -242,6 +274,8 @@ export const tablesByEntity = {
   units: unitsTable,
   "unit-conversions": unitConversionsTable,
   "product-suppliers": productSuppliersTable,
+  warehouses: warehousesTable,
+  "product-lots": productLotsTable,
 } as const;
 
 export type EntityRoute = keyof typeof tablesByEntity;

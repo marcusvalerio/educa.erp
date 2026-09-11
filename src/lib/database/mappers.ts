@@ -12,6 +12,9 @@ import type {
   UnidadeMedida,
   ConversaoUnidade,
   ProdutoFornecedor,
+  Deposito,
+  TipoDeposito,
+  Lote,
   StatusCadastro,
   TipoPessoa,
 } from "@/lib/cadastros/types";
@@ -29,6 +32,8 @@ import type {
   UnitRow,
   UnitConversionRow,
   ProductSupplierRow,
+  WarehouseRow,
+  ProductLotRow,
   DbStatus,
 } from "./schema";
 
@@ -48,6 +53,15 @@ function tipoFromDb(type: "individual" | "company"): TipoPessoa {
 function tipoToDb(tipo: TipoPessoa | undefined): "individual" | "company" | undefined {
   if (tipo === undefined) return undefined;
   return tipo === "Pessoa Física" ? "individual" : "company";
+}
+
+function tipoDepositoFromDb(type: "standard" | "virtual"): TipoDeposito {
+  return type === "standard" ? "Padrão" : "Virtual";
+}
+
+function tipoDepositoToDb(tipo: TipoDeposito | undefined): "standard" | "virtual" | undefined {
+  if (tipo === undefined) return undefined;
+  return tipo === "Padrão" ? "standard" : "virtual";
 }
 
 // Diferencia "campo não enviado" (undefined — omitido do patch, coluna
@@ -527,4 +541,62 @@ export function productSupplierToRowFields(data: Partial<ProdutoFornecedor>): Pa
     is_preferred: data.preferencial,
     status: statusToDb(data.status),
   } as Record<string, unknown>) as Partial<ProductSupplierRow>;
+}
+
+// ------------------------------------------------------------- Depósito
+export function warehouseFromRow(row: WarehouseRow): Deposito {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    codigo: row.code,
+    nome: row.name,
+    tipo: tipoDepositoFromDb(row.type),
+    endereco: row.address ?? "",
+    cidade: row.city ?? "",
+    estado: row.state ?? "",
+    cep: row.zip_code ?? "",
+  };
+}
+
+export function warehouseToRowFields(data: Partial<Deposito>): Partial<WarehouseRow> {
+  return omitUndefined({
+    code: data.codigo,
+    name: data.nome,
+    type: tipoDepositoToDb(data.tipo),
+    address: nullableText(data.endereco),
+    city: nullableText(data.cidade),
+    state: nullableText(data.estado),
+    zip_code: nullableText(data.cep),
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<WarehouseRow>;
+}
+
+// ----------------------------------------------------------------- Lote
+export function productLotFromRow(row: ProductLotRow): Lote {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    produtoId: row.product_id,
+    numeroLote: row.lot_number,
+    dataFabricacao: row.manufactured_at ?? "",
+    dataValidade: row.expires_at ?? "",
+    fornecedorId: row.supplier_id ?? "",
+    observacoes: row.notes ?? "",
+  };
+}
+
+export function productLotToRowFields(data: Partial<Lote>): Partial<ProductLotRow> {
+  return omitUndefined({
+    product_id: data.produtoId,
+    lot_number: data.numeroLote,
+    manufactured_at: nullableText(data.dataFabricacao),
+    expires_at: nullableText(data.dataValidade),
+    supplier_id: nullableText(data.fornecedorId),
+    notes: nullableText(data.observacoes),
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<ProductLotRow>;
 }

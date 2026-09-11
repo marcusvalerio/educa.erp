@@ -37,6 +37,8 @@ const PERMISSION_MODULE: Record<EntityRoute, string> = {
   units: "units",
   "unit-conversions": "unit_conversions",
   "product-suppliers": "product_suppliers",
+  warehouses: "warehouses",
+  "product-lots": "product_lots",
 };
 
 function firstIssueMessage(error: { issues: { message: string }[] }) {

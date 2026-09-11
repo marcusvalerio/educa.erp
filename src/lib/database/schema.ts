@@ -241,6 +241,217 @@ export type WarehouseLocationRow = {
   updated_at: string;
 };
 
+// ---------------------------------------------------------- Estoque/WMS
+// Espelha supabase/migrations/0008-0012. warehouses e product_lots são
+// cadastros normais (status active/inactive, CRUD via createTableRepository).
+// product_serial_numbers tem vocabulário de status próprio (ciclo de vida
+// do item serializado). stock_balances/stock_movements/stock_transfers(+items)/
+// stock_reservations(+items)/stock_adjustments(+items)/stock_counts(+items)
+// são só leitura pela API REST genérica — toda escrita passa pelas funções
+// SECURITY DEFINER (fn_receive_stock, fn_ship_transfer, fn_post_adjustment
+// etc.), chamadas via RPC (ver src/app/api/stock-*).
+
+export type WarehouseRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  type: "standard" | "virtual";
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip_code: string | null;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductLotRow = {
+  id: string;
+  company_id: string;
+  product_id: string;
+  lot_number: string;
+  manufactured_at: string | null;
+  expires_at: string | null;
+  supplier_id: string | null;
+  notes: string | null;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SerialStatus = "in_stock" | "reserved" | "shipped" | "returned" | "scrapped";
+
+export type ProductSerialNumberRow = {
+  id: string;
+  company_id: string;
+  product_id: string;
+  serial_number: string;
+  status: SerialStatus;
+  current_location_id: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StockBalanceRow = {
+  id: string;
+  company_id: string;
+  product_id: string;
+  location_id: string;
+  lot_id: string | null;
+  on_hand: number;
+  reserved: number;
+  available: number;
+  updated_at: string;
+};
+
+export type MovementType =
+  | "RECEIPT"
+  | "ISSUE"
+  | "TRANSFER_OUT"
+  | "TRANSFER_IN"
+  | "ADJUSTMENT_IN"
+  | "ADJUSTMENT_OUT"
+  | "RETURN_IN"
+  | "RETURN_OUT"
+  | "PRODUCTION_IN"
+  | "PRODUCTION_OUT"
+  | "RESERVATION"
+  | "RELEASE";
+
+export type StockMovementRow = {
+  id: string;
+  company_id: string;
+  product_id: string;
+  location_id: string;
+  lot_id: string | null;
+  movement_type: MovementType;
+  quantity: number;
+  unit_cost: number | null;
+  reference_type: string | null;
+  reference_id: string | null;
+  notes: string | null;
+  idempotency_key: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type TransferStatus = "draft" | "in_transit" | "completed" | "cancelled";
+
+export type StockTransferRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  from_location_id: string;
+  to_location_id: string;
+  status: TransferStatus;
+  notes: string | null;
+  created_by: string | null;
+  shipped_at: string | null;
+  received_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StockTransferItemRow = {
+  id: string;
+  company_id: string;
+  transfer_id: string;
+  product_id: string;
+  lot_id: string | null;
+  quantity: number;
+  created_at: string;
+};
+
+export type ReservationStatus = "active" | "released" | "consumed" | "cancelled";
+
+export type StockReservationRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  location_id: string;
+  status: ReservationStatus;
+  reference_type: string | null;
+  reference_id: string | null;
+  notes: string | null;
+  created_by: string | null;
+  released_at: string | null;
+  consumed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StockReservationItemRow = {
+  id: string;
+  company_id: string;
+  reservation_id: string;
+  product_id: string;
+  lot_id: string | null;
+  quantity: number;
+  created_at: string;
+};
+
+export type AdjustmentStatus = "draft" | "posted" | "cancelled";
+
+export type StockAdjustmentRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  location_id: string;
+  reason_code: string;
+  notes: string | null;
+  status: AdjustmentStatus;
+  created_by: string | null;
+  posted_by: string | null;
+  posted_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StockAdjustmentItemRow = {
+  id: string;
+  company_id: string;
+  adjustment_id: string;
+  product_id: string;
+  lot_id: string | null;
+  quantity_delta: number;
+  unit_cost: number | null;
+  created_at: string;
+};
+
+export type CountStatus = "counting" | "closed" | "cancelled";
+
+export type StockCountRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  warehouse_id: string;
+  status: CountStatus;
+  notes: string | null;
+  created_by: string | null;
+  closed_by: string | null;
+  closed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CountItemStatus = "pending" | "counted";
+
+export type StockCountItemRow = {
+  id: string;
+  company_id: string;
+  count_id: string;
+  product_id: string;
+  location_id: string;
+  lot_id: string | null;
+  expected_quantity: number;
+  counted_quantity: number | null;
+  variance: number | null;
+  status: CountItemStatus;
+  created_at: string;
+};
+
 export type AuditLogRow = {
   id: string;
   company_id: string | null;

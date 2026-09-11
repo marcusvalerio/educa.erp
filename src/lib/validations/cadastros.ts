@@ -188,6 +188,27 @@ export const productSupplierSchema = z.object({
   status: statusSchema.optional().default("Ativo"),
 });
 
+export const warehouseSchema = z.object({
+  codigo: z.string().trim().min(1, "Informe o código do depósito."),
+  nome: z.string().trim().min(1, "Informe o nome do depósito."),
+  tipo: z.enum(["Padrão", "Virtual"]).optional().default("Padrão"),
+  endereco: optionalText,
+  cidade: optionalText,
+  estado: optionalText,
+  cep: optionalText,
+  status: statusSchema.optional().default("Ativo"),
+});
+
+export const productLotSchema = z.object({
+  produtoId: z.string().trim().min(1, "Selecione o produto."),
+  numeroLote: z.string().trim().min(1, "Informe o número do lote."),
+  dataFabricacao: optionalText,
+  dataValidade: optionalText,
+  fornecedorId: optionalText,
+  observacoes: optionalText,
+  status: statusSchema.optional().default("Ativo"),
+});
+
 export const schemasByEntity = {
   products: productSchema,
   customers: customerSchema,
@@ -202,6 +223,8 @@ export const schemasByEntity = {
   units: unitSchema,
   "unit-conversions": unitConversionSchema,
   "product-suppliers": productSupplierSchema,
+  warehouses: warehouseSchema,
+  "product-lots": productLotSchema,
 } as const;
 
 export type EntityRoute = keyof typeof schemasByEntity;

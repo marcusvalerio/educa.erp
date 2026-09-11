@@ -485,6 +485,187 @@ export type MaterialRequestItemRow = {
   created_at: string;
 };
 
+// ------------------------------------------------------ Compras/Suprimentos
+// Espelha supabase/migrations/0014-0018. Todas as tabelas são
+// documentos transacionais (mesmo padrão de stock_transfers/
+// stock_reservations/material_requests): só leitura pela API REST
+// genérica, toda escrita via função RPC (src/app/api/purchase-*).
+// Não usam BaseEntity/StatusCadastro em português — não são cadastros.
+
+export type PurchasePriority = "low" | "medium" | "high" | "urgent";
+export type PurchaseRequestStatus =
+  | "draft" | "requested" | "approved" | "rejected" | "cancelled"
+  | "partially_ordered" | "ordered" | "completed";
+
+export type PurchaseRequestRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  requested_by: string | null;
+  department: string | null;
+  priority: PurchasePriority;
+  status: PurchaseRequestStatus;
+  justification: string | null;
+  requested_at: string;
+  needed_by: string | null;
+  notes: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PurchaseRequestItemRow = {
+  id: string;
+  company_id: string;
+  request_id: string;
+  product_id: string | null;
+  description: string;
+  unit: string | null;
+  quantity_requested: number;
+  quantity_approved: number | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type PurchaseQuoteStatus = "draft" | "sent" | "closed" | "cancelled";
+
+export type PurchaseQuoteRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  purchase_request_id: string | null;
+  status: PurchaseQuoteStatus;
+  notes: string | null;
+  created_by: string | null;
+  closed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PurchaseQuoteSupplierStatus = "invited" | "responded" | "selected" | "rejected";
+
+export type PurchaseQuoteSupplierRow = {
+  id: string;
+  company_id: string;
+  quote_id: string;
+  supplier_id: string;
+  status: PurchaseQuoteSupplierStatus;
+  payment_terms: string | null;
+  freight_cost: number | null;
+  delivery_days: number | null;
+  valid_until: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PurchaseQuoteItemRow = {
+  id: string;
+  company_id: string;
+  quote_supplier_id: string;
+  product_id: string | null;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  discount: number;
+  line_total: number;
+  notes: string | null;
+  created_at: string;
+};
+
+export type PurchaseOrderStatus =
+  | "draft" | "pending_approval" | "approved" | "sent"
+  | "partially_received" | "received" | "closed" | "cancelled";
+
+export type PurchaseOrderRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  supplier_id: string;
+  purchase_request_id: string | null;
+  purchase_quote_id: string | null;
+  status: PurchaseOrderStatus;
+  issued_at: string;
+  expected_delivery_at: string | null;
+  payment_terms: string | null;
+  freight_cost: number;
+  discount: number;
+  total_amount: number;
+  notes: string | null;
+  created_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  sent_at: string | null;
+  closed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PurchaseOrderItemRow = {
+  id: string;
+  company_id: string;
+  order_id: string;
+  product_id: string | null;
+  description: string;
+  unit: string | null;
+  ordered_quantity: number;
+  received_quantity: number;
+  cancelled_quantity: number;
+  unit_price: number;
+  discount: number;
+  line_total: number;
+  notes: string | null;
+  created_at: string;
+};
+
+export type PurchaseReceiptStatus = "draft" | "confirmed" | "rejected";
+
+export type PurchaseReceiptRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  purchase_order_id: string;
+  supplier_id: string;
+  received_at: string;
+  received_by: string | null;
+  status: PurchaseReceiptStatus;
+  notes: string | null;
+  document_type: string | null;
+  document_number: string | null;
+  document_series: string | null;
+  access_key: string | null;
+  document_issued_at: string | null;
+  document_value: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ReceiptConferenceStatus = "pending" | "matched" | "divergent";
+export type ReceiptDivergenceType = "none" | "quantity" | "product" | "lot" | "expiration" | "quality" | "other";
+
+export type PurchaseReceiptItemRow = {
+  id: string;
+  company_id: string;
+  receipt_id: string;
+  purchase_order_item_id: string;
+  product_id: string;
+  quantity_received: number;
+  unit: string | null;
+  destination_location_id: string;
+  lot_id: string | null;
+  lot_number: string | null;
+  expires_at: string | null;
+  serial_numbers: string[] | null;
+  accepted_quantity: number;
+  rejected_quantity: number;
+  conference_status: ReceiptConferenceStatus;
+  divergence_type: ReceiptDivergenceType | null;
+  divergence_notes: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
 export type AuditLogRow = {
   id: string;
   company_id: string | null;

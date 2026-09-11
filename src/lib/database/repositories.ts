@@ -18,6 +18,10 @@ import {
   userToRowFields,
   warehouseLocationFromRow,
   warehouseLocationToRowFields,
+  categoryFromRow,
+  categoryToRowFields,
+  brandFromRow,
+  brandToRowFields,
 } from "./mappers";
 
 export const productsTable = createTableRepository({
@@ -138,6 +142,48 @@ export const warehouseLocationsTable = createTableRepository({
   ],
 });
 
+export const categoriesTable = createTableRepository({
+  table: "product_categories",
+  entityLabel: "Categoria",
+  searchColumns: ["code", "name"],
+  defaultSort: "created_at",
+  fromRow: categoryFromRow,
+  toRowFields: categoryToRowFields,
+  labelOf: (item) => item.nome,
+  dependents: [
+    {
+      table: "products",
+      column: "category_id",
+      matchValue: (item) => item.id,
+      message: "Esta categoria está vinculada a produtos cadastrados. Utilize a inativação.",
+    },
+    {
+      table: "product_categories",
+      column: "parent_id",
+      matchValue: (item) => item.id,
+      message: "Esta categoria possui subcategorias vinculadas. Remova ou reclassifique-as primeiro.",
+    },
+  ],
+});
+
+export const brandsTable = createTableRepository({
+  table: "product_brands",
+  entityLabel: "Marca",
+  searchColumns: ["code", "name"],
+  defaultSort: "created_at",
+  fromRow: brandFromRow,
+  toRowFields: brandToRowFields,
+  labelOf: (item) => item.nome,
+  dependents: [
+    {
+      table: "products",
+      column: "brand_id",
+      matchValue: (item) => item.id,
+      message: "Esta marca está vinculada a produtos cadastrados. Utilize a inativação.",
+    },
+  ],
+});
+
 export const tablesByEntity = {
   products: productsTable,
   customers: customersTable,
@@ -147,6 +193,8 @@ export const tablesByEntity = {
   vehicles: vehiclesTable,
   users: usersTable,
   "warehouse-locations": warehouseLocationsTable,
+  categories: categoriesTable,
+  brands: brandsTable,
 } as const;
 
 export type EntityRoute = keyof typeof tablesByEntity;

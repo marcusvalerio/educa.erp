@@ -6,8 +6,12 @@ import {
   customerFromRow,
   driverFromRow,
   driverToRowFields,
+  categoryFromRow,
+  categoryToRowFields,
+  brandFromRow,
+  brandToRowFields,
 } from "@/lib/database/mappers";
-import type { ProductRow, CustomerRow, DriverRow } from "@/lib/database/schema";
+import type { ProductRow, CustomerRow, DriverRow, ProductCategoryRow, ProductBrandRow } from "@/lib/database/schema";
 
 const baseProductRow: ProductRow = {
   id: "11111111-1111-1111-1111-111111111111",
@@ -29,6 +33,8 @@ const baseProductRow: ProductRow = {
   maximum_stock: 500,
   reorder_point: 100,
   supplier_id: "22222222-2222-2222-2222-222222222222",
+  category_id: null,
+  brand_id: null,
   default_location_code: "CD01-R01-M01-N01-P01",
   batch_controlled: true,
   expiration_controlled: false,
@@ -125,4 +131,76 @@ test("driverFromRow/driverToRowFields fazem round-trip do vínculo com a transpo
   assert.equal(entity.transportadoraId, "55555555-5555-5555-5555-555555555555");
   const fields = driverToRowFields({ transportadoraId: "66666666-6666-6666-6666-666666666666" });
   assert.equal(fields.carrier_id, "66666666-6666-6666-6666-666666666666");
+});
+
+test("productFromRow/productToRowFields fazem round-trip de category_id/brand_id (catálogo relacional)", () => {
+  const withCatalog: ProductRow = {
+    ...baseProductRow,
+    category_id: "77777777-7777-7777-7777-777777777777",
+    brand_id: "88888888-8888-8888-8888-888888888888",
+  };
+  const entity = productFromRow(withCatalog);
+  assert.equal(entity.categoriaId, "77777777-7777-7777-7777-777777777777");
+  assert.equal(entity.marcaId, "88888888-8888-8888-8888-888888888888");
+
+  const fields = productToRowFields({ categoriaId: "99999999-9999-9999-9999-999999999999" });
+  assert.equal(fields.category_id, "99999999-9999-9999-9999-999999999999");
+  // Campo não enviado (undefined) não deve virar NULL — mesma regra do
+  // nullableText já coberta acima para outros campos (bug real da Fase 2).
+  assert.equal("brand_id" in fields, false);
+});
+
+const baseCategoryRow: ProductCategoryRow = {
+  id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  company_id: "00000000-0000-0000-0000-000000000001",
+  parent_id: null,
+  code: "CAT_MATERIA_PRIMA",
+  name: "Matéria-prima",
+  path: "aaaaaaaa_aaaa_aaaa_aaaa_aaaaaaaaaaaa",
+  status: "active",
+  created_at: "2026-01-01T00:00:00.000Z",
+  updated_at: "2026-01-01T00:00:00.000Z",
+};
+
+describe("categoryFromRow/categoryToRowFields", () => {
+  test("mapeia parent_id null para categoriaPaiId vazio (categoria raiz)", () => {
+    const entity = categoryFromRow(baseCategoryRow);
+    assert.equal(entity.categoriaPaiId, "");
+    assert.equal(entity.nome, "Matéria-prima");
+  });
+
+  test("mapeia parent_id preenchido (subcategoria)", () => {
+    const entity = categoryFromRow({ ...baseCategoryRow, parent_id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" });
+    assert.equal(entity.categoriaPaiId, "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+  });
+
+  test("categoryToRowFields mapeia nome/código/pai", () => {
+    const fields = categoryToRowFields({ codigo: "CAT_NOVA", nome: "Nova categoria", categoriaPaiId: "" });
+    assert.equal(fields.code, "CAT_NOVA");
+    assert.equal(fields.name, "Nova categoria");
+    assert.equal(fields.parent_id, null);
+  });
+});
+
+const baseBrandRow: ProductBrandRow = {
+  id: "cccccccc-cccc-cccc-cccc-cccccccccccc",
+  company_id: "00000000-0000-0000-0000-000000000001",
+  code: "MRC-0001",
+  name: "Marca Teste",
+  status: "active",
+  created_at: "2026-01-01T00:00:00.000Z",
+  updated_at: "2026-01-01T00:00:00.000Z",
+};
+
+describe("brandFromRow/brandToRowFields", () => {
+  test("faz round-trip de código/nome/status", () => {
+    const entity = brandFromRow(baseBrandRow);
+    assert.equal(entity.codigo, "MRC-0001");
+    assert.equal(entity.nome, "Marca Teste");
+    assert.equal(entity.status, "Ativo");
+
+    const fields = brandToRowFields({ nome: "Marca Atualizada", status: "Inativo" });
+    assert.equal(fields.name, "Marca Atualizada");
+    assert.equal(fields.status, "inactive");
+  });
 });

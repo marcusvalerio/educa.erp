@@ -7,6 +7,8 @@ import {
   vehicleSchema,
   userSchema,
   warehouseLocationSchema,
+  categorySchema,
+  brandSchema,
 } from "@/lib/validations/cadastros";
 
 describe("productSchema", () => {
@@ -101,5 +103,78 @@ describe("warehouseLocationSchema", () => {
       tipo: "Armazenagem",
     });
     assert.equal(result.success, true);
+  });
+});
+
+describe("productSchema — catálogo relacional (categoriaId/marcaId)", () => {
+  test("aceita produto válido sem categoriaId/marcaId (campos opcionais)", () => {
+    const result = productSchema.safeParse({
+      codigo: "PRD-0002",
+      descricao: "Produto sem categoria/marca relacional",
+      categoria: "Ferramentas",
+      unidade: "UN",
+    });
+    assert.equal(result.success, true);
+    if (result.success) {
+      assert.equal(result.data.categoriaId, "");
+      assert.equal(result.data.marcaId, "");
+    }
+  });
+
+  test("aceita produto com categoriaId/marcaId preenchidos", () => {
+    const result = productSchema.safeParse({
+      codigo: "PRD-0003",
+      descricao: "Produto com categoria/marca relacional",
+      categoria: "Ferramentas",
+      unidade: "UN",
+      categoriaId: "33333333-3333-3333-3333-333333333333",
+      marcaId: "44444444-4444-4444-4444-444444444444",
+    });
+    assert.equal(result.success, true);
+    if (result.success) {
+      assert.equal(result.data.categoriaId, "33333333-3333-3333-3333-333333333333");
+      assert.equal(result.data.marcaId, "44444444-4444-4444-4444-444444444444");
+    }
+  });
+});
+
+describe("categorySchema", () => {
+  test("rejeita categoria sem código/nome", () => {
+    const result = categorySchema.safeParse({});
+    assert.equal(result.success, false);
+  });
+
+  test("campo ausente mostra mensagem amigável", () => {
+    const result = categorySchema.safeParse({});
+    assert.equal(result.success, false);
+    if (!result.success) {
+      assert.equal(result.error.issues[0].message, "Informe o código da categoria.");
+    }
+  });
+
+  test("aceita categoria válida (com e sem categoriaPaiId)", () => {
+    const semPai = categorySchema.safeParse({ codigo: "CAT-RAIZ", nome: "Matéria-prima" });
+    assert.equal(semPai.success, true);
+    if (semPai.success) assert.equal(semPai.data.status, "Ativo");
+
+    const comPai = categorySchema.safeParse({
+      codigo: "CAT-SUB",
+      nome: "Importado",
+      categoriaPaiId: "55555555-5555-5555-5555-555555555555",
+    });
+    assert.equal(comPai.success, true);
+  });
+});
+
+describe("brandSchema", () => {
+  test("rejeita marca sem código/nome", () => {
+    const result = brandSchema.safeParse({});
+    assert.equal(result.success, false);
+  });
+
+  test("aceita marca válida e aplica default de status", () => {
+    const result = brandSchema.safeParse({ codigo: "MRC-0001", nome: "Marca Teste" });
+    assert.equal(result.success, true);
+    if (result.success) assert.equal(result.data.status, "Ativo");
   });
 });

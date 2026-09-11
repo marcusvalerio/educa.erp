@@ -147,18 +147,26 @@ Pontos importantes:
 
 ## 7. Row Level Security (RLS)
 
-RLS está **habilitada em todas as tabelas de negócio**
-(`supabase/migrations/0004_rls_policies.sql`), mas **nenhuma policy é
-criada para os papéis `anon`/`authenticated`** nesta fase — ou seja,
-sem uma policy correspondente, o Postgres nega por padrão. Toda a
-leitura/escrita passa pelas rotas `/api/*`, que usam o cliente
-administrativo (`service_role`, que ignora RLS por definição).
+**Atualizado — RLS deixou de ser só "habilitada" e passou a ter
+policies reais.** Ver `docs/RBAC.md` para o desenho completo e a prova
+empírica (isolamento entre empresas + permissão por ação, testado de
+verdade, não só descrito). Resumo:
 
-**O que muda na Fase 3:** com o Supabase Auth, cada usuário terá um
-JWT com claims (ex.: `company_id`), e serão criadas policies como
-`using (company_id = (auth.jwt() ->> 'company_id')::uuid)` — nesse
-ponto o acesso poderá passar a respeitar RLS diretamente do browser
-quando fizer sentido.
+- Toda tabela de negócio tem 4 policies (SELECT/INSERT/UPDATE/DELETE),
+  usando `has_permission(company_id, 'modulo.acao')` — uma função que
+  casa `auth.uid()` (sessão Supabase Auth real) contra
+  `public.users.auth_user_id` e a cadeia `user_roles → roles →
+  role_permissions → permissions`. Nenhuma policy usa `using (true)`
+  em dado de empresa.
+- As rotas `/api/*` **continuam** usando o cliente administrativo
+  (`service_role`, ignora RLS) — essa parte não mudou nesta rodada (ver
+  `docs/AUTH_ARCHITECTURE.md` para o porquê: depende de decisões de
+  produto sobre login ainda pendentes). A diferença é que agora, se/
+  quando essas rotas migrarem para o cliente de sessão, o RLS por trás
+  já está pronto e testado — não é mais um "depois eu faço".
+- Acesso direto ao Postgres/PostgREST (fora das rotas `/api/*` do
+  Next.js) já respeita essas regras hoje, com ou sem as rotas
+  migrarem.
 
 ## 8. Transição do localStorage (Fase 4 → Fase 2)
 
@@ -206,17 +214,31 @@ Ver `docs/TESTING.md` para o roteiro de testes manuais/automatizados
 executados nesta fase (CRUD, relacionamentos, bloqueio de exclusão,
 alerta de CNH, paginação/filtros, tratamento de erros).
 
-## 11. O que fica para a Fase 3
+## 11. O que fica para depois
 
-- Autenticação real (Supabase Auth) e sessão no browser.
-- Substituir o `service_role` fixo nas rotas de API por um cliente no
-  contexto do usuário autenticado (`src/lib/supabase/server.ts` já
-  está pronto para isso).
-- Policies de RLS por `company_id`/usuário (hoje só habilitada, sem
-  policies de `anon`/`authenticated`).
-- Perfis e permissões por módulo/ação (a tabela `users` já tem
-  `role`/`department`; falta a aplicação impor essas permissões).
-- Vincular `public.users.auth_user_id` a `auth.users` de fato.
-- Auditoria com `user_id` real em vez de `actor_label = 'dev-system'`.
-- Suporte a múltiplas empresas (`company_id` dinâmico por sessão, em
-  vez do `DEFAULT_COMPANY_ID` fixo).
+Atualizado após a rodada "RLS/RBAC/Catálogo" (`docs/RBAC.md`,
+`docs/CATALOGO.md`) — riscado o que já foi resolvido:
+
+- ~~Policies de RLS por `company_id`/usuário~~ — feito (`docs/RBAC.md`).
+- ~~Perfis e permissões por módulo/ação~~ — feito (roles/permissions/
+  role_permissions/user_roles reais, `docs/RBAC.md`). Falta só a UI de
+  gestão de papéis (tela `Configurações → Permissões` continua mock).
+- ~~Vincular `public.users.auth_user_id` a `auth.users` de fato~~ —
+  a coluna já era usada por RLS/RBAC; falta só a UI de login/convite
+  que efetivamente popula essa coluna no dia a dia.
+- Autenticação real com **UI de login** (Supabase Auth já funciona —
+  testado via SQL/RPC — mas não há tela; ver "Decisões que faltam" em
+  `docs/AUTH_ARCHITECTURE.md`, que continuam pendentes).
+- Substituir o `service_role` fixo nas rotas de API `/api/*` por um
+  cliente no contexto do usuário autenticado
+  (`src/lib/supabase/server.ts` + `src/lib/auth/session.ts` já
+  existem e são reais, usados hoje por `/api/me` — só não foram
+  adotados pelas 8 rotas de cadastro ainda, de propósito).
+- Auditoria com `user_id` real em vez de `actor_label = 'dev-system'`
+  (depende do item anterior).
+- Suporte a múltiplas empresas por sessão (`company_id` dinâmico em
+  vez do `DEFAULT_COMPANY_ID` fixo) — o modelo de dados já suporta
+  (RLS já filtra por empresa do usuário, não por uma constante), falta
+  só a API parar de usar `DEFAULT_COMPANY_ID` fixo nas 8 rotas.
+- RLS por filial (`branch_id` existe, não entra em nenhuma policy
+  ainda).

@@ -28,6 +28,8 @@ export type Produto = BaseEntity & {
   pontoReposicao: number;
   localizacaoPadrao: string;
   fornecedorId: string;
+  categoriaId: string;
+  marcaId: string;
   loteControlado: boolean;
   validadeControlada: boolean;
 };
@@ -140,6 +142,17 @@ export type LocalEstoque = BaseEntity & {
   posicao: string;
   tipo: string;
   capacidade: number;
+};
+
+export type Categoria = BaseEntity & {
+  codigo: string;
+  nome: string;
+  categoriaPaiId: string;
+};
+
+export type Marca = BaseEntity & {
+  codigo: string;
+  nome: string;
 };
 
 export type AuditAcao = "Criado" | "Alterado" | "Ativado" | "Inativado" | "Excluído";

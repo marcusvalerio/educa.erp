@@ -12,6 +12,19 @@ const statusSchema = z.enum(["Ativo", "Inativo"]);
 const optionalText = z.string().trim().optional().default("");
 const optionalNumber = z.coerce.number().optional().default(0);
 
+// z.string().min(1, msg) só usa `msg` quando o valor chega como string
+// vazia — se a chave vier ausente (undefined), o Zod falha antes disso
+// no check de tipo e mostra sua mensagem técnica padrão em inglês
+// ("Invalid input: expected string..."). O preprocess normaliza
+// undefined/null para "" antes da validação, garantindo que a mensagem
+// amigável apareça nos dois casos (campo ausente ou campo vazio).
+function requiredText(message: string) {
+  return z.preprocess(
+    (value) => (value === undefined || value === null ? "" : value),
+    z.string().trim().min(1, message)
+  );
+}
+
 export const productSchema = z.object({
   codigo: z.string().trim().min(1, "Informe o código do produto."),
   sku: optionalText,
@@ -31,6 +44,8 @@ export const productSchema = z.object({
   pontoReposicao: optionalNumber,
   localizacaoPadrao: optionalText,
   fornecedorId: optionalText,
+  categoriaId: optionalText,
+  marcaId: optionalText,
   loteControlado: z.coerce.boolean().optional().default(false),
   validadeControlada: z.coerce.boolean().optional().default(false),
   status: statusSchema.optional().default("Ativo"),
@@ -147,6 +162,19 @@ export const warehouseLocationSchema = z.object({
   status: statusSchema.optional().default("Ativo"),
 });
 
+export const categorySchema = z.object({
+  codigo: requiredText("Informe o código da categoria."),
+  nome: requiredText("Informe o nome da categoria."),
+  categoriaPaiId: optionalText,
+  status: statusSchema.optional().default("Ativo"),
+});
+
+export const brandSchema = z.object({
+  codigo: requiredText("Informe o código da marca."),
+  nome: requiredText("Informe o nome da marca."),
+  status: statusSchema.optional().default("Ativo"),
+});
+
 export const schemasByEntity = {
   products: productSchema,
   customers: customerSchema,
@@ -156,6 +184,8 @@ export const schemasByEntity = {
   vehicles: vehicleSchema,
   users: userSchema,
   "warehouse-locations": warehouseLocationSchema,
+  categories: categorySchema,
+  brands: brandSchema,
 } as const;
 
 export type EntityRoute = keyof typeof schemasByEntity;

@@ -1,5 +1,5 @@
 import type { BaseEntity } from "./types";
-import type { Produto, Cliente, Fornecedor, Transportadora, Motorista, Veiculo, Usuario, LocalEstoque } from "./types";
+import type { Produto, Cliente, Fornecedor, Transportadora, Motorista, Veiculo, Usuario, LocalEstoque, Categoria, Marca } from "./types";
 
 // Camada de repositório — Fase 2.
 //
@@ -145,6 +145,8 @@ export const motoristasRepository = createRepository<Motorista>("drivers");
 export const veiculosRepository = createRepository<Veiculo>("vehicles");
 export const usuariosRepository = createRepository<Usuario>("users");
 export const locaisEstoqueRepository = createRepository<LocalEstoque>("warehouse-locations");
+export const categoriasRepository = createRepository<Categoria>("categories");
+export const marcasRepository = createRepository<Marca>("brands");
 
 export function hydrateAllCadastros(): Promise<void[]> {
   return Promise.all([
@@ -156,5 +158,7 @@ export function hydrateAllCadastros(): Promise<void[]> {
     clientesRepository.hydrate(),
     usuariosRepository.hydrate(),
     produtosRepository.hydrate(),
+    categoriasRepository.hydrate(),
+    marcasRepository.hydrate(),
   ]);
 }

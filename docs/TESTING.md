@@ -20,6 +20,13 @@ de teste adicionais). Cobre a camada que não depende de rede:
 - `tests/cnh-alert.test.ts` — a lógica de alerta de CNH vencida/a
   vencer em 30 dias continua correta após a migração para o banco
   (mesma função usada pela coluna "Validade CNH" da listagem).
+- `categorySchema`/`brandSchema` (em `tests/validations.test.ts`) e os
+  mapeadores `categoryFromRow`/`brandFromRow` (em `tests/mappers.test.ts`)
+  — catálogo relacional novo (rodada "RLS/RBAC/Catálogo").
+- **RLS/RBAC não são testáveis por `node --test`** (dependem de sessão
+  Postgres real) — a prova empírica (isolamento entre empresas +
+  permissão por ação, com usuário Auth real) está documentada em
+  `docs/RBAC.md`, seção 4, com a metodologia e os resultados exatos.
 
 `npm run lint` e `npm run build` (typecheck completo do Next.js)
 também são parte da verificação desta fase — ambos devem terminar sem

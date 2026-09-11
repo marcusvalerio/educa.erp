@@ -25,6 +25,8 @@ export type ProductRow = {
   maximum_stock: number | null;
   reorder_point: number | null;
   supplier_id: string | null;
+  category_id: string | null;
+  brand_id: string | null;
   default_location_code: string | null;
   batch_controlled: boolean;
   expiration_controlled: boolean;
@@ -177,6 +179,34 @@ export type WarehouseLocationRow = {
   status: DbStatus;
   created_at: string;
   updated_at: string;
+};
+
+export type ProductCategoryRow = {
+  id: string;
+  company_id: string;
+  parent_id: string | null;
+  code: string;
+  name: string;
+  path: string | null;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductBrandRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UnitRow = {
+  code: string;
+  name: string;
+  created_at: string;
 };
 
 export type AuditLogRow = {

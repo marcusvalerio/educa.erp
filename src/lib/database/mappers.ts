@@ -7,6 +7,8 @@ import type {
   Veiculo,
   Usuario,
   LocalEstoque,
+  Categoria,
+  Marca,
   StatusCadastro,
   TipoPessoa,
 } from "@/lib/cadastros/types";
@@ -19,6 +21,8 @@ import type {
   VehicleRow,
   UserRow,
   WarehouseLocationRow,
+  ProductCategoryRow,
+  ProductBrandRow,
   DbStatus,
 } from "./schema";
 
@@ -82,6 +86,8 @@ export function productFromRow(row: ProductRow): Produto {
     pontoReposicao: Number(row.reorder_point ?? 0),
     localizacaoPadrao: row.default_location_code ?? "",
     fornecedorId: row.supplier_id ?? "",
+    categoriaId: row.category_id ?? "",
+    marcaId: row.brand_id ?? "",
     loteControlado: row.batch_controlled,
     validadeControlada: row.expiration_controlled,
   };
@@ -106,6 +112,8 @@ export function productToRowFields(data: Partial<Produto>): Partial<ProductRow> 
     maximum_stock: data.estoqueMaximo,
     reorder_point: data.pontoReposicao,
     supplier_id: nullableText(data.fornecedorId),
+    category_id: nullableText(data.categoriaId),
+    brand_id: nullableText(data.marcaId),
     default_location_code: nullableText(data.localizacaoPadrao),
     batch_controlled: data.loteControlado,
     expiration_controlled: data.validadeControlada,
@@ -379,6 +387,48 @@ export function warehouseLocationFromRow(row: WarehouseLocationRow): LocalEstoqu
     tipo: row.location_type ?? "",
     capacidade: Number(row.capacity ?? 0),
   };
+}
+
+// ------------------------------------------------------------ Categoria
+export function categoryFromRow(row: ProductCategoryRow): Categoria {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    codigo: row.code,
+    nome: row.name,
+    categoriaPaiId: row.parent_id ?? "",
+  };
+}
+
+export function categoryToRowFields(data: Partial<Categoria>): Partial<ProductCategoryRow> {
+  return omitUndefined({
+    code: data.codigo,
+    name: data.nome,
+    parent_id: nullableText(data.categoriaPaiId),
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<ProductCategoryRow>;
+}
+
+// ----------------------------------------------------------------- Marca
+export function brandFromRow(row: ProductBrandRow): Marca {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    codigo: row.code,
+    nome: row.name,
+  };
+}
+
+export function brandToRowFields(data: Partial<Marca>): Partial<ProductBrandRow> {
+  return omitUndefined({
+    code: data.codigo,
+    name: data.nome,
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<ProductBrandRow>;
 }
 
 export function warehouseLocationToRowFields(data: Partial<LocalEstoque>): Partial<WarehouseLocationRow> {

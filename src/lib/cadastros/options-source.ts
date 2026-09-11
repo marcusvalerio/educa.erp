@@ -3,9 +3,17 @@ import {
   locaisEstoqueRepository,
   transportadorasRepository,
   motoristasRepository,
+  categoriasRepository,
+  marcasRepository,
 } from "./repository";
 
-export type OptionsSourceKey = "fornecedores" | "locais" | "transportadoras" | "motoristas";
+export type OptionsSourceKey =
+  | "fornecedores"
+  | "locais"
+  | "transportadoras"
+  | "motoristas"
+  | "categorias"
+  | "marcas";
 
 export type SelectOption = { value: string; label: string };
 
@@ -28,6 +36,16 @@ export function resolveOptionsSource(key: OptionsSourceKey): SelectOption[] {
         .map((t) => ({ value: t.id, label: t.razaoSocial }));
     case "motoristas":
       return motoristasRepository
+        .list()
+        .filter((m) => m.status === "Ativo")
+        .map((m) => ({ value: m.id, label: m.nome }));
+    case "categorias":
+      return categoriasRepository
+        .list()
+        .filter((c) => c.status === "Ativo")
+        .map((c) => ({ value: c.id, label: c.nome }));
+    case "marcas":
+      return marcasRepository
         .list()
         .filter((m) => m.status === "Ativo")
         .map((m) => ({ value: m.id, label: m.nome }));

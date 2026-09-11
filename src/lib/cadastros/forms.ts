@@ -38,6 +38,15 @@ export const produtoForm: FormSection[] = [
       { key: "codigoBarras", label: "Código de barras", type: "text", span: 2 },
       { key: "ncm", label: "NCM", type: "text", span: 1 },
       { key: "fornecedorId", label: "Fornecedor", type: "select", optionsSource: "fornecedores", span: 1 },
+      {
+        key: "categoriaId",
+        label: "Categoria (catálogo)",
+        type: "select",
+        optionsSource: "categorias",
+        span: 1,
+        helpText: "Opcional — complementa o campo Categoria acima com o novo catálogo relacional.",
+      },
+      { key: "marcaId", label: "Marca", type: "select", optionsSource: "marcas", span: 1 },
     ],
   },
   {

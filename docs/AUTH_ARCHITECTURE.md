@@ -1,5 +1,17 @@
 # Autenticação, Autorização e Usuários — decisão arquitetural pendente
 
+> **Atualização (rodada "RLS/RBAC/Catálogo"):** RLS real e RBAC
+> (roles/permissions/role_permissions/user_roles) **foram
+> implementados** — ver `docs/RBAC.md` para o desenho completo e a
+> prova empírica. O que **continua** pendente, exatamente como descrito
+> neste documento: a UI de login, e a decisão de produto sobre método
+> de login/provisionamento (seção "Decisões que faltam" abaixo, que
+> **não mudou**). As rotas `/api/*` de cadastro também continuam no
+> `service_role` — RLS/RBAC já protegem o banco de verdade, mas a API
+> do Next.js ainda não foi migrada de autoridade (depende das mesmas
+> decisões pendentes). O restante deste documento é o registro
+> histórico da análise original — mantido para contexto.
+
 Este documento registra a análise feita na etapa de "fundação" do ASTRA.ERP
 (pós-auditoria funcional) sobre autenticação/autorização e sobre a
 duplicidade de "Usuários". **Nada aqui foi implementado em código** — é a
@@ -19,8 +31,15 @@ solução improvisada que teria que ser refeita.
 
 ## Estado atual (confirmado por auditoria)
 
-- Não existe login, sessão, Supabase Auth, middleware de rota ou RBAC no
-  código. Busca por `auth`/`login`/`middleware` no `src/` não retorna nada.
+> Parágrafo original desta seção, válido no momento em que foi escrito
+> (antes da rodada "RLS/RBAC/Catálogo") — ver o aviso no topo do
+> documento para o que mudou desde então.
+
+- Não existia login, sessão, ou RBAC no código nesta época. Busca por
+  `auth`/`login`/`middleware` no `src/` não retornava nada. **Isso
+  mudou para RBAC** (`src/lib/auth/session.ts`, `/api/me`,
+  `has_permission()`/RLS reais no banco — ver `docs/RBAC.md`); login/
+  sessão de browser e middleware de rota continuam não implementados.
 - Todas as rotas `/api/*` usam `createAdminClient()`
   (`src/lib/supabase/admin.ts`), o cliente **service_role**, que ignora
   Row Level Security por definição. Ou seja: hoje, qualquer requisição que

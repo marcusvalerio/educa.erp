@@ -39,6 +39,12 @@ const PERMISSION_MODULE: Record<EntityRoute, string> = {
   "product-suppliers": "product_suppliers",
   warehouses: "warehouses",
   "product-lots": "product_lots",
+  "sales-representatives": "sales_representatives",
+  "price-lists": "price_lists",
+  // Itens de tabela de preço reaproveitam as permissões de price_lists
+  // (editar uma tabela inclui editar seus itens) — não existe um
+  // permissions.price_list_items.* separado, de propósito.
+  "price-list-items": "price_lists",
 };
 
 function firstIssueMessage(error: { issues: { message: string }[] }) {
@@ -67,9 +73,14 @@ export function createCollectionHandlers(entity: EntityRoute) {
       const { companyId } = await requireAccess(entity, "read");
       const { searchParams } = new URL(request.url);
       const statusParam = searchParams.get("status");
-      // productId filtra tabelas filhas de um produto (ex.: product-suppliers)
-      // sem precisar de um método dedicado por relação — ver ListParams.filters.
+      // productId/priceListId filtram tabelas filhas (ex.: product-suppliers,
+      // price-list-items) sem precisar de um método dedicado por relação —
+      // ver ListParams.filters.
       const productIdParam = searchParams.get("productId");
+      const priceListIdParam = searchParams.get("priceListId");
+      const filters: Record<string, string> = {};
+      if (productIdParam) filters.product_id = productIdParam;
+      if (priceListIdParam) filters.price_list_id = priceListIdParam;
       const result = await table.list(companyId, {
         search: searchParams.get("search") ?? undefined,
         status: statusParam === "Ativo" || statusParam === "Inativo" ? (statusParam as StatusCadastro) : undefined,
@@ -77,7 +88,7 @@ export function createCollectionHandlers(entity: EntityRoute) {
         pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : undefined,
         sort: searchParams.get("sort") ?? undefined,
         order: searchParams.get("order") === "desc" ? "desc" : searchParams.get("order") === "asc" ? "asc" : undefined,
-        filters: productIdParam ? { product_id: productIdParam } : undefined,
+        filters: Object.keys(filters).length > 0 ? filters : undefined,
       });
       return NextResponse.json({
         success: true,

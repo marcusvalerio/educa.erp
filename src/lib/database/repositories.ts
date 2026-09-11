@@ -32,6 +32,12 @@ import {
   warehouseToRowFields,
   productLotFromRow,
   productLotToRowFields,
+  salesRepresentativeFromRow,
+  salesRepresentativeToRowFields,
+  priceListFromRow,
+  priceListToRowFields,
+  priceListItemFromRow,
+  priceListItemToRowFields,
 } from "./mappers";
 
 export const productsTable = createTableRepository({
@@ -260,6 +266,44 @@ export const productLotsTable = createTableRepository({
   labelOf: (item) => item.numeroLote,
 });
 
+export const salesRepresentativesTable = createTableRepository({
+  table: "sales_representatives",
+  entityLabel: "Vendedor",
+  searchColumns: ["code", "name", "document"],
+  defaultSort: "created_at",
+  fromRow: salesRepresentativeFromRow,
+  toRowFields: salesRepresentativeToRowFields,
+  labelOf: (item) => item.nome,
+});
+
+export const priceListsTable = createTableRepository({
+  table: "price_lists",
+  entityLabel: "Tabela de preço",
+  searchColumns: ["code", "name"],
+  defaultSort: "created_at",
+  fromRow: priceListFromRow,
+  toRowFields: priceListToRowFields,
+  labelOf: (item) => item.nome,
+  dependents: [
+    {
+      table: "price_list_items",
+      column: "price_list_id",
+      matchValue: (item) => item.id,
+      message: "Esta tabela de preço possui itens cadastrados. Utilize a inativação.",
+    },
+  ],
+});
+
+export const priceListItemsTable = createTableRepository({
+  table: "price_list_items",
+  entityLabel: "Item de tabela de preço",
+  searchColumns: [],
+  defaultSort: "created_at",
+  fromRow: priceListItemFromRow,
+  toRowFields: priceListItemToRowFields,
+  labelOf: (item) => item.produtoId,
+});
+
 export const tablesByEntity = {
   products: productsTable,
   customers: customersTable,
@@ -276,6 +320,9 @@ export const tablesByEntity = {
   "product-suppliers": productSuppliersTable,
   warehouses: warehousesTable,
   "product-lots": productLotsTable,
+  "sales-representatives": salesRepresentativesTable,
+  "price-lists": priceListsTable,
+  "price-list-items": priceListItemsTable,
 } as const;
 
 export type EntityRoute = keyof typeof tablesByEntity;

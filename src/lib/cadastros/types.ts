@@ -81,6 +81,32 @@ export type Lote = BaseEntity & {
   observacoes: string;
 };
 
+// -------------------------------------------------------------- Comercial
+export type Vendedor = BaseEntity & {
+  codigo: string;
+  nome: string;
+  documento: string;
+  email: string;
+  telefone: string;
+  percentualComissao: number;
+  observacoes: string;
+};
+
+export type TabelaPreco = BaseEntity & {
+  codigo: string;
+  nome: string;
+  vigenciaInicio: string;
+  vigenciaFim: string;
+  prioridade: number;
+  observacoes: string;
+};
+
+export type ItemTabelaPreco = BaseEntity & {
+  tabelaPrecoId: string;
+  produtoId: string;
+  preco: number;
+};
+
 export type ProdutoFornecedor = BaseEntity & {
   produtoId: string;
   fornecedorId: string;
@@ -89,6 +115,11 @@ export type ProdutoFornecedor = BaseEntity & {
   prazoEntregaDias: number;
   preferencial: boolean;
 };
+
+// Situação comercial — diferente de status (Ativo/Inativo do cadastro):
+// um cliente pode estar "Ativo" no cadastro e em "Bloqueio de Crédito"
+// no comercial. Ver supabase/migrations/0019.
+export type StatusComercial = "Ativo" | "Bloqueio de Crédito" | "Bloqueado";
 
 export type Cliente = BaseEntity & {
   codigo: string;
@@ -109,6 +140,11 @@ export type Cliente = BaseEntity & {
   complemento: string;
   limiteCredito: number;
   condicaoPagamento: string;
+  vendedorPadraoId: string;
+  tabelaPrecoPadraoId: string;
+  condicaoPagamentoPadraoId: string;
+  segmento: string;
+  statusComercial: StatusComercial;
 };
 
 export type Fornecedor = BaseEntity & {

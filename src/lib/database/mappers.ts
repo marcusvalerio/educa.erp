@@ -16,6 +16,10 @@ import type {
   TipoDeposito,
   Lote,
   FinalidadeLocal,
+  Vendedor,
+  TabelaPreco,
+  ItemTabelaPreco,
+  StatusComercial,
   StatusCadastro,
   TipoPessoa,
 } from "@/lib/cadastros/types";
@@ -36,6 +40,10 @@ import type {
   WarehouseRow,
   ProductLotRow,
   LocationPurpose,
+  SalesRepresentativeRow,
+  PriceListRow,
+  PriceListItemRow,
+  CommercialStatus,
   DbStatus,
 } from "./schema";
 
@@ -89,6 +97,27 @@ function finalidadeFromDb(purpose: LocationPurpose): FinalidadeLocal {
 function finalidadeToDb(finalidade: FinalidadeLocal | undefined): LocationPurpose | undefined {
   if (finalidade === undefined) return undefined;
   return FINALIDADE_TO_DB[finalidade];
+}
+
+const STATUS_COMERCIAL_FROM_DB: Record<CommercialStatus, StatusComercial> = {
+  active: "Ativo",
+  credit_hold: "Bloqueio de Crédito",
+  blocked: "Bloqueado",
+};
+
+const STATUS_COMERCIAL_TO_DB: Record<StatusComercial, CommercialStatus> = {
+  Ativo: "active",
+  "Bloqueio de Crédito": "credit_hold",
+  Bloqueado: "blocked",
+};
+
+function statusComercialFromDb(status: CommercialStatus): StatusComercial {
+  return STATUS_COMERCIAL_FROM_DB[status];
+}
+
+function statusComercialToDb(status: StatusComercial | undefined): CommercialStatus | undefined {
+  if (status === undefined) return undefined;
+  return STATUS_COMERCIAL_TO_DB[status];
 }
 
 // Diferencia "campo não enviado" (undefined — omitido do patch, coluna
@@ -201,6 +230,11 @@ export function customerFromRow(row: CustomerRow): Cliente {
     complemento: row.address_complement ?? "",
     limiteCredito: Number(row.credit_limit ?? 0),
     condicaoPagamento: row.payment_terms ?? "",
+    vendedorPadraoId: row.default_sales_representative_id ?? "",
+    tabelaPrecoPadraoId: row.default_price_list_id ?? "",
+    condicaoPagamentoPadraoId: row.default_payment_terms_id ?? "",
+    segmento: row.segment ?? "",
+    statusComercial: statusComercialFromDb(row.commercial_status),
   };
 }
 
@@ -223,6 +257,11 @@ export function customerToRowFields(data: Partial<Cliente>): Partial<CustomerRow
     address_complement: nullableText(data.complemento),
     credit_limit: data.limiteCredito,
     payment_terms: nullableText(data.condicaoPagamento),
+    default_sales_representative_id: nullableText(data.vendedorPadraoId),
+    default_price_list_id: nullableText(data.tabelaPrecoPadraoId),
+    default_payment_terms_id: nullableText(data.condicaoPagamentoPadraoId),
+    segment: nullableText(data.segmento),
+    commercial_status: statusComercialToDb(data.statusComercial),
     status: statusToDb(data.status),
   } as Record<string, unknown>) as Partial<CustomerRow>;
 }
@@ -628,4 +667,81 @@ export function productLotToRowFields(data: Partial<Lote>): Partial<ProductLotRo
     notes: nullableText(data.observacoes),
     status: statusToDb(data.status),
   } as Record<string, unknown>) as Partial<ProductLotRow>;
+}
+
+// -------------------------------------------------------------- Vendedor
+export function salesRepresentativeFromRow(row: SalesRepresentativeRow): Vendedor {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    codigo: row.code,
+    nome: row.name,
+    documento: row.document ?? "",
+    email: row.email ?? "",
+    telefone: row.phone ?? "",
+    percentualComissao: Number(row.commission_percentage ?? 0),
+    observacoes: row.notes ?? "",
+  };
+}
+
+export function salesRepresentativeToRowFields(data: Partial<Vendedor>): Partial<SalesRepresentativeRow> {
+  return omitUndefined({
+    name: data.nome,
+    document: nullableText(data.documento),
+    email: nullableText(data.email),
+    phone: nullableText(data.telefone),
+    commission_percentage: data.percentualComissao,
+    notes: nullableText(data.observacoes),
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<SalesRepresentativeRow>;
+}
+
+// ----------------------------------------------------------- Tabela de preço
+export function priceListFromRow(row: PriceListRow): TabelaPreco {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    codigo: row.code,
+    nome: row.name,
+    vigenciaInicio: row.valid_from ?? "",
+    vigenciaFim: row.valid_until ?? "",
+    prioridade: row.priority,
+    observacoes: row.notes ?? "",
+  };
+}
+
+export function priceListToRowFields(data: Partial<TabelaPreco>): Partial<PriceListRow> {
+  return omitUndefined({
+    name: data.nome,
+    valid_from: nullableText(data.vigenciaInicio),
+    valid_until: nullableText(data.vigenciaFim),
+    priority: data.prioridade,
+    notes: nullableText(data.observacoes),
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<PriceListRow>;
+}
+
+export function priceListItemFromRow(row: PriceListItemRow): ItemTabelaPreco {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    tabelaPrecoId: row.price_list_id,
+    produtoId: row.product_id,
+    preco: Number(row.unit_price ?? 0),
+  };
+}
+
+export function priceListItemToRowFields(data: Partial<ItemTabelaPreco>): Partial<PriceListItemRow> {
+  return omitUndefined({
+    price_list_id: data.tabelaPrecoId,
+    product_id: data.produtoId,
+    unit_price: data.preco,
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<PriceListItemRow>;
 }

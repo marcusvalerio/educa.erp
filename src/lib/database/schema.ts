@@ -95,6 +95,8 @@ export type ProductSupplierRow = {
   updated_at: string;
 };
 
+export type CommercialStatus = "active" | "credit_hold" | "blocked";
+
 export type CustomerRow = {
   id: string;
   company_id: string;
@@ -116,6 +118,12 @@ export type CustomerRow = {
   address_complement: string | null;
   credit_limit: number | null;
   payment_terms: string | null;
+  // ------------------------------------------------ Comercial (0019)
+  default_sales_representative_id: string | null;
+  default_price_list_id: string | null;
+  default_payment_terms_id: string | null;
+  segment: string | null;
+  commercial_status: CommercialStatus;
   status: DbStatus;
   created_at: string;
   updated_at: string;
@@ -662,6 +670,176 @@ export type PurchaseReceiptItemRow = {
   conference_status: ReceiptConferenceStatus;
   divergence_type: ReceiptDivergenceType | null;
   divergence_notes: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+// -------------------------------------------------------------- Comercial
+// Espelha supabase/migrations/0019-0021. sales_representatives e
+// price_lists/price_list_items são cadastros normais (CRUD via
+// createTableRepository, como warehouses/product_lots). payment_terms
+// precisa de validação atômica multi-linha (soma de percentuais = 100%)
+// e por isso usa handlers dedicados, como purchase_quotes. sales_quotes/
+// sales_orders são documentos transacionais (mesmo padrão de
+// stock_transfers/purchase_orders) — só leitura pela API REST genérica,
+// toda escrita via função RPC.
+
+export type SalesRepresentativeRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  document: string | null;
+  email: string | null;
+  phone: string | null;
+  commission_percentage: number | null;
+  notes: string | null;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PriceListRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  valid_from: string | null;
+  valid_until: string | null;
+  priority: number;
+  notes: string | null;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PriceListItemRow = {
+  id: string;
+  company_id: string;
+  price_list_id: string;
+  product_id: string;
+  unit_price: number;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PaymentTermRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  installments_count: number;
+  notes: string | null;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PaymentTermInstallmentRow = {
+  id: string;
+  company_id: string;
+  payment_term_id: string;
+  installment_number: number;
+  days_after: number;
+  percentage: number;
+  created_at: string;
+};
+
+export type SalesQuoteStatus = "draft" | "sent" | "approved" | "rejected" | "expired" | "cancelled";
+
+export type SalesQuoteRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  customer_id: string;
+  sales_representative_id: string | null;
+  price_list_id: string | null;
+  payment_terms_id: string | null;
+  status: SalesQuoteStatus;
+  issued_at: string;
+  valid_until: string | null;
+  discount: number;
+  freight_cost: number;
+  total_amount: number;
+  notes: string | null;
+  created_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SalesQuoteItemRow = {
+  id: string;
+  company_id: string;
+  quote_id: string;
+  product_id: string | null;
+  description: string;
+  unit: string | null;
+  quantity: number;
+  unit_price: number;
+  discount: number;
+  line_total: number;
+  notes: string | null;
+  created_at: string;
+};
+
+export type SalesOrderStatus =
+  | "draft" | "pending_approval" | "approved" | "reservation_pending" | "reserved"
+  | "picking" | "ready_to_ship" | "shipped" | "completed" | "cancelled";
+
+export type SalesOrderRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  customer_id: string;
+  sales_representative_id: string | null;
+  sales_quote_id: string | null;
+  price_list_id: string | null;
+  payment_terms_id: string | null;
+  status: SalesOrderStatus;
+  order_date: string;
+  expected_delivery_at: string | null;
+  discount: number;
+  freight_cost: number;
+  total_amount: number;
+  delivery_zip_code: string | null;
+  delivery_state: string | null;
+  delivery_city: string | null;
+  delivery_neighborhood: string | null;
+  delivery_address: string | null;
+  delivery_address_number: string | null;
+  delivery_address_complement: string | null;
+  carrier_id: string | null;
+  fiscal_document_type: string | null;
+  fiscal_document_number: string | null;
+  fiscal_document_series: string | null;
+  fiscal_access_key: string | null;
+  fiscal_status: string | null;
+  notes: string | null;
+  created_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SalesOrderItemRow = {
+  id: string;
+  company_id: string;
+  order_id: string;
+  product_id: string | null;
+  description: string;
+  unit: string | null;
+  ordered_quantity: number;
+  reserved_quantity: number;
+  picked_quantity: number;
+  shipped_quantity: number;
+  cancelled_quantity: number;
+  unit_price: number;
+  discount: number;
+  line_total: number;
   notes: string | null;
   created_at: string;
 };

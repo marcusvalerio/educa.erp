@@ -60,6 +60,11 @@ export const customerSchema = z.object({
   complemento: optionalText,
   limiteCredito: optionalNumber,
   condicaoPagamento: optionalText,
+  vendedorPadraoId: optionalText,
+  tabelaPrecoPadraoId: optionalText,
+  condicaoPagamentoPadraoId: optionalText,
+  segmento: optionalText,
+  statusComercial: z.enum(["Ativo", "Bloqueio de Crédito", "Bloqueado"]).optional().default("Ativo"),
   status: statusSchema.optional().default("Ativo"),
 });
 
@@ -213,6 +218,33 @@ export const productLotSchema = z.object({
   status: statusSchema.optional().default("Ativo"),
 });
 
+export const salesRepresentativeSchema = z.object({
+  nome: z.string().trim().min(1, "Informe o nome do vendedor."),
+  documento: optionalText,
+  email: z.union([z.literal(""), z.string().trim().email("Informe um e-mail válido.")]).optional().default(""),
+  telefone: optionalText,
+  percentualComissao: optionalNumber,
+  observacoes: optionalText,
+  status: statusSchema.optional().default("Ativo"),
+});
+
+export const priceListSchema = z.object({
+  codigo: z.string().trim().min(1, "Informe o código da tabela de preço."),
+  nome: z.string().trim().min(1, "Informe o nome da tabela de preço."),
+  vigenciaInicio: optionalText,
+  vigenciaFim: optionalText,
+  prioridade: optionalNumber,
+  observacoes: optionalText,
+  status: statusSchema.optional().default("Ativo"),
+});
+
+export const priceListItemSchema = z.object({
+  tabelaPrecoId: z.string().trim().min(1, "Selecione a tabela de preço."),
+  produtoId: z.string().trim().min(1, "Selecione o produto."),
+  preco: z.coerce.number().min(0, "O preço não pode ser negativo."),
+  status: statusSchema.optional().default("Ativo"),
+});
+
 export const schemasByEntity = {
   products: productSchema,
   customers: customerSchema,
@@ -229,6 +261,9 @@ export const schemasByEntity = {
   "product-suppliers": productSupplierSchema,
   warehouses: warehouseSchema,
   "product-lots": productLotSchema,
+  "sales-representatives": salesRepresentativeSchema,
+  "price-lists": priceListSchema,
+  "price-list-items": priceListItemSchema,
 } as const;
 
 export type EntityRoute = keyof typeof schemasByEntity;

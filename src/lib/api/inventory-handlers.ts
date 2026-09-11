@@ -16,6 +16,7 @@ import {
   startCountSchema,
   submitCountItemSchema,
   productSerialNumberSchema,
+  createMaterialRequestSchema,
 } from "@/lib/validations/inventory";
 
 // Handlers do domínio transacional de Estoque/WMS (supabase/migrations/
@@ -571,6 +572,119 @@ export async function cancelCount(_request: NextRequest, context: RouteContext) 
     const { id } = await context.params;
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("fn_cancel_count", { p_count_id: id });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+// ------------------------------------------------------- material-requests
+// Almoxarifado Operacional -> Produção (ou local -> local, genérico).
+// NÃO é um mecanismo novo de saldo: fn_deliver_material_request chama a
+// mesma fn_post_stock_movement de tudo o mais neste arquivo, só com
+// movement_type = PRODUCTION_OUT. Ver docs/INVENTORY.md.
+async function fetchMaterialRequestWithItems(companyId: string, id: string) {
+  const admin = createAdminClient();
+  const { data: header, error } = await admin
+    .from("material_requests")
+    .select("*")
+    .eq("company_id", companyId)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw translatePostgresError(error);
+  if (!header) return null;
+
+  const { data: items, error: itemsError } = await admin
+    .from("material_request_items")
+    .select("*")
+    .eq("request_id", id);
+  if (itemsError) throw translatePostgresError(itemsError);
+
+  return { ...header, items: items ?? [] };
+}
+
+export async function listMaterialRequests(request: NextRequest) {
+  try {
+    const { companyId } = await requireStockAccess("stock.view");
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status");
+
+    let query = createAdminClient().from("material_requests").select("*").eq("company_id", companyId);
+    if (status) query = query.eq("status", status);
+
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (error) throw translatePostgresError(error);
+    return NextResponse.json({ success: true, data: data ?? [] });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+export async function getMaterialRequest(_request: NextRequest, context: RouteContext) {
+  try {
+    const { companyId } = await requireStockAccess("stock.view");
+    const { id } = await context.params;
+    const materialRequest = await fetchMaterialRequestWithItems(companyId, id);
+    if (!materialRequest) throw notFoundError("Requisição de material");
+    return NextResponse.json({ success: true, data: materialRequest });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+export async function createMaterialRequest(request: NextRequest) {
+  try {
+    await requireStockAccess("stock.request");
+    const body = await parseBody(request, createMaterialRequestSchema);
+    const ctx = await getAuthContext();
+    if (!ctx) throw unauthorizedError();
+
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_create_material_request", {
+      p_company_id: ctx.companyId,
+      p_from_location_id: body.fromLocationId,
+      p_to_location_id: body.toLocationId,
+      p_items: body.items.map((item) => ({ product_id: item.productId, lot_id: item.lotId ?? null, quantity: item.quantity })),
+      p_notes: body.notes ?? null,
+      p_reference_type: body.referenceType ?? null,
+      p_reference_id: body.referenceId ?? null,
+    });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data }, { status: 201 });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+export async function deliverMaterialRequest(request: NextRequest, context: RouteContext) {
+  try {
+    // Entregar uma requisição reaproveita stock.transfer (mover material
+    // de um local para outro) — nenhuma permissão nova foi criada para
+    // esta ação, ver comentário em fn_deliver_material_request.
+    await requireStockAccess("stock.transfer");
+    const { id } = await context.params;
+    const body = await request.json().catch(() => ({}));
+    const parsed = idempotencyActionSchema.safeParse(body ?? {});
+
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_deliver_material_request", {
+      p_request_id: id,
+      p_idempotency_key: parsed.success ? parsed.data.idempotencyKey ?? null : null,
+    });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+export async function cancelMaterialRequest(_request: NextRequest, context: RouteContext) {
+  try {
+    await requireStockAccess("stock.request");
+    const { id } = await context.params;
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_cancel_material_request", { p_request_id: id });
     if (error) throw rpcError(error);
     return NextResponse.json({ success: true, data });
   } catch (error) {

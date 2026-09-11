@@ -178,7 +178,8 @@ Rotas principais: `/api/warehouses`, `/api/product-lots`,
 `/api/stock-reservations` (+ `/[id]/release`, `/[id]/consume`),
 `/api/stock-adjustments` (+ `/[id]/post`, `/[id]/cancel`),
 `/api/stock-counts` (+ `/[id]/items/[itemId]/submit`, `/[id]/close`,
-`/[id]/cancel`).
+`/[id]/cancel`), `/api/material-requests` (+ `/[id]/deliver`, `/[id]/cancel`
+— ver §6).
 
 ## 5. Auditoria
 
@@ -191,7 +192,74 @@ redundante. Em vez disso, `audit_logs` registra o nível de **documento**
 contagem) grava uma linha `entity` = nome da tabela, `action = 'UPDATE'`,
 com `old_data`/`new_data` contendo o status antes/depois.
 
-## 6. Decisões de escopo desta etapa (e o que fica para depois)
+## 6. Almoxarifado Operacional (migration 0013)
+
+**Não é um segundo estoque.** É o mesmo `warehouses`/`warehouse_locations`/
+`product_lots`/`product_serial_numbers`/`stock_balances`/`stock_movements`
+de todo este documento — a diferença entre "Estoque" (produtos/
+mercadorias) e "Almoxarifado Operacional" (matérias-primas, componentes,
+insumos) é só o **propósito de um local**, não um mecanismo de saldo
+paralelo.
+
+```
+ALMOXARIFADO OPERACIONAL → requisição → PRODUÇÃO → transformação → PRODUTO ACABADO → ESTOQUE
+```
+
+### `warehouse_locations.purpose`
+
+Nova coluna: `STOCK` (padrão), `OPERATIONAL_WAREHOUSE`, `PRODUCTION`,
+`QUARANTINE`, `TRANSIT`. Vive no **local**, não no depósito — um mesmo
+depósito físico pode ter áreas com propósitos diferentes (ex.: uma
+área de quarentena dentro de um depósito de estoque geral), então
+classificar por local é o que evita forçar uma reorganização física só
+para representar a distinção.
+
+Toda empresa ganha automaticamente um depósito `ALMOX` ("Almoxarifado
+Operacional", `fn_seed_company_operational_warehouse`) — mesmo padrão
+de `PRINCIPAL` (0008). Só o depósito é semeado; os locais dentro dele
+(com `purpose = OPERATIONAL_WAREHOUSE`) são cadastrados normalmente via
+`/api/warehouse-locations`, agora com um campo `finalidade` (`Estoque` /
+`Almoxarifado Operacional` / `Produção` / `Quarentena` / `Trânsito` —
+mapeado de/para `purpose` em `src/lib/database/mappers.ts`).
+
+### `material_requests` — requisição interna de material
+
+Prepara o fluxo "Produção solicita → Almoxarifado separa → entrega →
+registra movimentação" sem implementar um módulo de Produção completo:
+
+- `fn_create_material_request` (permissão nova **`stock.request`**) —
+  só grava o documento (`status = 'requested'`), nenhum movimento ainda.
+- `fn_deliver_material_request` (permissão **`stock.transfer` reaproveitada**
+  — entregar é, na prática, mover material de um local para outro) —
+  grava um `PRODUCTION_OUT` por item via `fn_post_stock_movement` no
+  local de origem. O tipo `PRODUCTION_OUT` já existia no vocabulário de
+  `stock_movements` desde a migration 0009, reservado exatamente para
+  isto — nenhuma mudança no ledger foi necessária.
+- `fn_cancel_material_request` (`stock.request`) — só em `requested`.
+
+"Verificar disponibilidade" e "separar" (passos do fluxo conceitual)
+não viram estado persistido nesta etapa — são processo/UI entre a
+criação e a entrega, sem efeito em saldo até a entrega de fato.
+
+`reference_type`/`reference_id` em `material_requests` ficam prontos
+para apontar para uma futura `production_orders` (ordem de produção) —
+nenhuma tabela de produção/BOM foi criada nesta etapa (fora do escopo
+pedido), mas nada aqui impede que o módulo de Produção seja construído
+depois: uma ordem de produção poderia gerar `material_requests`
+automaticamente a partir de uma estrutura de produto (BOM), e seu
+resultado (produto acabado) entraria no Estoque como um `RECEIPT`/
+`PRODUCTION_IN` comum — vocabulário que já existe.
+
+### Por que nenhuma permissão `warehouse.*` foi criada
+
+O pedido explícito foi "não criar permissões duplicadas quando uma
+permissão de estoque já atender ao mesmo propósito". `stock.view`
+(ler), `stock.transfer` (mover entre locais) e as novas `stock.request`/
+já cobrem toda a superfície do Almoxarifado Operacional — um segundo
+namespace `warehouse.*` paralelo representaria exatamente as mesmas
+operações sob nomes diferentes, então não foi criado.
+
+## 7. Decisões de escopo desta etapa (e o que fica para depois)
 
 - **Sem bucket físico de "em trânsito"**: entre `fn_ship_transfer` e
   `fn_receive_transfer`, a quantidade não existe em nenhum local — o
@@ -207,7 +275,18 @@ com `old_data`/`new_data` contendo o status antes/depois.
   individuais. Reconciliar as duas visões (1 número de série = 1
   unidade de saldo) é um trabalho de um ciclo futuro.
 - **Sem UI própria**: esta fase é banco de dados + API. Não há telas de
-  Estoque/WMS — consistente com o pedido explícito desta etapa.
+  Estoque/WMS — consistente com o pedido explícito desta etapa. A
+  distinção visual 📦 Estoque / 🏭 Almoxarifado Operacional (adendo, §6)
+  também fica para quando houver UI de estoque.
+- **Sem BOM/ordem de produção**: `material_requests` prepara o ponto de
+  entrada (Almoxarifado → Produção), mas estrutura de produto (lista de
+  materiais por produto acabado) e ordens de produção não foram criadas
+  — não fazem parte do pedido desta etapa e não são bloqueadas por nada
+  aqui (§6).
+- **Entrega de requisição é sempre total**: `fn_deliver_material_request`
+  entrega a quantidade requisitada inteira por item. Entrega parcial
+  (quantidade diferente da requisitada) é uma evolução futura, não um
+  requisito desta etapa.
 - **Nenhuma migration foi aplicada a um banco real** (ver aviso no
   topo) — a próxima etapa precisa validar isso empiricamente antes de
   qualquer uso em produção.

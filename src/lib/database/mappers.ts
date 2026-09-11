@@ -15,6 +15,7 @@ import type {
   Deposito,
   TipoDeposito,
   Lote,
+  FinalidadeLocal,
   StatusCadastro,
   TipoPessoa,
 } from "@/lib/cadastros/types";
@@ -34,6 +35,7 @@ import type {
   ProductSupplierRow,
   WarehouseRow,
   ProductLotRow,
+  LocationPurpose,
   DbStatus,
 } from "./schema";
 
@@ -62,6 +64,31 @@ function tipoDepositoFromDb(type: "standard" | "virtual"): TipoDeposito {
 function tipoDepositoToDb(tipo: TipoDeposito | undefined): "standard" | "virtual" | undefined {
   if (tipo === undefined) return undefined;
   return tipo === "Padrão" ? "standard" : "virtual";
+}
+
+const FINALIDADE_FROM_DB: Record<LocationPurpose, FinalidadeLocal> = {
+  STOCK: "Estoque",
+  OPERATIONAL_WAREHOUSE: "Almoxarifado Operacional",
+  PRODUCTION: "Produção",
+  QUARANTINE: "Quarentena",
+  TRANSIT: "Trânsito",
+};
+
+const FINALIDADE_TO_DB: Record<FinalidadeLocal, LocationPurpose> = {
+  Estoque: "STOCK",
+  "Almoxarifado Operacional": "OPERATIONAL_WAREHOUSE",
+  Produção: "PRODUCTION",
+  Quarentena: "QUARANTINE",
+  Trânsito: "TRANSIT",
+};
+
+function finalidadeFromDb(purpose: LocationPurpose): FinalidadeLocal {
+  return FINALIDADE_FROM_DB[purpose];
+}
+
+function finalidadeToDb(finalidade: FinalidadeLocal | undefined): LocationPurpose | undefined {
+  if (finalidade === undefined) return undefined;
+  return FINALIDADE_TO_DB[finalidade];
 }
 
 // Diferencia "campo não enviado" (undefined — omitido do patch, coluna
@@ -407,6 +434,7 @@ export function warehouseLocationFromRow(row: WarehouseLocationRow): LocalEstoqu
     codigoLocal: row.code,
     descricao: row.name ?? "",
     armazem: row.warehouse ?? "",
+    finalidade: finalidadeFromDb(row.purpose),
     area: row.zone ?? "",
     rua: row.aisle ?? "",
     modulo: row.rack ?? "",
@@ -422,6 +450,7 @@ export function warehouseLocationToRowFields(data: Partial<LocalEstoque>): Parti
     code: data.codigoLocal,
     name: nullableText(data.descricao),
     warehouse: nullableText(data.armazem),
+    purpose: finalidadeToDb(data.finalidade),
     zone: nullableText(data.area),
     aisle: nullableText(data.rua),
     rack: nullableText(data.modulo),

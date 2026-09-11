@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { warehouseSchema, productLotSchema } from "@/lib/validations/cadastros";
+import { warehouseSchema, productLotSchema, warehouseLocationSchema } from "@/lib/validations/cadastros";
 import {
   productSerialNumberSchema,
   receiveStockSchema,
@@ -10,6 +10,7 @@ import {
   createAdjustmentSchema,
   startCountSchema,
   submitCountItemSchema,
+  createMaterialRequestSchema,
 } from "@/lib/validations/inventory";
 
 const uuid1 = "11111111-1111-4111-8111-111111111111";
@@ -130,6 +131,47 @@ describe("createAdjustmentSchema", () => {
     });
     assert.equal(positive.success, true);
     assert.equal(negative.success, true);
+  });
+});
+
+describe("warehouseLocationSchema — finalidade (Almoxarifado Operacional)", () => {
+  test("finalidade default é Estoque quando omitida", () => {
+    const result = warehouseLocationSchema.safeParse({ codigoLocal: "ALMOX-01", armazem: "ALMOX", tipo: "Rua" });
+    assert.equal(result.success, true);
+    if (result.success) assert.equal(result.data.finalidade, "Estoque");
+  });
+
+  test("aceita Almoxarifado Operacional e rejeita valor fora do enum", () => {
+    const valid = warehouseLocationSchema.safeParse({
+      codigoLocal: "ALMOX-01",
+      armazem: "ALMOX",
+      tipo: "Rua",
+      finalidade: "Almoxarifado Operacional",
+    });
+    assert.equal(valid.success, true);
+
+    const invalid = warehouseLocationSchema.safeParse({
+      codigoLocal: "ALMOX-01",
+      armazem: "ALMOX",
+      tipo: "Rua",
+      finalidade: "Almoxarifado",
+    });
+    assert.equal(invalid.success, false);
+  });
+});
+
+describe("createMaterialRequestSchema", () => {
+  test("exige origem, destino e ao menos um item", () => {
+    assert.equal(createMaterialRequestSchema.safeParse({ items: [] }).success, false);
+  });
+
+  test("aceita requisição válida (Almoxarifado -> Produção)", () => {
+    const result = createMaterialRequestSchema.safeParse({
+      fromLocationId: uuid1,
+      toLocationId: uuid2,
+      items: [{ productId: uuid1, quantity: 50 }],
+    });
+    assert.equal(result.success, true);
   });
 });
 

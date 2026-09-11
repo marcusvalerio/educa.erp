@@ -223,12 +223,15 @@ export type UserRow = {
   updated_at: string;
 };
 
+export type LocationPurpose = "STOCK" | "OPERATIONAL_WAREHOUSE" | "PRODUCTION" | "QUARANTINE" | "TRANSIT";
+
 export type WarehouseLocationRow = {
   id: string;
   company_id: string;
   code: string;
   name: string | null;
   warehouse: string | null;
+  purpose: LocationPurpose;
   zone: string | null;
   aisle: string | null;
   rack: string | null;
@@ -449,6 +452,36 @@ export type StockCountItemRow = {
   counted_quantity: number | null;
   variance: number | null;
   status: CountItemStatus;
+  created_at: string;
+};
+
+export type MaterialRequestStatus = "requested" | "delivered" | "cancelled";
+
+export type MaterialRequestRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  from_location_id: string;
+  to_location_id: string;
+  status: MaterialRequestStatus;
+  notes: string | null;
+  reference_type: string | null;
+  reference_id: string | null;
+  requested_by: string | null;
+  delivered_by: string | null;
+  delivered_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MaterialRequestItemRow = {
+  id: string;
+  company_id: string;
+  request_id: string;
+  product_id: string;
+  lot_id: string | null;
+  quantity_requested: number;
+  quantity_delivered: number | null;
   created_at: string;
 };
 

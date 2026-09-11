@@ -187,10 +187,18 @@ export type Usuario = BaseEntity & {
   departamento: string;
 };
 
+// Finalidade operacional do local — ver supabase/migrations/0013 e
+// docs/INVENTORY.md. Não é um segundo tipo de estoque: classifica o
+// mesmo local (mesmo saldo, mesmo ledger) por propósito. "Almoxarifado
+// Operacional" é o nome oficial usado na UI para OPERATIONAL_WAREHOUSE
+// — nunca abreviar para "Almoxarifado" sozinho (ambíguo).
+export type FinalidadeLocal = "Estoque" | "Almoxarifado Operacional" | "Produção" | "Quarentena" | "Trânsito";
+
 export type LocalEstoque = BaseEntity & {
   codigoLocal: string;
   descricao: string;
   armazem: string;
+  finalidade: FinalidadeLocal;
   area: string;
   rua: string;
   modulo: string;

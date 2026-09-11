@@ -1,7 +1,14 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { warehouseFromRow, warehouseToRowFields, productLotFromRow, productLotToRowFields } from "@/lib/database/mappers";
-import type { WarehouseRow, ProductLotRow } from "@/lib/database/schema";
+import {
+  warehouseFromRow,
+  warehouseToRowFields,
+  productLotFromRow,
+  productLotToRowFields,
+  warehouseLocationFromRow,
+  warehouseLocationToRowFields,
+} from "@/lib/database/mappers";
+import type { WarehouseRow, ProductLotRow, WarehouseLocationRow } from "@/lib/database/schema";
 
 const baseWarehouseRow: WarehouseRow = {
   id: "11111111-1111-1111-1111-111111111111",
@@ -78,5 +85,41 @@ describe("productLotFromRow / productLotToRowFields", () => {
     const fields = productLotToRowFields(entity);
     assert.equal(fields.lot_number, "L2026-001");
     assert.equal(fields.product_id, baseLotRow.product_id);
+  });
+});
+
+// ---------------------------------------------- Finalidade do local (0013)
+const baseLocationRow: WarehouseLocationRow = {
+  id: "44444444-4444-4444-4444-444444444444",
+  company_id: "00000000-0000-0000-0000-000000000001",
+  code: "CD01-R01-M01-N01-P01",
+  name: "Rua 1",
+  warehouse: "CD01",
+  purpose: "STOCK",
+  zone: null,
+  aisle: "R01",
+  rack: "M01",
+  level: "N01",
+  position: "P01",
+  location_type: "Rua",
+  capacity: 100,
+  status: "active",
+  created_at: "2026-01-01T00:00:00.000Z",
+  updated_at: "2026-01-02T00:00:00.000Z",
+};
+
+describe("warehouseLocationFromRow / warehouseLocationToRowFields — finalidade", () => {
+  test("mapeia cada purpose para o rótulo em português correspondente", () => {
+    assert.equal(warehouseLocationFromRow(baseLocationRow).finalidade, "Estoque");
+    assert.equal(warehouseLocationFromRow({ ...baseLocationRow, purpose: "OPERATIONAL_WAREHOUSE" }).finalidade, "Almoxarifado Operacional");
+    assert.equal(warehouseLocationFromRow({ ...baseLocationRow, purpose: "PRODUCTION" }).finalidade, "Produção");
+    assert.equal(warehouseLocationFromRow({ ...baseLocationRow, purpose: "QUARANTINE" }).finalidade, "Quarentena");
+    assert.equal(warehouseLocationFromRow({ ...baseLocationRow, purpose: "TRANSIT" }).finalidade, "Trânsito");
+  });
+
+  test("round-trip: toRowFields(fromRow(x)) preserva purpose", () => {
+    const entity = warehouseLocationFromRow({ ...baseLocationRow, purpose: "OPERATIONAL_WAREHOUSE" });
+    const fields = warehouseLocationToRowFields(entity);
+    assert.equal(fields.purpose, "OPERATIONAL_WAREHOUSE");
   });
 });

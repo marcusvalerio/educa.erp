@@ -143,6 +143,10 @@ export const warehouseLocationSchema = z.object({
   codigoLocal: z.string().trim().min(1, "Informe o código do local."),
   descricao: optionalText,
   armazem: z.string().trim().min(1, "Informe o armazém."),
+  finalidade: z
+    .enum(["Estoque", "Almoxarifado Operacional", "Produção", "Quarentena", "Trânsito"])
+    .optional()
+    .default("Estoque"),
   area: optionalText,
   rua: optionalText,
   modulo: optionalText,

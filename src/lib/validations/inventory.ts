@@ -101,6 +101,27 @@ export const createAdjustmentSchema = z.object({
 });
 
 // ----------------------------------------------------------- Contagens
+// ------------------------------------------------- Requisições de material
+// Almoxarifado Operacional -> Produção (ou qualquer local -> local).
+// Ver docs/INVENTORY.md — reaproveita a mesma infraestrutura de
+// transferências/movimentações, só com vocabulário e permissões
+// próprias (stock.request para criar/cancelar, stock.transfer —
+// reaproveitada — para entregar).
+const materialRequestItemSchema = z.object({
+  productId: uuidField("Selecione o produto do item."),
+  lotId: optionalUuid,
+  quantity: positiveQuantity,
+});
+
+export const createMaterialRequestSchema = z.object({
+  fromLocationId: uuidField("Selecione o local de origem (ex.: Almoxarifado Operacional)."),
+  toLocationId: uuidField("Selecione o local de destino (ex.: Produção)."),
+  notes: z.string().trim().optional(),
+  referenceType: z.string().trim().optional(),
+  referenceId: optionalUuid,
+  items: z.array(materialRequestItemSchema).min(1, "A requisição precisa de ao menos um item."),
+});
+
 export const startCountSchema = z.object({
   warehouseId: uuidField("Selecione o depósito."),
   notes: z.string().trim().optional(),

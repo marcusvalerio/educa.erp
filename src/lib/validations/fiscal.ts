@@ -174,11 +174,34 @@ export const cancelFiscalDocumentSchema = z.object({
 // ------------------------------------------------------------ Eventos fiscais
 export const registerFiscalDocumentEventSchema = z.object({
   fiscalDocumentId: uuidField("Selecione o documento fiscal."),
-  eventType: z.enum(["CONTINGENCY", "CORRECTION_LETTER", "OTHER", "DENIED"]),
+  eventType: z.enum(["CONTINGENCY", "CORRECTION_LETTER", "OTHER", "DENIED", "INUTILIZATION", "MANIFESTATION"]),
   protocol: z.string().trim().optional(),
   statusCode: z.string().trim().optional(),
   message: z.string().trim().optional(),
   payloadReference: z.string().trim().optional(),
+});
+
+// ---------------------------------------------------- Referências e volumes
+export const addFiscalDocumentReferenceSchema = z.object({
+  referencedDocumentId: uuidField("Selecione o documento fiscal referenciado."),
+  referenceType: z.enum(["RETURN", "COMPLEMENT", "REPLACEMENT", "EVENT_SOURCE", "TRANSFER_COUNTERPART", "OTHER"]),
+  notes: z.string().trim().optional(),
+});
+
+export const addFiscalDocumentPackageSchema = z.object({
+  packageNumber: z.coerce.number().int().positive("Informe um número de volume válido."),
+  quantity: z.coerce.number().int().positive().optional().default(1),
+  species: z.string().trim().optional(),
+  brandMark: z.string().trim().optional(),
+  numbering: z.string().trim().optional(),
+  grossWeight: z.coerce.number().min(0).optional(),
+  netWeight: z.coerce.number().min(0).optional(),
+});
+
+export const createFiscalDocumentReturnSchema = z.object({
+  fiscalEstablishmentId: uuidField("Selecione o estabelecimento fiscal."),
+  operationNatureId: uuidField("Selecione a natureza da operação."),
+  notes: z.string().trim().optional(),
 });
 
 // --------------------------------------------------------------- Integrações

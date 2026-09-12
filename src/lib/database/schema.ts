@@ -1537,8 +1537,10 @@ export type TaxRuleItemRow = {
 };
 
 export type FiscalDocumentType = "NFE" | "NFCE" | "NFSE" | "CTE" | "MDFE" | "OTHER";
-export type FiscalDocumentStatus = "DRAFT" | "CALCULATED" | "AUTHORIZED" | "CANCELLED" | "DENIED" | "REJECTED" | "CONTINGENCY";
-export type FiscalDocumentSourceType = "purchase_receipt" | "sales_order" | "shipment" | "manual" | "return";
+export type FiscalDocumentStatus = "DRAFT" | "CALCULATED" | "READY" | "AUTHORIZED" | "CANCELLED" | "DENIED" | "REJECTED" | "CONTINGENCY";
+export type FiscalDocumentSourceType = "purchase_receipt" | "sales_order" | "shipment" | "manual" | "return" | "transfer_out" | "transfer_in";
+export type FiscalDocumentFreightMode = "EMITENTE" | "DESTINATARIO" | "TERCEIROS" | "SEM_FRETE" | "OTHER";
+export type FiscalDocumentEnvironment = "PRODUCTION" | "HOMOLOGATION";
 
 export type FiscalDocumentRow = {
   id: string;
@@ -1573,6 +1575,15 @@ export type FiscalDocumentRow = {
   products_amount: number;
   taxes_amount: number;
   total_amount: number;
+  freight_mode: FiscalDocumentFreightMode | null;
+  gross_weight: number | null;
+  net_weight: number | null;
+  volumes_quantity: number | null;
+  environment: FiscalDocumentEnvironment;
+  service: string | null;
+  return_message: string | null;
+  authorized_at: string | null;
+  xml_sent_reference: string | null;
   notes: string | null;
   created_by: string | null;
   created_at: string;
@@ -1625,8 +1636,8 @@ export type FiscalDocumentItemTaxRow = {
 };
 
 export type FiscalDocumentEventType =
-  | "CREATED" | "CALCULATED" | "AUTHORIZED" | "CANCELLED" | "REJECTED"
-  | "DENIED" | "CONTINGENCY" | "CORRECTION_LETTER" | "OTHER";
+  | "CREATED" | "CALCULATED" | "READY" | "AUTHORIZED" | "CANCELLED" | "REJECTED"
+  | "DENIED" | "CONTINGENCY" | "CORRECTION_LETTER" | "INUTILIZATION" | "MANIFESTATION" | "OTHER";
 
 export type FiscalDocumentEventRow = {
   id: string;
@@ -1638,6 +1649,97 @@ export type FiscalDocumentEventRow = {
   status_code: string | null;
   message: string | null;
   payload_reference: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type FiscalDocumentReferenceType =
+  | "RETURN" | "COMPLEMENT" | "REPLACEMENT" | "EVENT_SOURCE" | "TRANSFER_COUNTERPART" | "OTHER";
+
+export type FiscalDocumentReferenceRow = {
+  id: string;
+  company_id: string;
+  fiscal_document_id: string;
+  referenced_document_id: string;
+  reference_type: FiscalDocumentReferenceType;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type FiscalDocumentPackageRow = {
+  id: string;
+  company_id: string;
+  fiscal_document_id: string;
+  package_number: number;
+  quantity: number;
+  species: string | null;
+  brand_mark: string | null;
+  numbering: string | null;
+  gross_weight: number | null;
+  net_weight: number | null;
+  created_at: string;
+};
+
+export type CostMethod = "MOVING_AVERAGE" | "FIFO" | "STANDARD";
+
+export type CostMovementType =
+  | "RECEIPT" | "ISSUE" | "TRANSFER_OUT" | "TRANSFER_IN" | "ADJUSTMENT_IN" | "ADJUSTMENT_OUT"
+  | "RETURN_IN" | "RETURN_OUT" | "PRODUCTION_IN" | "PRODUCTION_OUT" | "SCRAP";
+
+export type CostMovementRow = {
+  id: string;
+  company_id: string;
+  stock_movement_id: string;
+  product_id: string;
+  location_id: string;
+  lot_id: string | null;
+  movement_type: CostMovementType;
+  cost_method: CostMethod;
+  quantity: number;
+  unit_cost: number;
+  total_cost: number;
+  average_cost_before: number;
+  average_cost_after: number;
+  source_type: string | null;
+  source_id: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type ProductCostBalanceRow = {
+  id: string;
+  company_id: string;
+  product_id: string;
+  location_id: string;
+  lot_id: string | null;
+  quantity: number;
+  total_value: number;
+  average_unit_cost: number;
+  updated_at: string;
+};
+
+export type InventoryValuationRow = {
+  company_id: string;
+  product_id: string;
+  location_id: string;
+  lot_id: string | null;
+  quantity: number;
+  unit_cost: number;
+  total_value: number;
+};
+
+export type ProductStandardCostRow = {
+  id: string;
+  company_id: string;
+  product_id: string;
+  cost: number;
+  version: number;
+  valid_from: string;
+  valid_until: string | null;
+  status: "active" | "obsolete";
+  notes: string | null;
   created_by: string | null;
   created_at: string;
 };

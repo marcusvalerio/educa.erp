@@ -1,8 +1,12 @@
-# Fiscal / Núcleo Tributário — Fase 8
+# Fiscal / Núcleo Tributário — Fase 8 + Fase 9 (Operacional)
 
-Fundação do módulo Fiscal (`supabase/migrations/0036` a `0040`),
+Fundação do módulo Fiscal (`supabase/migrations/0036` a `0040`, Fase 8),
 construída sobre RLS/RBAC, Catálogo, Estoque/WMS, Compras, Comercial,
-Logística, Produção/PCP e Financeiro já existentes.
+Logística, Produção/PCP e Financeiro já existentes, evoluída pela Fase 9
+— Fiscal Operacional (`0041` a `0042`) — para um ciclo de vida com
+conferência fiscal explícita (`READY`), documento referenciado
+(devolução), volumes declarados e imutabilidade dos dados fiscais
+consolidados. Ver `## 18` em diante para o que a Fase 9 acrescenta.
 
 **Aviso — escopo desta etapa:** como nas fases anteriores, estas
 migrations foram escritas e revisadas estaticamente, mas **não foram
@@ -141,9 +145,10 @@ regra mais recente.
 
 `fiscal_documents` é a entidade genérica (seção 16):
 `type` (NFE/NFCE/NFSE/CTE/MDFE/OTHER), `direction` (ENTRADA/SAIDA),
-`status` (DRAFT→CALCULATED→AUTHORIZED, ou →REJECTED/DENIED em
-CALCULATED, ou →CANCELLED a partir de quase qualquer estado,
-ou →CONTINGENCY via evento manual). `code` é o identificador interno
+`status` (DRAFT→CALCULATED→READY→AUTHORIZED — `READY` introduzida na
+Fase 9, ver `## 18` — ou →REJECTED/DENIED em CALCULATED, ou →CANCELLED
+a partir de quase qualquer estado, ou →CONTINGENCY via evento manual).
+`code` é o identificador interno
 (`fn_generate_code`, prefixo `DF`); `number`/`series`/`model` são os
 identificadores fiscais oficiais, informados pelo chamador (nenhuma
 numeração oficial é simulada/gerada automaticamente).
@@ -278,6 +283,13 @@ duplicar a referência.
 - **Sem gerador a partir de `shipment`**: estrutura pronta
   (`source_type = 'shipment'`, `carrier_id`/`vehicle_id`), função não
   implementada (§9).
+- **Transferência entre estabelecimentos (Fase 9, §18.7)**: vocabulário
+  pronto (`source_type = 'transfer_out'/'transfer_in'`,
+  `fiscal_document_references.reference_type = 'TRANSFER_COUNTERPART'`),
+  mas nenhuma função gera automaticamente as duas pernas do documento —
+  cada estabelecimento precisa ter seu documento criado via
+  `fn_create_fiscal_document` e vinculado manualmente via
+  `fn_add_fiscal_document_reference`, mesmo espírito do item acima.
 - **Sem comunicação SEFAZ real**: autorização/rejeição são registros
   manuais; nenhum XML é gerado, assinado ou transmitido.
   `xml_storage_reference` é só um ponteiro preparado (seção 29).
@@ -304,8 +316,11 @@ duplicar a referência.
 | `fiscal_tax_codes.view/create/update` | CST + CSOSN compartilham este módulo — ambos são cadastros de referência da mesma natureza (código de situação tributária), sem regra de negócio própria que justifique dois módulos separados |
 | `product_fiscal_profiles.view/create/update` | perfil fiscal do produto — `.update` só edita notas, nunca a classificação (§5) |
 | `tax_rules.view/create/update/approve` | regras tributárias — `.approve` cobre ativar E desativar |
-| `fiscal_documents.view/create/update/cancel` | documentos — `.create` cobre criar E adicionar itens; `.update` cobre calcular, autorizar E rejeitar |
-| `fiscal_document_events.view/create` | eventos — `.create` só para os tipos manuais (§8) |
+| `fiscal_documents.view/create/cancel` | documentos — `.create` cobre criar, adicionar itens E gerar devolução |
+| `fiscal_documents.calculate/ready/authorize` | transições específicas do ciclo de vida (Fase 9, §18.2) — substituem o antigo uso genérico de `.update` para essas três transições; `.update` permanece só para `fn_reject_fiscal_document` |
+| `fiscal_document_events.view/create` | eventos — `.create` só para os tipos manuais (§8), agora incluindo `INUTILIZATION`/`MANIFESTATION` (§18.3) |
+| `fiscal_document_references.view/create` | documento referenciado (Fase 9, §18.4) |
+| `fiscal_document_packages.view/create` | volumes declarados (Fase 9, §18.5) |
 
 `product_fiscal_profiles.*` e `fiscal_tax_codes.*` não estavam na
 lista literal da seção 38 — foram adicionados porque o domínio
@@ -359,8 +374,11 @@ handlers dedicados (`src/lib/api/fiscal-handlers.ts`). Propagadas aos
 
 `/api/fiscal-documents` (filtrável por `?status=`/`?type=`/
 `?fiscalEstablishmentId=`, +`/[id]`, `/[id]/items`, `/[id]/calculate`,
-`/[id]/authorize`, `/[id]/reject`, `/[id]/cancel`),
-`/api/fiscal-document-events` (filtrável por `?fiscalDocumentId=`).
+`/[id]/ready`, `/[id]/authorize`, `/[id]/reject`, `/[id]/cancel`,
+`/[id]/return`, `/[id]/references`, `/[id]/packages`),
+`/api/fiscal-document-events` (filtrável por `?fiscalDocumentId=`),
+`/api/fiscal-document-references` (filtrável por `?fiscalDocumentId=`),
+`/api/fiscal-document-packages` (filtrável por `?fiscalDocumentId=`).
 
 `/api/purchase-receipts/[id]/generate-fiscal-document`,
 `/api/sales-orders/[id]/generate-fiscal-document`.
@@ -378,3 +396,133 @@ dos 27 cenários pedidos não são testáveis sem banco). Nenhuma tela
 nova — banco de dados, backend, domínio, modelo tributário, workflow,
 segurança, integrações, testes e documentação, como pedido; frontend
 fica para uma etapa futura (v0).
+
+## 18. Fase 9 — Fiscal Operacional (migrations 0041-0042)
+
+Evolui a Fase 8 para um Fiscal usável pelo resto do ERP, ainda **sem**
+integração real com SEFAZ/certificado digital/NF-e eletrônica — o
+objetivo é preparar o domínio para essa etapa futura sem refazer nada.
+
+### 18.1 Documento fiscal operacional
+
+Nenhuma entidade nova por tipo de operação — `fiscal_documents`
+continua representando entrada, saída, devolução, transferência,
+remessa e retorno através de `direction` + `fiscal_operation_natures` +
+`source_type`, evitando duplicar a estrutura por operação.
+
+### 18.2 Ciclo de vida — o estado READY
+
+`DRAFT → CALCULATED → READY → AUTHORIZED → CANCELLED`
+(+`REJECTED`/`DENIED`/`CONTINGENCY` como antes). `READY` é novo: separa
+"foi calculado" de "foi conferido e está pronto para autorizar" —
+nenhum documento pula direto de CALCULATED para AUTHORIZED.
+
+- `fn_mark_fiscal_document_ready` (a **conferência fiscal**, §18.3):
+  CALCULATED → READY.
+- `fn_authorize_fiscal_document`: create or replace (0041) — agora
+  exige READY (era CALCULATED) e grava `authorized_at`.
+- `fn_calculate_fiscal_document`/`fn_cancel_fiscal_document`: mesma
+  lógica de 0039, só a permissão exigida por `fn_calculate_fiscal_document`
+  mudou (§14).
+
+### 18.3 Conferência fiscal
+
+`fn_mark_fiscal_document_ready` valida, antes de liberar para
+autorização: estabelecimento existe e está ativo; natureza de operação
+existe e está ativa; cliente presente quando SAÍDA, fornecedor presente
+quando ENTRADA; ao menos um item; nenhum item com NCM/CFOP/origem/
+unidade/quantidade incompletos; `products_amount > 0`; e que
+`total_amount` bate com a soma dos componentes (produtos - desconto +
+frete + seguro + outras despesas + impostos) — um documento incompleto
+ou inconsistente nunca vira READY.
+
+### 18.4 Documento referenciado
+
+`fiscal_document_references` (`fiscal_document_id`,
+`referenced_document_id`, `reference_type`) evita dezenas de colunas
+nullable em `fiscal_documents` para cada tipo de relação — uma
+devolução referencia o original (`RETURN`), um documento complementar
+referencia o anterior (`COMPLEMENT`), um substituto referencia o
+anterior (`REPLACEMENT`), as duas pernas de uma transferência se
+referenciam entre si (`TRANSFER_COUNTERPART`). A FK composta
+`(id, company_id)` em ambos os lados impede referenciar um documento de
+outra empresa.
+
+### 18.5 Volumes
+
+`fiscal_document_packages` (quantidade/espécie/marca/numeração/peso
+bruto/peso líquido) é o volume **declarado no documento fiscal** —
+deliberadamente uma entidade separada de `shipment_packages` (Logística
+0024, o volume **físico** da expedição): podem divergir (reembalagem,
+consolidação de várias expedições em um só documento) e por isso nunca
+foram fundidas.
+
+### 18.6 Devoluções
+
+`fn_create_fiscal_document_return` cria o documento de devolução
+(venda ou compra) a partir de um original **AUTHORIZED**: direção
+sempre invertida, mesmo cliente/fornecedor, itens copiados preservando
+o snapshot do original (NCM/CFOP/origem/quantidade/preço — nunca
+relidos do cadastro atual), `source_type = 'return'` (idempotente pelo
+mesmo índice único de origem da Fase 8) e um vínculo automático em
+`fiscal_document_references` (`RETURN`).
+
+### 18.7 Transferências
+
+Preparado, não automatizado (ver §13) — `source_type` inclui
+`transfer_out`/`transfer_in` para que as duas pernas de uma
+transferência entre estabelecimentos compartilhem o mesmo
+`stock_transfer` como origem sem colidir no índice único de
+idempotência (cada perna tem seu próprio `source_type`). O Fiscal
+continua nunca movendo estoque — quem move é `fn_ship_transfer`/
+`fn_receive_transfer` (Estoque, 0010; agora também gerando custo, ver
+`docs/COSTS.md`).
+
+### 18.8 Chave/identificação, transporte e XML (preparação)
+
+Cabeçalho ganhou `freight_mode` (EMITENTE/DESTINATARIO/TERCEIROS/
+SEM_FRETE/OTHER), `gross_weight`/`net_weight`/`volumes_quantity`
+(resumo — o detalhe por volume vive em `fiscal_document_packages`),
+`environment` (PRODUCTION/HOMOLOGATION, default HOMOLOGATION),
+`service`, `return_message`, `authorized_at`, `xml_sent_reference`
+(complementa `xml_storage_reference` de 0039, agora o pointer do XML
+**enviado** vs. o de **retorno**). Nenhum arquivo ou certificado é
+armazenado — só ponteiros/metadados preparados (§13).
+
+### 18.9 Eventos
+
+`fiscal_document_events.event_type` ganhou `READY` (automático, gravado
+por `fn_mark_fiscal_document_ready`), `INUTILIZATION` e `MANIFESTATION`
+(manuais, via `fn_register_fiscal_document_event`, create or replace em
+0041) — o ledger continua append-only, nunca apagado.
+
+### 18.10 Imutabilidade (snapshot consolidado)
+
+Regra absoluta (§2, reforçada): a partir de READY/AUTHORIZED, um
+trigger (`fn_guard_fiscal_document_snapshot`) bloqueia qualquer
+alteração em `fiscal_establishment_id`/`type`/`direction`/
+`operation_nature_id`/`customer_id`/`supplier_id`/`products_amount`/
+`taxes_amount`/`total_amount`/`discount_amount`/`freight_amount`/
+`insurance_amount`/`other_expenses_amount` — `status` em si permanece
+mutável (cancelamento é sempre uma troca pura de status). Dois
+triggers irmãos bloqueiam UPDATE/DELETE em `fiscal_document_items` e
+`fiscal_document_item_taxes` assim que o documento sai de
+DRAFT/CALCULATED. Isso é uma garantia estrutural do banco, não uma
+convenção de código — mudar um NCM ou uma `tax_rule` amanhã nunca
+altera um documento já conferido.
+
+### 18.11 RBAC (Fase 9)
+
+`fiscal_documents.calculate`/`.ready`/`.authorize`,
+`fiscal_document_references.view`/`.create`,
+`fiscal_document_packages.view`/`.create` (ver tabela em §14).
+
+### 18.12 Testes (Fase 9)
+
+`tests/fiscal-validations.test.ts` ganhou casos para os novos schemas
+(`registerFiscalDocumentEventSchema` com os dois novos tipos,
+`addFiscalDocumentReferenceSchema`, `addFiscalDocumentPackageSchema`,
+`createFiscalDocumentReturnSchema`) — mesma limitação de sempre: o
+workflow real (READY exige conferência completa, imutabilidade após
+READY/AUTHORIZED, idempotência da devolução, RLS/RBAC/isolamento por
+empresa) só é verificável contra um Postgres real.

@@ -25,6 +25,9 @@ import {
   registerFiscalDocumentEventSchema,
   createFiscalDocumentFromReceiptSchema,
   createFiscalDocumentFromSalesOrderSchema,
+  addFiscalDocumentReferenceSchema,
+  addFiscalDocumentPackageSchema,
+  createFiscalDocumentReturnSchema,
 } from "@/lib/validations/fiscal";
 
 // Handlers do domínio Fiscal/Núcleo Tributário (supabase/migrations/
@@ -602,7 +605,11 @@ async function fetchFiscalDocumentWithDetails(companyId: string, id: string) {
     if (taxesError) throw translatePostgresError(taxesError);
     taxes = taxRows ?? [];
   }
-  return { ...header, items: items ?? [], taxes };
+  const { data: references, error: referencesError } = await admin.from("fiscal_document_references").select("*").eq("fiscal_document_id", id);
+  if (referencesError) throw translatePostgresError(referencesError);
+  const { data: packages, error: packagesError } = await admin.from("fiscal_document_packages").select("*").eq("fiscal_document_id", id);
+  if (packagesError) throw translatePostgresError(packagesError);
+  return { ...header, items: items ?? [], taxes, references: references ?? [], packages: packages ?? [] };
 }
 
 export async function listFiscalDocuments(request: NextRequest) {
@@ -767,6 +774,112 @@ export async function cancelFiscalDocument(request: NextRequest, context: RouteC
     });
     if (error) throw rpcError(error);
     return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+export async function markFiscalDocumentReady(_request: NextRequest, context: RouteContext) {
+  try {
+    await requireAccess("fiscal_documents.ready");
+    const { id } = await context.params;
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_mark_fiscal_document_ready", { p_fiscal_document_id: id });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+export async function createFiscalDocumentReturn(request: NextRequest, context: RouteContext) {
+  try {
+    await requireAccess("fiscal_documents.create");
+    const { id } = await context.params;
+    const body = await parseBody(request, createFiscalDocumentReturnSchema);
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_create_fiscal_document_return", {
+      p_original_fiscal_document_id: id,
+      p_fiscal_establishment_id: body.fiscalEstablishmentId,
+      p_operation_nature_id: body.operationNatureId,
+      p_notes: body.notes ?? null,
+    });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data }, { status: 201 });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+// ------------------------------------------------------- fiscal_document_references
+export async function listFiscalDocumentReferences(request: NextRequest) {
+  try {
+    const { companyId } = await requireAccess("fiscal_document_references.view");
+    const { searchParams } = new URL(request.url);
+    const fiscalDocumentId = searchParams.get("fiscalDocumentId");
+    let query = createAdminClient().from("fiscal_document_references").select("*").eq("company_id", companyId);
+    if (fiscalDocumentId) query = query.eq("fiscal_document_id", fiscalDocumentId);
+    const { data, error } = await query.order("created_at", { ascending: false });
+    if (error) throw translatePostgresError(error);
+    return NextResponse.json({ success: true, data: data ?? [] });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+export async function addFiscalDocumentReference(request: NextRequest, context: RouteContext) {
+  try {
+    await requireAccess("fiscal_document_references.create");
+    const { id } = await context.params;
+    const body = await parseBody(request, addFiscalDocumentReferenceSchema);
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_add_fiscal_document_reference", {
+      p_fiscal_document_id: id,
+      p_referenced_document_id: body.referencedDocumentId,
+      p_reference_type: body.referenceType,
+      p_notes: body.notes ?? null,
+    });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data }, { status: 201 });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+// -------------------------------------------------------- fiscal_document_packages
+export async function listFiscalDocumentPackages(request: NextRequest) {
+  try {
+    const { companyId } = await requireAccess("fiscal_document_packages.view");
+    const { searchParams } = new URL(request.url);
+    const fiscalDocumentId = searchParams.get("fiscalDocumentId");
+    let query = createAdminClient().from("fiscal_document_packages").select("*").eq("company_id", companyId);
+    if (fiscalDocumentId) query = query.eq("fiscal_document_id", fiscalDocumentId);
+    const { data, error } = await query.order("package_number");
+    if (error) throw translatePostgresError(error);
+    return NextResponse.json({ success: true, data: data ?? [] });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+export async function addFiscalDocumentPackage(request: NextRequest, context: RouteContext) {
+  try {
+    await requireAccess("fiscal_document_packages.create");
+    const { id } = await context.params;
+    const body = await parseBody(request, addFiscalDocumentPackageSchema);
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_add_fiscal_document_package", {
+      p_fiscal_document_id: id,
+      p_package_number: body.packageNumber,
+      p_quantity: body.quantity ?? 1,
+      p_species: body.species ?? null,
+      p_brand_mark: body.brandMark ?? null,
+      p_numbering: body.numbering ?? null,
+      p_gross_weight: body.grossWeight ?? null,
+      p_net_weight: body.netWeight ?? null,
+    });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     return jsonError(error);
   }

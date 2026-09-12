@@ -59,6 +59,9 @@ import {
   registerFiscalDocumentEventSchema,
   createFiscalDocumentFromReceiptSchema,
   createFiscalDocumentFromSalesOrderSchema,
+  addFiscalDocumentReferenceSchema,
+  addFiscalDocumentPackageSchema,
+  createFiscalDocumentReturnSchema,
 } from "@/lib/validations/fiscal";
 
 const uuid1 = "11111111-1111-4111-8111-111111111111";
@@ -295,16 +298,18 @@ describe("registerFiscalDocumentEventSchema", () => {
     assert.equal(result.success, false);
   });
 
-  test("aceita os quatro tipos de evento manual", () => {
-    for (const eventType of ["CONTINGENCY", "CORRECTION_LETTER", "OTHER", "DENIED"] as const) {
+  test("aceita os seis tipos de evento manual (Fase 9 adiciona INUTILIZATION/MANIFESTATION)", () => {
+    for (const eventType of ["CONTINGENCY", "CORRECTION_LETTER", "OTHER", "DENIED", "INUTILIZATION", "MANIFESTATION"] as const) {
       const result = registerFiscalDocumentEventSchema.safeParse({ fiscalDocumentId: uuid1, eventType });
       assert.equal(result.success, true, `eventType ${eventType} deveria ser aceito`);
     }
   });
 
-  test("rejeita tipo de evento automático (CREATED) — bloqueio real fica na função RPC, mas o enum do schema já não inclui esses valores", () => {
-    const result = registerFiscalDocumentEventSchema.safeParse({ fiscalDocumentId: uuid1, eventType: "CREATED" });
-    assert.equal(result.success, false);
+  test("rejeita tipo de evento automático (CREATED/READY) — bloqueio real fica na função RPC, mas o enum do schema já não inclui esses valores", () => {
+    const created = registerFiscalDocumentEventSchema.safeParse({ fiscalDocumentId: uuid1, eventType: "CREATED" });
+    const ready = registerFiscalDocumentEventSchema.safeParse({ fiscalDocumentId: uuid1, eventType: "READY" });
+    assert.equal(created.success, false);
+    assert.equal(ready.success, false);
   });
 });
 
@@ -321,5 +326,55 @@ describe("createFiscalDocumentFromReceiptSchema / createFiscalDocumentFromSalesO
     const orderResult = createFiscalDocumentFromSalesOrderSchema.safeParse({ fiscalEstablishmentId: uuid1, operationNatureId: uuid2 });
     assert.equal(receiptResult.success, true);
     assert.equal(orderResult.success, true);
+  });
+});
+
+// ============================================================ Fase 9 — Fiscal Operacional
+describe("addFiscalDocumentReferenceSchema", () => {
+  test("exige referencedDocumentId e referenceType", () => {
+    const result = addFiscalDocumentReferenceSchema.safeParse({});
+    assert.equal(result.success, false);
+  });
+
+  test("aceita os seis tipos de referência", () => {
+    for (const referenceType of ["RETURN", "COMPLEMENT", "REPLACEMENT", "EVENT_SOURCE", "TRANSFER_COUNTERPART", "OTHER"] as const) {
+      const result = addFiscalDocumentReferenceSchema.safeParse({ referencedDocumentId: uuid1, referenceType });
+      assert.equal(result.success, true, `referenceType ${referenceType} deveria ser aceito`);
+    }
+  });
+
+  test("rejeita referenceType fora do enum", () => {
+    const result = addFiscalDocumentReferenceSchema.safeParse({ referencedDocumentId: uuid1, referenceType: "CORRECTION" });
+    assert.equal(result.success, false);
+  });
+});
+
+describe("addFiscalDocumentPackageSchema", () => {
+  test("exige packageNumber positivo", () => {
+    const result = addFiscalDocumentPackageSchema.safeParse({ packageNumber: 0 });
+    assert.equal(result.success, false);
+  });
+
+  test("aceita volume mínimo válido, quantity default 1", () => {
+    const result = addFiscalDocumentPackageSchema.safeParse({ packageNumber: 1 });
+    assert.equal(result.success, true);
+    if (result.success) assert.equal(result.data.quantity, 1);
+  });
+
+  test("rejeita peso negativo", () => {
+    const result = addFiscalDocumentPackageSchema.safeParse({ packageNumber: 1, grossWeight: -5 });
+    assert.equal(result.success, false);
+  });
+});
+
+describe("createFiscalDocumentReturnSchema", () => {
+  test("exige fiscalEstablishmentId e operationNatureId", () => {
+    const result = createFiscalDocumentReturnSchema.safeParse({});
+    assert.equal(result.success, false);
+  });
+
+  test("aceita payload mínimo válido", () => {
+    const result = createFiscalDocumentReturnSchema.safeParse({ fiscalEstablishmentId: uuid1, operationNatureId: uuid2 });
+    assert.equal(result.success, true);
   });
 });

@@ -969,6 +969,178 @@ export type DeliveryEventRow = {
   created_at: string;
 };
 
+// ------------------------------------------------------------ Produção/PCP
+// Espelha supabase/migrations/0026-0030. work_centers/production_routings/
+// production_routing_operations são "cadastro" (CRUD direto via RLS,
+// sem função dedicada). product_boms/production_orders e tudo que
+// deriva deles são documentos transacionais — só leitura pela API REST
+// genérica, toda escrita via função RPC.
+
+export type ProductionType = "purchased" | "manufactured" | "both";
+
+export type WorkCenterType = "machine" | "line" | "cell" | "sector";
+
+export type WorkCenterRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  type: WorkCenterType;
+  description: string | null;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductionRoutingStatus = "draft" | "active" | "obsolete";
+
+export type ProductionRoutingRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  product_id: string | null;
+  name: string;
+  description: string | null;
+  status: ProductionRoutingStatus;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductionRoutingOperationRow = {
+  id: string;
+  company_id: string;
+  routing_id: string;
+  sequence: number;
+  name: string;
+  description: string | null;
+  work_center_id: string | null;
+  planned_time_minutes: number | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type ProductBomStatus = "draft" | "active" | "obsolete";
+
+export type ProductBomRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  product_id: string;
+  version: number;
+  status: ProductBomStatus;
+  reference_quantity: number;
+  unit_id: string;
+  valid_from: string | null;
+  valid_until: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductBomItemRow = {
+  id: string;
+  company_id: string;
+  bom_id: string;
+  component_product_id: string;
+  quantity: number;
+  unit_id: string;
+  scrap_percentage: number;
+  sequence: number;
+  is_optional: boolean;
+  notes: string | null;
+  created_at: string;
+};
+
+export type ProductionOrderPriority = "low" | "medium" | "high" | "urgent";
+
+export type ProductionOrderStatus =
+  | "draft" | "planned" | "released" | "materials_reserved"
+  | "in_progress" | "completed" | "cancelled" | "on_hold";
+
+export type ProductionOrderRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  product_id: string;
+  bom_id: string;
+  planned_quantity: number;
+  produced_quantity: number;
+  rejected_quantity: number;
+  unit_id: string;
+  source_warehouse_id: string;
+  consumption_location_id: string;
+  target_warehouse_id: string;
+  output_location_id: string;
+  priority: ProductionOrderPriority;
+  status: ProductionOrderStatus;
+  planned_date: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  responsible_user_id: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductionOrderMaterialStatus = "pending" | "partial" | "reserved" | "consumed" | "short" | "cancelled";
+
+export type ProductionOrderMaterialRow = {
+  id: string;
+  company_id: string;
+  production_order_id: string;
+  bom_item_id: string | null;
+  component_product_id: string;
+  planned_quantity: number;
+  reserved_quantity: number;
+  consumed_quantity: number;
+  returned_quantity: number;
+  scrapped_quantity: number;
+  unit_id: string;
+  lot_id: string | null;
+  serial_numbers: string[] | null;
+  scrap_percentage: number;
+  status: ProductionOrderMaterialStatus;
+  notes: string | null;
+  created_at: string;
+};
+
+export type ProductionScrapRow = {
+  id: string;
+  company_id: string;
+  production_order_id: string;
+  material_id: string | null;
+  product_id: string;
+  quantity: number;
+  unit_id: string;
+  reason: string;
+  lot_id: string | null;
+  stock_movement_issue_id: string | null;
+  idempotency_key: string | null;
+  recorded_by: string | null;
+  occurred_at: string;
+  created_at: string;
+};
+
+export type ProductionOperationLogRow = {
+  id: string;
+  company_id: string;
+  production_order_id: string;
+  routing_operation_id: string | null;
+  work_center_id: string | null;
+  operator_user_id: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  produced_quantity: number;
+  rejected_quantity: number;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
 export type AuditLogRow = {
   id: string;
   company_id: string | null;

@@ -1744,6 +1744,244 @@ export type ProductStandardCostRow = {
   created_at: string;
 };
 
+// ============================================================ Fase 11 — Controladoria Gerencial
+export type CompetencePeriodStatus = "OPEN" | "CLOSING" | "CLOSED" | "REOPENED";
+
+export type FinancialCompetencePeriodRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  period_start: string;
+  period_end: string;
+  status: CompetencePeriodStatus;
+  closed_at: string | null;
+  closed_by: string | null;
+  reopened_at: string | null;
+  reopened_by: string | null;
+  reopen_reason: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CostAllocationSourceType = "manual" | "accounts_payable" | "financial_transaction";
+export type CostAllocationCriterion = "PERCENTAGE" | "FIXED_VALUE" | "QUANTITY" | "REVENUE" | "COST" | "HEADCOUNT" | "AREA";
+
+export type CostAllocationRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  source_type: CostAllocationSourceType;
+  source_id: string | null;
+  competence_period_id: string | null;
+  total_amount: number;
+  criterion: CostAllocationCriterion;
+  status: "applied" | "cancelled";
+  description: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type CostAllocationItemRow = {
+  id: string;
+  company_id: string;
+  allocation_id: string;
+  cost_center_id: string;
+  percentage: number | null;
+  amount: number;
+  notes: string | null;
+  created_at: string;
+};
+
+export type BudgetHeaderRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  period_start: string;
+  period_end: string;
+  status: "draft" | "approved" | "closed";
+  notes: string | null;
+  created_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BudgetItemRow = {
+  id: string;
+  company_id: string;
+  budget_header_id: string;
+  cost_center_id: string | null;
+  financial_category_id: string | null;
+  planned_amount: number;
+  notes: string | null;
+  created_at: string;
+};
+
+export type BudgetVsActualRow = {
+  cost_center_id: string | null;
+  financial_category_id: string | null;
+  planned_amount: number;
+  actual_amount: number;
+  variance_amount: number;
+};
+
+export type DreGerencialResult = {
+  gross_revenue: number;
+  deductions: number;
+  net_revenue: number;
+  cmv: number;
+  gross_profit: number;
+  operating_expenses: number;
+  operating_result: number;
+  financial_result: number;
+  managerial_result: number;
+};
+
+export type ControllingKpisResult = DreGerencialResult & {
+  gross_margin_pct: number | null;
+  accounts_receivable_open: number;
+  accounts_payable_open: number;
+  cash_balance: number;
+  overdue_receivable: number;
+  average_ticket: number | null;
+};
+
+export type ResultByCostCenterRow = {
+  cost_center_id: string;
+  cost_center_code: string;
+  cost_center_name: string;
+  revenue: number;
+  expense: number;
+  allocated_cost: number;
+  result: number;
+};
+
+export type IndustrialCostSummaryRow = {
+  production_order_id: string;
+  production_order_code: string;
+  product_id: string;
+  material_cost: number;
+  produced_quantity: number;
+  unit_cost: number;
+};
+
+export type ForecastBucketRow = {
+  bucket: "REALIZED_REVENUE" | "REALIZED_EXPENSE" | "COMMITTED_REVENUE" | "COMMITTED_EXPENSE";
+  amount: number;
+};
+
+export type SalesOrderItemMarginRow = {
+  sales_order_item_id: string;
+  sales_order_id: string;
+  company_id: string;
+  customer_id: string;
+  sales_representative_id: string | null;
+  order_date: string;
+  product_id: string | null;
+  revenue_amount: number;
+  cost_amount: number;
+  margin_amount: number;
+};
+
+export type MarginByProductRow = { product_id: string | null; revenue: number; cost: number; margin: number; margin_pct: number | null };
+export type MarginByCustomerRow = { customer_id: string; revenue: number; cost: number; margin: number; margin_pct: number | null };
+export type MarginByOrderRow = { sales_order_id: string; customer_id: string; revenue: number; cost: number; margin: number; margin_pct: number | null };
+
+// ============================================================ Fase 12 — Relatórios / BI Operacional
+export type ReportExecutiveResult = {
+  gross_revenue: number;
+  net_revenue: number;
+  gross_margin_pct: number | null;
+  cmv: number;
+  operating_expenses: number;
+  managerial_result: number;
+  accounts_receivable_open: number;
+  accounts_payable_open: number;
+  cash_balance: number;
+  inventory_value: number;
+  open_sales_orders: number;
+  open_shipments: number;
+  open_production_orders: number;
+};
+
+export type ReportCommercialResult = {
+  orders_count: number;
+  orders_amount: number;
+  average_ticket: number | null;
+  customers_count: number;
+  cancelled_orders: number;
+  pending_orders: number;
+  quote_conversion_pct: number | null;
+};
+
+export type ReportInventoryResult = {
+  total_quantity: number;
+  total_value: number;
+  receipts_count: number;
+  issues_count: number;
+  transfers_count: number;
+  adjustments_count: number;
+  reservations_active: number;
+  products_without_movement: number;
+};
+
+export type ReportPurchasesResult = {
+  requests_count: number;
+  orders_count: number;
+  orders_amount: number;
+  receipts_count: number;
+  receipts_amount: number;
+  divergent_receipt_items: number;
+  suppliers_count: number;
+};
+
+export type ReportProductionResult = {
+  orders_count: number;
+  open_orders: number;
+  in_progress_orders: number;
+  completed_orders: number;
+  cancelled_orders: number;
+  produced_quantity: number;
+  consumed_material_cost: number;
+  scrap_quantity: number;
+};
+
+export type ReportLogisticsResult = {
+  shipments_count: number;
+  shipped_count: number;
+  delivered_count: number;
+  failed_count: number;
+  in_transit_count: number;
+  pick_lists_count: number;
+  average_lead_time_days: number | null;
+};
+
+export type ReportFinanceResult = {
+  cash_balance: number;
+  accounts_receivable_open: number;
+  accounts_payable_open: number;
+  overdue_receivable: number;
+  overdue_payable: number;
+  received_in_period: number;
+  paid_in_period: number;
+};
+
+export type ReportFiscalResult = {
+  documents_count: number;
+  entradas_count: number;
+  saidas_count: number;
+  authorized_count: number;
+  rejected_count: number;
+  cancelled_count: number;
+  pending_count: number;
+  taxes_amount: number;
+};
+
 export type AuditLogRow = {
   id: string;
   company_id: string | null;

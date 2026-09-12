@@ -34,6 +34,10 @@ export type ProductRow = {
   cost_price: number | null;
   sale_price: number | null;
   min_price: number | null;
+  purchase_unit_id: string | null;
+  sale_unit_id: string | null;
+  production_unit_id: string | null;
+  product_segment: "RESALE" | "RAW_MATERIAL" | "FINISHED_GOOD" | "SERVICE" | null;
   status: DbStatus;
   created_at: string;
   updated_at: string;
@@ -45,6 +49,7 @@ export type ProductCategoryRow = {
   parent_id: string | null;
   code: string;
   name: string;
+  description: string | null;
   status: DbStatus;
   created_at: string;
   updated_at: string;
@@ -53,17 +58,25 @@ export type ProductCategoryRow = {
 export type ProductBrandRow = {
   id: string;
   company_id: string;
+  code: string | null;
   name: string;
+  description: string | null;
   status: DbStatus;
   created_at: string;
   updated_at: string;
 };
+
+export type UnitType = "COUNT" | "WEIGHT" | "VOLUME" | "LENGTH" | "AREA" | "TIME" | "OTHER";
 
 export type UnitRow = {
   id: string;
   company_id: string;
   code: string;
   name: string;
+  symbol: string | null;
+  unit_type: UnitType | null;
+  decimal_places: number;
+  base_unit_id: string | null;
   fractionable: boolean;
   status: DbStatus;
   created_at: string;
@@ -75,7 +88,10 @@ export type UnitConversionRow = {
   company_id: string;
   from_unit_id: string;
   to_unit_id: string;
+  product_id: string | null;
   factor: number;
+  valid_from: string | null;
+  valid_until: string | null;
   status: DbStatus;
   created_at: string;
   updated_at: string;
@@ -1980,6 +1996,134 @@ export type ReportFiscalResult = {
   cancelled_count: number;
   pending_count: number;
   taxes_amount: number;
+};
+
+// ============================================================ Fase 13 — Cadastros Mestres Avançados
+export type ProductAttributeInputType = "TEXT" | "NUMBER" | "BOOLEAN" | "SELECT";
+
+export type ProductAttributeRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  input_type: ProductAttributeInputType;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductAttributeValueRow = {
+  id: string;
+  company_id: string;
+  attribute_id: string;
+  value: string;
+  status: DbStatus;
+  created_at: string;
+};
+
+export type ProductAttributeAssignmentRow = {
+  id: string;
+  company_id: string;
+  product_id: string;
+  attribute_id: string;
+  value_id: string | null;
+  value_text: string | null;
+  value_number: number | null;
+  value_boolean: boolean | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PartyType = "customer" | "supplier" | "carrier";
+export type PartyAddressType = "billing" | "delivery" | "invoicing" | "commercial" | "correspondence" | "main";
+export type PartyContactType = "commercial" | "financial" | "technical" | "other";
+
+export type PartyAddressRow = {
+  id: string;
+  company_id: string;
+  party_type: PartyType;
+  party_id: string;
+  address_type: PartyAddressType;
+  is_primary: boolean;
+  zip_code: string | null;
+  state: string | null;
+  city: string | null;
+  neighborhood: string | null;
+  address: string | null;
+  address_number: string | null;
+  address_complement: string | null;
+  notes: string | null;
+  status: DbStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PartyContactRow = {
+  id: string;
+  company_id: string;
+  party_type: PartyType;
+  party_id: string;
+  name: string;
+  role: string | null;
+  phone: string | null;
+  email: string | null;
+  contact_type: PartyContactType;
+  is_primary: boolean;
+  notes: string | null;
+  status: DbStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+// ============================================================ Fase 14 — Configuração e Parametrização
+export type SettingValueType = "STRING" | "INTEGER" | "DECIMAL" | "BOOLEAN" | "DATE" | "JSON";
+
+export type SystemSettingRow = {
+  id: string;
+  company_id: string | null;
+  establishment_id: string | null;
+  module: string;
+  key: string;
+  value_type: SettingValueType;
+  value_string: string | null;
+  value_integer: number | null;
+  value_decimal: number | null;
+  value_boolean: boolean | null;
+  value_date: string | null;
+  value_json: Record<string, unknown> | null;
+  description: string | null;
+  valid_from: string | null;
+  valid_until: string | null;
+  status: DbStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type DocumentType = "SALES_ORDER" | "PURCHASE_ORDER" | "FISCAL_DOCUMENT" | "TRANSFER" | "SHIPMENT" | "OTHER";
+
+export type DocumentSequenceRow = {
+  id: string;
+  company_id: string;
+  establishment_id: string | null;
+  document_type: DocumentType;
+  series_code: string;
+  description: string | null;
+  prefix: string | null;
+  current_number: number;
+  padding: number;
+  status: DbStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type NextDocumentNumberResult = {
+  sequence_id: string;
+  number: number;
+  formatted_number: string;
 };
 
 export type AuditLogRow = {

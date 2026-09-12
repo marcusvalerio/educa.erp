@@ -844,6 +844,131 @@ export type SalesOrderItemRow = {
   created_at: string;
 };
 
+// ------------------------------------------------------ Logística/Expedição
+// Espelha supabase/migrations/0023-0025. Todas documentos transacionais
+// (mesmo padrão de stock_transfers/purchase_orders/sales_orders) — só
+// leitura pela API REST genérica, toda escrita via função RPC.
+
+export type PickListStatus = "pending" | "in_progress" | "completed" | "cancelled";
+
+export type PickListRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  sales_order_id: string;
+  warehouse_id: string;
+  status: PickListStatus;
+  assigned_to: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PickListItemStatus = "pending" | "picked" | "short" | "cancelled";
+export type PickDivergenceType = "none" | "quantity" | "product" | "lot" | "serial";
+
+export type PickListItemRow = {
+  id: string;
+  company_id: string;
+  pick_list_id: string;
+  sales_order_item_id: string;
+  product_id: string;
+  location_id: string;
+  lot_id: string | null;
+  requested_quantity: number;
+  picked_quantity: number;
+  serial_numbers: string[] | null;
+  status: PickListItemStatus;
+  divergence_type: PickDivergenceType | null;
+  divergence_notes: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type ShipmentStatus =
+  | "draft" | "ready" | "picking" | "packed" | "ready_to_ship"
+  | "shipped" | "in_transit" | "delivered" | "completed" | "cancelled";
+
+export type ShipmentRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  sales_order_id: string;
+  customer_id: string;
+  warehouse_id: string;
+  pick_list_id: string | null;
+  status: ShipmentStatus;
+  carrier_id: string | null;
+  driver_id: string | null;
+  vehicle_id: string | null;
+  delivery_zip_code: string | null;
+  delivery_state: string | null;
+  delivery_city: string | null;
+  delivery_neighborhood: string | null;
+  delivery_address: string | null;
+  delivery_address_number: string | null;
+  delivery_address_complement: string | null;
+  expected_ship_date: string | null;
+  shipped_at: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ShipmentItemRow = {
+  id: string;
+  company_id: string;
+  shipment_id: string;
+  sales_order_item_id: string;
+  product_id: string;
+  location_id: string;
+  quantity: number;
+  unit: string | null;
+  lot_id: string | null;
+  serial_numbers: string[] | null;
+  weight: number | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type ShipmentPackageRow = {
+  id: string;
+  company_id: string;
+  shipment_id: string;
+  package_number: number;
+  weight: number | null;
+  height: number | null;
+  width: number | null;
+  length: number | null;
+  tracking_code: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type DeliveryEventStatus = "out_for_delivery" | "delivered" | "failed" | "refused" | "absent" | "returned";
+export type PodType = "signature" | "photo" | "document";
+
+export type DeliveryEventRow = {
+  id: string;
+  company_id: string;
+  shipment_id: string;
+  status: DeliveryEventStatus;
+  occurred_at: string;
+  recorded_by: string | null;
+  recipient_name: string | null;
+  recipient_document: string | null;
+  notes: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  pod_type: PodType | null;
+  pod_reference: string | null;
+  created_at: string;
+};
+
 export type AuditLogRow = {
   id: string;
   company_id: string | null;

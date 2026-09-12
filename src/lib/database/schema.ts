@@ -1377,6 +1377,271 @@ export type CashFlowProjectionRow = {
   amount: number;
 };
 
+// ----------------------------------------------------------------- Fiscal
+// Espelha supabase/migrations/0036-0040. fiscal_establishments/
+// fiscal_ncms/fiscal_cfops/fiscal_operation_natures/fiscal_cst_codes/
+// fiscal_csosn_codes são "cadastro" (CRUD direto via RLS).
+// product_fiscal_profiles/tax_rules/fiscal_documents e tudo que deriva
+// deles são documentos transacionais — só leitura pela API REST
+// genérica, toda escrita via função RPC.
+
+export type TaxRegime = "SIMPLES_NACIONAL" | "LUCRO_PRESUMIDO" | "LUCRO_REAL" | "MEI";
+
+export type FiscalEstablishmentRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  cnpj: string;
+  state_registration: string | null;
+  municipal_registration: string | null;
+  tax_regime: TaxRegime;
+  address: string | null;
+  address_number: string | null;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
+  zip_code: string | null;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+};
+
+export type FiscalNcmRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  description: string;
+  valid_from: string;
+  valid_until: string | null;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+};
+
+export type FiscalCfopDirection = "ENTRADA" | "SAIDA";
+export type FiscalCfopScope = "INTERNAL" | "INTERSTATE" | "FOREIGN";
+
+export type FiscalCfopRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  description: string;
+  direction: FiscalCfopDirection;
+  scope: FiscalCfopScope;
+  valid_from: string;
+  valid_until: string | null;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+};
+
+export type FiscalOperationNatureRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  direction: FiscalCfopDirection;
+  default_cfop_id: string | null;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+};
+
+export type FiscalCstTaxType = "ICMS" | "IPI" | "PIS" | "COFINS";
+
+export type FiscalCstCodeRow = {
+  id: string;
+  company_id: string;
+  tax_type: FiscalCstTaxType;
+  code: string;
+  description: string;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+};
+
+export type FiscalCsosnCodeRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  description: string;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+};
+
+export type GoodsOriginCode = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
+
+export type ProductFiscalProfileRow = {
+  id: string;
+  company_id: string;
+  product_id: string;
+  ncm_id: string | null;
+  origin_code: GoodsOriginCode;
+  icms_cst: string | null;
+  icms_csosn: string | null;
+  pis_cst: string | null;
+  cofins_cst: string | null;
+  ipi_cst: string | null;
+  tax_framework: string | null;
+  valid_from: string;
+  valid_until: string | null;
+  status: "active" | "obsolete";
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type TaxRuleStatus = "draft" | "active" | "inactive";
+
+export type TaxRuleRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  product_id: string | null;
+  ncm_id: string | null;
+  origin_code: GoodsOriginCode | null;
+  cfop_id: string | null;
+  operation_nature_id: string | null;
+  origin_uf: string | null;
+  destination_uf: string | null;
+  tax_regime: TaxRegime | null;
+  customer_id: string | null;
+  supplier_id: string | null;
+  priority: number;
+  valid_from: string;
+  valid_until: string | null;
+  status: TaxRuleStatus;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TaxType = "ICMS" | "ICMS_ST" | "IPI" | "PIS" | "COFINS" | "ISS" | "FCP" | "DIFAL" | "OTHER";
+
+export type TaxRuleItemRow = {
+  id: string;
+  company_id: string;
+  tax_rule_id: string;
+  tax_type: TaxType;
+  cst: string | null;
+  csosn: string | null;
+  rate: number;
+  reduction_percentage: number;
+  notes: string | null;
+  created_at: string;
+};
+
+export type FiscalDocumentType = "NFE" | "NFCE" | "NFSE" | "CTE" | "MDFE" | "OTHER";
+export type FiscalDocumentStatus = "DRAFT" | "CALCULATED" | "AUTHORIZED" | "CANCELLED" | "DENIED" | "REJECTED" | "CONTINGENCY";
+export type FiscalDocumentSourceType = "purchase_receipt" | "sales_order" | "shipment" | "manual" | "return";
+
+export type FiscalDocumentRow = {
+  id: string;
+  company_id: string;
+  fiscal_establishment_id: string;
+  code: string;
+  number: number | null;
+  series: string | null;
+  model: string | null;
+  type: FiscalDocumentType;
+  direction: FiscalCfopDirection;
+  status: FiscalDocumentStatus;
+  issue_date: string;
+  operation_date: string | null;
+  customer_id: string | null;
+  supplier_id: string | null;
+  operation_nature_id: string;
+  access_key: string | null;
+  protocol: string | null;
+  receipt_number: string | null;
+  rejection_reason: string | null;
+  return_code: string | null;
+  xml_storage_reference: string | null;
+  source_type: FiscalDocumentSourceType | null;
+  source_id: string | null;
+  carrier_id: string | null;
+  vehicle_id: string | null;
+  freight_amount: number;
+  insurance_amount: number;
+  other_expenses_amount: number;
+  discount_amount: number;
+  products_amount: number;
+  taxes_amount: number;
+  total_amount: number;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FiscalDocumentItemRow = {
+  id: string;
+  company_id: string;
+  fiscal_document_id: string;
+  product_id: string;
+  description: string;
+  ncm_id: string | null;
+  ncm_code: string;
+  ncm_description: string | null;
+  cfop_id: string | null;
+  cfop_code: string;
+  origin_code: GoodsOriginCode;
+  quantity: number;
+  unit: string | null;
+  unit_price: number;
+  discount: number;
+  freight_amount: number;
+  insurance_amount: number;
+  other_expenses: number;
+  gross_amount: number;
+  total_amount: number;
+  source_reference_type: string | null;
+  source_reference_id: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type FiscalDocumentItemTaxRow = {
+  id: string;
+  company_id: string;
+  fiscal_document_item_id: string;
+  tax_type: TaxType;
+  cst: string | null;
+  csosn: string | null;
+  calculation_basis: number;
+  rate: number;
+  reduction_percentage: number;
+  amount: number;
+  withheld: boolean;
+  modality: string | null;
+  source_tax_rule_id: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type FiscalDocumentEventType =
+  | "CREATED" | "CALCULATED" | "AUTHORIZED" | "CANCELLED" | "REJECTED"
+  | "DENIED" | "CONTINGENCY" | "CORRECTION_LETTER" | "OTHER";
+
+export type FiscalDocumentEventRow = {
+  id: string;
+  company_id: string;
+  fiscal_document_id: string;
+  event_type: FiscalDocumentEventType;
+  occurred_at: string;
+  protocol: string | null;
+  status_code: string | null;
+  message: string | null;
+  payload_reference: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
 export type AuditLogRow = {
   id: string;
   company_id: string | null;

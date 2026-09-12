@@ -1,8 +1,5 @@
 import type { FormSection } from "./form-types";
 import {
-  CATEGORIAS_PRODUTO,
-  SUBCATEGORIAS_PRODUTO,
-  UNIDADES_PRODUTO,
   TIPOS_PESSOA,
   CONDICOES_PAGAMENTO,
   ESTADOS_UF,
@@ -19,61 +16,11 @@ import {
   STATUS_OPTIONS,
 } from "./constants";
 
-export const produtoForm: FormSection[] = [
-  {
-    title: "Dados principais",
-    fields: [
-      { key: "codigo", label: "Código", type: "text", required: true, span: 2, disabledOnEdit: true },
-      { key: "sku", label: "SKU", type: "text", span: 2 },
-      { key: "descricao", label: "Descrição", type: "text", required: true, span: 4 },
-      { key: "descricaoCurta", label: "Descrição curta", type: "text", span: 4 },
-    ],
-  },
-  {
-    title: "Classificação",
-    fields: [
-      { key: "categoria", label: "Categoria", type: "select", options: CATEGORIAS_PRODUTO, required: true, span: 2 },
-      { key: "subcategoria", label: "Subcategoria", type: "select", options: SUBCATEGORIAS_PRODUTO, span: 1 },
-      { key: "unidade", label: "Unidade de medida", type: "select", options: UNIDADES_PRODUTO, required: true, span: 1 },
-      { key: "codigoBarras", label: "Código de barras", type: "text", span: 2 },
-      { key: "ncm", label: "NCM", type: "text", span: 1 },
-      { key: "fornecedorId", label: "Fornecedor", type: "select", optionsSource: "fornecedores", span: 1 },
-      {
-        key: "categoriaId",
-        label: "Categoria (catálogo)",
-        type: "select",
-        optionsSource: "categorias",
-        span: 1,
-        helpText: "Opcional — complementa o campo Categoria acima com o novo catálogo relacional.",
-      },
-      { key: "marcaId", label: "Marca", type: "select", optionsSource: "marcas", span: 1 },
-    ],
-  },
-  {
-    title: "Dimensões e peso",
-    fields: [
-      { key: "peso", label: "Peso (kg)", type: "number", step: 0.01, span: 1 },
-      { key: "altura", label: "Altura (cm)", type: "number", step: 0.1, span: 1 },
-      { key: "largura", label: "Largura (cm)", type: "number", step: 0.1, span: 1 },
-      { key: "comprimento", label: "Comprimento (cm)", type: "number", step: 0.1, span: 1 },
-    ],
-  },
-  {
-    title: "Controle de estoque",
-    fields: [
-      { key: "estoqueMinimo", label: "Estoque mínimo", type: "number", span: 1 },
-      { key: "estoqueMaximo", label: "Estoque máximo", type: "number", span: 1 },
-      { key: "pontoReposicao", label: "Ponto de reposição", type: "number", span: 1 },
-      { key: "localizacaoPadrao", label: "Localização padrão", type: "select", optionsSource: "locais", span: 1 },
-      { key: "loteControlado", label: "Lote controlado", type: "checkbox", span: 2 },
-      { key: "validadeControlada", label: "Validade controlada", type: "checkbox", span: 2 },
-    ],
-  },
-  {
-    title: "Status",
-    fields: [{ key: "status", label: "Status", type: "select", options: STATUS_OPTIONS, span: 1 }],
-  },
-];
+// produtoForm foi removido na Fase 2 — Produtos ganhou formulário próprio
+// dentro de src/components/produtos/ProdutoDrawer.tsx, com seletores de
+// categoria/marca/unidade alimentados por dados reais (product_categories/
+// product_brands/units), não mais pelas constantes hardcoded que existiam
+// aqui (CATEGORIAS_PRODUTO/SUBCATEGORIAS_PRODUTO/UNIDADES_PRODUTO).
 
 export const clienteForm: FormSection[] = [
   {

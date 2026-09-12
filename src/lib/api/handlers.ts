@@ -28,6 +28,13 @@ export function createCollectionHandlers(entity: EntityRoute) {
     try {
       const { searchParams } = new URL(request.url);
       const statusParam = searchParams.get("status");
+      const filters: Record<string, string> | undefined = table.filterParams
+        ? Object.fromEntries(
+            Object.entries(table.filterParams)
+              .map(([param, column]) => [column, searchParams.get(param)])
+              .filter((entry): entry is [string, string] => Boolean(entry[1]))
+          )
+        : undefined;
       const result = await table.list({
         search: searchParams.get("search") ?? undefined,
         status: statusParam === "Ativo" || statusParam === "Inativo" ? (statusParam as StatusCadastro) : undefined,
@@ -35,6 +42,7 @@ export function createCollectionHandlers(entity: EntityRoute) {
         pageSize: searchParams.get("pageSize") ? Number(searchParams.get("pageSize")) : undefined,
         sort: searchParams.get("sort") ?? undefined,
         order: searchParams.get("order") === "desc" ? "desc" : searchParams.get("order") === "asc" ? "asc" : undefined,
+        filters: filters && Object.keys(filters).length > 0 ? filters : undefined,
       });
       return NextResponse.json({
         success: true,

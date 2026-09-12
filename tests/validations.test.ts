@@ -9,12 +9,25 @@ import {
   warehouseLocationSchema,
   categorySchema,
   brandSchema,
+  productSupplierSchema,
+  productPriceSchema,
+  productUnitSchema,
 } from "@/lib/validations/cadastros";
 
 describe("productSchema", () => {
   test("rejeita produto sem campos obrigatórios", () => {
     const result = productSchema.safeParse({});
     assert.equal(result.success, false);
+  });
+
+  test("campo obrigatório ausente (não apenas vazio) mostra mensagem amigável, não o erro técnico padrão do Zod", () => {
+    const result = productSchema.safeParse({});
+    assert.equal(result.success, false);
+    if (!result.success) {
+      const message = result.error.issues[0].message;
+      assert.equal(message, "Informe o código do produto.");
+      assert.doesNotMatch(message, /expected string|invalid_type|received undefined/i);
+    }
   });
 
   test("aceita produto válido e aplica defaults", () => {
@@ -176,5 +189,117 @@ describe("brandSchema", () => {
     const result = brandSchema.safeParse({ codigo: "MRC-0001", nome: "Marca Teste" });
     assert.equal(result.success, true);
     if (result.success) assert.equal(result.data.status, "Ativo");
+  });
+});
+
+describe("productSchema — categoria virou legado/opcional (Fase 2)", () => {
+  test("aceita produto sem o campo categoria (categoriaId é a classificação real agora)", () => {
+    const result = productSchema.safeParse({
+      codigo: "PRD-0004",
+      descricao: "Produto sem categoria em texto",
+      unidade: "UN",
+    });
+    assert.equal(result.success, true);
+    if (result.success) assert.equal(result.data.categoria, "");
+  });
+
+  test("ainda exige código, descrição e unidade", () => {
+    const result = productSchema.safeParse({});
+    assert.equal(result.success, false);
+  });
+});
+
+describe("productSupplierSchema", () => {
+  test("rejeita sem produto/fornecedor", () => {
+    const result = productSupplierSchema.safeParse({});
+    assert.equal(result.success, false);
+  });
+
+  test("aceita vínculo mínimo e aplica defaults", () => {
+    const result = productSupplierSchema.safeParse({
+      produtoId: "11111111-1111-1111-1111-111111111111",
+      fornecedorId: "22222222-2222-2222-2222-222222222222",
+    });
+    assert.equal(result.success, true);
+    if (result.success) {
+      assert.equal(result.data.preferencial, false);
+      assert.equal(result.data.custo, 0);
+      assert.equal(result.data.status, "Ativo");
+    }
+  });
+
+  test("aceita custo, prazo e preferência informados", () => {
+    const result = productSupplierSchema.safeParse({
+      produtoId: "11111111-1111-1111-1111-111111111111",
+      fornecedorId: "22222222-2222-2222-2222-222222222222",
+      custo: 12.5,
+      prazoEntregaDias: 7,
+      preferencial: true,
+    });
+    assert.equal(result.success, true);
+    if (result.success) {
+      assert.equal(result.data.custo, 12.5);
+      assert.equal(result.data.preferencial, true);
+    }
+  });
+});
+
+describe("productPriceSchema", () => {
+  test("rejeita sem produto/tipo de preço", () => {
+    const result = productPriceSchema.safeParse({});
+    assert.equal(result.success, false);
+  });
+
+  test("rejeita valor negativo", () => {
+    const result = productPriceSchema.safeParse({
+      produtoId: "11111111-1111-1111-1111-111111111111",
+      tipoPreco: "sale",
+      valor: -10,
+    });
+    assert.equal(result.success, false);
+  });
+
+  test("rejeita tipo de preço inválido", () => {
+    const result = productPriceSchema.safeParse({
+      produtoId: "11111111-1111-1111-1111-111111111111",
+      tipoPreco: "atacado",
+      valor: 10,
+    });
+    assert.equal(result.success, false);
+  });
+
+  test("aceita preço válido e aplica moeda padrão BRL", () => {
+    const result = productPriceSchema.safeParse({
+      produtoId: "11111111-1111-1111-1111-111111111111",
+      tipoPreco: "sale",
+      valor: 99.9,
+    });
+    assert.equal(result.success, true);
+    if (result.success) assert.equal(result.data.moeda, "BRL");
+  });
+});
+
+describe("productUnitSchema", () => {
+  test("rejeita sem produto/unidade", () => {
+    const result = productUnitSchema.safeParse({});
+    assert.equal(result.success, false);
+  });
+
+  test("rejeita fator de conversão zero ou negativo", () => {
+    const result = productUnitSchema.safeParse({
+      produtoId: "11111111-1111-1111-1111-111111111111",
+      unidadeCodigo: "CX",
+      fatorConversao: 0,
+    });
+    assert.equal(result.success, false);
+  });
+
+  test("aceita embalagem válida e aplica fator de conversão padrão 1", () => {
+    const result = productUnitSchema.safeParse({
+      produtoId: "11111111-1111-1111-1111-111111111111",
+      unidadeCodigo: "CX",
+    });
+    assert.equal(result.success, true);
+    if (result.success) assert.equal(result.data.fatorConversao, 1);
   });
 });

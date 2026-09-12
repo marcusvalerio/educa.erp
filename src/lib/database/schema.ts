@@ -209,6 +209,46 @@ export type UnitRow = {
   created_at: string;
 };
 
+export type ProductSupplierRow = {
+  id: string;
+  company_id: string;
+  product_id: string;
+  supplier_id: string;
+  supplier_sku: string | null;
+  cost: number | null;
+  lead_time_days: number | null;
+  is_preferred: boolean;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductPriceRow = {
+  id: string;
+  company_id: string;
+  product_id: string;
+  price_type: "cost" | "sale" | "minimum";
+  amount: number;
+  currency: string;
+  valid_from: string;
+  valid_to: string | null;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductUnitRow = {
+  id: string;
+  company_id: string;
+  product_id: string;
+  unit_code: string;
+  conversion_factor: number;
+  barcode: string | null;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
 export type AuditLogRow = {
   id: string;
   company_id: string | null;

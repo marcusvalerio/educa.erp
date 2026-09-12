@@ -1,7 +1,6 @@
 import { cadastros as cadastroPageMeta } from "@/lib/pages/cadastros";
 import type { CadastroConfig, RelatedGroup } from "./config-types";
 import type {
-  Produto,
   Cliente,
   Fornecedor,
   Transportadora,
@@ -21,9 +20,6 @@ import {
   locaisEstoqueRepository,
 } from "./repository";
 import {
-  produtoColumns,
-  produtoFilters,
-  produtoToRow,
   clienteColumns,
   clienteFilters,
   clienteToRow,
@@ -47,7 +43,6 @@ import {
   localEstoqueToRow,
 } from "./columns";
 import {
-  produtoForm,
   clienteForm,
   fornecedorForm,
   transportadoraForm,
@@ -57,7 +52,6 @@ import {
   localEstoqueForm,
 } from "./forms";
 import {
-  validateProduto,
   validateCliente,
   validateFornecedor,
   validateTransportadora,
@@ -67,65 +61,13 @@ import {
   validateLocalEstoque,
 } from "./validation";
 
-function nextCode(prefix: string, count: number) {
-  return `${prefix}-${String(count + 1).padStart(4, "0")}`;
-}
-
 const meta = cadastroPageMeta;
 
-export const produtoCadastroConfig: CadastroConfig<Produto> = {
-  moduleLabel: meta.produtos.moduleLabel,
-  moduleHref: meta.produtos.moduleHref,
-  pageLabel: meta.produtos.pageLabel,
-  title: meta.produtos.title,
-  description: meta.produtos.description,
-  primaryActionLabel: meta.produtos.primaryActionLabel,
-  entityLabel: "Produto",
-  entityNounLower: "produto",
-  repository: produtosRepository,
-  columns: produtoColumns,
-  filters: produtoFilters,
-  toRow: produtoToRow,
-  formSections: produtoForm,
-  validate: validateProduto,
-  labelOf: (item) => item.codigo,
-  defaultValues: (list) => ({
-    codigo: nextCode("PRD", list.length),
-    sku: "",
-    descricao: "",
-    descricaoCurta: "",
-    categoria: "",
-    subcategoria: "",
-    unidade: "",
-    codigoBarras: "",
-    ncm: "",
-    peso: 0,
-    altura: 0,
-    largura: 0,
-    comprimento: 0,
-    estoqueMinimo: 0,
-    estoqueMaximo: 0,
-    pontoReposicao: 0,
-    localizacaoPadrao: "",
-    fornecedorId: "",
-    loteControlado: false,
-    validadeControlada: false,
-    status: "Ativo",
-  }),
-  relatedLists: (item): RelatedGroup[] => [
-    {
-      title: "Fornecedor vinculado",
-      items: item.fornecedorId
-        ? [{ label: fornecedoresRepository.get(item.fornecedorId)?.razaoSocial ?? "—" }]
-        : [],
-    },
-    {
-      title: "Local de estoque padrão",
-      items: item.localizacaoPadrao ? [{ label: item.localizacaoPadrao }] : [],
-    },
-  ],
-  dependsOn: [fornecedoresRepository],
-};
+// produtoCadastroConfig foi removido na Fase 2 — Produtos passou a ter
+// página dedicada (src/components/produtos/ProdutosPage.tsx) com busca/
+// filtro/ordenação/paginação reais via API, em vez do padrão genérico
+// de hidratar tudo e filtrar em memória usado pelos outros cadastros
+// abaixo. Ver relatório da Fase 2 para o porquê.
 
 export const clienteCadastroConfig: CadastroConfig<Cliente> = {
   moduleLabel: meta.clientes.moduleLabel,

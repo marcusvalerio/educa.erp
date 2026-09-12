@@ -10,7 +10,8 @@ type FilterBarProps = {
 };
 
 export function FilterBar({ filters, values, onChange, onReset, resultCount }: FilterBarProps) {
-  const hasActiveFilters = Object.values(values).some((v) => v && v !== "Todos");
+  const activeCount = Object.values(values).filter((v) => v && v !== "Todos").length;
+  const hasActiveFilters = activeCount > 0;
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 shadow-card">
@@ -44,11 +45,14 @@ export function FilterBar({ filters, values, onChange, onReset, resultCount }: F
                 className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-[13px] text-ink transition-colors duration-150 focus:border-brand focus:outline-none focus:ring-[3px] focus:ring-brand/12"
               >
                 <option value="Todos">Todos</option>
-                {filter.options.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
+                {filter.options.map((opt) => {
+                  const { value, label } = typeof opt === "string" ? { value: opt, label: opt } : opt;
+                  return (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             )}
           </div>
@@ -63,8 +67,20 @@ export function FilterBar({ filters, values, onChange, onReset, resultCount }: F
           </button>
         )}
       </div>
-      <p className="text-[12px] text-ink-subtle">
-        {resultCount} {resultCount === 1 ? "registro encontrado" : "registros encontrados"}
+      <p className="flex items-center gap-2 text-[12px] text-ink-subtle">
+        <span>
+          {resultCount} {resultCount === 1 ? "registro encontrado" : "registros encontrados"}
+        </span>
+        {hasActiveFilters && (
+          <>
+            <span aria-hidden className="text-ink-subtle/50">
+              ·
+            </span>
+            <span className="font-medium text-brand-ink">
+              {activeCount} {activeCount === 1 ? "filtro ativo" : "filtros ativos"}
+            </span>
+          </>
+        )}
       </p>
     </div>
   );

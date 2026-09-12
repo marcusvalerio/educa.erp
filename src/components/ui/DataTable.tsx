@@ -1,5 +1,7 @@
 import clsx from "clsx";
+import type { ReactNode } from "react";
 import { ArrowUp, ArrowDown, ChevronsUpDown } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import type { ColumnConfig } from "@/lib/pages/types";
 import type { Row } from "@/lib/mock/generators";
 import { StatusBadge } from "./StatusBadge";
@@ -7,10 +9,18 @@ import { EmptyState } from "./EmptyState";
 
 export type SortDir = "asc" | "desc";
 
+type EmptyStateConfig = {
+  icon?: LucideIcon;
+  title?: string;
+  description?: string;
+  action?: ReactNode;
+};
+
 type DataTableProps = {
   columns: ColumnConfig[];
   rows: Row[];
   emptyHint?: string;
+  emptyState?: EmptyStateConfig;
   renderActions?: (row: Row) => React.ReactNode;
   /** Chave da coluna ordenada e direção atual — omitir desativa a UI de ordenação. */
   sort?: { key: string; dir: SortDir };
@@ -18,9 +28,25 @@ type DataTableProps = {
   onRowClick?: (row: Row) => void;
 };
 
-export function DataTable({ columns, rows, emptyHint, renderActions, sort, onSortChange, onRowClick }: DataTableProps) {
+export function DataTable({
+  columns,
+  rows,
+  emptyHint,
+  emptyState,
+  renderActions,
+  sort,
+  onSortChange,
+  onRowClick,
+}: DataTableProps) {
   if (rows.length === 0) {
-    return <EmptyState description={emptyHint ?? "Ajuste os filtros para encontrar o que você procura."} />;
+    return (
+      <EmptyState
+        icon={emptyState?.icon}
+        title={emptyState?.title}
+        description={emptyState?.description ?? emptyHint ?? "Ajuste os filtros para encontrar o que você procura."}
+        action={emptyState?.action}
+      />
+    );
   }
 
   return (
@@ -87,6 +113,7 @@ export function DataTable({ columns, rows, emptyHint, renderActions, sort, onSor
               }
               tabIndex={onRowClick ? 0 : undefined}
               role={onRowClick ? "button" : undefined}
+              aria-label={onRowClick ? `Ver detalhes: ${row[columns[0].key]}` : undefined}
               className={clsx(
                 "group border-b border-border last:border-0 transition-colors duration-100 hover:bg-surface-hover/60",
                 onRowClick && "cursor-pointer focus-visible:outline-none focus-visible:bg-surface-hover/60"

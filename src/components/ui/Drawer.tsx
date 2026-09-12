@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
@@ -14,8 +14,16 @@ type DrawerProps = {
 };
 
 export function Drawer({ open, onClose, title, subtitle, children, footer }: DrawerProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (!open) return;
+    // Devolve o foco a quem abriu o drawer (ex.: botão "Visualizar" da
+    // linha da tabela) quando ele fechar — importante para quem navega
+    // só por teclado não "perder o lugar" na página.
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    panelRef.current?.focus();
+
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
@@ -24,6 +32,7 @@ export function Drawer({ open, onClose, title, subtitle, children, footer }: Dra
     return () => {
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = "";
+      previouslyFocused?.focus();
     };
   }, [open, onClose]);
 
@@ -36,10 +45,19 @@ export function Drawer({ open, onClose, title, subtitle, children, footer }: Dra
         onClick={onClose}
         className="absolute inset-0 bg-ink/45 backdrop-blur-[2px] animate-fade-in"
       />
-      <div className="animate-slide-in-right relative flex h-full w-full max-w-xl flex-col bg-surface shadow-elevated">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="drawer-title"
+        tabIndex={-1}
+        className="animate-slide-in-right relative flex h-full w-full max-w-xl flex-col bg-surface shadow-elevated outline-none"
+      >
         <div className="flex items-start justify-between gap-3 border-b border-border px-6 py-5">
           <div>
-            <h2 className="font-display text-[1.05rem] font-semibold tracking-tight text-ink">{title}</h2>
+            <h2 id="drawer-title" className="font-display text-[1.05rem] font-semibold tracking-tight text-ink">
+              {title}
+            </h2>
             {subtitle && <p className="mt-0.5 text-[13px] text-ink-muted">{subtitle}</p>}
           </div>
           <button

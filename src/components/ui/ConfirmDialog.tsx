@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { AlertTriangle, Info } from "lucide-react";
 import { Button } from "./Button";
@@ -13,6 +14,8 @@ type ConfirmDialogProps = {
   cancelLabel?: string;
   tone?: "danger" | "info";
   loading?: boolean;
+  /** Erro da última tentativa (ex.: exclusão bloqueada por dependência) — o diálogo permanece aberto para o usuário ler antes de cancelar. */
+  error?: string | null;
   onConfirm?: () => void;
   onCancel: () => void;
 };
@@ -26,9 +29,29 @@ export function ConfirmDialog({
   cancelLabel = "Cancelar",
   tone = "danger",
   loading = false,
+  error,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    panelRef.current?.focus();
+
+    function onKeyDown(e: KeyboardEvent) {
+      // Enquanto uma ação está em andamento (loading), Escape não fecha —
+      // evita cancelar visualmente algo que já está sendo processado.
+      if (e.key === "Escape" && !loading) onCancel();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      previouslyFocused?.focus();
+    };
+  }, [open, loading, onCancel]);
+
   if (!open || typeof document === "undefined") return null;
 
   return createPortal(
@@ -36,9 +59,17 @@ export function ConfirmDialog({
       <button
         aria-label="Fechar"
         onClick={onCancel}
+        disabled={loading}
         className="absolute inset-0 bg-ink/45 backdrop-blur-[2px] animate-fade-in"
       />
-      <div className="animate-scale-in relative w-full max-w-md rounded-xl border border-border bg-surface p-6 shadow-elevated">
+      <div
+        ref={panelRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        tabIndex={-1}
+        className="animate-scale-in relative w-full max-w-md rounded-xl border border-border bg-surface p-6 shadow-elevated outline-none"
+      >
         <div className="flex items-start gap-3">
           <span
             className={
@@ -50,8 +81,13 @@ export function ConfirmDialog({
             {tone === "danger" ? <AlertTriangle size={18} strokeWidth={1.75} /> : <Info size={18} strokeWidth={1.75} />}
           </span>
           <div>
-            <h3 className="font-display text-[1.05rem] font-semibold tracking-tight text-ink">{title}</h3>
+            <h3 id="confirm-dialog-title" className="font-display text-[1.05rem] font-semibold tracking-tight text-ink">
+              {title}
+            </h3>
             <p className="mt-1.5 text-[13.5px] text-ink-muted">{description}</p>
+            {error && (
+              <p className="mt-3 rounded-lg bg-danger-soft/60 px-3 py-2 text-[12.5px] text-danger">{error}</p>
+            )}
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-2">

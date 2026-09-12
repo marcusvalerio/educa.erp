@@ -155,6 +155,37 @@ export type Marca = BaseEntity & {
   nome: string;
 };
 
+// Sub-recursos de Produto (relacionamentos N:N/1:N com dados próprios) —
+// não são cadastros de nível superior, mas usam o mesmo formato de
+// entidade (BaseEntity) para reaproveitar createTableRepository/
+// createCollectionHandlers sem alterações (ver src/lib/database/table.ts).
+export type ProdutoFornecedor = BaseEntity & {
+  produtoId: string;
+  fornecedorId: string;
+  skuFornecedor: string;
+  custo: number;
+  prazoEntregaDias: number;
+  preferencial: boolean;
+};
+
+export type TipoPreco = "cost" | "sale" | "minimum";
+
+export type ProdutoPreco = BaseEntity & {
+  produtoId: string;
+  tipoPreco: TipoPreco;
+  valor: number;
+  moeda: string;
+  vigenciaInicio: string;
+  vigenciaFim: string;
+};
+
+export type ProdutoEmbalagem = BaseEntity & {
+  produtoId: string;
+  unidadeCodigo: string;
+  fatorConversao: number;
+  codigoBarras: string;
+};
+
 export type AuditAcao = "Criado" | "Alterado" | "Ativado" | "Inativado" | "Excluído";
 
 export type AuditEntry = {

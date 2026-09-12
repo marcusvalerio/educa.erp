@@ -55,10 +55,26 @@ export function translatePostgresError(error: { code?: string; message?: string;
     if (detail.includes("barcode")) {
       return new ApiError("DUPLICATE_BARCODE", "Já existe um produto com este código de barras.", 409);
     }
+    if (detail.includes("supplier_id") && detail.includes("product_id")) {
+      return new ApiError("DUPLICATE_PRODUCT_SUPPLIER", "Este fornecedor já está vinculado a este produto.", 409);
+    }
+    if (detail.includes("unit_code") && detail.includes("product_id")) {
+      return new ApiError("DUPLICATE_PRODUCT_UNIT", "Esta unidade/embalagem já está cadastrada para este produto.", 409);
+    }
     if (detail.includes("code")) {
       return new ApiError("DUPLICATE_CODE", "Já existe um registro com este código.", 409);
     }
     return new ApiError("DUPLICATE", "Já existe um registro com estes dados.", 409);
+  }
+
+  // exclusion_violation — período de vigência sobreposto em product_prices
+  // (constraint no banco, ver supabase/migrations/0009_catalog_foundation.sql).
+  if (error.code === "23P01") {
+    return new ApiError(
+      "OVERLAPPING_PRICE_PERIOD",
+      "Já existe um preço deste tipo vigente para este produto no período informado.",
+      409
+    );
   }
 
   // foreign_key_violation — rede de segurança do banco além da checagem

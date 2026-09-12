@@ -20,6 +20,8 @@ export type ListParams = {
   pageSize?: number;
   sort?: string;
   order?: "asc" | "desc";
+  /** Filtros de igualdade adicionais (coluna -> valor), ex.: { category_id: "..." }. */
+  filters?: Record<string, string>;
 };
 
 export type ListResult<Entity> = {
@@ -38,6 +40,13 @@ export type TableConfig<Entity extends BaseEntity, Row extends { id: string; sta
   toRowFields: (data: Partial<Entity>) => Partial<Row>;
   labelOf: (entity: Entity) => string;
   dependents?: DependentCheck<Entity>[];
+  /**
+   * Nomes de query params (ex.: "categoryId") aceitos por GET como filtro
+   * de igualdade, mapeados para a coluna real da tabela (ex.: "category_id").
+   * Whitelist explícita — evita que qualquer nome de coluna arbitrário vire
+   * filtro só por estar na URL. Ver createCollectionHandlers (GET).
+   */
+  filterParams?: Record<string, string>;
 };
 
 function statusToDb(status: StatusCadastro): "active" | "inactive" {
@@ -77,6 +86,11 @@ export function createTableRepository<Entity extends BaseEntity, Row extends { i
 
     if (params.status) {
       query = query.eq("status", statusToDb(params.status));
+    }
+    if (params.filters) {
+      for (const [column, value] of Object.entries(params.filters)) {
+        if (value) query = query.eq(column, value);
+      }
     }
     if (params.search && params.search.trim() && config.searchColumns.length > 0) {
       const term = params.search.trim().replace(/[%_]/g, "");
@@ -201,7 +215,7 @@ export function createTableRepository<Entity extends BaseEntity, Row extends { i
     });
   }
 
-  return { list, get, create, update, toggleStatus, remove };
+  return { list, get, create, update, toggleStatus, remove, filterParams: config.filterParams };
 }
 
 export { ApiError };

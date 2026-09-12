@@ -1,25 +1,7 @@
-export const CATEGORIAS_PRODUTO = [
-  "Matéria-prima",
-  "Material de almoxarifado",
-  "Material elétrico",
-  "EPI",
-  "Ferramentas",
-  "Químicos",
-  "Líquidos",
-  "Embalagens",
-  "Produto acabado",
-] as const;
-
-export const SUBCATEGORIAS_PRODUTO = [
-  "Geral",
-  "Importado",
-  "Nacional",
-  "Linha industrial",
-  "Linha leve",
-  "Consumível",
-] as const;
-
-export const UNIDADES_PRODUTO = ["UN", "KG", "G", "L", "ML", "M", "CX", "PC", "KIT", "T"] as const;
+// CATEGORIAS_PRODUTO/SUBCATEGORIAS_PRODUTO/UNIDADES_PRODUTO (arrays
+// hardcoded) foram removidas na Fase 2 — Produtos usa dados reais de
+// product_categories/product_brands/units agora (ver
+// src/components/produtos/ProdutosPage.tsx e docs/CATALOGO.md).
 
 export const TIPOS_PESSOA = ["Pessoa Física", "Pessoa Jurídica"] as const;
 

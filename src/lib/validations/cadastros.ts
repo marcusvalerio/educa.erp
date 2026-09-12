@@ -25,14 +25,25 @@ function requiredText(message: string) {
   );
 }
 
+function requiredEmail(message: string) {
+  return z.preprocess(
+    (value) => (value === undefined || value === null ? "" : value),
+    z.string().trim().min(1, message).pipe(z.string().email(message))
+  );
+}
+
 export const productSchema = z.object({
-  codigo: z.string().trim().min(1, "Informe o código do produto."),
+  codigo: requiredText("Informe o código do produto."),
   sku: optionalText,
-  descricao: z.string().trim().min(1, "Informe a descrição do produto."),
+  descricao: requiredText("Informe a descrição do produto."),
   descricaoCurta: optionalText,
-  categoria: z.string().trim().min(1, "Selecione a categoria."),
+  // Legado (texto livre) — preservado por compatibilidade, mas não é
+  // mais coletado no formulário atual de Produtos: categoriaId (FK real
+  // para product_categories) é a classificação de verdade agora. Ver
+  // docs/CATALOGO.md.
+  categoria: optionalText,
   subcategoria: optionalText,
-  unidade: z.string().trim().min(1, "Selecione a unidade de medida."),
+  unidade: requiredText("Selecione a unidade de medida."),
   codigoBarras: optionalText,
   ncm: optionalText,
   peso: optionalNumber,
@@ -52,10 +63,10 @@ export const productSchema = z.object({
 });
 
 export const customerSchema = z.object({
-  tipo: z.enum(["Pessoa Física", "Pessoa Jurídica"]),
-  nome: z.string().trim().min(1, "Informe o nome ou razão social."),
+  tipo: z.enum(["Pessoa Física", "Pessoa Jurídica"], "Selecione o tipo de cliente."),
+  nome: requiredText("Informe o nome ou razão social."),
   nomeFantasia: optionalText,
-  documento: z.string().trim().min(1, "Informe o CPF/CNPJ."),
+  documento: requiredText("Informe o CPF/CNPJ."),
   inscricaoEstadual: optionalText,
   email: z.union([z.literal(""), z.string().trim().email("Informe um e-mail válido.")]).optional().default(""),
   telefone: optionalText,
@@ -73,10 +84,10 @@ export const customerSchema = z.object({
 });
 
 export const supplierSchema = z.object({
-  tipo: z.enum(["Pessoa Física", "Pessoa Jurídica"]),
-  razaoSocial: z.string().trim().min(1, "Informe a razão social."),
+  tipo: z.enum(["Pessoa Física", "Pessoa Jurídica"], "Selecione o tipo de fornecedor."),
+  razaoSocial: requiredText("Informe a razão social."),
   nomeFantasia: optionalText,
-  documento: z.string().trim().min(1, "Informe o CNPJ/CPF."),
+  documento: requiredText("Informe o CNPJ/CPF."),
   inscricaoEstadual: optionalText,
   email: z.union([z.literal(""), z.string().trim().email("Informe um e-mail válido.")]).optional().default(""),
   telefone: optionalText,
@@ -96,9 +107,9 @@ export const supplierSchema = z.object({
 });
 
 export const carrierSchema = z.object({
-  razaoSocial: z.string().trim().min(1, "Informe a razão social."),
+  razaoSocial: requiredText("Informe a razão social."),
   nomeFantasia: optionalText,
-  cnpj: z.string().trim().min(1, "Informe o CNPJ."),
+  cnpj: requiredText("Informe o CNPJ."),
   inscricaoEstadual: optionalText,
   email: z.union([z.literal(""), z.string().trim().email("Informe um e-mail válido.")]).optional().default(""),
   telefone: optionalText,
@@ -113,11 +124,11 @@ export const carrierSchema = z.object({
 });
 
 export const driverSchema = z.object({
-  nome: z.string().trim().min(1, "Informe o nome do motorista."),
-  cpf: z.string().trim().min(1, "Informe o CPF."),
+  nome: requiredText("Informe o nome do motorista."),
+  cpf: requiredText("Informe o CPF."),
   rg: optionalText,
-  cnh: z.string().trim().min(1, "Informe o número da CNH."),
-  categoriaCnh: z.string().trim().min(1, "Selecione a categoria da CNH."),
+  cnh: requiredText("Informe o número da CNH."),
+  categoriaCnh: requiredText("Selecione a categoria da CNH."),
   validadeCnh: optionalText,
   telefone: optionalText,
   transportadoraId: optionalText,
@@ -125,10 +136,10 @@ export const driverSchema = z.object({
 });
 
 export const vehicleSchema = z.object({
-  placa: z.string().trim().min(1, "Informe a placa."),
+  placa: requiredText("Informe a placa."),
   renavam: optionalText,
   marca: optionalText,
-  modelo: z.string().trim().min(1, "Informe o modelo."),
+  modelo: requiredText("Informe o modelo."),
   ano: optionalNumber,
   tipo: optionalText,
   capacidadeCarga: optionalNumber,
@@ -140,24 +151,24 @@ export const vehicleSchema = z.object({
 });
 
 export const userSchema = z.object({
-  nome: z.string().trim().min(1, "Informe o nome do usuário."),
-  email: z.string().trim().email("Informe um e-mail válido."),
-  login: z.string().trim().min(1, "Informe o login."),
-  perfil: z.string().trim().min(1, "Selecione o perfil."),
+  nome: requiredText("Informe o nome do usuário."),
+  email: requiredEmail("Informe um e-mail válido."),
+  login: requiredText("Informe o login."),
+  perfil: requiredText("Selecione o perfil."),
   departamento: optionalText,
   status: statusSchema.optional().default("Ativo"),
 });
 
 export const warehouseLocationSchema = z.object({
-  codigoLocal: z.string().trim().min(1, "Informe o código do local."),
+  codigoLocal: requiredText("Informe o código do local."),
   descricao: optionalText,
-  armazem: z.string().trim().min(1, "Informe o armazém."),
+  armazem: requiredText("Informe o armazém."),
   area: optionalText,
   rua: optionalText,
   modulo: optionalText,
   nivel: optionalText,
   posicao: optionalText,
-  tipo: z.string().trim().min(1, "Selecione o tipo de local."),
+  tipo: requiredText("Selecione o tipo de local."),
   capacidade: optionalNumber,
   status: statusSchema.optional().default("Ativo"),
 });
@@ -175,6 +186,34 @@ export const brandSchema = z.object({
   status: statusSchema.optional().default("Ativo"),
 });
 
+export const productSupplierSchema = z.object({
+  produtoId: requiredText("Informe o produto."),
+  fornecedorId: requiredText("Selecione o fornecedor."),
+  skuFornecedor: optionalText,
+  custo: optionalNumber,
+  prazoEntregaDias: optionalNumber,
+  preferencial: z.coerce.boolean().optional().default(false),
+  status: statusSchema.optional().default("Ativo"),
+});
+
+export const productPriceSchema = z.object({
+  produtoId: requiredText("Informe o produto."),
+  tipoPreco: z.enum(["cost", "sale", "minimum"], "Selecione o tipo de preço."),
+  valor: z.coerce.number().min(0, "O valor não pode ser negativo."),
+  moeda: z.string().trim().optional().default("BRL"),
+  vigenciaInicio: optionalText,
+  vigenciaFim: optionalText,
+  status: statusSchema.optional().default("Ativo"),
+});
+
+export const productUnitSchema = z.object({
+  produtoId: requiredText("Informe o produto."),
+  unidadeCodigo: requiredText("Selecione a unidade."),
+  fatorConversao: z.coerce.number().gt(0, "O fator de conversão deve ser maior que zero.").optional().default(1),
+  codigoBarras: optionalText,
+  status: statusSchema.optional().default("Ativo"),
+});
+
 export const schemasByEntity = {
   products: productSchema,
   customers: customerSchema,
@@ -186,6 +225,9 @@ export const schemasByEntity = {
   "warehouse-locations": warehouseLocationSchema,
   categories: categorySchema,
   brands: brandSchema,
+  "product-suppliers": productSupplierSchema,
+  "product-prices": productPriceSchema,
+  "product-units": productUnitSchema,
 } as const;
 
 export type EntityRoute = keyof typeof schemasByEntity;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Eye, Pencil, Power, Trash2, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Eye, Pencil, Power, Trash2, CheckCircle2, XCircle, Loader2, Plus } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { FilterBar } from "@/components/ui/FilterBar";
 import { DataTable } from "@/components/ui/DataTable";
@@ -9,6 +9,7 @@ import { TableSkeleton } from "@/components/ui/TableSkeleton";
 import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { Button } from "@/components/ui/Button";
 import { EntityDrawer } from "@/components/cadastro/EntityDrawer";
 import { RelatedList } from "@/components/cadastro/RelatedList";
 import { AuditTrail } from "@/components/cadastro/AuditTrail";
@@ -39,12 +40,14 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
   const [page, setPage] = useState(1);
   const [drawer, setDrawer] = useState<DrawerState | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; tone: "success" | "danger" } | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
 
@@ -121,6 +124,32 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
     );
   }, [rows, config.filters, filterValues]);
 
+  // Vazio "de verdade" (nenhum registro cadastrado) merece uma mensagem e
+  // uma ação diferentes de "filtro sem resultado" — no primeiro caso, a
+  // ação certa é cadastrar o primeiro registro; no segundo, é limpar os
+  // filtros.
+  const emptyState =
+    items.length === 0
+      ? {
+          title: `Nenhum ${config.entityNounLower} cadastrado ainda`,
+          description: `Você ainda não possui ${config.pageLabel.toLowerCase()} cadastrados.`,
+          action: (
+            <Button onClick={openCreate}>
+              <Plus size={15} strokeWidth={2} />
+              Cadastrar {config.entityNounLower}
+            </Button>
+          ),
+        }
+      : {
+          title: "Nenhum resultado para os filtros aplicados",
+          description: "Ajuste ou limpe os filtros para encontrar o que você procura.",
+          action: (
+            <Button variant="secondary" onClick={handleReset}>
+              Limpar filtros
+            </Button>
+          ),
+        };
+
   const pageCount = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const pagedRows = filteredRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -136,12 +165,14 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
   }
 
   function openCreate() {
+    setSaveError(null);
     setDrawer({ mode: "create", values: config.defaultValues(items), errors: {} });
   }
 
   function openView(id: string) {
     const item = config.repository.get(id);
     if (!item) return;
+    setSaveError(null);
     setDrawer({ mode: "view", editingId: id, values: { ...item }, errors: {} });
     setAuditEntries([]);
     setAuditLoading(true);
@@ -150,6 +181,7 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
   function openEdit(id: string) {
     const item = config.repository.get(id);
     if (!item) return;
+    setSaveError(null);
     setDrawer({ mode: "edit", editingId: id, values: { ...item }, errors: {} });
   }
 
@@ -160,9 +192,11 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
   function closeDrawer() {
     if (saving) return;
     setDrawer(null);
+    setSaveError(null);
   }
 
   function handleFieldChange(key: string, value: string | number | boolean) {
+    setSaveError(null);
     setDrawer((prev) => (prev ? { ...prev, values: { ...prev.values, [key]: value } } : prev));
   }
 
@@ -174,6 +208,7 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
       return;
     }
     setSaving(true);
+    setSaveError(null);
     try {
       if (drawer.mode === "create") {
         await config.repository.create(drawer.values as Partial<T>);
@@ -184,8 +219,10 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
       }
       setDrawer(null);
     } catch (error) {
-      // Mantém o drawer aberto com os dados preenchidos para nova tentativa.
-      showToast(errorMessage(error, `Não foi possível salvar o ${config.entityNounLower}.`), "danger");
+      // Mantém o drawer aberto com os dados preenchidos para nova tentativa —
+      // o erro fica visível dentro do próprio drawer (não só num toast que
+      // desaparece em poucos segundos).
+      setSaveError(errorMessage(error, `Não foi possível salvar o ${config.entityNounLower}.`));
     } finally {
       setSaving(false);
     }
@@ -206,18 +243,19 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
   async function handleDeleteConfirm() {
     if (!confirmDeleteId) return;
     setDeleting(true);
+    setDeleteError(null);
     try {
       const result = await config.repository.remove(confirmDeleteId);
       if (result.ok) {
         showToast(`${config.entityLabel} excluído com sucesso.`);
         setConfirmDeleteId(null);
       } else {
-        showToast(result.reason, "danger");
-        setConfirmDeleteId(null);
+        // Mantém o diálogo aberto para o usuário ler o motivo (ex.: bloqueio
+        // por dependência) antes de decidir cancelar — não fecha sozinho.
+        setDeleteError(result.reason);
       }
     } catch (error) {
-      showToast(errorMessage(error, "Não foi possível excluir o registro."), "danger");
-      setConfirmDeleteId(null);
+      setDeleteError(errorMessage(error, "Não foi possível excluir o registro."));
     } finally {
       setDeleting(false);
     }
@@ -259,6 +297,7 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
           <DataTable
             columns={config.columns}
             rows={pagedRows}
+            emptyState={emptyState}
             onRowClick={(row) => openView(String(row.id))}
             renderActions={(row) => {
               const id = String(row.id);
@@ -292,7 +331,10 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
                     {isPending ? <Loader2 size={16} className="animate-spin" /> : <Power size={16} />}
                   </button>
                   <button
-                    onClick={() => setConfirmDeleteId(id)}
+                    onClick={() => {
+                      setDeleteError(null);
+                      setConfirmDeleteId(id);
+                    }}
                     aria-label="Excluir"
                     title="Excluir"
                     className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-danger-soft hover:text-danger transition-colors"
@@ -319,6 +361,7 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
           open
           mode={drawer.mode}
           saving={saving}
+          formError={saveError}
           title={
             drawer.mode === "create"
               ? `Novo ${config.entityNounLower}`
@@ -358,9 +401,13 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
         confirmLabel="Excluir"
         loadingLabel="Excluindo..."
         loading={deleting}
+        error={deleteError}
         tone="danger"
         onConfirm={handleDeleteConfirm}
-        onCancel={() => setConfirmDeleteId(null)}
+        onCancel={() => {
+          setConfirmDeleteId(null);
+          setDeleteError(null);
+        }}
       />
 
       {/* z-[80]: acima do Drawer (z-[60]) e do ConfirmDialog (z-[70]) — o

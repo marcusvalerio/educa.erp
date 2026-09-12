@@ -1,8 +1,7 @@
 "use client";
 
-import { CadastroPage } from "@/components/cadastro/CadastroPage";
-import { produtoCadastroConfig } from "@/lib/cadastros/configs";
+import { ProdutosPage } from "@/components/produtos/ProdutosPage";
 
 export default function Page() {
-  return <CadastroPage config={produtoCadastroConfig} />;
+  return <ProdutosPage />;
 }

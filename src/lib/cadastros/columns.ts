@@ -1,7 +1,6 @@
 import type { ColumnConfig, FilterConfig } from "@/lib/pages/types";
 import type { Row } from "@/lib/mock/generators";
 import type {
-  Produto,
   Cliente,
   Fornecedor,
   Transportadora,
@@ -15,7 +14,6 @@ import {
   motoristasRepository,
 } from "./repository";
 import {
-  CATEGORIAS_PRODUTO,
   TIPOS_PESSOA,
   CATEGORIAS_FORNECIMENTO,
   TIPOS_TRANSPORTE,
@@ -44,38 +42,11 @@ export function cnhAlertaTexto(validadeCnh: string): string {
   return formatted;
 }
 
-// PRODUTOS
-export const produtoColumns: ColumnConfig[] = [
-  { key: "codigo", label: "Código" },
-  { key: "sku", label: "SKU" },
-  { key: "produto", label: "Produto" },
-  { key: "categoria", label: "Categoria" },
-  { key: "unidade", label: "Unidade", align: "center" },
-  { key: "estoqueMinimo", label: "Estoque mín.", align: "right" },
-  { key: "estoqueMaximo", label: "Estoque máx.", align: "right" },
-  { key: "status", label: "Status", render: "status" },
-];
-
-export const produtoFilters: FilterConfig[] = [
-  { key: "codigo", label: "Código", type: "text" },
-  { key: "produto", label: "Descrição", type: "text" },
-  { key: "categoria", label: "Categoria", type: "select", options: [...CATEGORIAS_PRODUTO] },
-  { key: "status", label: "Status", type: "select", options: [...STATUS_OPTIONS] },
-];
-
-export function produtoToRow(p: Produto): Row {
-  return {
-    id: p.id,
-    codigo: p.codigo,
-    sku: p.sku,
-    produto: p.descricao,
-    categoria: p.categoria,
-    unidade: p.unidade,
-    estoqueMinimo: p.estoqueMinimo,
-    estoqueMaximo: p.estoqueMaximo,
-    status: p.status,
-  };
-}
+// PRODUTOS — colunas/filtros/toRow para o padrão genérico de cadastro
+// foram removidos na Fase 2 (ver src/components/produtos/ProdutosPage.tsx,
+// que monta suas próprias colunas com categoria/marca resolvidas via
+// lookup real em vez do texto legado/constantes hardcoded que existiam
+// aqui).
 
 // CLIENTES
 export const clienteColumns: ColumnConfig[] = [

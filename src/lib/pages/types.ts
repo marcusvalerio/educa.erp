@@ -11,9 +11,11 @@ export type ColumnConfig = {
   sortable?: boolean;
 };
 
+export type SelectFilterOption = string | { value: string; label: string };
+
 export type FilterConfig =
   | { key: string; label: string; type: "text"; placeholder?: string }
-  | { key: string; label: string; type: "select"; options: string[] };
+  | { key: string; label: string; type: "select"; options: SelectFilterOption[] };
 
 export type PageConfig = {
   moduleLabel: string;

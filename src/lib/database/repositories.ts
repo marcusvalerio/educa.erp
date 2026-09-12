@@ -22,6 +22,12 @@ import {
   categoryToRowFields,
   brandFromRow,
   brandToRowFields,
+  productSupplierFromRow,
+  productSupplierToRowFields,
+  productPriceFromRow,
+  productPriceToRowFields,
+  productUnitFromRow,
+  productUnitToRowFields,
 } from "./mappers";
 
 export const productsTable = createTableRepository({
@@ -32,6 +38,7 @@ export const productsTable = createTableRepository({
   fromRow: productFromRow,
   toRowFields: productToRowFields,
   labelOf: (item) => item.codigo,
+  filterParams: { categoryId: "category_id", brandId: "brand_id", unit: "unit" },
 });
 
 export const customersTable = createTableRepository({
@@ -184,6 +191,39 @@ export const brandsTable = createTableRepository({
   ],
 });
 
+export const productSuppliersTable = createTableRepository({
+  table: "product_suppliers",
+  entityLabel: "Fornecedor do produto",
+  searchColumns: [],
+  defaultSort: "created_at",
+  fromRow: productSupplierFromRow,
+  toRowFields: productSupplierToRowFields,
+  labelOf: (item) => item.fornecedorId,
+  filterParams: { productId: "product_id" },
+});
+
+export const productPricesTable = createTableRepository({
+  table: "product_prices",
+  entityLabel: "Preço do produto",
+  searchColumns: [],
+  defaultSort: "valid_from",
+  fromRow: productPriceFromRow,
+  toRowFields: productPriceToRowFields,
+  labelOf: (item) => item.tipoPreco,
+  filterParams: { productId: "product_id" },
+});
+
+export const productUnitsTable = createTableRepository({
+  table: "product_units",
+  entityLabel: "Embalagem do produto",
+  searchColumns: [],
+  defaultSort: "created_at",
+  fromRow: productUnitFromRow,
+  toRowFields: productUnitToRowFields,
+  labelOf: (item) => item.unidadeCodigo,
+  filterParams: { productId: "product_id" },
+});
+
 export const tablesByEntity = {
   products: productsTable,
   customers: customersTable,
@@ -195,6 +235,9 @@ export const tablesByEntity = {
   "warehouse-locations": warehouseLocationsTable,
   categories: categoriesTable,
   brands: brandsTable,
+  "product-suppliers": productSuppliersTable,
+  "product-prices": productPricesTable,
+  "product-units": productUnitsTable,
 } as const;
 
 export type EntityRoute = keyof typeof tablesByEntity;

@@ -10,8 +10,23 @@ import {
   categoryToRowFields,
   brandFromRow,
   brandToRowFields,
+  productSupplierFromRow,
+  productSupplierToRowFields,
+  productPriceFromRow,
+  productPriceToRowFields,
+  productUnitFromRow,
+  productUnitToRowFields,
 } from "@/lib/database/mappers";
-import type { ProductRow, CustomerRow, DriverRow, ProductCategoryRow, ProductBrandRow } from "@/lib/database/schema";
+import type {
+  ProductRow,
+  CustomerRow,
+  DriverRow,
+  ProductCategoryRow,
+  ProductBrandRow,
+  ProductSupplierRow,
+  ProductPriceRow,
+  ProductUnitRow,
+} from "@/lib/database/schema";
 
 const baseProductRow: ProductRow = {
   id: "11111111-1111-1111-1111-111111111111",
@@ -202,5 +217,91 @@ describe("brandFromRow/brandToRowFields", () => {
     const fields = brandToRowFields({ nome: "Marca Atualizada", status: "Inativo" });
     assert.equal(fields.name, "Marca Atualizada");
     assert.equal(fields.status, "inactive");
+  });
+});
+
+const baseProductSupplierRow: ProductSupplierRow = {
+  id: "dddddddd-dddd-dddd-dddd-dddddddddddd",
+  company_id: "00000000-0000-0000-0000-000000000001",
+  product_id: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+  supplier_id: "ffffffff-ffff-ffff-ffff-ffffffffffff",
+  supplier_sku: "SUP-SKU-1",
+  cost: 42.5,
+  lead_time_days: 5,
+  is_preferred: true,
+  status: "active",
+  created_at: "2026-01-01T00:00:00.000Z",
+  updated_at: "2026-01-01T00:00:00.000Z",
+};
+
+describe("productSupplierFromRow/productSupplierToRowFields", () => {
+  test("faz round-trip de custo/prazo/preferência", () => {
+    const entity = productSupplierFromRow(baseProductSupplierRow);
+    assert.equal(entity.produtoId, "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
+    assert.equal(entity.fornecedorId, "ffffffff-ffff-ffff-ffff-ffffffffffff");
+    assert.equal(entity.custo, 42.5);
+    assert.equal(entity.prazoEntregaDias, 5);
+    assert.equal(entity.preferencial, true);
+
+    const fields = productSupplierToRowFields({ custo: 10, preferencial: false });
+    assert.equal(fields.cost, 10);
+    assert.equal(fields.is_preferred, false);
+  });
+});
+
+const baseProductPriceRow: ProductPriceRow = {
+  id: "11111111-2222-3333-4444-555555555555",
+  company_id: "00000000-0000-0000-0000-000000000001",
+  product_id: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+  price_type: "sale",
+  amount: 199.9,
+  currency: "BRL",
+  valid_from: "2026-01-01T00:00:00.000Z",
+  valid_to: null,
+  status: "active",
+  created_at: "2026-01-01T00:00:00.000Z",
+  updated_at: "2026-01-01T00:00:00.000Z",
+};
+
+describe("productPriceFromRow/productPriceToRowFields", () => {
+  test("mapeia valid_to null para vigenciaFim vazio", () => {
+    const entity = productPriceFromRow(baseProductPriceRow);
+    assert.equal(entity.tipoPreco, "sale");
+    assert.equal(entity.valor, 199.9);
+    assert.equal(entity.vigenciaFim, "");
+  });
+
+  test("omite valid_from quando vigenciaInicio não é enviado (deixa o default now() do banco decidir)", () => {
+    const fields = productPriceToRowFields({ produtoId: "x", tipoPreco: "cost", valor: 5 });
+    assert.equal("valid_from" in fields, false);
+  });
+
+  test("envia valid_from quando vigenciaInicio é informado", () => {
+    const fields = productPriceToRowFields({ vigenciaInicio: "2026-06-01T00:00:00.000Z" });
+    assert.equal(fields.valid_from, "2026-06-01T00:00:00.000Z");
+  });
+});
+
+const baseProductUnitRow: ProductUnitRow = {
+  id: "66666666-7777-8888-9999-000000000000",
+  company_id: "00000000-0000-0000-0000-000000000001",
+  product_id: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+  unit_code: "CX",
+  conversion_factor: 12,
+  barcode: "7891234567890",
+  status: "active",
+  created_at: "2026-01-01T00:00:00.000Z",
+  updated_at: "2026-01-01T00:00:00.000Z",
+};
+
+describe("productUnitFromRow/productUnitToRowFields", () => {
+  test("faz round-trip do fator de conversão e código de barras da embalagem", () => {
+    const entity = productUnitFromRow(baseProductUnitRow);
+    assert.equal(entity.unidadeCodigo, "CX");
+    assert.equal(entity.fatorConversao, 12);
+    assert.equal(entity.codigoBarras, "7891234567890");
+
+    const fields = productUnitToRowFields({ fatorConversao: 24 });
+    assert.equal(fields.conversion_factor, 24);
   });
 });

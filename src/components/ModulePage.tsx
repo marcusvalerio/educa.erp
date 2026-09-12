@@ -9,6 +9,7 @@ import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Drawer } from "@/components/ui/Drawer";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Button } from "@/components/ui/Button";
 import type { PageConfig } from "@/lib/pages/types";
 import type { Row } from "@/lib/mock/generators";
 
@@ -66,6 +67,19 @@ export function ModulePage({ config }: { config: PageConfig }) {
     });
   }
 
+  const hasActiveFilters = Object.values(filterValues).some((v) => v && v !== "Todos");
+  const emptyState = hasActiveFilters
+    ? {
+        title: "Nenhum resultado para os filtros aplicados",
+        description: config.emptyHint ?? "Ajuste ou limpe os filtros para encontrar o que você procura.",
+        action: (
+          <Button variant="secondary" onClick={handleReset}>
+            Limpar filtros
+          </Button>
+        ),
+      }
+    : undefined;
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -93,6 +107,7 @@ export function ModulePage({ config }: { config: PageConfig }) {
         columns={config.columns}
         rows={pagedRows}
         emptyHint={config.emptyHint}
+        emptyState={emptyState}
         sort={sort ?? undefined}
         onSortChange={handleSortChange}
         onRowClick={setViewingRow}

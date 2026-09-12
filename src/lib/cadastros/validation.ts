@@ -1,5 +1,4 @@
 import type {
-  Produto,
   Cliente,
   Fornecedor,
   Transportadora,
@@ -33,20 +32,10 @@ function duplicate<T>(
   if (clash) errors[key] = message;
 }
 
-export function validateProduto(data: Partial<Produto>, list: Produto[], currentId?: string): FieldErrors {
-  const errors: FieldErrors = {};
-  required(data.codigo, "Informe o código do produto.", errors, "codigo");
-  required(data.descricao, "Informe a descrição do produto.", errors, "descricao");
-  required(data.unidade, "Selecione a unidade de medida.", errors, "unidade");
-  required(data.categoria, "Selecione a categoria.", errors, "categoria");
-  if (data.codigo) {
-    duplicate(list, currentId, (p) => p.codigo === data.codigo, "Já existe um produto com este código.", errors, "codigo");
-  }
-  if (data.estoqueMinimo !== undefined && data.estoqueMaximo !== undefined && data.estoqueMaximo < data.estoqueMinimo) {
-    errors.estoqueMaximo = "O estoque máximo deve ser maior ou igual ao mínimo.";
-  }
-  return errors;
-}
+// validateProduto foi removido na Fase 2 — a validação de Produtos passou
+// a viver em src/components/produtos/ProdutoDrawer.tsx (client-side,
+// alinhada aos campos reais do novo formulário) mais o Zod schema em
+// src/lib/validations/cadastros.ts (server-side, fonte de verdade).
 
 export function validateCliente(data: Partial<Cliente>, list: Cliente[], currentId?: string): FieldErrors {
   const errors: FieldErrors = {};

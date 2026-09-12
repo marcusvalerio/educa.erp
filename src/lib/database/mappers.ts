@@ -9,6 +9,9 @@ import type {
   LocalEstoque,
   Categoria,
   Marca,
+  ProdutoFornecedor,
+  ProdutoPreco,
+  ProdutoEmbalagem,
   StatusCadastro,
   TipoPessoa,
 } from "@/lib/cadastros/types";
@@ -23,6 +26,9 @@ import type {
   WarehouseLocationRow,
   ProductCategoryRow,
   ProductBrandRow,
+  ProductSupplierRow,
+  ProductPriceRow,
+  ProductUnitRow,
   DbStatus,
 } from "./schema";
 
@@ -429,6 +435,88 @@ export function brandToRowFields(data: Partial<Marca>): Partial<ProductBrandRow>
     name: data.nome,
     status: statusToDb(data.status),
   } as Record<string, unknown>) as Partial<ProductBrandRow>;
+}
+
+// --------------------------------------------------- Produto ↔ Fornecedor
+export function productSupplierFromRow(row: ProductSupplierRow): ProdutoFornecedor {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    produtoId: row.product_id,
+    fornecedorId: row.supplier_id,
+    skuFornecedor: row.supplier_sku ?? "",
+    custo: Number(row.cost ?? 0),
+    prazoEntregaDias: Number(row.lead_time_days ?? 0),
+    preferencial: row.is_preferred,
+  };
+}
+
+export function productSupplierToRowFields(data: Partial<ProdutoFornecedor>): Partial<ProductSupplierRow> {
+  return omitUndefined({
+    product_id: data.produtoId,
+    supplier_id: data.fornecedorId,
+    supplier_sku: nullableText(data.skuFornecedor),
+    cost: data.custo,
+    lead_time_days: data.prazoEntregaDias,
+    is_preferred: data.preferencial,
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<ProductSupplierRow>;
+}
+
+// -------------------------------------------------------- Preço de produto
+export function productPriceFromRow(row: ProductPriceRow): ProdutoPreco {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    produtoId: row.product_id,
+    tipoPreco: row.price_type,
+    valor: Number(row.amount),
+    moeda: row.currency,
+    vigenciaInicio: row.valid_from,
+    vigenciaFim: row.valid_to ?? "",
+  };
+}
+
+export function productPriceToRowFields(data: Partial<ProdutoPreco>): Partial<ProductPriceRow> {
+  return omitUndefined({
+    product_id: data.produtoId,
+    price_type: data.tipoPreco,
+    amount: data.valor,
+    currency: data.moeda,
+    // vazio/ausente omite a coluna — deixa o default now() do banco
+    // decidir (valid_from é NOT NULL, não aceita string vazia nem null).
+    valid_from: data.vigenciaInicio ? data.vigenciaInicio : undefined,
+    valid_to: nullableText(data.vigenciaFim),
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<ProductPriceRow>;
+}
+
+// -------------------------------------------------- Embalagem de produto
+export function productUnitFromRow(row: ProductUnitRow): ProdutoEmbalagem {
+  return {
+    id: row.id,
+    status: statusFromDb(row.status),
+    criadoEm: row.created_at,
+    atualizadoEm: row.updated_at,
+    produtoId: row.product_id,
+    unidadeCodigo: row.unit_code,
+    fatorConversao: Number(row.conversion_factor),
+    codigoBarras: row.barcode ?? "",
+  };
+}
+
+export function productUnitToRowFields(data: Partial<ProdutoEmbalagem>): Partial<ProductUnitRow> {
+  return omitUndefined({
+    product_id: data.produtoId,
+    unit_code: data.unidadeCodigo,
+    conversion_factor: data.fatorConversao,
+    barcode: nullableText(data.codigoBarras),
+    status: statusToDb(data.status),
+  } as Record<string, unknown>) as Partial<ProductUnitRow>;
 }
 
 export function warehouseLocationToRowFields(data: Partial<LocalEstoque>): Partial<WarehouseLocationRow> {

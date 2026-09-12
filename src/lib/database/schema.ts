@@ -1141,6 +1141,242 @@ export type ProductionOperationLogRow = {
   created_at: string;
 };
 
+// -------------------------------------------------------------- Financeiro
+// Espelha supabase/migrations/0031-0035. financial_categories/
+// cost_centers são "cadastro" (CRUD direto via RLS). financial_accounts
+// nasce via fn_create_financial_account (current_balance sempre
+// sincronizado), mas aceita PATCH direto para campos não-financeiros.
+// accounts_payable/accounts_receivable e tudo que deriva deles são
+// documentos transacionais — só leitura pela API REST genérica, toda
+// escrita via função RPC.
+
+export type FinancialCategoryType = "INCOME" | "EXPENSE";
+
+export type FinancialCategoryRow = {
+  id: string;
+  company_id: string;
+  parent_id: string | null;
+  code: string;
+  name: string;
+  type: FinancialCategoryType;
+  description: string | null;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+};
+
+export type CostCenterRow = {
+  id: string;
+  company_id: string;
+  parent_id: string | null;
+  code: string;
+  name: string;
+  status: "active" | "inactive";
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FinancialAccountType = "CASH" | "BANK" | "DIGITAL" | "OTHER";
+
+export type FinancialAccountRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  type: FinancialAccountType;
+  bank_name: string | null;
+  bank_agency: string | null;
+  bank_account_masked: string | null;
+  opening_balance: number;
+  current_balance: number;
+  currency_code: string;
+  status: "active" | "inactive";
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AccountsPayableOriginType = "manual" | "purchase_receipt";
+export type AccountsPayableStatus = "OPEN" | "PARTIALLY_PAID" | "PAID" | "OVERDUE" | "CANCELLED";
+
+export type AccountsPayableRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  supplier_id: string;
+  description: string;
+  category_id: string | null;
+  cost_center_id: string | null;
+  origin_type: AccountsPayableOriginType;
+  origin_id: string | null;
+  document_reference: string | null;
+  original_amount: number;
+  discount: number;
+  interest: number;
+  penalty: number;
+  updated_amount: number;
+  status: AccountsPayableStatus;
+  issue_date: string;
+  due_date: string;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AccountsPayableInstallmentRow = {
+  id: string;
+  company_id: string;
+  payable_id: string;
+  installment_number: number;
+  due_date: string;
+  amount: number;
+  paid_amount: number;
+  status: AccountsPayableStatus;
+  settled_at: string | null;
+  created_at: string;
+};
+
+export type AccountsReceivableOriginType = "manual" | "sales_order";
+export type AccountsReceivableStatus = "OPEN" | "PARTIALLY_RECEIVED" | "RECEIVED" | "OVERDUE" | "CANCELLED";
+
+export type AccountsReceivableRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  customer_id: string;
+  description: string;
+  category_id: string | null;
+  cost_center_id: string | null;
+  origin_type: AccountsReceivableOriginType;
+  origin_id: string | null;
+  document_reference: string | null;
+  original_amount: number;
+  discount: number;
+  interest: number;
+  penalty: number;
+  updated_amount: number;
+  status: AccountsReceivableStatus;
+  issue_date: string;
+  due_date: string;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AccountsReceivableInstallmentRow = {
+  id: string;
+  company_id: string;
+  receivable_id: string;
+  installment_number: number;
+  due_date: string;
+  amount: number;
+  received_amount: number;
+  status: AccountsReceivableStatus;
+  settled_at: string | null;
+  created_at: string;
+};
+
+export type FinancialTransactionType = "CREDIT" | "DEBIT";
+
+export type FinancialTransactionRow = {
+  id: string;
+  company_id: string;
+  financial_account_id: string;
+  type: FinancialTransactionType;
+  amount: number;
+  occurred_at: string;
+  reference_type: string | null;
+  reference_id: string | null;
+  category_id: string | null;
+  cost_center_id: string | null;
+  description: string | null;
+  idempotency_key: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type PaymentMethod = "CASH" | "BANK_TRANSFER" | "PIX" | "CARD" | "BOLETO" | "OTHER";
+export type SettlementStatus = "CONFIRMED" | "REVERSED";
+
+export type PaymentRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  installment_id: string;
+  financial_account_id: string;
+  amount: number;
+  paid_at: string;
+  method: PaymentMethod;
+  status: SettlementStatus;
+  reference: string | null;
+  notes: string | null;
+  idempotency_key: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type ReceiptRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  installment_id: string;
+  financial_account_id: string;
+  amount: number;
+  received_at: string;
+  method: PaymentMethod;
+  status: SettlementStatus;
+  reference: string | null;
+  notes: string | null;
+  idempotency_key: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type BankReconciliationStatus = "in_progress" | "completed";
+
+export type BankReconciliationRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  financial_account_id: string;
+  period_start: string;
+  period_end: string;
+  status: BankReconciliationStatus;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BankReconciliationItemStatus = "reconciled" | "unreconciled" | "divergent";
+
+export type BankReconciliationItemRow = {
+  id: string;
+  company_id: string;
+  reconciliation_id: string;
+  financial_transaction_id: string;
+  status: BankReconciliationItemStatus;
+  notes: string | null;
+  created_at: string;
+};
+
+export type CashFlowSummaryRow = {
+  company_id: string;
+  current_balance_total: number;
+  open_receivable_total: number;
+  open_payable_total: number;
+};
+
+export type CashFlowProjectionRow = {
+  company_id: string;
+  due_date: string;
+  direction: "INFLOW" | "OUTFLOW";
+  amount: number;
+};
+
 export type AuditLogRow = {
   id: string;
   company_id: string | null;

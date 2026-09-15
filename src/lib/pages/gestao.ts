@@ -56,26 +56,10 @@ export const gestao: Record<string, PageConfig> = {
     ],
     rows: genRelatorios(701),
   },
-  dashboard: {
-    moduleLabel,
-    moduleHref,
-    pageLabel: "Dashboard",
-    title: "Dashboard de gestão",
-    description: "Painel executivo com visão consolidada de metas e desempenho da operação.",
-    primaryActionLabel: "Novo painel",
-    filters: [
-      { key: "indicador", label: "Indicador", type: "text" },
-      { key: "status", label: "Status", type: "select", options: ["Ativo", "Atenção"] },
-    ],
-    columns: [
-      { key: "indicador", label: "Indicador" },
-      { key: "valorAtual", label: "Valor atual", align: "right" },
-      { key: "meta", label: "Meta", align: "right" },
-      { key: "tendencia", label: "Tendência", align: "center" },
-      { key: "status", label: "Status", render: "status" },
-    ],
-    rows: KPI_ROWS.slice().reverse(),
-  },
+  // "dashboard" foi removido deste config (Fase 19): a tela em
+  // src/app/gestao/dashboard/page.tsx agora é um componente dedicado
+  // que busca dados REAIS de fn_report_executive via /api/reports/
+  // executive, nunca mais o KPI_ROWS fabricado que vivia aqui.
   auditoria: {
     moduleLabel,
     moduleHref,

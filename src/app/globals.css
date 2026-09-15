@@ -108,6 +108,90 @@
   --neutral-soft: #e3e6eb;
 }
 
+/*
+  Modo escuro (Fase 19 — Design System) — paleta própria, não uma
+  inversão ingênua dos tokens claros. Superfícies derivadas de
+  "Authentic Black / Dark Graphic" (#08080C) com leve tom azulado
+  (identidade ASTRA), nunca cinza neutro puro. --sidebar/--brand-tint
+  não são redefinidos aqui porque a sidebar já nasce escura em ambos os
+  temas (identidade visual constante, não depende do modo).
+
+  Aplicado em dois lugares, nunca só um (ver src/components/theme/
+  ThemeProvider.tsx): a media query cobre a preferência "Sistema" sem
+  JS (evita flash antes da hidratação); [data-theme="dark"] cobre a
+  escolha explícita do usuário e SEMPRE ganha da media query, inclusive
+  quando o sistema está em claro e o usuário escolheu escuro.
+*/
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0a0d13;
+    --surface: #11151d;
+    --surface-hover: #1a1f2a;
+    --surface-sunken: #0d1017;
+    --border: #232a37;
+    --border-strong: #333d4f;
+
+    --ink: #eef1f5;
+    --ink-muted: #a4acba;
+    --ink-subtle: #6c7585;
+
+    --brand-hover: #19a7ea;
+    --brand-soft: #102a3d;
+    --brand-ink: #8dc8ef;
+
+    --success: #34c07e;
+    --success-soft: #123524;
+    --warning: #e0923f;
+    --warning-soft: #3a2a16;
+    --danger: #ec6a5d;
+    --danger-soft: #3a1e1c;
+    --info: #5aa9d6;
+    --info-soft: #16293a;
+    --neutral: #a0a6b3;
+    --neutral-soft: #262b35;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.4);
+    --shadow-raised: 0 4px 14px -4px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-elevated: 0 24px 48px -16px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.45);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0a0d13;
+  --surface: #11151d;
+  --surface-hover: #1a1f2a;
+  --surface-sunken: #0d1017;
+  --border: #232a37;
+  --border-strong: #333d4f;
+
+  --ink: #eef1f5;
+  --ink-muted: #a4acba;
+  --ink-subtle: #6c7585;
+
+  --brand-hover: #19a7ea;
+  --brand-soft: #102a3d;
+  --brand-ink: #8dc8ef;
+
+  --success: #34c07e;
+  --success-soft: #123524;
+  --warning: #e0923f;
+  --warning-soft: #3a2a16;
+  --danger: #ec6a5d;
+  --danger-soft: #3a1e1c;
+  --info: #5aa9d6;
+  --info-soft: #16293a;
+  --neutral: #a0a6b3;
+  --neutral-soft: #262b35;
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 1px rgba(0, 0, 0, 0.4);
+  --shadow-raised: 0 4px 14px -4px rgba(0, 0, 0, 0.55), 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 24px 48px -16px rgba(0, 0, 0, 0.7), 0 4px 12px -4px rgba(0, 0, 0, 0.45);
+}
+
+body {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
 * {
   border-color: var(--color-border);
 }

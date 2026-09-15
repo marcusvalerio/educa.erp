@@ -2138,3 +2138,455 @@ export type AuditLogRow = {
   new_data: Record<string, unknown> | null;
   created_at: string;
 };
+
+// ============================================================ Fase 15 — CRM
+export type LeadStatus = "NEW" | "CONTACTED" | "QUALIFIED" | "DISQUALIFIED" | "CONVERTED";
+export type LeadQualification = "COLD" | "WARM" | "HOT";
+export type ActivityType = "CALL" | "MEETING" | "TASK" | "CONTACT" | "FOLLOW_UP" | "NOTE";
+export type ActivityStatus = "PENDING" | "DONE" | "CANCELLED";
+export type ActivityRelatedType = "lead" | "opportunity" | "customer";
+export type OpportunityStatus = "OPEN" | "WON" | "LOST";
+
+export type LeadOriginRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  status: DbStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LeadRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  company_name: string | null;
+  document: string | null;
+  email: string | null;
+  phone: string | null;
+  origin_id: string | null;
+  responsible_user_id: string | null;
+  status: LeadStatus;
+  qualification: LeadQualification | null;
+  disqualify_reason: string | null;
+  converted_customer_id: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PipelineRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  status: DbStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PipelineStageRow = {
+  id: string;
+  company_id: string;
+  pipeline_id: string;
+  code: string;
+  name: string;
+  sequence: number;
+  probability_default: number;
+  is_won: boolean;
+  is_lost: boolean;
+  status: DbStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OpportunityRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  title: string;
+  customer_id: string | null;
+  lead_id: string | null;
+  pipeline_id: string;
+  stage_id: string;
+  estimated_value: number;
+  probability: number;
+  owner_user_id: string | null;
+  expected_close_date: string | null;
+  origin_id: string | null;
+  status: OpportunityStatus;
+  lost_reason: string | null;
+  closed_at: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OpportunityStageHistoryRow = {
+  id: string;
+  company_id: string;
+  opportunity_id: string;
+  stage_id: string;
+  entered_at: string;
+  exited_at: string | null;
+  created_at: string;
+};
+
+export type ActivityRow = {
+  id: string;
+  company_id: string;
+  activity_type: ActivityType;
+  subject: string;
+  description: string | null;
+  related_type: ActivityRelatedType;
+  related_id: string;
+  due_date: string | null;
+  completed_at: string | null;
+  status: ActivityStatus;
+  owner_user_id: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+// ============================================================ Fase 16 — Ativos e Manutenção
+export type AssetStatus = "ACTIVE" | "INACTIVE" | "UNDER_MAINTENANCE" | "DECOMMISSIONED";
+export type MaintenancePlanType = "PREVENTIVE" | "CORRECTIVE" | "PREDICTIVE";
+export type MaintenancePeriodicityType = "TIME" | "HOURS" | "CYCLES" | "MILEAGE" | "OTHER";
+export type MaintenanceOrderStatus = "OPEN" | "PLANNED" | "IN_PROGRESS" | "WAITING_PARTS" | "COMPLETED" | "CANCELLED";
+export type MaintenanceCostType = "SERVICE" | "EXPENSE";
+
+export type AssetCategoryRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  status: DbStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AssetLocationRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  parent_id: string | null;
+  description: string | null;
+  status: DbStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AssetRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  description: string;
+  category_id: string | null;
+  manufacturer: string | null;
+  model: string | null;
+  serial_number: string | null;
+  location_id: string | null;
+  parent_asset_id: string | null;
+  status: AssetStatus;
+  acquisition_date: string | null;
+  acquisition_cost: number | null;
+  supplier_id: string | null;
+  warranty_expiration: string | null;
+  cost_center_id: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MaintenancePlanRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  asset_id: string | null;
+  asset_category_id: string | null;
+  plan_type: MaintenancePlanType;
+  periodicity_type: MaintenancePeriodicityType;
+  periodicity_value: number | null;
+  periodicity_unit: string | null;
+  description: string;
+  notes: string | null;
+  status: DbStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MaintenanceOrderRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  asset_id: string;
+  plan_id: string | null;
+  order_type: MaintenancePlanType;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  status: MaintenanceOrderStatus;
+  description: string;
+  cause: string | null;
+  solution: string | null;
+  scheduled_date: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  requested_by: string | null;
+  assigned_to: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MaintenanceOrderCostRow = {
+  id: string;
+  company_id: string;
+  maintenance_order_id: string;
+  cost_type: MaintenanceCostType;
+  description: string;
+  amount: number;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type MaintenanceOrderCostSummary = {
+  parts_cost: number;
+  services_cost: number;
+  expenses_cost: number;
+  total_cost: number;
+};
+
+export type AssetHistoryEvent = {
+  event_at: string;
+  event_type: "MAINTENANCE_ORDER" | "PART_CONSUMPTION" | "MAINTENANCE_COST" | "AUDIT";
+  description: string;
+  amount: number | null;
+};
+
+// ============================================================ Fase 17 — Qualidade
+export type QualityInspectionType = "RECEIVING" | "PRODUCTION" | "SHIPPING" | "RETURN" | "PROCESS" | "OTHER";
+export type QualityCriteriaType = "PASS_FAIL" | "NUMERIC" | "TEXT" | "YES_NO" | "RANGE";
+export type QualityInspectionStatus = "PENDING" | "IN_PROGRESS" | "APPROVED" | "REJECTED" | "PARTIALLY_APPROVED";
+export type QualityResult = "PASS" | "FAIL";
+export type NonconformitySeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type NonconformityStatus = "OPEN" | "IN_ANALYSIS" | "IN_TREATMENT" | "CLOSED";
+export type QualityActionType = "CORRECTIVE" | "PREVENTIVE";
+export type QualityActionStatus = "OPEN" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+export type QualitySourceType = "purchase_receipt" | "production_order" | "production_operation" | "shipment" | "delivery_event" | "asset" | "maintenance_order" | "service_order" | "other";
+
+export type QualityChecklistRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  inspection_type: QualityInspectionType;
+  description: string | null;
+  status: DbStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type QualityChecklistItemRow = {
+  id: string;
+  company_id: string;
+  checklist_id: string;
+  sequence: number;
+  description: string;
+  criteria_type: QualityCriteriaType;
+  expected_value: string | null;
+  min_value: number | null;
+  max_value: number | null;
+  unit: string | null;
+  is_mandatory: boolean;
+  created_at: string;
+};
+
+export type QualityInspectionRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  inspection_type: QualityInspectionType;
+  checklist_id: string | null;
+  source_type: QualitySourceType | null;
+  source_id: string | null;
+  product_id: string | null;
+  lot_id: string | null;
+  status: QualityInspectionStatus;
+  inspector_user_id: string | null;
+  inspected_at: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type QualityInspectionResultRow = {
+  id: string;
+  company_id: string;
+  inspection_id: string;
+  checklist_item_id: string;
+  value_found: string | null;
+  numeric_value: number | null;
+  result: QualityResult | null;
+  notes: string | null;
+  recorded_by: string | null;
+  recorded_at: string;
+};
+
+export type NonconformityRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  inspection_id: string | null;
+  origin_type: string | null;
+  origin_id: string | null;
+  severity: NonconformitySeverity;
+  cause: string | null;
+  description: string;
+  status: NonconformityStatus;
+  responsible_user_id: string | null;
+  evidence_notes: string | null;
+  opened_at: string;
+  closed_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type QualityActionRow = {
+  id: string;
+  company_id: string;
+  nonconformity_id: string | null;
+  action_type: QualityActionType;
+  description: string;
+  responsible_user_id: string | null;
+  due_date: string | null;
+  status: QualityActionStatus;
+  completed_at: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type QualityTraceabilityEvent = {
+  event_at: string;
+  stage: "RECEIVING" | "INSPECTION" | "STOCK_MOVEMENT" | "PRODUCTION" | "SHIPMENT";
+  description: string;
+};
+
+// ============================================================ Fase 18 — Projetos e Serviços
+export type ProjectStatus = "PLANNING" | "IN_PROGRESS" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
+export type ProjectTaskStatus = "OPEN" | "IN_PROGRESS" | "BLOCKED" | "COMPLETED" | "CANCELLED";
+export type ServiceOrderStatus = "OPEN" | "SCHEDULED" | "IN_PROGRESS" | "WAITING" | "COMPLETED" | "CANCELLED";
+export type ProjectServiceSourceType = "project" | "service_order";
+export type ProjectServiceCostType = "SERVICE" | "EXPENSE";
+
+export type ProjectRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  customer_id: string | null;
+  description: string | null;
+  responsible_user_id: string | null;
+  status: ProjectStatus;
+  start_date: string | null;
+  forecast_end_date: string | null;
+  end_date: string | null;
+  budget: number | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProjectTaskRow = {
+  id: string;
+  company_id: string;
+  project_id: string;
+  parent_task_id: string | null;
+  name: string;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  status: ProjectTaskStatus;
+  due_date: string | null;
+  estimated_hours: number | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProjectTaskDependencyRow = {
+  task_id: string;
+  depends_on_task_id: string;
+  created_at: string;
+};
+
+export type TimeEntryRow = {
+  id: string;
+  company_id: string;
+  project_id: string | null;
+  task_id: string | null;
+  service_order_id: string | null;
+  entry_date: string;
+  duration_minutes: number;
+  description: string | null;
+  user_id: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type ServiceOrderRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  customer_id: string;
+  project_id: string | null;
+  title: string;
+  description: string | null;
+  status: ServiceOrderStatus;
+  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  scheduled_date: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  responsible_user_id: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProjectServiceCostRow = {
+  id: string;
+  company_id: string;
+  source_type: ProjectServiceSourceType;
+  source_id: string;
+  cost_type: ProjectServiceCostType;
+  description: string;
+  amount: number;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type ProjectServiceCostSummary = {
+  materials_cost: number;
+  services_cost: number;
+  expenses_cost: number;
+  total_cost: number;
+};

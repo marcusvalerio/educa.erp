@@ -1553,7 +1553,7 @@ export type TaxRuleItemRow = {
 };
 
 export type FiscalDocumentType = "NFE" | "NFCE" | "NFSE" | "CTE" | "MDFE" | "OTHER";
-export type FiscalDocumentStatus = "DRAFT" | "CALCULATED" | "READY" | "AUTHORIZED" | "CANCELLED" | "DENIED" | "REJECTED" | "CONTINGENCY";
+export type FiscalDocumentStatus = "DRAFT" | "CALCULATED" | "READY" | "AUTHORIZING" | "AUTHORIZED" | "CANCELLED" | "DENIED" | "REJECTED" | "CONTINGENCY";
 export type FiscalDocumentSourceType = "purchase_receipt" | "sales_order" | "shipment" | "manual" | "return" | "transfer_out" | "transfer_in";
 export type FiscalDocumentFreightMode = "EMITENTE" | "DESTINATARIO" | "TERCEIROS" | "SEM_FRETE" | "OTHER";
 export type FiscalDocumentEnvironment = "PRODUCTION" | "HOMOLOGATION";
@@ -1652,7 +1652,7 @@ export type FiscalDocumentItemTaxRow = {
 };
 
 export type FiscalDocumentEventType =
-  | "CREATED" | "CALCULATED" | "READY" | "AUTHORIZED" | "CANCELLED" | "REJECTED"
+  | "CREATED" | "CALCULATED" | "READY" | "AUTHORIZING" | "AUTHORIZED" | "CANCELLED" | "REJECTED"
   | "DENIED" | "CONTINGENCY" | "CORRECTION_LETTER" | "INUTILIZATION" | "MANIFESTATION" | "OTHER";
 
 export type FiscalDocumentEventRow = {
@@ -1665,6 +1665,7 @@ export type FiscalDocumentEventRow = {
   status_code: string | null;
   message: string | null;
   payload_reference: string | null;
+  idempotency_key: string | null;
   created_by: string | null;
   created_at: string;
 };
@@ -2589,4 +2590,300 @@ export type ProjectServiceCostSummary = {
   services_cost: number;
   expenses_cost: number;
   total_cost: number;
+};
+
+// ==========================================================================
+// Fase 20 — Workflow + Aprovações (supabase/migrations/0060-0061)
+// ==========================================================================
+export type WorkflowStatus = "active" | "inactive";
+export type WorkflowVersionStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type WorkflowStepType = "APPROVAL" | "REVIEW" | "NOTIFICATION";
+export type WorkflowApprovalPolicy = "ALL" | "ANY" | "QUORUM";
+export type WorkflowApproverType = "USER" | "ROLE";
+export type WorkflowRuleOperator = "eq" | "ne" | "lt" | "lte" | "gt" | "gte" | "in" | "not_in";
+export type WorkflowInstanceStatus = "PENDING" | "IN_PROGRESS" | "APPROVED" | "REJECTED" | "RETURNED" | "CANCELLED";
+export type WorkflowInstanceStepStatus = "PENDING" | "IN_PROGRESS" | "APPROVED" | "REJECTED" | "RETURNED" | "SKIPPED" | "CANCELLED";
+export type ApprovalStatus = "PENDING" | "DECIDED" | "CANCELLED";
+export type ApprovalDecisionType = "APPROVED" | "REJECTED" | "RETURNED";
+export type ApprovalHistoryEventType = "STARTED" | "STEP_ADVANCED" | "APPROVED" | "REJECTED" | "RETURNED" | "CANCELLED" | "FINISHED";
+
+export type WorkflowRow = {
+  id: string;
+  company_id: string;
+  code: string;
+  name: string;
+  module: string;
+  entity_type: string;
+  description: string | null;
+  status: WorkflowStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type WorkflowVersionRow = {
+  id: string;
+  company_id: string;
+  workflow_id: string;
+  version_number: number;
+  status: WorkflowVersionStatus;
+  notes: string | null;
+  published_at: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type WorkflowStepRow = {
+  id: string;
+  company_id: string;
+  workflow_version_id: string;
+  step_order: number;
+  name: string;
+  description: string | null;
+  step_type: WorkflowStepType;
+  approval_policy: WorkflowApprovalPolicy;
+  quorum_count: number | null;
+  is_mandatory: boolean;
+  require_justification_on_reject: boolean;
+  sla_hours: number | null;
+  created_at: string;
+};
+
+export type WorkflowStepApproverRow = {
+  id: string;
+  company_id: string;
+  workflow_step_id: string;
+  approver_type: WorkflowApproverType;
+  user_id: string | null;
+  role_id: string | null;
+  created_at: string;
+};
+
+export type WorkflowRuleRow = {
+  id: string;
+  company_id: string;
+  workflow_step_id: string;
+  attribute: string;
+  operator: WorkflowRuleOperator;
+  value: unknown;
+  created_at: string;
+};
+
+export type WorkflowInstanceRow = {
+  id: string;
+  company_id: string;
+  workflow_id: string;
+  workflow_version_id: string;
+  entity_type: string;
+  entity_id: string;
+  status: WorkflowInstanceStatus;
+  current_step_id: string | null;
+  entity_snapshot: Record<string, unknown>;
+  started_by: string | null;
+  started_at: string;
+  finished_at: string | null;
+  created_at: string;
+};
+
+export type WorkflowInstanceStepRow = {
+  id: string;
+  company_id: string;
+  workflow_instance_id: string;
+  workflow_step_id: string;
+  step_order: number;
+  status: WorkflowInstanceStepStatus;
+  required_approvals: number;
+  received_approvals: number;
+  due_at: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+  created_at: string;
+};
+
+export type ApprovalRow = {
+  id: string;
+  company_id: string;
+  workflow_instance_step_id: string;
+  approver_type: WorkflowApproverType;
+  user_id: string | null;
+  role_id: string | null;
+  status: ApprovalStatus;
+  created_at: string;
+};
+
+export type ApprovalDecisionRow = {
+  id: string;
+  company_id: string;
+  approval_id: string;
+  workflow_instance_step_id: string;
+  decided_by: string | null;
+  decision: ApprovalDecisionType;
+  justification: string | null;
+  context: Record<string, unknown> | null;
+  decided_at: string;
+  created_at: string;
+};
+
+export type ApprovalHistoryRow = {
+  id: string;
+  company_id: string;
+  workflow_instance_id: string;
+  workflow_instance_step_id: string | null;
+  event_type: ApprovalHistoryEventType;
+  actor_user_id: string | null;
+  message: string | null;
+  payload: Record<string, unknown> | null;
+  occurred_at: string;
+};
+
+export type WorkflowPendingApproval = {
+  approval_id: string;
+  workflow_instance_id: string;
+  workflow_instance_step_id: string;
+  workflow_code: string;
+  workflow_name: string;
+  step_name: string;
+  entity_type: string;
+  entity_id: string;
+  approver_type: WorkflowApproverType;
+  due_at: string | null;
+  started_at: string | null;
+};
+
+// ==========================================================================
+// Fase 21 — Importação + Exportação (supabase/migrations/0063)
+// ==========================================================================
+export type ImportExportFormat = "CSV" | "XLSX";
+export type ImportJobStatus = "UPLOADED" | "VALIDATING" | "READY" | "PROCESSING" | "COMPLETED" | "COMPLETED_WITH_ERRORS" | "FAILED" | "CANCELLED";
+export type ImportJobRowStatus = "PENDING" | "VALID" | "INVALID" | "PROCESSED" | "FAILED" | "SKIPPED";
+export type ImportErrorSeverity = "ERROR" | "WARNING";
+export type ExportJobStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+
+export type ImportJobRow = {
+  id: string;
+  company_id: string;
+  module: string;
+  entity_type: string;
+  format: ImportExportFormat;
+  original_filename: string | null;
+  status: ImportJobStatus;
+  column_mapping: Record<string, string>;
+  total_rows: number;
+  processed_rows: number;
+  success_rows: number;
+  error_rows: number;
+  started_by: string | null;
+  started_at: string;
+  finished_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ImportJobRowRecordRow = {
+  id: string;
+  company_id: string;
+  import_job_id: string;
+  row_number: number;
+  raw_data: Record<string, string>;
+  status: ImportJobRowStatus;
+  natural_key: string | null;
+  entity_id: string | null;
+  created_at: string;
+  processed_at: string | null;
+};
+
+export type ImportJobErrorRow = {
+  id: string;
+  company_id: string;
+  import_job_id: string;
+  import_job_row_id: string | null;
+  row_number: number;
+  column_name: string | null;
+  value_text: string | null;
+  error_code: string | null;
+  message: string;
+  severity: ImportErrorSeverity;
+  created_at: string;
+};
+
+export type ExportJobRow = {
+  id: string;
+  company_id: string;
+  module: string;
+  entity_type: string;
+  format: ImportExportFormat;
+  filters: Record<string, unknown>;
+  columns: string[];
+  status: ExportJobStatus;
+  total_rows: number;
+  requested_by: string | null;
+  created_at: string;
+  finished_at: string | null;
+};
+
+// ==========================================================================
+// Fase 22 — Fiscal Operacional Avançado (supabase/migrations/0063)
+// ==========================================================================
+export type FiscalProviderEnvironment = "PRODUCTION" | "HOMOLOGATION";
+export type FiscalCertificateType = "A1" | "A3";
+export type FiscalCertificateStatus = "active" | "inactive" | "expired" | "revoked";
+export type FiscalAuthorizationAttemptStatus = "PENDING" | "SENT" | "AUTHORIZED" | "REJECTED" | "ERROR";
+export type FiscalDocumentFileType = "XML_SENT" | "XML_AUTHORIZED" | "XML_CANCELLATION" | "XML_CORRECTION_LETTER" | "XML_EVENT" | "OTHER";
+
+export type FiscalProviderConfigRow = {
+  id: string;
+  company_id: string;
+  fiscal_establishment_id: string;
+  provider_code: string;
+  environment: FiscalProviderEnvironment;
+  status: "active" | "inactive";
+  config: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FiscalDigitalCertificateRow = {
+  id: string;
+  company_id: string;
+  fiscal_establishment_id: string;
+  alias: string;
+  certificate_type: FiscalCertificateType;
+  subject_name: string | null;
+  issuer_name: string | null;
+  valid_from: string | null;
+  valid_until: string | null;
+  external_secret_reference: string | null;
+  status: FiscalCertificateStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FiscalAuthorizationAttemptRow = {
+  id: string;
+  company_id: string;
+  fiscal_document_id: string;
+  provider_code: string;
+  attempt_number: number;
+  status: FiscalAuthorizationAttemptStatus;
+  request_reference: string | null;
+  response_reference: string | null;
+  protocol: string | null;
+  error_code: string | null;
+  error_message: string | null;
+  started_at: string;
+  finished_at: string | null;
+  created_by: string | null;
+};
+
+export type FiscalDocumentFileRow = {
+  id: string;
+  company_id: string;
+  fiscal_document_id: string;
+  file_type: FiscalDocumentFileType;
+  version: number;
+  storage_reference: string;
+  content_hash: string | null;
+  created_by: string | null;
+  created_at: string;
 };

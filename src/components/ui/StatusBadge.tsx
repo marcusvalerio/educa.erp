@@ -15,6 +15,15 @@ const POSITIVE = new Set([
   "pago",
   "preenchido",
   "cnh regular",
+  // Fases 15-18 (CRM/Ativos/Qualidade/Projetos/Serviços) — vocabulário
+  // em inglês vindo direto do banco (status/type columns), nunca
+  // traduzido só para a UI (evita um segundo vocabulário paralelo).
+  "won",
+  "approved",
+  "completed",
+  "active",
+  "pass",
+  "closed",
 ]);
 
 const NEGATIVE = new Set([
@@ -31,6 +40,10 @@ const NEGATIVE = new Set([
   "cnh vencida",
   "não encontrado",
   "nao encontrado",
+  "lost",
+  "rejected",
+  "fail",
+  "decommissioned",
 ]);
 
 const WARNING = new Set([
@@ -53,9 +66,26 @@ const WARNING = new Set([
   "atenção",
   "atencao",
   "cnh a vencer",
+  "open",
+  "pending",
+  "waiting",
+  "waiting_parts",
+  "scheduled",
+  "draft",
+  "planned",
+  "partially_approved",
 ]);
 
-const INFO = new Set(["em andamento", "em separação", "em separacao", "ocupado"]);
+const INFO = new Set([
+  "em andamento",
+  "em separação",
+  "em separacao",
+  "ocupado",
+  "in_progress",
+  "in_analysis",
+  "in_treatment",
+  "under_maintenance",
+]);
 
 function tone(status: string): "success" | "danger" | "warning" | "info" | "neutral" {
   const s = status.toLowerCase();

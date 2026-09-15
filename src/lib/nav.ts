@@ -9,6 +9,10 @@ import {
   Receipt,
   BarChart3,
   Settings,
+  Target,
+  Wrench,
+  ShieldCheck,
+  Briefcase,
 } from "lucide-react";
 
 export type NavChild = {
@@ -91,6 +95,56 @@ export const NAV: NavModule[] = [
       { label: "Transferências", slug: "transferencias" },
       { label: "Devoluções", slug: "devolucoes" },
       { label: "Transportes", slug: "transportes" },
+      { label: "Almoxarifado", slug: "almoxarifado" },
+    ],
+  },
+  {
+    label: "CRM",
+    slug: "crm",
+    icon: Target,
+    description: "Leads, pipeline de oportunidades e atividades comerciais — Fase 15.",
+    children: [
+      { label: "Leads", slug: "leads" },
+      { label: "Pipeline", slug: "pipeline" },
+      { label: "Oportunidades", slug: "oportunidades" },
+      { label: "Atividades", slug: "atividades" },
+    ],
+  },
+  {
+    label: "Ativos",
+    slug: "ativos",
+    icon: Wrench,
+    description: "Cadastro de ativos, hierarquia, planos e ordens de manutenção — Fase 16.",
+    children: [
+      { label: "Ativos", slug: "lista" },
+      { label: "Categorias", slug: "categorias" },
+      { label: "Locais", slug: "locais" },
+      { label: "Planos de manutenção", slug: "planos-manutencao" },
+      { label: "Ordens de manutenção", slug: "ordens-manutencao" },
+    ],
+  },
+  {
+    label: "Qualidade",
+    slug: "qualidade",
+    icon: ShieldCheck,
+    description: "Checklists, inspeções, não conformidades e ações corretivas/preventivas — Fase 17.",
+    children: [
+      { label: "Checklists", slug: "checklists" },
+      { label: "Inspeções", slug: "inspecoes" },
+      { label: "Não conformidades", slug: "nao-conformidades" },
+      { label: "Ações", slug: "acoes" },
+    ],
+  },
+  {
+    label: "Projetos e Serviços",
+    slug: "projetos",
+    icon: Briefcase,
+    description: "Projetos, tarefas, apontamentos e ordens de serviço — Fase 18.",
+    children: [
+      { label: "Projetos", slug: "lista" },
+      { label: "Tarefas", slug: "tarefas" },
+      { label: "Apontamentos", slug: "apontamentos" },
+      { label: "Ordens de serviço", slug: "ordens-servico" },
     ],
   },
   {

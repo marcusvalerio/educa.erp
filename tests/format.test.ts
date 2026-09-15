@@ -1,7 +1,7 @@
 // Testes de formatação compartilhada (src/lib/format.ts, Fase 19).
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { formatCurrencyBRL, formatInteger, formatPercent, percentChange } from "@/lib/format";
+import { formatCurrencyBRL, formatInteger, formatPercent, percentChange, formatDate, formatDateTime } from "@/lib/format";
 
 describe("formatCurrencyBRL / formatInteger / formatPercent", () => {
   test("formatCurrencyBRL formata em R$ e trata null/undefined", () => {
@@ -18,6 +18,18 @@ describe("formatCurrencyBRL / formatInteger / formatPercent", () => {
   test("formatPercent formata com vírgula decimal", () => {
     assert.equal(formatPercent(42.567, 1), "42,6%");
     assert.equal(formatPercent(null), "—");
+  });
+});
+
+describe("formatDate / formatDateTime", () => {
+  test("formata data ISO (yyyy-mm-dd) e trata valor ausente", () => {
+    assert.equal(formatDate("2025-03-10"), "10/03/2025");
+    assert.equal(formatDate(null), "—");
+    assert.equal(formatDate(undefined), "—");
+  });
+
+  test("formatDateTime trata valor inválido sem lançar erro", () => {
+    assert.equal(formatDateTime("not-a-date"), "—");
   });
 });
 

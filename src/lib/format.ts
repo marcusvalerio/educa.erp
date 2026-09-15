@@ -23,6 +23,20 @@ export function formatPercent(value: number | null | undefined, digits = 1): str
   return `${value.toFixed(digits).replace(".", ",")}%`;
 }
 
+export function formatDate(value: string | null | undefined): string {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("pt-BR", { timeZone: value.length <= 10 ? "UTC" : undefined });
+}
+
+export function formatDateTime(value: string | null | undefined): string {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("pt-BR");
+}
+
 // Variação percentual entre dois valores (usada para a tendência real
 // dos KPI cards — nunca um número fictício, ver src/app/gestao/dashboard).
 // Retorna null quando o período anterior é zero (variação indefinida).

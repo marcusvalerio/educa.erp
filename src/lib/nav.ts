@@ -165,7 +165,7 @@ export const NAV: NavModule[] = [
     slug: "fiscal",
     icon: Receipt,
     description:
-      "Documentos e parâmetros fiscais utilizados nas operações da empresa (dados simulados).",
+      "Documentos e parâmetros fiscais utilizados nas operações da empresa.",
     children: [
       { label: "Notas fiscais", slug: "notas-fiscais" },
       { label: "NF-e", slug: "nfe" },

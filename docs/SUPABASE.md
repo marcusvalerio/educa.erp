@@ -34,6 +34,23 @@ exceção explícita do `.env.local.example`, que é o template).
 `SUPABASE_SERVICE_ROLE_KEY` só é lida em código marcado `server-only`
 (`src/lib/supabase/admin.ts`) — nunca chega ao bundle do navegador.
 
+## 2.1 Deploy em produção (Vercel) — NEXT_PUBLIC_* exige rebuild
+
+**Causa raiz confirmada de "Variável de ambiente NEXT_PUBLIC_SUPABASE_ANON_KEY não definida" em produção:** não é um bug de código — é comportamento documentado do próprio Next.js (`node_modules/next/dist/docs/01-app/02-guides/environment-variables.md`, seção "Bundling Environment Variables for the Browser"):
+
+> Next.js can "inline" a value, **at build time**, into the js bundle... replacing all references to `process.env.[variable]`... After being built, your app will no longer respond to changes to these environment variables... all `NEXT_PUBLIC_` variables will be frozen with the value evaluated at build time.
+
+Isso vale mesmo para código que só roda no servidor (`src/lib/supabase/env.ts`, `server.ts`, e o `proxy.ts`/Edge middleware) — o prefixo `NEXT_PUBLIC_` faz o Next.js substituir a referência por um literal em **toda** a árvore compilada, não só no bundle do navegador.
+
+**Consequência prática:** editar/adicionar `NEXT_PUBLIC_SUPABASE_URL` ou `NEXT_PUBLIC_SUPABASE_ANON_KEY` nas Environment Variables do painel da Vercel **não tem efeito nenhum sobre um deployment já existente**. Só passa a valer a partir do próximo `next build` — ou seja, é preciso criar um **novo deployment** (Redeploy, ou um novo push) depois de confirmar a variável salva em Production. Se o deployment atual foi construído antes da variável estar correta no ambiente, ele vai continuar falhando indefinidamente com esse erro até ser reconstruído — trocar o valor de novo não resolve, só reconstruir resolve.
+
+Checklist para produção:
+1. Confirme as 3 variáveis em **Vercel → Project → Settings → Environment Variables**, escopo **Production** (não só Preview/Development).
+2. Dispare um **novo deployment** (Redeploy do último commit, ou um novo push) — nunca reaproveite um build antigo.
+3. Só then teste os endpoints — testar antes do rebuild vai mostrar o mesmo erro mesmo com a variável "salva".
+
+`SUPABASE_SERVICE_ROLE_KEY` (sem o prefixo `NEXT_PUBLIC_`) não sofre esse problema — variáveis server-only são lidas em runtime a cada invocação da função serverless, não precisam de rebuild para atualizar.
+
 ## 3. Rodar as migrations
 
 As migrations ficam em `supabase/migrations/*.sql`, numeradas e

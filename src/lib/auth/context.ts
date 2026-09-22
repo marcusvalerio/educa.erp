@@ -52,10 +52,49 @@ export async function hasPermission(companyId: string, permissionCode: string): 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("has_permission", {
     p_company_id: companyId,
-    p_permission_code: permissionCode,
+    p_code: permissionCode,
   });
   if (error) {
     console.error("[auth] has_permission RPC falhou:", error.message);
+    return false;
+  }
+  return data === true;
+}
+
+// Contexto organizacional do usuário (empresa, unidades acessíveis,
+// setor, cargo, papéis, permissões efetivas e módulos habilitados),
+// resolvido inteiramente no banco por fn_user_context — nenhuma regra de
+// acesso é reimplementada aqui. Base para a experiência contextual; não
+// substitui, em hipótese alguma, RLS/has_permission na leitura de dados.
+export type UserContext = {
+  user: { id: string; name: string; email: string; code: string };
+  company: { id: string; name: string; lifecycle_status: string; operational: boolean };
+  branch: { id: string; code: string; name: string } | null;
+  branches: Array<{ id: string; code: string; name: string }>;
+  department: { id: string; code: string; name: string } | null;
+  position: { id: string; code: string; name: string; seniority_level: number | null } | null;
+  roles: Array<{ id: string; code: string; name: string; is_system: boolean }>;
+  permissions: string[];
+  modules: string[];
+};
+
+export async function getUserContext(companyId: string): Promise<UserContext | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("fn_user_context", { p_company_id: companyId });
+  if (error) {
+    console.error("[auth] fn_user_context RPC falhou:", error.message);
+    return null;
+  }
+  return (data as UserContext | null) ?? null;
+}
+
+// Autorização de PLATAFORMA (SaaS). Namespace separado de propósito: uma
+// permissão de plataforma nunca concede acesso a dados de tenant.
+export async function hasPlatformPermission(permissionCode: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("has_platform_permission", { p_code: permissionCode });
+  if (error) {
+    console.error("[auth] has_platform_permission RPC falhou:", error.message);
     return false;
   }
   return data === true;

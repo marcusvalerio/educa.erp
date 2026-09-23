@@ -17,7 +17,7 @@ export async function apiGet<T>(path: string): Promise<T> {
   return body.data;
 }
 
-export async function apiSend<T>(path: string, method: "POST" | "PATCH" | "DELETE", payload?: unknown): Promise<T> {
+export async function apiSend<T>(path: string, method: "POST" | "PUT" | "PATCH" | "DELETE", payload?: unknown): Promise<T> {
   const res = await fetch(path, {
     method,
     headers: payload !== undefined ? { "Content-Type": "application/json" } : undefined,

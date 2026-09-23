@@ -269,6 +269,8 @@ export async function listPlatformAudit(request: NextRequest) {
     const action = params.get("action");
     if (entity) query = query.eq("entity", entity);
     if (action) query = query.eq("action", action);
+    const search = params.get("search");
+    if (search) query = query.ilike("actor_label", `%${search}%`);
     const { data, error, count } = await query;
     if (error) throw dbError(error);
     return NextResponse.json({ success: true, data: data ?? [], meta: { total: count ?? 0, page, pageSize } });

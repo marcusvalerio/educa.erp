@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Columns3, Download, ExternalLink, Eye, Filter, MoreHorizontal, Rows3, Rows4, Search, X } from "lucide-react";
@@ -73,6 +73,8 @@ export type ResourceListPageProps<T> = {
   /** Conteúdo acima da tabela (resumo da lista, alertas). */
   summary?: ReactNode;
   exportName?: string;
+  /** Mudar este valor recarrega a coleção (após ações feitas no detalhe). */
+  refreshToken?: number;
 };
 
 const defaultRowId = (row: unknown) => String((row as { id?: unknown }).id ?? "");
@@ -107,6 +109,7 @@ function ResourceListInner<T>({
   rowActions,
   summary,
   exportName,
+  refreshToken,
 }: ResourceListPageProps<T>) {
   const router = useRouter();
   const filterIds = useMemo(() => filters.map((f) => f.id), [filters]);
@@ -117,6 +120,20 @@ function ResourceListInner<T>({
   const [viewing, setViewing] = useState<T | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchDraft, setSearchDraft] = useState<string | null>(null);
+  const reloadRef = useRef(resource.reload);
+  useEffect(() => {
+    reloadRef.current = resource.reload;
+  });
+  const firstRefresh = useRef(true);
+  useEffect(() => {
+    if (firstRefresh.current) {
+      firstRefresh.current = false;
+      return;
+    }
+    reloadRef.current();
+  }, [refreshToken]);
+  // O detalhe acompanha a versão mais recente da linha após recarregar.
+  const current = viewing ? resource.rows.find((row) => rowId(row) === rowId(viewing)) ?? viewing : null;
 
   const visibleColumns = columns.filter((c) => !prefs.hidden.has(c.id));
   const views = filters.filter((f) => f.kind === "view");
@@ -403,16 +420,16 @@ function ResourceListInner<T>({
           open={viewing !== null}
           onClose={() => setViewing(null)}
           size="lg"
-          title={viewing ? detail.title(viewing) : ""}
-          subtitle={viewing && detail.subtitle ? detail.subtitle(viewing) : undefined}
-          meta={viewing && detail.badges ? detail.badges(viewing) : undefined}
+          title={current ? detail.title(current) : ""}
+          subtitle={current && detail.subtitle ? detail.subtitle(current) : undefined}
+          meta={current && detail.badges ? detail.badges(current) : undefined}
           footer={
-            viewing && (detail.actions || detail.href) ? (
+            current && (detail.actions || detail.href) ? (
               <>
-                {detail.actions?.(viewing)}
+                {detail.actions?.(current)}
                 {detail.href && (
                   <Button asChild variant="secondary">
-                    <Link href={detail.href(viewing)}>
+                    <Link href={detail.href(current)}>
                       <ExternalLink size={14} /> Abrir página
                     </Link>
                   </Button>
@@ -421,7 +438,7 @@ function ResourceListInner<T>({
             ) : undefined
           }
         >
-          {viewing && <RecordDetail row={viewing} detail={detail} columns={columns} rowId={rowId} />}
+          {current && <RecordDetail row={current} detail={detail} columns={columns} rowId={rowId} />}
         </Drawer>
       )}
     </div>

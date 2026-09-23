@@ -55,7 +55,7 @@ export default function PedidoVendaDetailPage() {
   const [reserveError, setReserveError] = useState<string | null>(null);
   useBreadcrumbTail(order.data?.code);
 
-  const status = order.data ? dbStatusCode("sales_orders", order.data.status).toLowerCase() : "";
+  const status = order.data ? dbStatusCode("sales_orders", String(order.data.status ?? "")).toLowerCase() : "";
   const available = useMemo(
     () => (Object.keys(ACTIONS) as ActionId[]).filter((key) => ACTIONS[key].statuses.includes(status) && can(ACTIONS[key].permission)),
     [status, can]

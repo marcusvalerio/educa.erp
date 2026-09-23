@@ -51,7 +51,8 @@ export function SummaryStrip({
       {metrics.map((metric) => {
         const c = current.data?.[metric.key];
         const p = prior.data?.[metric.key];
-        const pct = c !== undefined && p !== undefined && c !== null && p !== null ? percentChange(Number(c), Number(p)) : null;
+        const hasBoth = c !== undefined && p !== undefined && c !== null && p !== null;
+        const pct = hasBoth ? percentChange(Number(c), Number(p)) : null;
         return (
           <Stat
             key={metric.key}
@@ -59,7 +60,7 @@ export function SummaryStrip({
             value={formatMetric(c, metric.format)}
             loading={current.loading}
             href={metric.href}
-            delta={prior.data ? { pct, goodWhen: metric.goodWhen ?? "up", label: metric.position ? "vs. posição anterior" : "vs. período anterior" } : undefined}
+            delta={hasBoth ? { pct, goodWhen: metric.goodWhen ?? "up", label: metric.position ? "vs. posição anterior" : "vs. período anterior" } : undefined}
           />
         );
       })}

@@ -28,7 +28,7 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
         </span>
         {onPageSizeChange && (
           <label className="hidden items-center gap-1.5 sm:flex">
-            <span>Por página</span>
+            <span className="whitespace-nowrap">Por página</span>
             <Select
               size="sm"
               aria-label="Registros por página"

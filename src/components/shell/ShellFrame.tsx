@@ -102,6 +102,9 @@ export function NoAccess({ title = "Sem acesso a este recurso", description, bac
   );
 }
 
+// Último título definido pelo shell (pode ser refinado quando a trilha muda).
+let lastShellTitle = "";
+
 function ShellInner({ environment, children }: { environment: Environment; children: ReactNode }) {
   const session = useSession();
   const { status, data, error, reload, can, canAny, canPlatform } = session;
@@ -117,6 +120,28 @@ function ShellInner({ environment, children }: { environment: Environment; child
   useEffect(() => {
     if (status === "unauthenticated") router.replace(`/login?next=${encodeURIComponent(pathname)}`);
   }, [status, pathname, router]);
+
+  // Título da aba a partir da trilha (páginas cliente não exportam metadata).
+  const titleLabel = useMemo(() => {
+    const trail = [...breadcrumbFor(env.nav, pathname, env.rootLabel, env.rootHref), ...tail];
+    return trail[trail.length - 1]?.label ?? env.rootLabel;
+  }, [env, pathname, tail]);
+  useEffect(() => {
+    const suffix = environment === "erp" ? "EDUCA.ERP" : environment === "admin" ? "Administração · EDUCA.ERP" : "Administração Central · EDUCA.ERP";
+    const desired = titleLabel === env.rootLabel ? `${env.rootLabel} · EDUCA.ERP` : `${titleLabel} · ${suffix}`;
+    // Só substitui títulos genéricos: páginas com metadata própria mantêm o seu.
+    const generic = new Set(["EDUCA.ERP", "Administração da Empresa · EDUCA.ERP", "Administração Central · EDUCA.ERP", ""]);
+    const apply = () => {
+      if (document.title !== desired && (generic.has(document.title) || document.title === lastShellTitle)) {
+        document.title = desired;
+        lastShellTitle = desired;
+      }
+    };
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(document.head, { subtree: true, childList: true, characterData: true });
+    return () => observer.disconnect();
+  }, [titleLabel, environment, env.rootLabel]);
 
   // Membro só da plataforma que cai no ERP vai para a Administração Central.
   useEffect(() => {

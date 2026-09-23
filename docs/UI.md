@@ -1,48 +1,173 @@
-# Design System e Tema — Fase 19
+# Interface do EDUCA.ERP — Design System, shells e padrões de tela
 
-**Aviso — escopo real desta etapa (leia antes do resto):** a Fase 19, como especificada, pede um redesenho visual completo de TODO o ERP (sidebar, topbar, todos os dashboards por contexto, padrão de tabela, padrão de formulário, badges, refatoração de todas as telas existentes). Isso é, na prática, um projeto de frontend de várias semanas. O que esta rodada entrega de fato — e só isso é reportado como concluído — é a **infraestrutura real** do Design System (tokens, tema, primitivos já existentes reaproveitados) e **um exemplo completo e funcional, ponta a ponta, de tela com dados reais** (o Dashboard executivo). A refatoração de cada uma das ~44 telas restantes para consumir API real em vez do mock (`src/lib/pages/*.ts` + `src/lib/mock/generators.ts`) **não foi feita** nesta rodada — é uma pendência genuína, listada no relatório final, não escondida.
+Este documento descreve a camada de interface depois da fase de design. A
+arquitetura de dados não mudou: **nenhuma migração, policy de RLS,
+permissão ou função do banco foi alterada**. O banco continua sendo a
+autoridade — a interface só esconde o que o perfil não pode usar e mostra
+o que a API devolve. Não existe dado fabricado em nenhuma tela.
 
-## 0. O que já existia (inspecionado antes de codificar, nunca duplicado)
+## 1. Identidade e tokens (`src/app/globals.css`)
 
-Um design system "ASTRA.ERP" já existia desde uma fase muito anterior (tokens em `src/app/globals.css`, `Sidebar`/`Topbar` em `src/components/layout/`, `DataTable`/`Card`/`StatCard`/`FilterBar`/`Pagination`/`PageHeader`/`Breadcrumb`/`StatusBadge`/`TableSkeleton`/`Drawer`/`ConfirmDialog`/`Field` em `src/components/ui/`). Esta fase **evolui** esse sistema (acrescenta tema escuro, corrige a fonte de dados do dashboard) — não o substitui por um segundo sistema, e não usa v0 nem copia nenhum projeto externo. A paleta, a tipografia (Satoshi) e a identidade visual (ASTRA.ERP) permanecem as mesmas; "EDUCA.ERP" é o nome do produto/empresa no código-fonte e documentação (ver `AGENTS.md`/instruções do projeto), a marca visual em tela continua a que já existia.
+Paleta com papéis fixos:
 
-## 1. Tokens semânticos (`src/app/globals.css`)
+| Papel | Cor | Uso |
+| --- | --- | --- |
+| Estrutura | Smoky Black `#100C08` | texto, botão primário, sidebar escura, base do modo escuro |
+| Estrutura | Chef's Hat `#F3F4F5` | fundo do modo claro |
+| Estrutura | Drifting Cloud `#DBE0E1` | bordas e divisões |
+| Semântica | Merin's Fire `#FF9408` | acento/destaque, atenção (warning) |
+| Semântica | Sauce Piquante `#CA3F16` | problema (danger) |
+| Semântica | Bacchic Burgundy `#95122C` | crítico e o acento da Administração Central |
 
-Já existiam: `--bg`/`--surface`/`--surface-hover`/`--surface-sunken`/`--border`/`--border-strong`/`--ink`/`--ink-muted`/`--ink-subtle`/`--sidebar*`/`--brand*`/`--success`/`--warning`/`--danger`/`--info`/`--neutral` (+ variantes `-soft`), `--shadow-*`, `--animate-*`. Nenhum componente usa cor hardcoded fora destes tokens (verificado por amostragem nos componentes tocados nesta fase).
+- Componentes usam **apenas tokens** (`bg-surface`, `text-muted-foreground`,
+  `border-border`, `bg-danger-soft`...). O único hex fora do CSS é o
+  `themeColor` do `viewport` e o `icon.svg`, que não aceitam variáveis.
+- Botão primário é Smoky Black (no escuro, Chef's Hat) — **nunca laranja**.
+- Claro/Escuro/Sistema: `:root` + `@media (prefers-color-scheme: dark)`
+  (guardado por `:not([data-theme="light"])`) + `[data-theme]` explícito.
+  O escuro tem identidade própria (preto quente, não inversão). Os
+  seletores `[data-theme]` também valem em elementos internos (prévia de
+  tema em Configurações › Aparência).
+- Contraste AA verificado para texto (`muted` 7,07:1; `subtle` ≥ 4,5:1).
+- Densidade: grade de 4px; raios 4/6/8; sombra só em popover, menu,
+  drawer e diálogo.
 
-Novo nesta fase: uma paleta **escura própria**, não uma inversão automática dos tokens claros — ver seção 2.
+### Tipografia
 
-## 2. Tema Claro/Escuro/Sistema
+Inter e JetBrains Mono **locais** (`src/app/fonts`, `next/font/local`,
+licenças OFL junto), sem CDN. Escala 11/12/13/14/16/20/24/30; tabela 13px,
+texto 14px; pesos 400/500/600. Números em valores, KPIs, tabelas e códigos
+usam `tabular-nums`; códigos usam a classe `.code` (mono).
 
-- **Tokens escuros** (`src/app/globals.css`): superfícies derivadas de "Authentic Black / Dark Graphic" com leve tom azulado (não cinza neutro puro), texto quase-branco (nunca branco puro), e as cores semânticas (`success`/`warning`/`danger`/`info`) redesenhadas para contraste adequado em fundo escuro — não é `filter: invert()`. A sidebar **não muda** entre os temas: ela já nasceu escura desde a fase anterior (identidade visual constante), então seus tokens não são redefinidos no modo escuro.
-- **Dois mecanismos de ativação, nunca um só**: uma media query `@media (prefers-color-scheme: dark)` guardada por `:root:not([data-theme="light"])` cobre a opção "Sistema" sem nenhum JavaScript; `:root[data-theme="dark"]`/`[data-theme="light"]` cobre a escolha explícita do usuário e sempre vence a media query.
-- **`src/lib/theme.ts`**: lógica pura (`resolveTheme(preference, systemPrefersDark)`), testada em `tests/theme.test.ts` — nenhuma lógica de tema vive apenas dentro de um componente React não testável.
-- **`src/components/theme/ThemeProvider.tsx`**: contexto React (`useTheme()`) que lê a preferência do `localStorage` (`educa-erp-theme-preference` — preferência pessoal de exibição por navegador, não um dado de empresa; por isso não usa `system_settings`/`fn_upsert_setting`, que são escopados por company/establishment, não por usuário), aplica `data-theme` no `<html>` e escuta mudanças de `prefers-color-scheme` ao vivo quando a preferência é "Sistema".
-- **Sem flash de tema**: um script síncrono em `src/app/layout.tsx` (antes da hidratação) lê o `localStorage` e já aplica `data-theme="dark"` se for o caso — sem isso, a página pintaria claro por um instante mesmo com o usuário tendo escolhido escuro.
-- **Onde configurar**: `Configurações → Aparência` (`src/app/configuracoes/aparencia/page.tsx`) — página real (não mais o `ModulePage` genérico mock que existia antes), com três opções (Claro/Escuro/Sistema), aplicação imediata e indicação de qual tema está efetivamente em uso agora.
+## 2. Ambientes e shells
 
-## 3. Dashboard executivo com dados reais (`src/app/gestao/dashboard/page.tsx`)
+Grupos de rota: `(auth)` (login, sem shell), `(erp)`, `admin` e
+`admincentral`, cada um com `ShellFrame` próprio
+(`src/components/shell/ShellFrame.tsx`).
 
-Antes desta fase, `/gestao/dashboard` era o `ModulePage` genérico renderizando `KPI_ROWS` — um array literal com números fabricados ("OTIF 94,2%", "Ticket médio R$ 4.280,00" etc., em `src/lib/pages/gestao.ts`). Isso violava diretamente a exigência da Fase 19 ("nunca dado mockado/fictício em dashboard").
+| Ambiente | Rota | Quem | Visual |
+| --- | --- | --- | --- |
+| ERP | `/` e módulos | usuários da empresa | sidebar clara, topbar com unidade/busca/tema/usuário |
+| Administração da Empresa | `/admin` | Company Admin, só a própria empresa | faixa de contexto "alterações aqui afetam somente esta empresa", link "Voltar ao ERP" |
+| Administração Central | `/admincentral` | Platform Owner/Admin | base Smoky Black, filete Bacchic Burgundy, selo "Plataforma EDUCA" |
 
-O que foi feito: a tela agora é um componente dedicado que chama `fn_report_executive` (Fase 12, já existente) via `/api/reports/executive`, comparando o mês em curso com o mesmo intervalo do mês anterior — **a variação percentual de cada card é calculada de verdade** (`src/lib/format.ts#percentChange`), nunca um "+12%" inventado. Estados de carregamento (skeleton), erro (com botão "Tentar novamente") e vazio (sem dados no período) são tratados explicitamente — nenhum deles é "tela branca". O `KPI_ROWS`/entrada `dashboard` mock foi removido de `src/lib/pages/gestao.ts` (não ficou um código morto ao lado do código real).
+- **Contexto da sessão**: `GET /api/session/context` (`fn_user_context` +
+  `fn_dashboard_context` + `current_platform_role`), no
+  `SessionProvider`. Topbar mostra o usuário real (nome, iniciais, cargo,
+  setor, papéis) — nenhum usuário de exemplo.
+- **Empresa** aparece só como contexto (sem seletor). **Unidade**: rótulo
+  quando há uma; seletor apenas entre as unidades liberadas ao usuário —
+  a escolha nunca amplia acesso.
+- **Navegação por permissão** (`src/lib/nav.ts`,
+  `src/lib/navigation/access.ts`): cada item declara a permissão exata da
+  API; seções sem item permitido somem; a rota é protegida pela mesma
+  regra ("Sem acesso a este recurso"). Item ativo é calculado **por
+  segmento** (`/admin` não fica ativo em `/admincentral`).
+- Busca/atalhos: `Ctrl/⌘ + K` (só destinos permitidos).
+- Mobile: sidebar vira drawer; filtros viram painel; tabelas viram cartões.
 
-**Limite honesto:** como em todas as fases anteriores, nenhum Supabase real foi tocado nesta rodada — o código está correto e chama a função certa, mas não há como demonstrar números reais na tela sem um banco aplicado. Os outros 7 relatórios por contexto (Comercial/Estoque/Compras/Produção/Logística/Financeiro/Fiscal, todos já existentes desde a Fase 12 em `/api/reports/*`) **não foram** ligados a uma tela nesta rodada — só o Executivo, como prova de conceito completa ponta-a-ponta. Ligá-los às telas `/comercial`, `/logistica/*` etc. segue o mesmo padrão exato deste dashboard e é o próximo passo natural, não feito por limite de tempo desta rodada.
+## 3. Componentes (`src/components/ui`)
 
-## 4. Padrão de tabela/formulário/badge
+Button, Input/Textarea, FormField/FormSection, Select, Checkbox, Switch,
+Segmented, Combobox (cmdk), DatePicker/DateRangePicker (react-day-picker),
+Badge/StatusBadge, Tooltip, Popover, Dialog/ConfirmDialog, Drawer,
+DropdownMenu/ContextMenu, Tabs/Accordion, Command, Toast, Alert,
+EmptyState (vazio, sem resultado, sem permissão, erro com nova tentativa),
+Skeleton, Progress, Kbd, PageHeader/SectionTitle, Panel, Stat/StatStrip,
+Timeline. Radix via o pacote `radix-ui`.
 
-`DataTable` (estados vazio e com dados), `TableSkeleton` (carregando), `StatusBadge` (semântico) e `Field`/`FilterBar` (formulário/filtro) já existiam e continuam sendo o padrão único — reaproveitados no Dashboard (skeleton) e na página de Aparência (nenhum primitivo novo e paralelo foi criado). Um estado de **erro** explícito (ver seção 3) foi o único padrão que faltava e que esta fase adiciona, via um `Card` com variante de erro (`border-danger/30 bg-danger-soft`) — reaproveitável em qualquer tela futura, não um componente único do dashboard.
+**StatusBadge** usa o registro tipado `src/lib/status.ts` (código do banco
+→ rótulo + tom + ícone por entidade); nunca procura palavras no texto.
 
-## 5. Responsividade e acessibilidade
+## 4. Listas, formulários e detalhes
 
-O dashboard e a página de Aparência usam grid responsivo (`sm:grid-cols-2 lg:grid-cols-3/4`, sem nenhuma largura mínima maior que a tela em 400px) e os seletores de tema são `<button>` reais com `aria-pressed`, foco visível (`focus-visible:ring`) e contraste adequado nos dois temas — consistentes com os primitivos já existentes (`Button`, `DataTable`) que já seguiam esse padrão.
+- `ResourceListPage` + `DataTable`: busca, filtros e visões de trabalho
+  na URL (drill-down chega filtrado), ordenação, seleção e ações em lote,
+  colunas configuráveis, densidade 32/40px, cabeçalho fixo, exportação
+  CSV, estados de carregando/vazio/sem resultado/erro. Quando a API pagina
+  (`meta` na resposta, rotas de cadastro e auditoria) a paginação é no
+  servidor; caso contrário, local.
+- Cadastros (`CadastroPage` + `EntityDrawer`): validação por campo, resumo
+  de erros, alterações não salvas com confirmação de descarte, ações
+  conforme permissão.
+- Detalhe (`DetailLayout`): cabeçalho com código/status/ações, resumo,
+  informações, itens, relações, financeiro, histórico de auditoria. Pedido
+  de venda (`/comercial/pedidos-venda/[id]`) com ações que dependem do
+  status e da permissão; a transição continua sendo validada pelo banco.
 
-## 6. Testes
+## 5. Painéis
 
-`tests/theme.test.ts` (resolução pura de tema) e `tests/format.test.ts` (formatação de moeda/percentual/inteiro e cálculo real de variação percentual) — lógica extraída para módulos puros justamente para serem testáveis sem DOM/navegador, seguindo a mesma limitação já documentada em todas as fases anteriores (este projeto não tem ambiente de renderização de componentes/DOM configurado; testes de UI aqui significam "lógica de UI extraída e testada", não "componente renderizado e clicado").
+Leitura em sete passos: CONTEXTO → RESUMO → MUDANÇAS → PROBLEMAS →
+OPERAÇÕES → INVESTIGAÇÃO → AÇÃO.
 
-## 7. Pendências genuínas desta fase (não escondidas)
+- `/` — centro operacional do usuário; `/gestao/dashboard/*` — 13 painéis
+  (executivo, comercial, compras, estoque, logística, produção,
+  financeiro, fiscal, controladoria, qualidade, manutenção, operações, TI).
+- Período na URL (`?periodo=`) e comparação sempre com o intervalo
+  anterior de mesma duração (`src/lib/dashboard/periods.ts`).
+- Problemas (`src/lib/dashboard/problems.ts`): 18 detectores sobre as
+  coleções reais, só os que o perfil pode ler, ordenados por gravidade e
+  pelo foco do contexto (setor/cargo/papel).
+- Fluxos do ERP em Sankey (`flows.ts`): pedido → entrega, compra →
+  recebimento, produção → resultado; conservam volume e cada etapa abre a
+  lista filtrada.
+- Gráficos (Recharts): neutros primeiro e um tom semântico; barras ≤ 24px,
+  linhas 2px, área 10%, alternância gráfico/tabela, tooltip, rótulo
+  acessível. Sem dados, o painel diz isso.
+- Módulos (`/comercial`, `/financeiro`...) são áreas de trabalho: resumo
+  do período, pendências do módulo, registros recentes e rotinas.
 
-- Refatorar as ~44 telas restantes (`/comercial/*`, `/logistica/*`, `/suprimentos/*`, `/financeiro/*`, `/fiscal/*`, `/cadastros/*`, `/gestao/kpis`, `/gestao/relatorios`, `/gestao/auditoria`) para consumir API real em vez de `src/lib/mock/generators.ts` — infraestrutura (tokens, tema, `DataTable`, estados de erro) já pronta para isso, mas o trabalho de ligar cada tela ao seu endpoint real não foi feito.
-- Dashboards por contexto (Comercial/Estoque/Compras/Produção/Logística/Financeiro/Fiscal) — os relatórios já existem (`/api/reports/*`), faltam as telas, seguindo exatamente o padrão do Dashboard executivo desta fase.
-- Nenhuma tela nova foi criada para CRM/Ativos/Manutenção/Qualidade/Projetos/Serviços (Fases 15-18) — essas fases entregaram backend + API completos; UI fica para uma rodada futura, como já era a convenção documentada desde a Fase 13 (MASTER_DATA.md §12).
+## 6. Administração
+
+**Empresa (`/admin`)** — visão geral com pendências de configuração;
+usuários (contexto organizacional, papéis e unidades; cadastro básico em
+`/admin/users/cadastro`); papéis com matriz módulo → recurso → ação
+(`fn_set_role_permissions`); setores em árvore; cargos; unidades; módulos
+contratados (liga/desliga, essenciais travados); foco dos painéis;
+auditoria. Tudo pela sessão — sem parâmetro de empresa.
+
+**Plataforma (`/admincentral`)** — visão geral, empresas (ciclo de vida e
+contratação de módulos), catálogo de módulos, membros Owner/Admin,
+permissões por papel, políticas e auditoria da plataforma. **Não há
+impersonation, "entrar como empresa" nem leitura de dados operacionais
+de empresas.**
+
+## 7. Qualidade
+
+- Testes (`npm test`): navegação/acesso (inclui "toda rota do menu tem
+  página"), listas, registro de status, painéis (períodos, problemas,
+  fluxos, métricas, drill-down para telas existentes) e lookup de nomes.
+- QA visual com Playwright sobre o build de produção, com respostas de
+  API interceptadas (fixtures só no ambiente de QA, nunca no app):
+  claro/escuro, desktop/mobile, `/admin`, `/admincentral`, perfil limitado
+  e sem acesso.
+- Acessibilidade: foco visível, navegação por teclado (Radix), link "pular
+  para o conteúdo", rótulos em controles, `aria-sort`, `prefers-reduced-motion`.
+
+## 8. Limites registrados (não alterados nesta fase)
+
+1. **`companies.read` não existe no catálogo de permissões.**
+   `/api/companies/me` exige essa permissão e por isso responde 403 para
+   todos; "Dados da empresa" fica oculto na navegação. Correção sugerida:
+   incluir `companies.read`/`companies.update` no catálogo e no papel
+   administrador (migração nova).
+2. **A plataforma não lê o nome das empresas** (policy
+   `companies_select_member`). `/admincentral` identifica empresas pelo id
+   e pelo perfil SaaS. Correção sugerida: uma view/função de plataforma
+   que exponha só nome e documento, sem dados operacionais.
+3. **Não há sessão real para validar ponta a ponta**: `platform_members`
+   está vazio, não há atribuição de papel administrador e nenhum usuário
+   tem `auth_user_id`. O QA visual usou respostas interceptadas.
+4. **Coleções de domínio vêm inteiras** (pedidos, títulos, OPs...). Listas
+   paginam localmente e os detectores/painéis leem a coleção completa.
+   Com volume, recomenda-se paginação no servidor nessas rotas e um
+   endpoint de contadores para os painéis.
+5. **O registro da empresa no seed chama-se "ASTRA.ERP"** (`supabase/seed.sql`,
+   `scripts/generate-seed.mjs`). É dado da empresa, exibido como contexto;
+   renomear é uma alteração de dados, não de interface.
+6. **Catálogo de módulos da plataforma é só leitura**: existe a permissão
+   `platform.modules.manage`, mas não há função/rota de escrita.
+7. **Recursos da matriz de permissões usam o código do catálogo** (ex.:
+   "Purchase orders"); um rótulo por recurso no catálogo melhoraria a leitura.
+8. **Vincular login a um usuário** (`auth_user_id`) não tem rota; o
+   cadastro cria o usuário e a administração mostra "Sem login".

@@ -72,7 +72,8 @@ export function DashboardHeader({ title, description, actions }: { title: string
   const { data, branchId } = useSession();
   const tenant = data?.tenant;
   const branch = tenant?.branches.find((b) => b.id === branchId);
-  const today = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  const weekday = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  const today = weekday.charAt(0).toUpperCase() + weekday.slice(1);
   return (
     <header className="flex flex-col gap-3 border-b border-border pb-4 lg:flex-row lg:items-end lg:justify-between">
       <div className="min-w-0">
@@ -95,7 +96,7 @@ export function DashboardHeader({ title, description, actions }: { title: string
               {[tenant?.department?.name, tenant?.position?.name].filter(Boolean).join(" · ")}
             </li>
           )}
-          <li className="flex items-center gap-1.5 capitalize">
+          <li className="flex items-center gap-1.5">
             <Calendar size={13} className="text-subtle-foreground" aria-hidden />
             {today}
           </li>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Pencil, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { DropdownMenuItem } from "@/components/ui/Menu";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Controls";
 import { Dialog } from "@/components/ui/Dialog";
@@ -85,9 +86,9 @@ export default function PlatformMembersPage() {
         rowActions={
           canManage
             ? (row) => (
-                <Button variant="ghost" size="icon-sm" aria-label={`Editar ${row.name}`} disabled={myRole === "ADMIN" && row.platform_role === "OWNER"} onClick={() => edit(row)}>
-                  <Pencil size={14} />
-                </Button>
+                <DropdownMenuItem disabled={myRole === "ADMIN" && row.platform_role === "OWNER"} onSelect={() => edit(row)}>
+                  <Pencil size={14} aria-hidden /> Editar membro
+                </DropdownMenuItem>
               )
             : undefined
         }

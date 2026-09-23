@@ -303,12 +303,12 @@ export function ModuleWorkspace({ section: sectionId }: { section: string }) {
       {hasActivity && (
         <div className="grid gap-4 lg:grid-cols-5">
           {def.problemModules && (
-            <div className={def.recent ? "lg:col-span-3" : "lg:col-span-5"}>
+            <div className={def.recent ? "min-w-0 lg:col-span-3" : "min-w-0 lg:col-span-5"}>
               <ProblemsPanel modules={def.problemModules} title="Pendências do módulo" description="Situações que pedem ação, com base nos registros reais." limit={6} />
             </div>
           )}
           {def.recent && (
-            <div className={def.problemModules ? "lg:col-span-2" : "lg:col-span-5"}>
+            <div className={def.problemModules ? "min-w-0 lg:col-span-2" : "min-w-0 lg:col-span-5"}>
               <RecentPanel def={def.recent} />
             </div>
           )}

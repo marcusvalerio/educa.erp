@@ -478,11 +478,11 @@ export function AreaDashboard({ area }: { area: AreaId }) {
       )}
 
       <div className="grid gap-4 lg:grid-cols-5">
-        <div className={reportOk ? "lg:col-span-3" : "lg:col-span-5"}>
+        <div className={reportOk ? "min-w-0 lg:col-span-3" : "min-w-0 lg:col-span-5"}>
           <ProblemsPanel modules={problemModules} />
         </div>
         {reportOk && def.report && (
-          <div className="lg:col-span-2">
+          <div className="min-w-0 lg:col-span-2">
             <ChangesPanel report={def.report} range={range} previous={previous} enabled />
           </div>
         )}
@@ -523,10 +523,10 @@ export function OperationalCenter() {
       )}
 
       <div className="grid gap-4 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+        <div className="min-w-0 lg:col-span-3">
           <ProblemsPanel limit={10} />
         </div>
-        <div className="flex flex-col gap-4 lg:col-span-2">
+        <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
           {execOk && <ChangesPanel report={REPORTS.executive} range={range} previous={previous} enabled />}
           <FocusPanel />
         </div>

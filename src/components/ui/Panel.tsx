@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 // denso com título, descrição curta e ações à direita.
 
 export function Panel({ className, ...props }: HTMLAttributes<HTMLElement>) {
-  return <section className={cn("rounded-md border border-border bg-surface", className)} {...props} />;
+  return <section className={cn("min-w-0 rounded-md border border-border bg-surface", className)} {...props} />;
 }
 
 type PanelHeaderProps = {

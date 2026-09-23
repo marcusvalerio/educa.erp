@@ -182,6 +182,20 @@ function ShellInner({ environment, children }: { environment: Environment; child
   const tenantMissing = environment !== "platform" && !data?.tenant;
   const adminDenied = environment === "admin" && !!data?.tenant && !canAny(ADMIN_ENTRY_PERMISSIONS);
   const platformDenied = environment === "platform" && !data?.platform;
+  // Membro da plataforma sem vínculo de empresa não administra empresas.
+  if (environment === "admin" && !data?.tenant && data?.platform) {
+    return (
+      <FullPageState>
+        <div className="w-full max-w-md">
+          <NoAccess
+            title="Acesso restrito à Administração da Empresa"
+            description="A Administração da Empresa é exclusiva dos administradores de cada empresa. Membros da plataforma usam a Administração Central, sem acesso aos dados das empresas."
+            backHref="/admincentral"
+          />
+        </div>
+      </FullPageState>
+    );
+  }
   if (tenantMissing && !(environment === "erp" && data?.platform)) {
     return (
       <FullPageState>

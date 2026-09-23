@@ -1,0 +1,41 @@
+"use client";
+
+import { ResourceListPage } from "@/components/resource/ResourceListPage";
+import { codeCol, textCol, dateCol, statusCol, refCol, statusFilter, overdueView, isRowOverdue, statusViews, combineViews } from "@/components/data-table/columns";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useIdNameLookup } from "@/lib/useIdNameLookup";
+import type { ShipmentRow } from "@/lib/database/schema";
+
+export default function ExpedicaoPage() {
+  const customers = useIdNameLookup("/api/customers");
+
+  return (
+    <ResourceListPage<ShipmentRow>
+      title="Expedições"
+      description="Expedições de pedidos de venda, da liberação ao despacho."
+      apiPath="/api/shipments"
+      searchPlaceholder="Buscar expedição, cliente ou cidade..."
+      columns={[
+        codeCol<ShipmentRow>("code", "Expedição"),
+        refCol<ShipmentRow>("customer_id", "Cliente", customers),
+        textCol<ShipmentRow>("delivery_city", "Cidade", { mobile: "meta" }),
+        dateCol<ShipmentRow>("expected_ship_date", "Expedição prevista", { overdueWhen: (row) => isRowOverdue(row, "expected_ship_date", ["draft","ready","picking","packed","ready_to_ship"]), mobile: "meta" }),
+        dateCol<ShipmentRow>("created_at", "Criada em", { defaultHidden: true }),
+        statusCol<ShipmentRow>("shipments"),
+      ]}
+      filters={[
+        combineViews<ShipmentRow>(
+          overdueView<ShipmentRow>("expected_ship_date", ["draft","ready","picking","packed","ready_to_ship"], "Expedição atrasada"),
+          statusViews<ShipmentRow>([{ value: "prontas", label: "Prontas para expedir", statuses: ["ready_to_ship"] }])
+        ),
+        statusFilter<ShipmentRow>("shipments", "status", { server: true }),
+      ]}
+      detail={{
+        title: (row) => row.code,
+        subtitle: (row) => customers.get(row.customer_id) ?? undefined,
+        badges: (row) => <StatusBadge entity="shipments" status={row.status} />,
+      }}
+      emptyDescription="Quando houver registros, eles aparecem aqui."
+    />
+  );
+}

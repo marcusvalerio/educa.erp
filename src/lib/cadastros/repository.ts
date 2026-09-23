@@ -156,18 +156,3 @@ export const unidadesMedidaRepository = createRepository<UnidadeMedida>("units")
 export const conversoesUnidadeRepository = createRepository<ConversaoUnidade>("unit-conversions");
 export const produtoFornecedoresRepository = createRepository<ProdutoFornecedor>("product-suppliers");
 
-export function hydrateAllCadastros(): Promise<void[]> {
-  return Promise.all([
-    locaisEstoqueRepository.hydrate(),
-    transportadorasRepository.hydrate(),
-    fornecedoresRepository.hydrate(),
-    motoristasRepository.hydrate(),
-    veiculosRepository.hydrate(),
-    clientesRepository.hydrate(),
-    usuariosRepository.hydrate(),
-    categoriasProdutoRepository.hydrate(),
-    marcasProdutoRepository.hydrate(),
-    unidadesMedidaRepository.hydrate(),
-    produtosRepository.hydrate(),
-  ]);
-}

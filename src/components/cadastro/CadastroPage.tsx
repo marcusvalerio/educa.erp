@@ -1,169 +1,142 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { Eye, Pencil, Power, Trash2, CheckCircle2, XCircle, Loader2, RefreshCcw } from "lucide-react";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { FilterBar } from "@/components/ui/FilterBar";
-import { DataTable } from "@/components/ui/DataTable";
-import { TableSkeleton } from "@/components/ui/TableSkeleton";
-import { Pagination } from "@/components/ui/Pagination";
-import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Suspense, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { Download, Eye, MoreHorizontal, Pencil, Plus, Power, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { EntityDrawer } from "@/components/cadastro/EntityDrawer";
-import { RelatedList } from "@/components/cadastro/RelatedList";
-import { AuditTrail } from "@/components/cadastro/AuditTrail";
-import type { AuditEntry, BaseEntity } from "@/lib/cadastros/types";
-import type { CadastroConfig } from "@/lib/cadastros/config-types";
-import type { EntityFormMode } from "@/components/cadastro/EntityForm";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Controls";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Panel } from "@/components/ui/Panel";
+import { ConfirmDialog } from "@/components/ui/Dialog";
+import { SkeletonRows } from "@/components/ui/Feedback";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { toast } from "@/components/ui/Toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/Menu";
+import { DataTable } from "@/components/data-table/DataTable";
+import { Pagination } from "@/components/data-table/Pagination";
+import { useListState, useTablePrefs } from "@/components/data-table/useListState";
+import type { ColumnDef } from "@/components/data-table/types";
+import { useSession } from "@/components/shell/SessionProvider";
+import { RecordHistory } from "@/components/resource/RecordHistory";
+import { applyClientQuery, toCsv } from "@/lib/list/query";
+import type { BaseEntity } from "@/lib/cadastros/types";
+import type { CadastroConfig, Row } from "@/lib/cadastros/config-types";
+import { EntityDrawer } from "./EntityDrawer";
+import { RelatedList } from "./RelatedList";
+import type { EntityFormMode } from "./EntityForm";
 
-const PAGE_SIZE = 8;
+// Cadastros com CRUD completo (produtos, clientes, fornecedores, frota,
+// locais). Mesmo padrão visual das listas (DataTable + estado na URL),
+// com ações habilitadas conforme as permissões reais do usuário.
 
 type DrawerState = {
   mode: EntityFormMode;
   editingId?: string;
   values: Record<string, unknown>;
+  initial: string;
   errors: Record<string, string>;
 };
+
+type Item = { item: BaseEntity; row: Row };
 
 function errorMessage(error: unknown, fallback: string) {
   return error instanceof Error && error.message ? error.message : fallback;
 }
 
-export function CadastroPage<T extends BaseEntity>({ config }: { config: CadastroConfig<T> }) {
-  const items = useSyncExternalStore(
-    config.repository.subscribe,
-    config.repository.getSnapshot,
-    config.repository.getSnapshot
-  );
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
-  const [page, setPage] = useState(1);
-  const [drawer, setDrawer] = useState<DrawerState | null>(null);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ text: string; tone: "success" | "danger" } | null>(null);
+function download(filename: string, content: string) {
+  const url = URL.createObjectURL(new Blob([content], { type: "text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfig<T> }) {
+  const { can } = useSession();
+  const pm = config.permissionModule;
+  const canCreate = can(`${pm}.create`);
+  const canUpdate = can(`${pm}.update`);
+  const canDelete = can(`${pm}.delete`);
+
+  const items = useSyncExternalStore(config.repository.subscribe, config.repository.getSnapshot, config.repository.getSnapshot);
+  const filterIds = useMemo(() => config.filters.map((f) => f.key), [config.filters]);
+  const { state, update, clear } = useListState(filterIds);
+  const prefs = useTablePrefs(`cadastro:${pm}`, []);
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
+  const [drawer, setDrawer] = useState<DrawerState | null>(null);
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [confirmBulk, setConfirmBulk] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [searchDraft, setSearchDraft] = useState<string | null>(null);
 
-  const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([]);
-  const [auditLoading, setAuditLoading] = useState(false);
-
-  // Carregando: busca os dados desta entidade e de qualquer cadastro do
-  // qual ela dependa (ex.: nome da transportadora na lista de motoristas)
-  // antes de considerar a tela pronta. O estado "carregando" é ligado por
-  // quem dispara o efeito (montagem inicial já começa com loading=true;
-  // o botão "Tentar novamente" liga antes de incrementar reloadToken) —
-  // o efeito em si só reage ao resultado, sem setState síncrono no topo.
+  // Carrega a entidade e os cadastros dos quais ela depende (ex.: nome da
+  // transportadora na lista de motoristas) antes de mostrar a tela.
   useEffect(() => {
     let cancelled = false;
     Promise.all([config.repository.hydrate(), ...(config.dependsOn ?? []).map((repo) => repo.hydrate())])
-      .then(() => {
-        if (!cancelled) setLoadError(null);
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) setLoadError(errorMessage(error, "Não foi possível carregar os dados."));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+      .then(() => !cancelled && setLoadError(null))
+      .catch((error: unknown) => !cancelled && setLoadError(errorMessage(error, "Não foi possível carregar os dados.")))
+      .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     };
   }, [config, reloadToken]);
 
-  function retryLoad() {
-    setLoading(true);
-    setLoadError(null);
-    setReloadToken((n) => n + 1);
-  }
+  const all: Item[] = useMemo(() => items.map((item) => ({ item, row: config.toRow(item) })), [items, config]);
 
-  // Histórico de auditoria — buscado sob demanda quando o painel de
-  // visualização é aberto (openView liga auditLoading antes de montar o
-  // drawer; este efeito só reage à conclusão da busca).
-  useEffect(() => {
-    if (drawer?.mode !== "view" || !drawer.editingId) return;
-    let cancelled = false;
-    fetch(`/api/audit-logs?entity=${encodeURIComponent(config.entityLabel)}&entityId=${drawer.editingId}`)
-      .then((res) => res.json())
-      .then((body: { success: boolean; data?: AuditEntry[] }) => {
-        if (!cancelled && body.success && body.data) setAuditEntries(body.data);
-      })
-      .catch(() => {
-        // histórico é informativo — uma falha aqui não deve travar a tela
-      })
-      .finally(() => {
-        if (!cancelled) setAuditLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [drawer?.mode, drawer?.editingId, config.entityLabel]);
+  const columns: ColumnDef<Item>[] = useMemo(
+    () =>
+      config.columns.map((col, index) => ({
+        id: col.key,
+        header: col.label,
+        align: col.align,
+        value: (it: Item) => it.row[col.key],
+        cell: col.render === "status" ? (it: Item) => <StatusBadge status={String(it.row[col.key] ?? "")} /> : undefined,
+        mobile: index === 0 ? ("title" as const) : col.render === "status" ? ("badge" as const) : index < 4 ? ("meta" as const) : undefined,
+        mono: index === 0,
+      })),
+    [config.columns]
+  );
 
-  function showToast(text: string, tone: "success" | "danger" = "success") {
-    setToast({ text, tone });
-    setTimeout(() => setToast(null), 3200);
-  }
+  const view = useMemo(
+    () =>
+      applyClientQuery(all, state, {
+        searchText: (it) => Object.values(it.row).join(" "),
+        sortValue: (it, id) => it.row[id],
+        predicates: Object.fromEntries(
+          config.filters.map((f) => [
+            f.key,
+            (it: Item, value: string) =>
+              f.type === "select"
+                ? String(it.row[f.key] ?? "").toLowerCase() === value.toLowerCase()
+                : String(it.row[f.key] ?? "").toLowerCase().includes(value.toLowerCase()),
+          ])
+        ),
+      }),
+    [all, state, config.filters]
+  );
 
-  const rows = useMemo(() => items.map(config.toRow), [items, config]);
-
-  const filteredRows = useMemo(() => {
-    return rows.filter((row) =>
-      config.filters.every((filter) => {
-        const value = filterValues[filter.key];
-        if (!value || value === "Todos") return true;
-        const cell = String(row[filter.key] ?? "").toLowerCase();
-        if (filter.type === "select") return cell === value.toLowerCase();
-        return cell.includes(value.toLowerCase());
-      })
-    );
-  }, [rows, config.filters, filterValues]);
-
-  const pageCount = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const pagedRows = filteredRows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-  function handleFilterChange(key: string, value: string) {
-    setFilterValues((prev) => ({ ...prev, [key]: value }));
-    setPage(1);
-  }
-
-  function handleReset() {
-    setFilterValues({});
-    setPage(1);
-  }
+  const visibleColumns = columns.filter((c) => !prefs.hidden.has(c.id));
+  const selectedItems = view.filtered.filter((it) => selected.has(it.item.id));
+  const hasFilters = !!state.q || Object.keys(state.filters).length > 0;
+  const selectFilters = config.filters.filter((f) => f.type === "select");
 
   function openCreate() {
-    setDrawer({ mode: "create", values: config.defaultValues(items), errors: {} });
+    const values = config.defaultValues(items) as Record<string, unknown>;
+    setDrawer({ mode: "create", values, initial: JSON.stringify(values), errors: {} });
   }
 
-  function openView(id: string) {
+  function openItem(id: string, mode: EntityFormMode) {
     const item = config.repository.get(id);
     if (!item) return;
-    setDrawer({ mode: "view", editingId: id, values: { ...item }, errors: {} });
-    setAuditEntries([]);
-    setAuditLoading(true);
-  }
-
-  function openEdit(id: string) {
-    const item = config.repository.get(id);
-    if (!item) return;
-    setDrawer({ mode: "edit", editingId: id, values: { ...item }, errors: {} });
-  }
-
-  function switchToEdit() {
-    setDrawer((prev) => (prev ? { ...prev, mode: "edit" } : prev));
-  }
-
-  function closeDrawer() {
-    if (saving) return;
-    setDrawer(null);
-  }
-
-  function handleFieldChange(key: string, value: string | number | boolean) {
-    setDrawer((prev) => (prev ? { ...prev, values: { ...prev.values, [key]: value } } : prev));
+    const values = { ...item } as Record<string, unknown>;
+    setDrawer({ mode, editingId: id, values, initial: JSON.stringify(values), errors: {} });
   }
 
   async function handleSave() {
@@ -177,217 +150,290 @@ export function CadastroPage<T extends BaseEntity>({ config }: { config: Cadastr
     try {
       if (drawer.mode === "create") {
         await config.repository.create(drawer.values as Partial<T>);
-        showToast(`${config.entityLabel} criado com sucesso.`);
-      } else if (drawer.mode === "edit" && drawer.editingId) {
+        toast.success(`${config.entityLabel} criado.`);
+      } else if (drawer.editingId) {
         await config.repository.update(drawer.editingId, drawer.values as Partial<T>);
-        showToast(`${config.entityLabel} atualizado com sucesso.`);
+        toast.success(`${config.entityLabel} atualizado.`);
       }
       setDrawer(null);
     } catch (error) {
-      // Mantém o drawer aberto com os dados preenchidos para nova tentativa.
-      showToast(errorMessage(error, `Não foi possível salvar o ${config.entityNounLower}.`), "danger");
+      toast.error(`Não foi possível salvar o ${config.entityNounLower}.`, errorMessage(error, "Tente novamente."));
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleToggleStatus(id: string) {
-    setPendingActionId(id);
+  async function toggleStatus(id: string) {
+    setBusy(true);
     try {
       const updated = await config.repository.toggleStatus(id);
-      showToast(`${config.entityLabel} ${updated.status === "Ativo" ? "ativado" : "inativado"} com sucesso.`);
+      toast.success(`${config.entityLabel} ${updated.status === "Ativo" ? "ativado" : "inativado"}.`);
     } catch (error) {
-      showToast(errorMessage(error, "Não foi possível atualizar o status."), "danger");
+      toast.error("Não foi possível alterar o status.", errorMessage(error, ""));
     } finally {
-      setPendingActionId(null);
+      setBusy(false);
     }
   }
 
-  async function handleDeleteConfirm() {
-    if (!confirmDeleteId) return;
-    setDeleting(true);
-    try {
-      const result = await config.repository.remove(confirmDeleteId);
-      if (result.ok) {
-        showToast(`${config.entityLabel} excluído com sucesso.`);
-        setConfirmDeleteId(null);
-      } else {
-        showToast(result.reason, "danger");
-        setConfirmDeleteId(null);
+  async function bulkInactivate() {
+    setBusy(true);
+    let done = 0;
+    let failed = 0;
+    for (const it of selectedItems) {
+      if (it.item.status !== "Ativo") continue;
+      try {
+        await config.repository.toggleStatus(it.item.id);
+        done += 1;
+      } catch {
+        failed += 1;
       }
-    } catch (error) {
-      showToast(errorMessage(error, "Não foi possível excluir o registro."), "danger");
-      setConfirmDeleteId(null);
-    } finally {
-      setDeleting(false);
     }
+    setBusy(false);
+    setConfirmBulk(false);
+    setSelected(new Set());
+    if (failed > 0) toast.warning(`${done} inativado(s), ${failed} com falha.`);
+    else toast.success(`${done} registro(s) inativado(s).`);
+  }
+
+  async function handleDelete() {
+    if (!confirmDelete) return;
+    setBusy(true);
+    try {
+      const result = await config.repository.remove(confirmDelete);
+      if (result.ok) toast.success(`${config.entityLabel} excluído.`);
+      else toast.error("Exclusão não permitida.", result.reason);
+    } catch (error) {
+      toast.error("Não foi possível excluir o registro.", errorMessage(error, ""));
+    } finally {
+      setBusy(false);
+      setConfirmDelete(null);
+    }
+  }
+
+  function exportRows(rows: Item[], suffix: string) {
+    const csv = toCsv(
+      visibleColumns.map((c) => c.header),
+      rows.map((it) => visibleColumns.map((c) => it.row[c.id] ?? ""))
+    );
+    download(`${pm}-${suffix}-${new Date().toISOString().slice(0, 10)}.csv`, csv);
   }
 
   const drawerItem = drawer?.editingId ? config.repository.get(drawer.editingId) : undefined;
-  const relatedGroups = drawerItem && config.relatedLists ? config.relatedLists(drawerItem) : [];
+  const related = drawerItem && config.relatedLists ? config.relatedLists(drawerItem) : [];
+  const searchValue = searchDraft ?? state.q;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <PageHeader
-        breadcrumb={[
-          { label: config.moduleLabel, href: config.moduleHref },
-          { label: config.pageLabel },
-        ]}
         title={config.title}
         description={config.description}
-        primaryActionLabel={config.primaryActionLabel}
-        onPrimaryAction={openCreate}
+        actions={
+          canCreate ? (
+            <Button onClick={openCreate}>
+              <Plus size={15} /> {config.primaryActionLabel}
+            </Button>
+          ) : undefined
+        }
       />
 
-      {loadError ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-danger/40 bg-danger-soft/40 py-16 text-center">
-          <XCircle size={28} className="text-danger" />
-          <div>
-            <p className="text-sm font-medium text-ink">Não foi possível carregar os dados</p>
-            <p className="mt-1 text-sm text-ink-subtle">{loadError}</p>
-          </div>
-          <Button variant="secondary" onClick={retryLoad}>
-            <RefreshCcw size={15} />
-            Tentar novamente
+      <Panel className="overflow-hidden">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
+          <form
+            role="search"
+            className="relative min-w-0 flex-1 sm:max-w-xs"
+            onSubmit={(event) => {
+              event.preventDefault();
+              update({ q: searchValue });
+              setSearchDraft(null);
+            }}
+          >
+            <Search size={14} className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-subtle-foreground" aria-hidden />
+            <Input
+              type="search"
+              aria-label={`Buscar ${config.entityNounLower}`}
+              placeholder={`Buscar ${config.entityNounLower}...`}
+              value={searchValue}
+              onChange={(e) => setSearchDraft(e.target.value)}
+              onBlur={() => {
+                if (searchDraft !== null && searchDraft !== state.q) update({ q: searchDraft });
+                setSearchDraft(null);
+              }}
+              className="pl-8"
+            />
+          </form>
+          {selectFilters.map((filter) =>
+            filter.type === "select" ? (
+              <Select
+                key={filter.key}
+                size="sm"
+                aria-label={filter.label}
+                value={state.filters[filter.key] ?? ""}
+                onValueChange={(value) => update({ filters: { [filter.key]: value } })}
+                options={[{ value: "", label: `${filter.label}: todos` }, ...filter.options.map((o) => ({ value: o, label: o }))]}
+                className="w-40"
+              />
+            ) : null
+          )}
+          {hasFilters && (
+            <Button variant="ghost" size="sm" onClick={clear}>
+              <X size={14} /> Limpar
+            </Button>
+          )}
+          <Button variant="ghost" size="icon-sm" className="ml-auto" aria-label="Exportar CSV" disabled={view.filtered.length === 0} onClick={() => exportRows(view.filtered, "lista")}>
+            <Download size={15} />
           </Button>
         </div>
-      ) : loading ? (
-        <div className="flex flex-col gap-4 animate-fade-in">
-          <div className="h-[86px] animate-skeleton rounded-xl border border-border bg-surface-sunken/40" />
-          <TableSkeleton columns={config.columns.length} />
-        </div>
-      ) : (
-        <>
-          <FilterBar
-            filters={config.filters}
-            values={filterValues}
-            onChange={handleFilterChange}
-            onReset={handleReset}
-            resultCount={filteredRows.length}
-          />
 
+        {selectedItems.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 border-b border-border bg-accent-soft/60 px-3 py-1.5 text-sm" role="region" aria-label="Ações em lote">
+            <span className="font-medium tabular-nums">{selectedItems.length} selecionado(s)</span>
+            <Button variant="secondary" size="xs" onClick={() => exportRows(selectedItems, "selecao")}>
+              <Download size={13} /> Exportar seleção
+            </Button>
+            {canUpdate && (
+              <Button variant="secondary" size="xs" onClick={() => setConfirmBulk(true)}>
+                <Power size={13} /> Inativar selecionados
+              </Button>
+            )}
+            <Button variant="ghost" size="xs" className="ml-auto" onClick={() => setSelected(new Set())}>
+              Limpar seleção
+            </Button>
+          </div>
+        )}
+
+        {loading && all.length === 0 ? (
+          <SkeletonRows columns={Math.min(columns.length, 6)} />
+        ) : (
           <DataTable
-            columns={config.columns}
-            rows={pagedRows}
-            renderActions={(row) => {
-              const id = String(row.id);
-              const status = String(row.status);
-              const isPending = pendingActionId === id;
-              return (
-                <div className="flex items-center justify-end gap-1">
-                  <button
-                    onClick={() => openView(id)}
-                    aria-label="Visualizar"
-                    title="Visualizar"
-                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-surface-hover hover:text-ink transition-colors"
-                  >
-                    <Eye size={16} />
-                  </button>
-                  <button
-                    onClick={() => openEdit(id)}
-                    aria-label="Editar"
-                    title="Editar"
-                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-surface-hover hover:text-ink transition-colors"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleToggleStatus(id)}
-                    disabled={isPending}
-                    aria-label={status === "Ativo" ? "Inativar" : "Ativar"}
-                    title={status === "Ativo" ? "Inativar" : "Ativar"}
-                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-surface-hover hover:text-ink transition-colors disabled:opacity-40"
-                  >
-                    {isPending ? <Loader2 size={16} className="animate-spin" /> : <Power size={16} />}
-                  </button>
-                  <button
-                    onClick={() => setConfirmDeleteId(id)}
-                    aria-label="Excluir"
-                    title="Excluir"
-                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle hover:bg-danger-soft hover:text-danger transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              );
+            columns={visibleColumns}
+            rows={view.rows}
+            rowId={(it) => it.item.id}
+            error={loadError}
+            onRetry={() => {
+              setLoading(true);
+              setReloadToken((n) => n + 1);
             }}
+            emptyTitle={`Nenhum ${config.entityNounLower} cadastrado`}
+            emptyDescription={canCreate ? `Cadastre o primeiro ${config.entityNounLower} para começar.` : undefined}
+            emptyAction={canCreate ? <Button size="sm" onClick={openCreate}><Plus size={14} /> {config.primaryActionLabel}</Button> : undefined}
+            filtered={hasFilters}
+            onClearFilters={clear}
+            sort={{ id: state.sort, dir: state.dir }}
+            onSortChange={(id) =>
+              state.sort !== id ? update({ sort: id, dir: "asc" }) : state.dir === "asc" ? update({ sort: id, dir: "desc" }) : update({ sort: null })
+            }
+            selectable
+            selected={selected}
+            onSelectedChange={setSelected}
+            onRowOpen={(it) => openItem(it.item.id, "view")}
+            density={prefs.density}
+            caption={config.title}
+            rowActions={(it) => (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon-sm" aria-label="Ações do registro">
+                    <MoreHorizontal size={15} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48">
+                  <DropdownMenuItem onSelect={() => openItem(it.item.id, "view")}>
+                    <Eye size={14} /> Visualizar
+                  </DropdownMenuItem>
+                  {canUpdate && (
+                    <>
+                      <DropdownMenuItem onSelect={() => openItem(it.item.id, "edit")}>
+                        <Pencil size={14} /> Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem disabled={busy} onSelect={() => toggleStatus(it.item.id)}>
+                        <Power size={14} /> {it.item.status === "Ativo" ? "Inativar" : "Ativar"}
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {canDelete && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem tone="danger" onSelect={() => setConfirmDelete(it.item.id)}>
+                        <Trash2 size={14} /> Excluir
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           />
+        )}
 
+        {!loadError && view.total > 0 && (
           <Pagination
-            page={currentPage}
-            pageCount={pageCount}
-            totalItems={filteredRows.length}
-            pageSize={PAGE_SIZE}
-            onPageChange={setPage}
+            page={state.page}
+            pageSize={state.pageSize}
+            total={view.total}
+            onPageChange={(page) => update({ page })}
+            onPageSizeChange={(pageSize) => update({ pageSize })}
           />
-        </>
-      )}
+        )}
+      </Panel>
 
       {drawer && (
         <EntityDrawer
           open
           mode={drawer.mode}
           saving={saving}
-          title={
-            drawer.mode === "create"
-              ? `Novo ${config.entityNounLower}`
-              : drawerItem
-                ? config.labelOf(drawerItem)
-                : config.entityLabel
-          }
-          subtitle={
-            drawer.mode === "view"
-              ? "Visualização de detalhes"
-              : drawer.mode === "edit"
-                ? `Editando ${config.entityNounLower}`
-                : `Preencha os dados do novo ${config.entityNounLower}`
-          }
+          canEdit={canUpdate}
+          dirty={JSON.stringify(drawer.values) !== drawer.initial}
+          title={drawer.mode === "create" ? `Novo ${config.entityNounLower}` : drawerItem ? config.labelOf(drawerItem) : config.entityLabel}
+          subtitle={drawer.mode === "create" ? `Preencha os dados do novo ${config.entityNounLower}.` : drawer.mode === "edit" ? `Editando ${config.entityNounLower}` : config.entityLabel}
+          meta={drawerItem ? <StatusBadge status={drawerItem.status} /> : undefined}
           sections={config.formSections}
           values={drawer.values}
           errors={drawer.errors}
-          onChange={handleFieldChange}
-          onClose={closeDrawer}
+          onChange={(key, value) => setDrawer((prev) => (prev ? { ...prev, values: { ...prev.values, [key]: value }, errors: { ...prev.errors, [key]: "" } } : prev))}
+          onClose={() => setDrawer(null)}
           onSave={handleSave}
-          onEdit={switchToEdit}
+          onEdit={() => setDrawer((prev) => (prev ? { ...prev, mode: "edit" } : prev))}
           extras={
-            <>
-              {relatedGroups.map((group) => (
-                <RelatedList key={group.title} title={group.title} items={group.items} />
-              ))}
-              <AuditTrail entries={auditEntries} loading={auditLoading} />
-            </>
+            drawer.editingId ? (
+              <>
+                {related.map((group) => (
+                  <RelatedList key={group.title} title={group.title} items={group.items} />
+                ))}
+                <section>
+                  <h3 className="mb-2 text-2xs font-medium tracking-wide text-subtle-foreground uppercase">Histórico</h3>
+                  <RecordHistory entityId={drawer.editingId} />
+                </section>
+              </>
+            ) : undefined
           }
         />
       )}
 
       <ConfirmDialog
-        open={confirmDeleteId !== null}
+        open={confirmDelete !== null}
         title={`Excluir ${config.entityNounLower}?`}
-        description="Tem certeza que deseja excluir este registro? Essa ação não pode ser desfeita. Registros já vinculados a outros cadastros não podem ser excluídos — utilize a inativação nesses casos."
+        description="A exclusão não pode ser desfeita. Registros vinculados a outros cadastros não podem ser excluídos — use a inativação nesses casos."
         confirmLabel="Excluir"
-        loadingLabel="Excluindo..."
-        loading={deleting}
         tone="danger"
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => setConfirmDeleteId(null)}
+        loading={busy}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(null)}
       />
-
-      {toast && (
-        <div
-          className={
-            toast.tone === "success"
-              ? "fixed right-6 bottom-6 z-50 flex items-center gap-2 rounded-lg bg-ink px-4 py-3 text-sm font-medium text-white shadow-lg"
-              : "fixed right-6 bottom-6 z-50 flex items-center gap-2 rounded-lg bg-danger px-4 py-3 text-sm font-medium text-white shadow-lg"
-          }
-        >
-          {toast.tone === "success" ? (
-            <CheckCircle2 size={16} className="text-success" />
-          ) : (
-            <XCircle size={16} className="text-white" />
-          )}
-          {toast.text}
-        </div>
-      )}
+      <ConfirmDialog
+        open={confirmBulk}
+        title="Inativar registros selecionados?"
+        description={`${selectedItems.filter((it) => it.item.status === "Ativo").length} registro(s) ativo(s) serão inativados. Eles continuam disponíveis para consulta.`}
+        confirmLabel="Inativar"
+        loading={busy}
+        onConfirm={bulkInactivate}
+        onCancel={() => setConfirmBulk(false)}
+      />
     </div>
+  );
+}
+
+export function CadastroPage<T extends BaseEntity>({ config }: { config: CadastroConfig<T> }) {
+  return (
+    <Suspense fallback={<SkeletonRows />}>
+      <CadastroInner config={config} />
+    </Suspense>
   );
 }

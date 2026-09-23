@@ -1,4 +1,3 @@
-import { cadastros as cadastroPageMeta } from "@/lib/pages/cadastros";
 import type { CadastroConfig, RelatedGroup } from "./config-types";
 import type {
   Produto,
@@ -74,11 +73,72 @@ function nextCode(prefix: string, count: number) {
   return `${prefix}-${String(count + 1).padStart(4, "0")}`;
 }
 
-const meta = cadastroPageMeta;
+// Textos e permissão de cada cadastro (antes em src/lib/pages, junto
+// de linhas fictícias que não existem mais). permissionModule é o
+// prefixo das permissões exigidas pela API (<modulo>.create/update/...).
+const meta = {
+  "produtos": {
+    pageLabel: "Produtos",
+    title: "Produtos",
+    description: "Gerencie os produtos, materiais e itens utilizados nas operações da empresa.",
+    primaryActionLabel: "Novo produto",
+    permissionModule: "products",
+  },
+  "clientes": {
+    pageLabel: "Clientes",
+    title: "Clientes",
+    description: "Cadastro geral de clientes utilizados nas operações comerciais e de faturamento.",
+    primaryActionLabel: "Novo cliente",
+    permissionModule: "customers",
+  },
+  "fornecedores": {
+    pageLabel: "Fornecedores",
+    title: "Fornecedores",
+    description: "Cadastro de fornecedores homologados para compras e suprimentos.",
+    primaryActionLabel: "Novo fornecedor",
+    permissionModule: "suppliers",
+  },
+  "transportadoras": {
+    pageLabel: "Transportadoras",
+    title: "Transportadoras",
+    description: "Cadastro de transportadoras parceiras para operações de frete e distribuição.",
+    primaryActionLabel: "Nova transportadora",
+    permissionModule: "carriers",
+  },
+  "motoristas": {
+    pageLabel: "Motoristas",
+    title: "Motoristas",
+    description: "Cadastro de motoristas vinculados às operações de transporte e expedição.",
+    primaryActionLabel: "Novo motorista",
+    permissionModule: "drivers",
+  },
+  "veiculos": {
+    pageLabel: "Veículos",
+    title: "Veículos",
+    description: "Frota própria e agregada utilizada nas operações de transporte.",
+    primaryActionLabel: "Novo veículo",
+    permissionModule: "vehicles",
+  },
+  "usuarios": {
+    pageLabel: "Usuários",
+    title: "Usuários",
+    description: "Usuários com acesso ao sistema e seus perfis de utilização.",
+    primaryActionLabel: "Novo usuário",
+    permissionModule: "users",
+  },
+  "locais-estoque": {
+    pageLabel: "Locais de estoque",
+    title: "Locais de estoque",
+    description: "Estrutura de armazéns, docas e áreas utilizadas para armazenagem.",
+    primaryActionLabel: "Novo local",
+    permissionModule: "warehouse_locations",
+  },
+} as const;
 
 export const produtoCadastroConfig: CadastroConfig<Produto> = {
-  moduleLabel: meta.produtos.moduleLabel,
-  moduleHref: meta.produtos.moduleHref,
+  moduleLabel: "Cadastros",
+  moduleHref: "/cadastros",
+  permissionModule: meta.produtos.permissionModule,
   pageLabel: meta.produtos.pageLabel,
   title: meta.produtos.title,
   description: meta.produtos.description,
@@ -137,8 +197,9 @@ export const produtoCadastroConfig: CadastroConfig<Produto> = {
 };
 
 export const clienteCadastroConfig: CadastroConfig<Cliente> = {
-  moduleLabel: meta.clientes.moduleLabel,
-  moduleHref: meta.clientes.moduleHref,
+  moduleLabel: "Cadastros",
+  moduleHref: "/cadastros",
+  permissionModule: meta.clientes.permissionModule,
   pageLabel: meta.clientes.pageLabel,
   title: meta.clientes.title,
   description: meta.clientes.description,
@@ -181,8 +242,9 @@ export const clienteCadastroConfig: CadastroConfig<Cliente> = {
 };
 
 export const fornecedorCadastroConfig: CadastroConfig<Fornecedor> = {
-  moduleLabel: meta.fornecedores.moduleLabel,
-  moduleHref: meta.fornecedores.moduleHref,
+  moduleLabel: "Cadastros",
+  moduleHref: "/cadastros",
+  permissionModule: meta.fornecedores.permissionModule,
   pageLabel: meta.fornecedores.pageLabel,
   title: meta.fornecedores.title,
   description: meta.fornecedores.description,
@@ -232,8 +294,9 @@ export const fornecedorCadastroConfig: CadastroConfig<Fornecedor> = {
 };
 
 export const transportadoraCadastroConfig: CadastroConfig<Transportadora> = {
-  moduleLabel: meta.transportadoras.moduleLabel,
-  moduleHref: meta.transportadoras.moduleHref,
+  moduleLabel: "Cadastros",
+  moduleHref: "/cadastros",
+  permissionModule: meta.transportadoras.permissionModule,
   pageLabel: meta.transportadoras.pageLabel,
   title: meta.transportadoras.title,
   description: meta.transportadoras.description,
@@ -283,8 +346,9 @@ export const transportadoraCadastroConfig: CadastroConfig<Transportadora> = {
 };
 
 export const motoristaCadastroConfig: CadastroConfig<Motorista> = {
-  moduleLabel: meta.motoristas.moduleLabel,
-  moduleHref: meta.motoristas.moduleHref,
+  moduleLabel: "Cadastros",
+  moduleHref: "/cadastros",
+  permissionModule: meta.motoristas.permissionModule,
   pageLabel: meta.motoristas.pageLabel,
   title: meta.motoristas.title,
   description: meta.motoristas.description,
@@ -328,8 +392,9 @@ export const motoristaCadastroConfig: CadastroConfig<Motorista> = {
 };
 
 export const veiculoCadastroConfig: CadastroConfig<Veiculo> = {
-  moduleLabel: meta.veiculos.moduleLabel,
-  moduleHref: meta.veiculos.moduleHref,
+  moduleLabel: "Cadastros",
+  moduleHref: "/cadastros",
+  permissionModule: meta.veiculos.permissionModule,
   pageLabel: meta.veiculos.pageLabel,
   title: meta.veiculos.title,
   description: meta.veiculos.description,
@@ -375,8 +440,9 @@ export const veiculoCadastroConfig: CadastroConfig<Veiculo> = {
 };
 
 export const usuarioCadastroConfig: CadastroConfig<Usuario> = {
-  moduleLabel: meta.usuarios.moduleLabel,
-  moduleHref: meta.usuarios.moduleHref,
+  moduleLabel: "Cadastros",
+  moduleHref: "/cadastros",
+  permissionModule: meta.usuarios.permissionModule,
   pageLabel: meta.usuarios.pageLabel,
   title: meta.usuarios.title,
   description: meta.usuarios.description,
@@ -401,8 +467,9 @@ export const usuarioCadastroConfig: CadastroConfig<Usuario> = {
 };
 
 export const localEstoqueCadastroConfig: CadastroConfig<LocalEstoque> = {
-  moduleLabel: meta["locais-estoque"].moduleLabel,
-  moduleHref: meta["locais-estoque"].moduleHref,
+  moduleLabel: "Cadastros",
+  moduleHref: "/cadastros",
+  permissionModule: meta["locais-estoque"].permissionModule,
   pageLabel: meta["locais-estoque"].pageLabel,
   title: meta["locais-estoque"].title,
   description: meta["locais-estoque"].description,

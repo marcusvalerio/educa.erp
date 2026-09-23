@@ -1,33 +1,48 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiGet } from "@/lib/api-client";
+import { cachedGet } from "@/lib/dashboard/client";
 
-// Fase 19 — Conclusão da UI: resolve id -> nome para colunas de
-// referência (cliente/fornecedor/produto...) nas telas convertidas de
-// ResourceListPage, sem duplicar a busca de cada cadastro relacionado
-// (reaproveita a mesma rota /api/* que os cadastros já usam). Enquanto
-// o lookup não chega, format() cai no próprio id — nunca um nome
-// fictício.
+// Resolve id -> nome para colunas de referência (cliente, fornecedor,
+// produto...). As rotas de cadastro devolvem entidades mapeadas
+// (nome/razaoSocial/descricao) e as de domínio devolvem linhas do banco
+// (name/legal_name/description): o campo pedido é tentado primeiro e,
+// sem ele, os equivalentes conhecidos. Enquanto o lookup não chega, a
+// coluna mostra o id curto — nunca um nome fictício.
+
+const NAME_FALLBACKS = ["nome", "nomeFantasia", "razaoSocial", "name", "trade_name", "legal_name", "descricao", "description", "codigo", "code"];
+
+/** Cadastros paginam por padrão (200); o lookup pede o máximo permitido. */
+export function lookupPath(apiPath: string): string {
+  if (/[?&]pageSize=/.test(apiPath)) return apiPath;
+  return `${apiPath}${apiPath.includes("?") ? "&" : "?"}pageSize=500`;
+}
+
+export function pickName(row: Record<string, unknown>, nameField: string): string | null {
+  for (const key of [nameField, ...NAME_FALLBACKS]) {
+    const value = row[key];
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  return null;
+}
+
 export function useIdNameLookup(apiPath: string, nameField = "name"): Map<string, string> {
   const [lookup, setLookup] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     let cancelled = false;
-    apiGet<Record<string, unknown>[]>(apiPath)
+    cachedGet<Record<string, unknown>[]>(lookupPath(apiPath))
       .then((rows) => {
-        if (cancelled) return;
+        if (cancelled || !Array.isArray(rows)) return;
         const map = new Map<string, string>();
         for (const row of rows) {
-          const id = row.id;
-          const name = row[nameField];
-          if (typeof id === "string" && typeof name === "string") map.set(id, name);
+          const name = pickName(row, nameField);
+          if (typeof row.id === "string" && name) map.set(row.id, name);
         }
         setLookup(map);
       })
       .catch(() => {
-        // Lookup é só um enriquecimento de exibição — uma falha aqui
-        // nunca deve travar a listagem principal (format() cai no id).
+        // Lookup é só enriquecimento de exibição — falha aqui nunca trava a lista.
       });
     return () => {
       cancelled = true;

@@ -1,59 +1,60 @@
 "use client";
 
-import { useEffect } from "react";
-import { createPortal } from "react-dom";
+import type { ReactNode } from "react";
+import { Dialog as D } from "radix-ui";
 import { X } from "lucide-react";
+import { cn } from "@/lib/cn";
+import { Button } from "./Button";
+
+// Painel lateral (detalhe rápido, formulário, filtros no mobile). No
+// mobile ocupa a largura toda; em telas largas, larguras fixas.
 
 type DrawerProps = {
   open: boolean;
   onClose: () => void;
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-  footer?: React.ReactNode;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  meta?: ReactNode;
+  children: ReactNode;
+  footer?: ReactNode;
+  side?: "right" | "left";
+  size?: "sm" | "md" | "lg";
 };
 
-export function Drawer({ open, onClose, title, subtitle, children, footer }: DrawerProps) {
-  useEffect(() => {
-    if (!open) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [open, onClose]);
+const SIZES = { sm: "sm:max-w-sm", md: "sm:max-w-lg", lg: "sm:max-w-2xl" };
 
-  if (!open || typeof document === "undefined") return null;
-
-  return createPortal(
-    <div className="fixed inset-0 z-[60] flex justify-end">
-      <button
-        aria-label="Fechar painel"
-        onClick={onClose}
-        className="absolute inset-0 bg-ink/45 backdrop-blur-[2px] animate-fade-in"
-      />
-      <div className="animate-slide-in-right relative flex h-full w-full max-w-xl flex-col bg-surface shadow-elevated">
-        <div className="flex items-start justify-between gap-3 border-b border-border px-6 py-5">
-          <div>
-            <h2 className="font-display text-[1.05rem] font-semibold tracking-tight text-ink">{title}</h2>
-            {subtitle && <p className="mt-0.5 text-[13px] text-ink-muted">{subtitle}</p>}
-          </div>
-          <button
-            aria-label="Fechar"
-            onClick={onClose}
-            className="rounded-md p-1.5 text-ink-subtle transition-colors duration-150 hover:bg-surface-hover hover:text-ink"
-          >
-            <X size={18} strokeWidth={1.75} />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
-        {footer && <div className="border-t border-border px-6 py-4">{footer}</div>}
-      </div>
-    </div>,
-    document.body
+export function Drawer({ open, onClose, title, subtitle, meta, children, footer, side = "right", size = "md" }: DrawerProps) {
+  return (
+    <D.Root open={open} onOpenChange={(next) => !next && onClose()}>
+      <D.Portal>
+        <D.Overlay className="fixed inset-0 z-50 bg-overlay animate-fade-in" />
+        <D.Content
+          className={cn(
+            "fixed inset-y-0 z-50 flex w-full flex-col border-border bg-surface shadow-dialog outline-none",
+            side === "right" ? "right-0 border-l animate-slide-in-right" : "left-0 border-r animate-slide-in-left",
+            SIZES[size]
+          )}
+        >
+          <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
+            <div className="min-w-0">
+              <D.Title className="truncate text-md font-semibold text-foreground">{title}</D.Title>
+              {subtitle ? (
+                <D.Description className="mt-0.5 text-sm text-muted-foreground">{subtitle}</D.Description>
+              ) : (
+                <D.Description className="sr-only">{typeof title === "string" ? title : "Painel"}</D.Description>
+              )}
+              {meta && <div className="mt-2 flex flex-wrap items-center gap-1.5">{meta}</div>}
+            </div>
+            <D.Close asChild>
+              <Button variant="ghost" size="icon-sm" aria-label="Fechar painel">
+                <X size={16} />
+              </Button>
+            </D.Close>
+          </header>
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
+          {footer && <footer className="flex flex-wrap items-center justify-end gap-2 border-t border-border px-5 py-3">{footer}</footer>}
+        </D.Content>
+      </D.Portal>
+    </D.Root>
   );
 }

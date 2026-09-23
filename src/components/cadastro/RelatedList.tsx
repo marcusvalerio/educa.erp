@@ -1,34 +1,29 @@
 import { Link2Off } from "lucide-react";
 
-type RelatedItem = {
-  label: string;
-  sublabel?: string;
-};
+type RelatedItem = { label: string; sublabel?: string };
 
+// Relacionamentos do registro (ex.: motoristas de uma transportadora).
 export function RelatedList({ title, items }: { title: string; items: RelatedItem[] }) {
   return (
-    <div className="flex flex-col gap-2">
-      <h4 className="text-xs font-semibold tracking-wide text-ink-subtle uppercase">
-        {title} <span className="text-ink-subtle/70">({items.length})</span>
-      </h4>
+    <section>
+      <h3 className="mb-2 text-2xs font-medium tracking-wide text-subtle-foreground uppercase">
+        {title} <span className="tabular-nums">({items.length})</span>
+      </h3>
       {items.length === 0 ? (
-        <p className="flex items-center gap-1.5 text-sm text-ink-subtle">
-          <Link2Off size={14} />
+        <p className="flex items-center gap-1.5 text-sm text-subtle-foreground">
+          <Link2Off size={14} aria-hidden />
           Nenhum registro vinculado.
         </p>
       ) : (
-        <ul className="flex flex-col gap-1.5">
+        <ul className="divide-y divide-border rounded-md border border-border">
           {items.map((item, i) => (
-            <li
-              key={i}
-              className="flex items-center justify-between rounded-lg border border-border bg-surface-hover/50 px-3 py-2 text-sm"
-            >
-              <span className="font-medium text-ink">{item.label}</span>
-              {item.sublabel && <span className="text-xs text-ink-subtle">{item.sublabel}</span>}
+            <li key={`${item.label}-${i}`} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+              <span className="truncate font-medium text-foreground">{item.label}</span>
+              {item.sublabel && <span className="shrink-0 text-xs text-subtle-foreground">{item.sublabel}</span>}
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </section>
   );
 }

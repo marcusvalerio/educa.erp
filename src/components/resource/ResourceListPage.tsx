@@ -1,242 +1,492 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { Eye, RefreshCcw, Search, XCircle } from "lucide-react";
-import { Breadcrumb, type Crumb } from "@/components/ui/Breadcrumb";
-import { DataTable } from "@/components/ui/DataTable";
-import { TableSkeleton } from "@/components/ui/TableSkeleton";
-import { Pagination } from "@/components/ui/Pagination";
+import { useRouter } from "next/navigation";
+import { Columns3, Download, ExternalLink, Eye, Filter, MoreHorizontal, Rows3, Rows4, Search, X } from "lucide-react";
+import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Controls";
 import { Drawer } from "@/components/ui/Drawer";
-import type { ColumnConfig } from "@/lib/pages/types";
-import type { Row } from "@/lib/mock/generators";
-import { apiGet } from "@/lib/api-client";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Panel } from "@/components/ui/Panel";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { SkeletonRows } from "@/components/ui/Feedback";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/Menu";
+import { DataTable, defaultCellText } from "@/components/data-table/DataTable";
+import { Pagination } from "@/components/data-table/Pagination";
+import { useListState, useTablePrefs } from "@/components/data-table/useListState";
+import { useResource } from "@/components/data-table/useResource";
+import type { ColumnDef, FilterDef } from "@/components/data-table/types";
+import { applyClientQuery, toCsv } from "@/lib/list/query";
+import { RecordHistory } from "./RecordHistory";
 
-// Fase 19 — Conclusão da UI: substitui o par ModulePage+mock (Row
-// fabricado em src/lib/mock/generators.ts) por uma tela real que busca
-// dados de uma rota /api/* já existente, reaproveitando DataTable/
-// TableSkeleton/Pagination/Drawer (nenhum componente novo e paralelo).
-// Escopo desta tela: LISTAGEM + VISUALIZAÇÃO reais. Criar/editar/excluir
-// por aqui não está incluído nesta rodada (ver docs/UI.md) — os únicos
-// cadastros com CRUD completo continuam sendo os 8 já convertidos nas
-// fases anteriores (src/components/cadastro/CadastroPage.tsx).
+// Padrão de LISTA do EDUCA (List Report): cabeçalho, visões de trabalho,
+// busca, filtros, tabela densa, seleção + ações em lote, colunas
+// configuráveis, densidade, exportação e detalhe — com estado na URL
+// (o drill-down do dashboard chega aqui já filtrado).
 
-const PAGE_SIZE = 10;
+export type DetailField<T> = { label: string; value: (row: T) => ReactNode; span?: 1 | 2 };
+export type DetailSection<T> = { title: string; fields: DetailField<T>[] };
 
-export type ResourceColumn<T> = {
-  key: string;
-  label: string;
-  align?: "left" | "right" | "center";
-  status?: boolean;
-  format?: (row: T) => string;
+export type DetailConfig<T> = {
+  title: (row: T) => ReactNode;
+  subtitle?: (row: T) => ReactNode;
+  badges?: (row: T) => ReactNode;
+  sections?: DetailSection<T>[];
+  /** Conteúdo extra (itens, relacionamentos...) carregado pela própria tela. */
+  render?: (row: T) => ReactNode;
+  actions?: (row: T) => ReactNode;
+  /** Rota dedicada do registro (quando existir). */
+  href?: (row: T) => string;
+  history?: boolean;
 };
 
-export type DetailField<T> = {
-  label: string;
-  format: (row: T) => string;
-};
-
-type ResourceListPageProps<T extends Record<string, unknown>> = {
-  breadcrumbParent: Crumb;
-  pageLabel: string;
+export type ResourceListPageProps<T> = {
   title: string;
-  description: string;
+  description?: string;
   apiPath: string;
-  columns: ResourceColumn<T>[];
-  searchKeys?: string[];
+  columns: ColumnDef<T>[];
+  filters?: FilterDef<T>[];
   searchPlaceholder?: string;
-  emptyHint?: string;
-  detailTitle?: (row: T) => string;
-  detailFields?: DetailField<T>[];
-  rowIdKey?: string;
-  // Quando informado, a ação "visualizar" navega para uma rota de
-  // detalhe dedicada (workspace rico) em vez de abrir o Drawer genérico
-  // — usado por entidades com histórico/abas próprias (ex.: Ativos).
-  detailHref?: (row: T) => string;
+  rowId?: (row: T) => string;
+  detail?: DetailConfig<T>;
+  /** Linha abre uma rota dedicada em vez do painel de detalhe. */
+  rowHref?: (row: T) => string;
+  /** Recorte fixo da tela sobre a coleção da API (ex.: só devoluções). */
+  baseFilter?: (row: T) => boolean;
+  actions?: ReactNode;
+  emptyTitle?: string;
+  emptyDescription?: ReactNode;
+  emptyAction?: ReactNode;
+  tableId?: string;
+  bulkActions?: (rows: T[], clear: () => void) => ReactNode;
+  rowActions?: (row: T) => ReactNode;
+  /** Conteúdo acima da tabela (resumo da lista, alertas). */
+  summary?: ReactNode;
+  exportName?: string;
 };
 
-function defaultFormat(value: unknown): string {
-  if (value === null || value === undefined || value === "") return "—";
-  if (typeof value === "boolean") return value ? "Sim" : "Não";
-  return String(value);
+const defaultRowId = (row: unknown) => String((row as { id?: unknown }).id ?? "");
+
+function download(filename: string, content: string) {
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
-export function ResourceListPage<T extends Record<string, unknown>>({
-  breadcrumbParent,
-  pageLabel,
+function ResourceListInner<T>({
   title,
   description,
   apiPath,
   columns,
-  searchKeys,
+  filters = [],
   searchPlaceholder = "Buscar...",
-  emptyHint,
-  detailTitle,
-  detailFields,
-  rowIdKey = "id",
-  detailHref,
+  rowId = defaultRowId,
+  detail,
+  rowHref,
+  baseFilter,
+  actions,
+  emptyTitle,
+  emptyDescription,
+  emptyAction,
+  tableId,
+  bulkActions,
+  rowActions,
+  summary,
+  exportName,
 }: ResourceListPageProps<T>) {
-  const [items, setItems] = useState<T[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadToken, setReloadToken] = useState(0);
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const filterIds = useMemo(() => filters.map((f) => f.id), [filters]);
+  const { state, update, clear } = useListState(filterIds);
+  const prefs = useTablePrefs(tableId ?? apiPath, columns.filter((c) => c.defaultHidden).map((c) => c.id));
+  const resource = useResource<T>(apiPath, state, filters, columns);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [viewing, setViewing] = useState<T | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [searchDraft, setSearchDraft] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await apiGet<T[]>(apiPath);
-        if (!cancelled) setItems(Array.isArray(data) ? data : []);
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Não foi possível carregar os dados.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [apiPath, reloadToken]);
+  const visibleColumns = columns.filter((c) => !prefs.hidden.has(c.id));
+  const views = filters.filter((f) => f.kind === "view");
+  const selectFilters = filters.filter((f) => f.kind !== "view");
 
-  const filtered = useMemo(() => {
-    if (!items) return [];
-    if (!search.trim() || !searchKeys || searchKeys.length === 0) return items;
-    const term = search.trim().toLowerCase();
-    return items.filter((item) => searchKeys.some((key) => String(item[key] ?? "").toLowerCase().includes(term)));
-  }, [items, search, searchKeys]);
+  // Modo cliente: a API devolveu tudo — busca/filtro/ordenação/página locais.
+  const view = useMemo(() => {
+    const base = baseFilter ? resource.rows.filter(baseFilter) : resource.rows;
+    if (resource.mode !== "client") return { rows: base, total: resource.total, filtered: base };
+    const byId = new Map(columns.map((c) => [c.id, c]));
+    const predicates: Record<string, (row: T, value: string) => boolean> = {};
+    for (const f of filters) if (f.predicate && !f.serverParam) predicates[f.id] = f.predicate;
+    return applyClientQuery(base, state, {
+      searchText: (row) => columns.map((c) => defaultCellText(c.exportValue?.(row) ?? c.value?.(row))).join(" "),
+      sortValue: (row, id) => byId.get(id)?.value?.(row),
+      predicates,
+    });
+  }, [resource.mode, resource.rows, resource.total, state, columns, filters, baseFilter]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const hasFilters = !!state.q || Object.keys(state.filters).length > 0;
+  const selectedRows = view.filtered.filter((row) => selected.has(rowId(row)));
 
-  const tableColumns: ColumnConfig[] = columns.map((col) => ({
-    key: col.key,
-    label: col.label,
-    align: col.align,
-    render: col.status ? "status" : "text",
-  }));
-
-  const tableRows: Row[] = paged.map((item, i) => {
-    const row: Row = { id: String(item[rowIdKey] ?? i) };
-    for (const col of columns) {
-      row[col.key] = col.format ? col.format(item) : defaultFormat(item[col.key]);
-    }
-    return row;
-  });
-
-  function findItem(rowId: string): T | undefined {
-    return paged.find((item) => String(item[rowIdKey] ?? "") === rowId);
+  function onSort(id: string) {
+    if (state.sort !== id) update({ sort: id, dir: "asc" });
+    else if (state.dir === "asc") update({ sort: id, dir: "desc" });
+    else update({ sort: null, dir: "asc" });
   }
 
-  function retry() {
-    setReloadToken((n) => n + 1);
+  function exportCsv(rows: T[], suffix: string) {
+    const cols = visibleColumns;
+    const csv = toCsv(
+      cols.map((c) => c.header),
+      rows.map((row) =>
+        cols.map((c) => {
+          const v = c.exportValue ? c.exportValue(row) : c.value?.(row);
+          return v === null || v === undefined ? "" : typeof v === "number" ? v : String(v);
+        })
+      )
+    );
+    const date = new Date().toISOString().slice(0, 10);
+    download(`${exportName ?? title.toLowerCase().replace(/\s+/g, "-")}-${suffix}-${date}.csv`, csv);
   }
 
-  const fields: DetailField<T>[] =
-    detailFields ?? columns.map((col) => ({ label: col.label, format: col.format ?? ((row: T) => defaultFormat(row[col.key])) }));
+  function openRow(row: T) {
+    if (rowHref) router.push(rowHref(row));
+    else if (detail) setViewing(row);
+  }
+
+  const searchValue = searchDraft ?? state.q;
+
+  const filterControls = (layout: "inline" | "stacked") =>
+    selectFilters.map((filter) => (
+      <label key={filter.id} className={cn(layout === "stacked" ? "flex flex-col gap-1.5" : "flex items-center")}>
+        <span className={cn("text-xs font-medium text-muted-foreground", layout === "inline" && "sr-only")}>{filter.label}</span>
+        <Select
+          size={layout === "inline" ? "sm" : "md"}
+          aria-label={filter.label}
+          value={state.filters[filter.id] ?? ""}
+          onValueChange={(value) => update({ filters: { [filter.id]: value } })}
+          placeholder={filter.label}
+          options={[{ value: "", label: `${filter.label}: todos` }, ...filter.options]}
+          className={layout === "inline" ? "w-44" : undefined}
+        />
+      </label>
+    ));
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4 border-b border-border pb-6">
-        <Breadcrumb items={[breadcrumbParent, { label: pageLabel }]} />
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="font-display text-[1.6rem] font-semibold tracking-tight text-ink sm:text-[1.85rem]">{title}</h1>
-            <p className="mt-1.5 max-w-2xl text-[13.5px] text-ink-muted">{description}</p>
-          </div>
-          {searchKeys && searchKeys.length > 0 && (
-            <div className="relative w-full max-w-xs shrink-0">
-              <Search size={15} strokeWidth={1.75} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-subtle" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                placeholder={searchPlaceholder}
-                className="w-full rounded-lg border border-border bg-surface py-2 pr-3 pl-9 text-[13px] text-ink placeholder:text-ink-subtle transition-colors duration-150 focus:border-brand/40 focus:outline-none focus:ring-[3px] focus:ring-brand/12"
-              />
-            </div>
-          )}
-        </div>
-      </div>
+    <div className="flex flex-col gap-4">
+      <PageHeader title={title} description={description} actions={actions} />
 
-      {error ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-danger/40 bg-danger-soft/40 py-16 text-center">
-          <XCircle size={28} className="text-danger" />
-          <div>
-            <p className="text-sm font-medium text-ink">Não foi possível carregar os dados</p>
-            <p className="mt-1 text-sm text-ink-subtle">{error}</p>
+      {summary}
+
+      <Panel className="overflow-hidden">
+        {views.length > 0 && (
+          <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-3 pt-1" role="toolbar" aria-label="Visões">
+            <ViewTab active={!views.some((v) => state.filters[v.id])} onClick={() => update({ filters: Object.fromEntries(views.map((v) => [v.id, ""])) })}>
+              Todos
+            </ViewTab>
+            {views.flatMap((v) =>
+              v.options.map((option) => (
+                <ViewTab key={`${v.id}-${option.value}`} active={state.filters[v.id] === option.value} onClick={() => update({ filters: { [v.id]: option.value } })}>
+                  {option.label}
+                </ViewTab>
+              ))
+            )}
           </div>
-          <Button variant="secondary" onClick={retry}>
-            <RefreshCcw size={15} />
-            Tentar novamente
-          </Button>
-        </div>
-      ) : loading ? (
-        <TableSkeleton columns={columns.length} />
-      ) : (
-        <>
-          <DataTable
-            columns={tableColumns}
-            rows={tableRows}
-            emptyHint={emptyHint}
-            renderActions={(row) => {
-              const item = findItem(String(row.id));
-              if (!item) return null;
-              if (detailHref) {
-                return (
-                  <Link
-                    href={detailHref(item)}
-                    aria-label="Abrir"
-                    title="Abrir"
-                    className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle transition-colors duration-100 hover:bg-surface-hover hover:text-ink"
-                  >
-                    <Eye size={16} strokeWidth={1.75} />
-                  </Link>
-                );
-              }
-              return (
-                <button
-                  onClick={() => setViewing(item)}
-                  aria-label="Visualizar"
-                  title="Visualizar"
-                  className="inline-flex items-center justify-center rounded-md p-1.5 text-ink-subtle transition-colors duration-100 hover:bg-surface-hover hover:text-ink"
-                >
-                  <Eye size={16} strokeWidth={1.75} />
-                </button>
-              );
+        )}
+
+        <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
+          <form
+            role="search"
+            className="relative min-w-0 flex-1 sm:max-w-xs"
+            onSubmit={(event) => {
+              event.preventDefault();
+              update({ q: searchValue });
+              setSearchDraft(null);
             }}
+          >
+            <Search size={14} className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-subtle-foreground" aria-hidden />
+            <Input
+              type="search"
+              aria-label={searchPlaceholder}
+              placeholder={searchPlaceholder}
+              value={searchValue}
+              onChange={(event) => setSearchDraft(event.target.value)}
+              onBlur={() => {
+                if (searchDraft !== null && searchDraft !== state.q) update({ q: searchDraft });
+                setSearchDraft(null);
+              }}
+              className="pl-8"
+            />
+          </form>
+          <div className="hidden items-center gap-2 lg:flex">{filterControls("inline")}</div>
+          {selectFilters.length > 0 && (
+            <Button variant="secondary" size="sm" className="lg:hidden" onClick={() => setFiltersOpen(true)}>
+              <Filter size={14} /> Filtros
+              {selectFilters.some((f) => state.filters[f.id]) && (
+                <span className="rounded-xs bg-foreground px-1 text-2xs text-background tabular-nums">
+                  {selectFilters.filter((f) => state.filters[f.id]).length}
+                </span>
+              )}
+            </Button>
+          )}
+          {hasFilters && (
+            <Button variant="ghost" size="sm" onClick={clear}>
+              <X size={14} /> Limpar
+            </Button>
+          )}
+          <div className="ml-auto flex items-center gap-1">
+            <Tooltip content={prefs.density === "compact" ? "Linhas confortáveis" : "Linhas compactas"}>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Alternar densidade"
+                onClick={() => prefs.setDensity(prefs.density === "compact" ? "comfortable" : "compact")}
+                className="hidden md:inline-flex"
+              >
+                {prefs.density === "compact" ? <Rows4 size={15} /> : <Rows3 size={15} />}
+              </Button>
+            </Tooltip>
+            <DropdownMenu>
+              <Tooltip content="Colunas">
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon-sm" aria-label="Configurar colunas" className="hidden md:inline-flex">
+                    <Columns3 size={15} />
+                  </Button>
+                </DropdownMenuTrigger>
+              </Tooltip>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuLabel>Colunas visíveis</DropdownMenuLabel>
+                {columns.map((col) => (
+                  <DropdownMenuCheckboxItem
+                    key={col.id}
+                    checked={!prefs.hidden.has(col.id)}
+                    disabled={col.hideable === false || (visibleColumns.length === 1 && !prefs.hidden.has(col.id))}
+                    onCheckedChange={() => prefs.toggleColumn(col.id)}
+                    onSelect={(event) => event.preventDefault()}
+                  >
+                    {col.header}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Tooltip content={resource.mode === "server" ? "Exportar página atual (CSV)" : "Exportar resultado filtrado (CSV)"}>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Exportar CSV"
+                disabled={view.filtered.length === 0}
+                onClick={() => exportCsv(view.filtered, resource.mode === "server" ? "pagina" : "lista")}
+              >
+                <Download size={15} />
+              </Button>
+            </Tooltip>
+          </div>
+        </div>
+
+        {selectedRows.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 border-b border-border bg-accent-soft/60 px-3 py-1.5 text-sm" role="region" aria-label="Ações em lote">
+            <span className="font-medium tabular-nums">
+              {selectedRows.length} {selectedRows.length === 1 ? "selecionado" : "selecionados"}
+            </span>
+            <Button variant="secondary" size="xs" onClick={() => exportCsv(selectedRows, "selecao")}>
+              <Download size={13} /> Exportar seleção
+            </Button>
+            {bulkActions?.(selectedRows, () => setSelected(new Set()))}
+            <Button variant="ghost" size="xs" className="ml-auto" onClick={() => setSelected(new Set())}>
+              Limpar seleção
+            </Button>
+          </div>
+        )}
+
+        <DataTable
+          columns={visibleColumns}
+          rows={view.rows}
+          rowId={rowId}
+          loading={resource.loading}
+          error={resource.error}
+          onRetry={resource.reload}
+          emptyTitle={emptyTitle}
+          emptyDescription={emptyDescription}
+          emptyAction={emptyAction}
+          filtered={hasFilters}
+          onClearFilters={clear}
+          sort={{ id: state.sort, dir: state.dir }}
+          onSortChange={(id) => {
+            const col = columns.find((c) => c.id === id);
+            // Em modo servidor só ordena pelo que a API sabe ordenar.
+            if (resource.mode === "server" && !col?.serverSortKey) return;
+            onSort(id);
+          }}
+          selectable
+          selected={selected}
+          onSelectedChange={setSelected}
+          onRowOpen={detail || rowHref ? openRow : undefined}
+          density={prefs.density}
+          caption={title}
+          rowActions={
+            detail || rowHref || rowActions
+              ? (row) => (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon-sm" aria-label="Ações da linha">
+                        <MoreHorizontal size={15} />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-52">
+                      {(detail || rowHref) && (
+                        <DropdownMenuItem onSelect={() => openRow(row)}>
+                          <Eye size={14} /> Abrir
+                        </DropdownMenuItem>
+                      )}
+                      {detail?.href && (
+                        <DropdownMenuItem asChild>
+                          <Link href={detail.href(row)}>
+                            <ExternalLink size={14} /> Abrir página do registro
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {rowActions?.(row)}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )
+              : undefined
+          }
+        />
+
+        {!resource.error && view.total > 0 && (
+          <Pagination
+            page={state.page}
+            pageSize={state.pageSize}
+            total={view.total}
+            onPageChange={(page) => update({ page })}
+            onPageSizeChange={(pageSize) => update({ pageSize })}
           />
-          <Pagination page={currentPage} pageCount={pageCount} totalItems={filtered.length} pageSize={PAGE_SIZE} onPageChange={setPage} />
-        </>
-      )}
+        )}
+      </Panel>
 
       <Drawer
-        open={viewing !== null}
-        onClose={() => setViewing(null)}
-        title={viewing && detailTitle ? detailTitle(viewing) : "Detalhes"}
-        subtitle="Visualização de detalhes"
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title="Filtros"
+        size="sm"
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                clear();
+                setFiltersOpen(false);
+              }}
+            >
+              Limpar
+            </Button>
+            <Button onClick={() => setFiltersOpen(false)}>Ver resultados</Button>
+          </>
+        }
       >
-        {viewing && (
-          <dl className="flex flex-col gap-4">
-            {fields.map((field) => (
-              <div key={field.label}>
-                <dt className="text-[11px] font-semibold tracking-wide text-ink-muted uppercase">{field.label}</dt>
-                <dd className="mt-1 text-[13.5px] text-ink">{field.format(viewing)}</dd>
+        <div className="flex flex-col gap-4">{filterControls("stacked")}</div>
+      </Drawer>
+
+      {detail && (
+        <Drawer
+          open={viewing !== null}
+          onClose={() => setViewing(null)}
+          size="lg"
+          title={viewing ? detail.title(viewing) : ""}
+          subtitle={viewing && detail.subtitle ? detail.subtitle(viewing) : undefined}
+          meta={viewing && detail.badges ? detail.badges(viewing) : undefined}
+          footer={
+            viewing && (detail.actions || detail.href) ? (
+              <>
+                {detail.actions?.(viewing)}
+                {detail.href && (
+                  <Button asChild variant="secondary">
+                    <Link href={detail.href(viewing)}>
+                      <ExternalLink size={14} /> Abrir página
+                    </Link>
+                  </Button>
+                )}
+              </>
+            ) : undefined
+          }
+        >
+          {viewing && <RecordDetail row={viewing} detail={detail} columns={columns} rowId={rowId} />}
+        </Drawer>
+      )}
+    </div>
+  );
+}
+
+function ViewTab({ active, onClick, children }: { active: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "-mb-px h-9 shrink-0 border-b-2 px-2 text-sm whitespace-nowrap transition-colors",
+        active ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function RecordDetail<T>({ row, detail, columns, rowId }: { row: T; detail: DetailConfig<T>; columns: ColumnDef<T>[]; rowId: (row: T) => string }) {
+  const sections: DetailSection<T>[] = detail.sections ?? [
+    {
+      title: "Informações principais",
+      fields: columns.map((col) => ({ label: col.header, value: (r: T) => (col.cell ? col.cell(r) : defaultCellText(col.value?.(r))) })),
+    },
+  ];
+  return (
+    <div className="flex flex-col gap-6">
+      {sections.map((section) => (
+        <section key={section.title}>
+          <h3 className="mb-2 text-2xs font-medium tracking-wide text-subtle-foreground uppercase">{section.title}</h3>
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 rounded-md border border-border p-3 sm:grid-cols-2">
+            {section.fields.map((field) => (
+              <div key={field.label} className={cn("min-w-0", field.span === 2 && "sm:col-span-2")}>
+                <dt className="text-xs text-muted-foreground">{field.label}</dt>
+                <dd className="mt-0.5 text-sm break-words text-foreground">{field.value(row) ?? "—"}</dd>
               </div>
             ))}
           </dl>
-        )}
-      </Drawer>
+        </section>
+      ))}
+      {detail.render?.(row)}
+      {detail.history !== false && (
+        <section>
+          <h3 className="mb-2 text-2xs font-medium tracking-wide text-subtle-foreground uppercase">Histórico</h3>
+          <RecordHistory entityId={rowId(row)} />
+        </section>
+      )}
     </div>
+  );
+}
+
+export function ResourceListPage<T>(props: ResourceListPageProps<T>) {
+  return (
+    <Suspense
+      fallback={
+        <div className="rounded-md border border-border bg-surface">
+          <SkeletonRows />
+        </div>
+      }
+    >
+      <ResourceListInner {...props} />
+    </Suspense>
   );
 }

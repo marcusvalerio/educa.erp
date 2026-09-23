@@ -1,5 +1,4 @@
-import type { ColumnConfig, FilterConfig } from "@/lib/pages/types";
-import type { Row } from "@/lib/mock/generators";
+import type { ColumnConfig, FilterConfig, Row } from "./config-types";
 import type {
   Produto,
   Cliente,

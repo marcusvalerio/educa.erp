@@ -1,5 +1,16 @@
-import type { ColumnConfig, FilterConfig } from "@/lib/pages/types";
-import type { Row } from "@/lib/mock/generators";
+// Linha já formatada para exibição em tabela (valores prontos).
+export type Row = Record<string, string | number>;
+
+export type ColumnConfig = {
+  key: string;
+  label: string;
+  render?: "status" | "text";
+  align?: "left" | "right" | "center";
+};
+
+export type FilterConfig =
+  | { key: string; label: string; type: "text"; placeholder?: string }
+  | { key: string; label: string; type: "select"; options: string[] };
 import type { FormSection } from "./form-types";
 import type { FieldErrors } from "./validation";
 import type { BaseEntity } from "./types";
@@ -13,6 +24,8 @@ export type RelatedGroup = {
 export type CadastroConfig<T extends BaseEntity> = {
   moduleLabel: string;
   moduleHref: string;
+  /** Prefixo das permissões da API (<modulo>.read/create/update/delete). */
+  permissionModule: string;
   pageLabel: string;
   title: string;
   description: string;

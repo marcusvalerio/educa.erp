@@ -1,4 +1,5 @@
-// Migration 0071 (onboarding & identidade) executada de verdade num
+// Migrations 0071 (onboarding & identidade) e 0072 (proteção do vínculo
+// login ↔ cadastro) executadas de verdade num
 // Postgres (PGlite, WASM) sobre stubs mínimos das peças do Supabase:
 // auth.users, auth.uid(), papéis anon/authenticated e as funções de
 // permissão existentes (has_permission, has_platform_permission).
@@ -11,11 +12,13 @@ import path from "node:path";
 import { PGlite } from "@electric-sql/pglite";
 
 const MIGRATION = readFileSync(path.join(process.cwd(), "supabase/migrations/0071_onboarding_identity.sql"), "utf8");
+const MIGRATION_0072 = readFileSync(path.join(process.cwd(), "supabase/migrations/0072_protect_auth_user_link.sql"), "utf8");
 
 // Esquema mínimo com as colunas/constraints reais usadas pela 0071.
 const STUBS = `
 create role anon nologin;
 create role authenticated nologin;
+create role service_role nologin bypassrls;
 create schema auth;
 grant usage on schema auth to anon, authenticated;
 grant usage on schema public to anon, authenticated;
@@ -94,7 +97,7 @@ begin
   insert into public.roles (company_id, code, name, is_system) values
     (new.id, 'admin', 'Administrador', true), (new.id, 'operador', 'Operador', true);
   insert into public.role_permissions (role_id, code)
-    select id, c from public.roles, unnest(array['users.read', 'users.update']) c where company_id = new.id and code = 'admin';
+    select id, c from public.roles, unnest(array['users.read', 'users.update', 'roles.manage']) c where company_id = new.id and code = 'admin';
   return new;
 end $$;
 create trigger seed after insert on public.companies for each row execute function public.stub_seed_company();
@@ -177,10 +180,14 @@ async function company(name: string): Promise<string> {
   return (await one<{ id: string }>("insert into public.companies (name) values ($1) returning id", [name])).id;
 }
 async function appUser(companyId: string, email: string, opts: { auth?: string | null; admin?: boolean; status?: string } = {}): Promise<string> {
+  // Fixture com login já vinculado: simula o caminho oficial (a marca que
+  // fn_accept_user_invitation põe na transação), pois a 0072 recusa o
+  // vínculo sem ela até para o dono da tabela.
+  if (opts.auth) await q("select set_config('educa.auth_link', 'invitation', false)");
   const row = await one<{ id: string }>(
     "insert into public.users (company_id, name, email, login, auth_user_id, status) values ($1, $2, $3, $4, $5, $6) returning id",
     [companyId, email.split("@")[0], email, email.split("@")[0], opts.auth ?? null, opts.status ?? "active"]
-  );
+  ).finally(() => q("select set_config('educa.auth_link', '', false)"));
   if (opts.admin) await q("insert into public.user_roles (user_id, role_id) select $1, id from public.roles where company_id = $2 and code = 'admin'", [row.id, companyId]);
   return row.id;
 }
@@ -193,6 +200,7 @@ before(async () => {
   db = new PGlite();
   await db.exec(STUBS);
   await db.exec(MIGRATION);
+  await db.exec(MIGRATION_0072);
 
   ids.companyA = await company("Empresa A");
   ids.companyB = await company("Empresa B");
@@ -500,5 +508,168 @@ describe("0071 — plataforma: criar empresa e primeiro administrador", () => {
     const found = await as(ids.ownerAuth, () => one<{ id: string }>("select public.fn_platform_auth_user_id(' OWNER@educa.test ') id"));
     assert.equal(found.id, ids.ownerAuth);
     await as(ids.operatorAAuth, () => rejects(q("select public.fn_platform_auth_user_id('owner@educa.test')"), "42501"));
+  });
+});
+
+describe("0071 — convite não escala privilégio", () => {
+  // Quem só tem users.update (sem roles.manage) não pode dar login a um
+  // cadastro que já carrega papéis: seria conceder esses papéis a um
+  // e-mail escolhido por ele sem poder gerenciar papéis.
+  before(async () => {
+    const role = await one<{ id: string }>("insert into public.roles (company_id, code, name) values ($1, 'gestor', 'Gestor') returning id", [ids.companyA]);
+    await q("insert into public.role_permissions (role_id, code) values ($1, 'users.read'), ($1, 'users.update')", [role.id]);
+    ids.managerAAuth = await authUser("gestor@a.test");
+    ids.managerA = await appUser(ids.companyA, "gestor@a.test", { auth: ids.managerAAuth });
+    await q("insert into public.user_roles (user_id, role_id) values ($1, $2)", [ids.managerA, role.id]);
+  });
+
+  test("sem roles.manage: recusa convite para cadastro com papel (ex.: admin)", async () => {
+    const target = await appUser(ids.companyA, "futuro.admin@a.test", { admin: true });
+    await as(ids.managerAAuth, () => rejects(q("select public.fn_create_user_invitation($1)", [target]), "42501", /roles\.manage/));
+    const n = await one<{ n: number }>("select count(*)::int n from public.user_invitations where user_id = $1", [target]);
+    assert.equal(n.n, 0);
+  });
+
+  test("sem roles.manage: cadastro sem papel pode ser convidado", async () => {
+    const target = await appUser(ids.companyA, "sem.papel@a.test");
+    const inv = await as(ids.managerAAuth, () => one<{ r: Row }>("select public.fn_create_user_invitation($1) r", [target]));
+    assert.equal(inv.r.kind, "USER");
+  });
+
+  test("com roles.manage: cadastro com papel pode ser convidado", async () => {
+    const target = await appUser(ids.companyA, "admin.dois@a.test", { admin: true });
+    const inv = await as(ids.adminAAuth, () => one<{ r: Row }>("select public.fn_create_user_invitation($1) r", [target]));
+    assert.equal(inv.r.kind, "USER");
+  });
+});
+
+describe("0072 — auth_user_id só pelo aceite de convite", () => {
+  // Nos stubs não há RLS em users; o privilégio de tabela é concedido
+  // aqui de propósito para provar que o GATILHO — e não a falta de
+  // GRANT — barra a escrita (em produção a policy users_update permite
+  // a quem tem users.update alterar qualquer coluna da própria empresa).
+  before(async () => {
+    await q("grant select, insert, update on public.users to authenticated, service_role");
+    await q("grant usage on sequence public.users_code_seq to authenticated, service_role");
+  });
+
+  async function setRole<T>(role: string, fn: () => Promise<T>): Promise<T> {
+    await db.exec(`set role ${role}`);
+    try {
+      return await fn();
+    } finally {
+      await db.exec("reset role");
+    }
+  }
+
+  test("authenticated (admin com users.update) não liga cadastro a outro login", async () => {
+    const target = await appUser(ids.companyA, "sequestro@a.test");
+    const attacker = await authUser("atacante@x.test");
+    await as(ids.adminAAuth, () => rejects(q("update public.users set auth_user_id = $1 where id = $2", [attacker, target]), "42501", /aceite de convite/));
+    const row = await one<{ auth_user_id: string | null }>("select auth_user_id from public.users where id = $1", [target]);
+    assert.equal(row.auth_user_id, null);
+  });
+
+  test("authenticated não troca nem remove o vínculo existente", async () => {
+    const other = await authUser("troca@x.test");
+    await as(ids.adminAAuth, async () => {
+      await rejects(q("update public.users set auth_user_id = $1 where id = $2", [other, ids.operatorA]), "42501");
+      await rejects(q("update public.users set auth_user_id = null where id = $1", [ids.operatorA]), "42501");
+    });
+    const row = await one<{ auth_user_id: string }>("select auth_user_id from public.users where id = $1", [ids.operatorA]);
+    assert.equal(row.auth_user_id, ids.operatorAAuth);
+  });
+
+  test("authenticated não cria cadastro já vinculado; sem vínculo, cria", async () => {
+    const attacker = await authUser("insert@x.test");
+    await as(ids.adminAAuth, async () => {
+      await rejects(
+        q("insert into public.users (company_id, name, email, login, auth_user_id) values ($1, 'X', 'x1@a.test', 'x1', $2)", [ids.companyA, attacker]),
+        "42501"
+      );
+      await q("insert into public.users (company_id, name, email, login) values ($1, 'Y', 'y1@a.test', 'y1')", [ids.companyA]);
+    });
+  });
+
+  test("outras colunas seguem editáveis com login vinculado", async () => {
+    await as(ids.adminAAuth, () => q("update public.users set name = 'Operador A' where id = $1", [ids.operatorA]));
+    const row = await one<{ name: string; auth_user_id: string }>("select name, auth_user_id from public.users where id = $1", [ids.operatorA]);
+    assert.deepEqual(row, { name: "Operador A", auth_user_id: ids.operatorAAuth });
+  });
+
+  test("anon também é barrado", async () => {
+    await q("grant update on public.users to anon");
+    try {
+      const target = await appUser(ids.companyA, "anon.alvo@a.test");
+      const attacker = await authUser("anon.atacante@x.test");
+      await as(null, () => rejects(q("update public.users set auth_user_id = $1 where id = $2", [attacker, target]), "42501"));
+    } finally {
+      await q("revoke update on public.users from anon");
+    }
+  });
+
+  test("service_role (cliente administrativo) não define nem remove vínculo", async () => {
+    const target = await appUser(ids.companyA, "svc.alvo@a.test");
+    const auth = await authUser("svc@x.test");
+    await setRole("service_role", async () => {
+      await rejects(q("update public.users set auth_user_id = $1 where id = $2", [auth, target]), "42501");
+      await rejects(q("update public.users set auth_user_id = null where id = $1", [ids.operatorA]), "42501");
+    });
+  });
+
+  test("nem o dono da tabela liga um login sem a marca do aceite oficial", async () => {
+    const target = await appUser(ids.companyA, "dono.alvo@a.test");
+    const auth = await authUser("dono@x.test");
+    await rejects(q("update public.users set auth_user_id = $1 where id = $2", [auth, target]), "42501");
+    // A marca vale só na transação que a define (set_config local).
+    await db.transaction(async (tx) => {
+      await tx.query("select set_config('educa.auth_link', 'invitation', true)");
+      await tx.query("update public.users set auth_user_id = $1 where id = $2", [auth, target]);
+    });
+    const linked = await one<{ auth_user_id: string }>("select auth_user_id from public.users where id = $1", [target]);
+    assert.equal(linked.auth_user_id, auth);
+    const other = await authUser("dono.outro@x.test");
+    await rejects(q("update public.users set auth_user_id = $1 where id = $2", [other, target]), "42501");
+  });
+
+  test("o aceite oficial vincula e não deixa a marca ativa depois", async () => {
+    const target = await appUser(ids.companyA, "oficial@a.test");
+    const inv = await as(ids.adminAAuth, () => one<{ r: Row }>("select public.fn_create_user_invitation($1) r", [target]));
+    const auth = await authUser("oficial@a.test");
+    await as(auth, async () => {
+      await q("select public.fn_accept_user_invitation($1)", [inv.r.token]);
+      const flag = await one<{ v: string | null }>("select current_setting('educa.auth_link', true) v");
+      assert.ok(!flag.v, "marca educa.auth_link não persiste após o aceite");
+      await rejects(q("update public.users set auth_user_id = $1 where id = $2", [ids.ownerAuth, ids.operatorA]), "42501");
+    });
+    const row = await one<{ auth_user_id: string }>("select auth_user_id from public.users where id = $1", [target]);
+    assert.equal(row.auth_user_id, auth);
+  });
+
+  test("login excluído no Auth: ON DELETE SET NULL continua funcionando", async () => {
+    const target = await appUser(ids.companyA, "excluido@a.test");
+    const auth = await authUser("excluido@a.test");
+    await db.transaction(async (tx) => {
+      await tx.query("select set_config('educa.auth_link', 'invitation', true)");
+      await tx.query("update public.users set auth_user_id = $1 where id = $2", [auth, target]);
+    });
+    await q("delete from auth.users where id = $1", [auth]);
+    const row = await one<{ auth_user_id: string | null }>("select auth_user_id from public.users where id = $1", [target]);
+    assert.equal(row.auth_user_id, null);
+  });
+
+  test("função do gatilho não é executável por clientes", async () => {
+    const acl = await one<{ anon: boolean; auth: boolean; svc: boolean }>(
+      `select has_function_privilege('anon', 'public.fn_guard_users_auth_link()', 'execute') anon,
+              has_function_privilege('authenticated', 'public.fn_guard_users_auth_link()', 'execute') auth,
+              has_function_privilege('service_role', 'public.fn_guard_users_auth_link()', 'execute') svc`
+    );
+    assert.deepEqual(acl, { anon: false, auth: false, svc: false });
+  });
+
+  test("0072 é idempotente (reaplicar não duplica gatilho)", async () => {
+    await db.exec(MIGRATION_0072);
+    const n = await one<{ n: number }>("select count(*)::int n from pg_trigger where tgrelid = 'public.users'::regclass and tgname = 'guard_users_auth_link'");
+    assert.equal(n.n, 1);
   });
 });

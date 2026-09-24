@@ -6,7 +6,7 @@
 // invariantes de segurança do código (service_role fora do navegador).
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { isGuestOnlyPath, isPublicPath, postLoginDestination, resolveAccessState, userScopedKeys } from "@/lib/onboarding/access";
 import {
@@ -336,5 +336,43 @@ describe("invariantes de segurança do código", () => {
   test("não existe rota de bootstrap de Owner na aplicação", () => {
     const offenders = all.filter(({ text }) => /bootstrap_platform_owner/.test(text)).map((f) => f.file);
     assert.deepEqual(offenders, []);
+  });
+
+  test("nenhuma variável NEXT_PUBLIC_ carrega segredo de servidor", () => {
+    const extra = ["scripts/bootstrap-platform-owner.mjs", ".env.local.example", "next.config.ts"]
+      .filter((f) => existsSync(f))
+      .map((file) => ({ file, text: readFileSync(file, "utf8") }));
+    const offenders = [...all, ...extra].filter(({ text }) => /NEXT_PUBLIC_[A-Z0-9_]*(SERVICE|SECRET|PRIVATE)/.test(text)).map((f) => f.file);
+    assert.deepEqual(offenders, []);
+  });
+
+  test("a aplicação nunca grava users.auth_user_id (só o aceite de convite, no banco)", () => {
+    // Leitura e filtros (.eq/.select) são permitidos; escrita não.
+    const writes = all.filter(({ text }) => /\.(insert|update|upsert)\([^)]*auth_user_id/.test(text) || /(?<!p_)auth_user_id\s*:\s*(body|input|payload|request)/.test(text));
+    assert.deepEqual(writes.map((f) => f.file), []);
+  });
+
+  test("membro da plataforma: alteração exige membro existente e mantém o e-mail do banco", () => {
+    const text = readFileSync(path.join(root, "lib/api/platform-handlers.ts"), "utf8");
+    const fn = text.slice(text.indexOf("export async function upsertPlatformMember"), text.indexOf("export async function listPlatformPermissions"));
+    assert.match(fn, /from\("platform_members"\)\.select\("email"\)/);
+    assert.match(fn, /p_email:\s*existing\.data\.email/);
+    assert.doesNotMatch(fn, /p_email:\s*body/);
+  });
+
+  test("convite de membro: Owner só por Owner, checado ANTES de criar login no Auth", () => {
+    const text = readFileSync(path.join(root, "lib/api/onboarding-handlers.ts"), "utf8");
+    const fn = text.slice(text.indexOf("export async function invitePlatformMember"));
+    const ownerCheck = fn.search(/platformRole === "OWNER" && !owner\.data/);
+    const send = fn.indexOf("sendAuthInvite(");
+    assert.ok(ownerCheck > 0 && send > ownerCheck, "checagem de Owner precede o envio do convite");
+  });
+
+  test("recuperação de senha: callback troca o código no servidor com o id do fluxo PKCE", () => {
+    const route = readFileSync(path.join(root, "app/auth/callback/route.ts"), "utf8");
+    assert.match(route, /exchangeCodeForSession\(code, flowId \? \{ flowId \} : undefined\)/);
+    assert.match(route, /safeNextPath\(/);
+    const client = readFileSync(path.join(root, "lib/supabase/client.ts"), "utf8");
+    assert.match(client, /appendPkceFlowIdToRedirects:\s*true/);
   });
 });

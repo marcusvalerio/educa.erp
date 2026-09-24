@@ -45,7 +45,7 @@ export default function PlatformPermissionsPage() {
         ) : groups.length === 0 ? (
           <EmptyState compact kind={query ? "no-results" : "empty"} title={query ? "Nenhuma permissão encontrada" : "Catálogo vazio"} />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="border-b border-border bg-surface-muted text-2xs font-medium tracking-wide text-muted-foreground uppercase">

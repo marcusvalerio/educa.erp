@@ -33,10 +33,17 @@ export const DropdownMenuItem = forwardRef<HTMLDivElement, ItemProps>(function D
   { className, tone = "default", shortcut, children, ...props },
   ref
 ) {
+  // Com asChild o Slot do Radix exige um único filho: o atalho não entra.
   return (
     <DM.Item ref={ref} className={cn(itemClass, tone === "danger" && "text-danger-fg [&_svg]:text-danger-fg", className)} {...props}>
-      {children}
-      {shortcut && <span className="ml-auto pl-4 text-2xs text-subtle-foreground">{shortcut}</span>}
+      {props.asChild ? (
+        children
+      ) : (
+        <>
+          {children}
+          {shortcut && <span className="ml-auto pl-4 text-2xs text-subtle-foreground">{shortcut}</span>}
+        </>
+      )}
     </DM.Item>
   );
 });

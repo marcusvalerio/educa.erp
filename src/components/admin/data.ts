@@ -28,6 +28,26 @@ export type AdminUser = {
   links_visible: boolean;
 };
 
+export type AdminInvitation = {
+  id: string;
+  user_id: string;
+  email: string;
+  kind: "USER" | "COMPANY_ADMIN";
+  status: "pending" | "accepted" | "revoked" | "expired";
+  expires_at: string;
+  created_at: string;
+  accepted_at: string | null;
+  revoked_at: string | null;
+  created_by_label: string;
+};
+
+/** Convite mais recente de cada cadastro (a lista chega do mais novo para o mais antigo). */
+export function latestInvitationByUser(rows: AdminInvitation[] | null | undefined): Map<string, AdminInvitation> {
+  const map = new Map<string, AdminInvitation>();
+  for (const row of rows ?? []) if (!map.has(row.user_id)) map.set(row.user_id, row);
+  return map;
+}
+
 export type AdminRole = {
   id: string;
   code: string;

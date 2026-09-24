@@ -118,7 +118,7 @@ export function MiniTable<T>({
 }) {
   if (rows.length === 0) return <p className="px-4 py-5 text-sm text-muted-foreground">{empty}</p>;
   return (
-    <div className="overflow-x-auto">
+    <div className="relative overflow-x-auto">
       <table className="w-full min-w-[560px] text-left text-sm">
         <thead>
           <tr className="border-b border-border bg-surface-muted">

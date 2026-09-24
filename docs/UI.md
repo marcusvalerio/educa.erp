@@ -141,6 +141,16 @@ de empresas.**
   API interceptadas (fixtures só no ambiente de QA, nunca no app):
   claro/escuro, desktop/mobile, `/admin`, `/admincentral`, perfil limitado
   e sem acesso.
+- QA visual **real**, sem interceptação, contra a réplica local do
+  Supabase (ver [ONBOARDING.md](./ONBOARDING.md) §5): 108 telas/estados,
+  desktop 1440 e mobile 390, claro e escuro. Checa overflow horizontal,
+  erros de console e de página e falhas de rede, e abre o menu da conta.
+  Resultado: 0 problema. Correções que saíram dessa rodada:
+  - `DropdownMenuItem` com `asChild` entrega um filho único ao Slot do
+    Radix. Antes, o menu da conta gerava "Primitive.div failed to slot".
+  - Contêineres de rolagem de tabela usam `relative`. O texto `sr-only`
+    absoluto do cabeçalho escapava da rolagem e alargava a página no
+    mobile (`/admin/branches`).
 - Acessibilidade: foco visível, navegação por teclado (Radix), link "pular
   para o conteúdo", rótulos em controles, `aria-sort`, `prefers-reduced-motion`.
 
@@ -155,9 +165,11 @@ de empresas.**
    `companies_select_member`). `/admincentral` identifica empresas pelo id
    e pelo perfil SaaS. Correção sugerida: uma view/função de plataforma
    que exponha só nome e documento, sem dados operacionais.
-3. **Não há sessão real para validar ponta a ponta**: `platform_members`
-   está vazio, não há atribuição de papel administrador e nenhum usuário
-   tem `auth_user_id`. O QA visual usou respostas interceptadas.
+3. **Sessão real em produção** depende do primeiro Owner
+   (`scripts/bootstrap-platform-owner.mjs`), do SMTP e de `APP_URL`. As
+   migrations 0071 e 0072 já estão aplicadas; ver
+   [ONBOARDING.md](./ONBOARDING.md) §8. A validação ponta a ponta com
+   sessão real foi feita na réplica local (E2E 102/102 e QA visual real).
 4. **Coleções de domínio vêm inteiras** (pedidos, títulos, OPs...). Listas
    paginam localmente e os detectores/painéis leem a coleção completa.
    Com volume, recomenda-se paginação no servidor nessas rotas e um
@@ -169,5 +181,10 @@ de empresas.**
    `platform.modules.manage`, mas não há função/rota de escrita.
 7. **Recursos da matriz de permissões usam o código do catálogo** (ex.:
    "Purchase orders"); um rótulo por recurso no catálogo melhoraria a leitura.
-8. **Vincular login a um usuário** (`auth_user_id`) não tem rota; o
-   cadastro cria o usuário e a administração mostra "Sem login".
+8. ~~Vincular login a um usuário~~ — resolvido pelo convite (0071) e
+   protegido pela 0072: o vínculo `auth_user_id` só acontece no aceite,
+   pelo banco. Ver [ONBOARDING.md](./ONBOARDING.md).
+9. **`operador` e `leitura` entram em `/admin`** porque têm `users.read`
+   (e `operador`, `users.update`). Isso é o RBAC semeado, não a interface.
+   Para um usuário "só ERP", use um papel personalizado. Ver ONBOARDING.md
+   §6.

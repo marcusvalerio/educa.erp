@@ -187,7 +187,7 @@ export function OrgCrudPage({ config }: { config: OrgCrudConfig }) {
         ) : rows.length === 0 ? (
           <EmptyState compact kind={query || status ? "no-results" : "empty"} title={query || status ? "Nenhum resultado" : "Nada cadastrado ainda"} description={query || status ? "Ajuste a busca ou a situação." : config.emptyDescription} />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-border bg-surface-muted">

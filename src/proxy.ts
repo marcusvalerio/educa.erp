@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { isGuestOnlyPath, isPublicPath } from "@/lib/onboarding/access";
 
 // Atualiza a sessão do Supabase Auth a cada requisição e protege as
 // rotas de UI: sem sessão, redireciona para /login; com sessão, /login
@@ -17,7 +18,10 @@ import { createServerClient } from "@supabase/ssr";
 // Next.js 16 renomeou `middleware.ts`/`middleware()` para
 // `proxy.ts`/`proxy()` (a convenção antiga fica deprecated) — ver
 // node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md.
-const PUBLIC_PATHS = ["/login"];
+//
+// Rotas públicas e rotas só-visitante: src/lib/onboarding/access.ts
+// (convite, recuperação/redefinição de senha e retorno do Auth abrem sem
+// sessão; cada página valida sozinha o que precisa).
 
 export async function proxy(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -46,16 +50,14 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const isPublic = PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
-
-  if (!user && !isPublic) {
+  if (!user && !isPublicPath(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (user && isPublic) {
+  if (user && isGuestOnlyPath(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     url.search = "";

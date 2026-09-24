@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowLeft, Building2, Landmark, LogOut, Menu, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Building2, Landmark, Menu, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
 import { EmptyState, Skeleton } from "@/components/ui/Feedback";
@@ -17,6 +17,10 @@ import { BreadcrumbTailProvider, Breadcrumbs, useBreadcrumbTailValue } from "./B
 import { CommandMenu } from "./CommandMenu";
 import { NotificationsButton, SearchTrigger, ThemeToggle, UnitSwitcher, UserMenu } from "./ShellControls";
 import { EducaMark, EducaWordmark } from "./Brand";
+import { BranchPrompt } from "./BranchPrompt";
+import { AuthFrame } from "@/components/auth/AuthFrame";
+import { AccessStateCard } from "@/components/auth/AccessStateCard";
+import { LogoutButton } from "@/components/auth/LogoutButton";
 
 // Moldura comum dos três ambientes do EDUCA:
 //   erp      — operação da empresa (/)
@@ -68,16 +72,6 @@ function ShellSkeleton() {
         </div>
       </div>
     </div>
-  );
-}
-
-function LogoutButton() {
-  return (
-    <form action="/api/auth/logout" method="post">
-      <Button type="submit" variant="ghost" size="sm">
-        <LogOut size={14} /> Sair
-      </Button>
-    </form>
   );
 }
 
@@ -196,18 +190,13 @@ function ShellInner({ environment, children }: { environment: Environment; child
       </FullPageState>
     );
   }
+  // Autenticado sem contexto de empresa: acesso não configurado, conta
+  // desativada ou empresa indisponível — explicado, sem detalhe técnico.
   if (tenantMissing && !(environment === "erp" && data?.platform)) {
     return (
-      <FullPageState>
-        <div className="w-full max-w-md rounded-md border border-border bg-surface">
-          <EmptyState
-            kind="no-permission"
-            title="Usuário sem empresa vinculada"
-            description="Seu acesso está autenticado, mas não há vínculo ativo com uma empresa. Procure o administrador da sua empresa."
-            action={<LogoutButton />}
-          />
-        </div>
-      </FullPageState>
+      <AuthFrame>
+        <AccessStateCard state={data?.access && data.access !== "active" ? data.access : "no_company"} email={data?.authUser.email} />
+      </AuthFrame>
     );
   }
   if (adminDenied || platformDenied) {
@@ -367,6 +356,7 @@ function ShellInner({ environment, children }: { environment: Environment; child
           <div className="mx-auto w-full max-w-screen-2xl">{allowed ? children : <NoAccess backHref={env.rootHref} />}</div>
         </main>
       </div>
+      {environment === "erp" && <BranchPrompt />}
       <CommandMenu open={commandOpen} onOpenChange={setCommandOpen} sections={sections} environmentLinks={environmentLinks} />
     </div>
   );

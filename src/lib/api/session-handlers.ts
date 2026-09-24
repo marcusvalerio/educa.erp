@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { jsonError } from "./response";
 import { dbError, requireSession } from "./governance";
 import type { FocusArea, PlatformContext, SessionContext, TenantContext } from "@/lib/session/types";
+import { resolveAccessState } from "@/lib/onboarding/access";
 
 // GET /api/session/context
 //
@@ -15,7 +16,10 @@ import type { FocusArea, PlatformContext, SessionContext, TenantContext } from "
 //   - focus: fn_dashboard_context (prioridades de dashboard, já filtradas
 //     por módulo habilitado + permissão);
 //   - platform: papel e permissões de plataforma — null para quem não é
-//     membro da plataforma.
+//     membro da plataforma;
+//   - access: situação do login (active / inactive / unlinked /
+//     no_company), para a UI explicar por que não há contexto — sem ids,
+//     sem detalhe técnico.
 // Os dois contextos são independentes de propósito: ser Platform Owner
 // não produz tenant, e ser Company Admin não produz platform.
 export async function getSessionContext() {
@@ -60,7 +64,8 @@ export async function getSessionContext() {
       };
     }
 
-    const body: SessionContext = { authUser: { id: authUserId, email }, tenant, focus, platform };
+    const access = resolveAccessState(appUser ? { status: appUser.status as string } : null, !!tenant);
+    const body: SessionContext = { authUser: { id: authUserId, email }, access, tenant, focus, platform };
     return NextResponse.json({ success: true, data: body });
   } catch (error) {
     return jsonError(error);

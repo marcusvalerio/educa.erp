@@ -311,7 +311,7 @@ function RoleMatrix({
                   <h3 className="flex-1 text-sm font-semibold">{group.name}</h3>
                   <span className="text-2xs text-subtle-foreground tabular-nums">{checked}/{group.codes.length}</span>
                 </header>
-                <div className="overflow-x-auto">
+                <div className="relative overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">

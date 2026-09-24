@@ -111,7 +111,7 @@ export default function AdminSettingsPage() {
           ) : rules.length === 0 ? (
             <EmptyState compact title="Nenhuma regra" description="Sem regras, os painéis usam as prioridades padrão de cada área." />
           ) : (
-            <div className="overflow-x-auto">
+            <div className="relative overflow-x-auto">
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
                   <tr className="border-b border-border bg-surface-muted text-left text-2xs font-medium tracking-wide text-muted-foreground uppercase">

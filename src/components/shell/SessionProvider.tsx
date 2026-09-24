@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { SessionContext } from "@/lib/session/types";
+import { takePrimedSession } from "@/lib/session/client-state";
 
 // Contexto da sessão no cliente (quem é, empresa, unidades, papéis,
 // permissões efetivas, módulos, papel de plataforma).
@@ -24,6 +25,8 @@ type SessionValue = {
   hasModule: (moduleCode: string) => boolean;
   /** Unidade em foco (null = todas as unidades acessíveis). */
   branchId: string | null;
+  /** Primeiro acesso com mais de uma unidade e nenhuma escolha feita ainda. */
+  branchPending: boolean;
   setBranchId: (branchId: string | null) => void;
 };
 
@@ -51,6 +54,15 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     async function load() {
+      // Resposta que o login acabou de buscar (mesma sessão, segundos atrás).
+      const primed = reloadKey === 0 ? takePrimedSession() : null;
+      if (primed) {
+        setData(primed);
+        setError(null);
+        setStatus("ready");
+        if (primed.tenant) setBranchChoice(readStoredBranch(primed.tenant.user.id));
+        return;
+      }
       try {
         const res = await fetch("/api/session/context", { cache: "no-store" });
         const body = await res.json().catch(() => null);
@@ -104,6 +116,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     return null;
   }, [branchChoice, data]);
 
+  const branchPending = status === "ready" && (data?.tenant?.branches.length ?? 0) > 1 && branchChoice === undefined;
+
   const setBranchId = useCallback(
     (next: string | null) => {
       setBranchChoice(next);
@@ -124,8 +138,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<SessionValue>(
-    () => ({ status, data, error, reload, can, canAny, canPlatform, hasModule, branchId, setBranchId }),
-    [status, data, error, reload, can, canAny, canPlatform, hasModule, branchId, setBranchId]
+    () => ({ status, data, error, reload, can, canAny, canPlatform, hasModule, branchId, branchPending, setBranchId }),
+    [status, data, error, reload, can, canAny, canPlatform, hasModule, branchId, branchPending, setBranchId]
   );
 
   return <SessionCtx.Provider value={value}>{children}</SessionCtx.Provider>;

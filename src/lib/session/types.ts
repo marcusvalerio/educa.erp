@@ -32,8 +32,17 @@ export type PlatformContext = {
   permissions: string[];
 };
 
+/**
+ * Situação do login em relação ao cadastro da empresa (public.users):
+ * active (opera), inactive (cadastro desativado), unlinked (login sem
+ * cadastro vinculado) ou no_company (cadastro ativo sem contexto de
+ * empresa). Ver src/lib/onboarding/access.ts.
+ */
+export type AccessState = "active" | "inactive" | "unlinked" | "no_company";
+
 export type SessionContext = {
   authUser: { id: string; email: string | null };
+  access: AccessState;
   tenant: TenantContext | null;
   focus: FocusArea[];
   platform: PlatformContext | null;

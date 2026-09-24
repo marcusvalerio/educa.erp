@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lock } from "lucide-react";
+import { Building2, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Select, Switch } from "@/components/ui/Controls";
@@ -16,14 +16,18 @@ import { dateCol, enumFilter, numberCol, statusCol, textCol } from "@/components
 import { useSession } from "@/components/shell/SessionProvider";
 import { useCached } from "@/lib/dashboard/client";
 import { formatDate } from "@/lib/format";
+import { CompanyAdminSection, NewCompanyDialog } from "@/components/platform/CompanyOnboarding";
 import { LIFECYCLE_LABEL, companyRef, platformSend, type LifecycleStatus, type PlatformCompany, type PlatformCompanyModule } from "@/components/platform/data";
 
 // Empresas como clientes da plataforma: ciclo de vida e módulos
 // contratados. Identificadas pelo id — a política de companies não
 // expõe nome/razão social à plataforma (limite registrado em docs/UI.md).
 export default function PlatformCompaniesPage() {
+  const { canPlatform } = useSession();
   const [refresh, setRefresh] = useState(0);
+  const [creating, setCreating] = useState(false);
   return (
+    <>
     <ResourceListPage<PlatformCompany>
       title="Empresas"
       description="Empresas clientes da plataforma, seu ciclo de vida e os módulos contratados."
@@ -32,6 +36,13 @@ export default function PlatformCompaniesPage() {
       rowId={(row) => row.company_id}
       refreshToken={refresh}
       searchPlaceholder="Buscar por identificador ou plano..."
+      actions={
+        canPlatform("platform.companies.create") ? (
+          <Button size="sm" onClick={() => setCreating(true)}>
+            <Building2 size={14} aria-hidden /> Nova empresa
+          </Button>
+        ) : undefined
+      }
       summary={
         <Alert tone="info" title="Identificação por código">
           As empresas aparecem pelo identificador: a Administração Central não lê o cadastro (nome, documento) das empresas.
@@ -57,6 +68,8 @@ export default function PlatformCompaniesPage() {
       }}
       emptyDescription="Nenhuma empresa cadastrada na plataforma."
     />
+    <NewCompanyDialog open={creating} onClose={() => setCreating(false)} onCreated={() => setRefresh((n) => n + 1)} />
+    </>
   );
 }
 
@@ -108,6 +121,8 @@ function CompanyGovernance({ company, onChanged }: { company: PlatformCompany; o
         <div><dt className="text-2xs font-medium tracking-wide text-subtle-foreground uppercase">Cancelada em</dt><dd className="tabular-nums">{formatDate(company.cancelled_at)}</dd></div>
         {company.notes && <div className="col-span-2"><dt className="text-2xs font-medium tracking-wide text-subtle-foreground uppercase">Observações</dt><dd>{company.notes}</dd></div>}
       </dl>
+
+      <CompanyAdminSection companyId={company.company_id} />
 
       <section className="flex flex-col gap-3 border-t border-border pt-4">
         <h3 className="text-sm font-semibold">Ciclo de vida</h3>

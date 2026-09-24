@@ -20,6 +20,7 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import { initials } from "@/lib/navigation/access";
 import { apiGet } from "@/lib/api-client";
 import { useSession } from "./SessionProvider";
+import { LogoutForm } from "@/components/auth/LogoutButton";
 
 type Variant = "default" | "platform";
 
@@ -317,13 +318,13 @@ export function UserMenu({ variant = "default", adminHref, platformHref, erpHref
           />
         </div>
         <DropdownMenuSeparator />
-        <form action="/api/auth/logout" method="post">
+        <LogoutForm>
           <DropdownMenuItem asChild>
             <button type="submit" className="w-full">
               <LogOut size={14} /> Sair
             </button>
           </DropdownMenuItem>
-        </form>
+        </LogoutForm>
       </DropdownMenuContent>
     </DropdownMenu>
   );

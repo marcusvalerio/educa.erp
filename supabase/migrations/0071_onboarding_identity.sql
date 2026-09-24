@@ -157,9 +157,9 @@ $$;
 
 -- Os privilégios padrão do Supabase concedem EXECUTE diretamente a anon e
 -- authenticated; revogar só de PUBLIC não basta.
-revoke all on function public.fn_invitation_token_hash(text) from public, anon, authenticated;
-revoke all on function public.fn_mask_email(text) from public, anon, authenticated;
-revoke all on function public.fn_issue_user_invitation(uuid, text, integer, text, uuid) from public, anon, authenticated;
+revoke all on function public.fn_invitation_token_hash(text) from public, anon, authenticated, service_role;
+revoke all on function public.fn_mask_email(text) from public, anon, authenticated, service_role;
+revoke all on function public.fn_issue_user_invitation(uuid, text, integer, text, uuid) from public, anon, authenticated, service_role;
 
 -- ------------------------------------------------------------------
 -- Company Admin: convidar / revogar
@@ -193,6 +193,14 @@ begin
   end if;
   if coalesce(trim(v_user.email), '') = '' then
     raise exception 'O cadastro do usuário não possui e-mail.' using errcode = '22023';
+  end if;
+  -- Dar login a um cadastro é, na prática, entregar os papéis dele. Quem
+  -- só edita cadastros (users.update — ex.: papel operador) não pode
+  -- liberar acesso a cadastro que já tenha papel (senão bastaria trocar
+  -- o e-mail de um cadastro administrador e convidar a si mesmo).
+  if exists (select 1 from public.user_roles where user_id = v_user.id)
+     and not public.has_permission(v_user.company_id, 'roles.manage') then
+    raise exception 'Este cadastro tem papéis atribuídos: liberar o acesso exige a permissão de gerenciar papéis (roles.manage).' using errcode = '42501';
   end if;
 
   select * into v_actor from public.users where id = public.current_app_user_id();
@@ -337,7 +345,11 @@ begin
     raise exception 'O acesso deste cadastro está desativado. Fale com o administrador da sua organização.' using errcode = 'P0001';
   end if;
 
+  -- Marca, só nesta transação, que o vínculo vem do aceite oficial
+  -- (o gatilho guard_users_auth_link da 0072 exige isso).
+  perform set_config('educa.auth_link', 'invitation', true);
   update public.users set auth_user_id = v_uid where id = v_user.id;
+  perform set_config('educa.auth_link', '', true);
 
   update public.user_invitations
   set status = 'accepted', accepted_at = now(), accepted_auth_user_id = v_uid, updated_at = now()

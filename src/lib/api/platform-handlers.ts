@@ -2,6 +2,7 @@ import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { ApiError } from "@/lib/database/errors";
 import { jsonError } from "./response";
 import { dbError, parseJson, requirePlatformMember, type IdRouteContext } from "./governance";
 import { companyLifecycleStatusSchema, upsertPlatformMemberSchema } from "@/lib/validations/platform";
@@ -213,14 +214,23 @@ export async function listPlatformMembers() {
 // Cadastro/alteração de membro: quem decide o que é permitido (ADMIN só
 // gerencia ADMIN; só OWNER mexe em OWNER; último OWNER protegido) é
 // fn_upsert_platform_member + o trigger guard_last_platform_owner.
+// Esta rota só ALTERA membro existente: novo membro entra por
+// /api/platform/members/invite, que resolve o login pelo e-mail. Assim o
+// cliente não liga um login arbitrário (authUserId) a um e-mail qualquer,
+// e o e-mail do membro não muda por aqui.
 export async function upsertPlatformMember(request: NextRequest) {
   try {
     const { supabase } = await requirePlatformMember();
     const body = await parseJson(request, upsertPlatformMemberSchema);
+    const existing = await supabase.from("platform_members").select("email").eq("auth_user_id", body.authUserId).maybeSingle();
+    if (existing.error) throw dbError(existing.error);
+    if (!existing.data) {
+      throw new ApiError("NOT_FOUND", "Membro não encontrado. Novos membros entram pelo convite por e-mail.", 404);
+    }
     const { data, error } = await supabase.rpc("fn_upsert_platform_member", {
       p_auth_user_id: body.authUserId,
       p_name: body.name,
-      p_email: body.email,
+      p_email: existing.data.email as string,
       p_platform_role: body.platformRole,
       p_status: body.status ?? "active",
     });

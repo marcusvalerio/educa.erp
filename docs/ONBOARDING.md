@@ -466,6 +466,7 @@ Resultados:
 
 | Sintoma | Causa provável | O que fazer |
 |---|---|---|
+| Link de senha (recuperação pelo painel do Supabase, ou convite com destino fora das Redirect URLs) cai no Site URL | O Auth manda a sessão no fragmento para `APP_URL` | Tratado: `/login` encaminha o fragmento para `/redefinir-senha` (destino fixo). Conta com `educa_password_pending` vê "Crie sua senha" e segue para o seu ambiente; demais contas redefinem e voltam ao login |
 | Link de recuperação volta a `/login?erro=link` | Redirect URL sem `**` em `/auth/callback`, link já usado ou expirado | Conferir as Redirect URLs (§2) e pedir um novo link |
 | E-mail de convite não chega | SMTP não configurado, ou o limite do SMTP padrão foi atingido | Configurar o SMTP (§2) e ver Authentication → Logs |
 | "Reenviar" responde erro logo após enviar | O GoTrue limita a 1 envio por minuto por usuário | Aguardar 60 s |

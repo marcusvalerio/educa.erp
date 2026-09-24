@@ -24,7 +24,11 @@ import type { SessionContext } from "@/lib/session/types";
 export function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const firstAccess = searchParams.get("primeiro-acesso") === "1";
+  // Primeiro acesso: pelo link (?primeiro-acesso=1) ou porque a conta
+  // ainda tem a senha pendente (educa_password_pending, marcado no convite)
+  // — assim um link de recuperação também conclui o primeiro acesso.
+  const [pendingPassword, setPendingPassword] = useState(false);
+  const firstAccess = searchParams.get("primeiro-acesso") === "1" || pendingPassword;
   const [phase, setPhase] = useState<"checking" | "ready" | "invalid">("checking");
   const [linkError, setLinkError] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
@@ -46,6 +50,7 @@ export function ResetPasswordForm() {
         return;
       }
       setEmail(data.user.email ?? null);
+      setPendingPassword(data.user.user_metadata?.educa_password_pending === true);
       setPhase("ready");
     })();
     return () => {

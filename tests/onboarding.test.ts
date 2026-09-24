@@ -26,7 +26,7 @@ import {
   userAccessStatus,
   type InviteByEmail,
 } from "@/lib/onboarding/invitations";
-import { parseAuthHash } from "@/lib/onboarding/auth-hash";
+import { authLinkLandingPath, parseAuthHash } from "@/lib/onboarding/auth-hash";
 import type { PlatformContext, SessionContext, TenantContext } from "@/lib/session/types";
 import { bootstrapOwner, parseArgs } from "../scripts/bootstrap-platform-owner.mjs";
 
@@ -231,6 +231,27 @@ describe("sessão no fragmento do link de convite", () => {
   test("sem fragmento ou incompleto → nada", () => {
     assert.deepEqual(parseAuthHash(""), { kind: "none" });
     assert.deepEqual(parseAuthHash("#access_token=only"), { kind: "none" });
+  });
+  test("link de senha que caiu no Site URL vai para /redefinir-senha (destino fixo)", () => {
+    // Recuperação disparada pelo painel do Supabase: sem redirect_to, cai em "/".
+    assert.equal(authLinkLandingPath("#access_token=at&refresh_token=rt&type=recovery"), "/redefinir-senha");
+    // Convite cujo redirect_to não estava na lista: primeiro acesso.
+    assert.equal(authLinkLandingPath("#access_token=at&refresh_token=rt&type=invite"), "/redefinir-senha?primeiro-acesso=1");
+    assert.equal(authLinkLandingPath("#access_token=at&refresh_token=rt&type=magiclink"), "/redefinir-senha");
+    // Link expirado/erro: a página de senha explica e oferece novo link.
+    assert.equal(authLinkLandingPath("#error=access_denied&error_code=otp_expired"), "/redefinir-senha");
+  });
+  test("fragmento sem sessão, tipo desconhecido ou sem tipo → não redireciona", () => {
+    assert.equal(authLinkLandingPath(""), null);
+    assert.equal(authLinkLandingPath("#secao"), null);
+    assert.equal(authLinkLandingPath("#access_token=at&refresh_token=rt"), null);
+    assert.equal(authLinkLandingPath("#access_token=at&refresh_token=rt&type=https://evil.example"), null);
+  });
+  test("nada no link escolhe o destino (sem open redirect)", () => {
+    for (const hash of ["#access_token=a&refresh_token=b&type=recovery&redirect_to=https://evil.example", "#access_token=a&refresh_token=b&type=invite&next=//evil.example"]) {
+      const target = authLinkLandingPath(hash);
+      assert.ok(target && target.startsWith("/redefinir-senha") && !/evil/.test(target), String(target));
+    }
   });
 });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
@@ -12,6 +12,7 @@ import { Alert } from "@/components/ui/Feedback";
 import { AuthFrame } from "@/components/auth/AuthFrame";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { postLoginDestination } from "@/lib/onboarding/access";
+import { authLinkLandingPath } from "@/lib/onboarding/auth-hash";
 import { primeSession } from "@/lib/session/client-state";
 import type { SessionContext } from "@/lib/session/types";
 
@@ -24,6 +25,14 @@ const NOTICES: Record<string, { tone: "success" | "info" | "warning"; text: stri
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Link de senha do Supabase que caiu no Site URL (ver authLinkLandingPath):
+  // leva o fragmento, sem abri-lo aqui, para a página que o trata.
+  useEffect(() => {
+    const target = authLinkLandingPath(window.location.hash);
+    if (target) window.location.replace(target + window.location.hash);
+  }, []);
+
   const notice = searchParams.get("saiu") ? NOTICES.saiu : searchParams.get("reset") === "ok" ? NOTICES["senha-alterada"] : searchParams.get("erro") === "link" ? NOTICES.link : null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -29,6 +29,22 @@ export function parseAuthHash(hash: string): AuthHash {
   return { kind: "none" };
 }
 
+// Links do Supabase Auth que caem no Site URL em vez do destino pedido —
+// recuperação disparada pelo painel do Supabase (não leva redirect_to) ou
+// redirect_to fora da lista de Redirect URLs — chegam em "/" (o proxy leva
+// a /login e o navegador preserva o fragmento) com a sessão no fragmento.
+// Ali ele seria ignorado e a pessoa ficaria no login sem conseguir definir
+// a senha. Devolve o destino interno FIXO que trata o fragmento (ou null):
+// nada vindo do link escolhe o caminho.
+const PASSWORD_LINK_TYPES = new Set(["recovery", "invite", "magiclink", "signup", "email"]);
+
+export function authLinkLandingPath(hash: string): string | null {
+  const parsed = parseAuthHash(hash);
+  if (parsed.kind === "error") return "/redefinir-senha";
+  if (parsed.kind !== "session" || !parsed.type || !PASSWORD_LINK_TYPES.has(parsed.type)) return null;
+  return parsed.type === "invite" ? "/redefinir-senha?primeiro-acesso=1" : "/redefinir-senha";
+}
+
 type AuthLike = {
   auth: {
     setSession: (s: { access_token: string; refresh_token: string }) => Promise<{ error: unknown }>;

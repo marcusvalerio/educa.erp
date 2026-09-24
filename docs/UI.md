@@ -155,9 +155,10 @@ de empresas.**
    `companies_select_member`). `/admincentral` identifica empresas pelo id
    e pelo perfil SaaS. Correção sugerida: uma view/função de plataforma
    que exponha só nome e documento, sem dados operacionais.
-3. **Não há sessão real para validar ponta a ponta**: `platform_members`
-   está vazio, não há atribuição de papel administrador e nenhum usuário
-   tem `auth_user_id`. O QA visual usou respostas interceptadas.
+3. **Não há sessão real para validar ponta a ponta** até o primeiro Owner
+   ser criado (`scripts/bootstrap-platform-owner.mjs`) e a migration 0071
+   ser aplicada — ver [ONBOARDING.md](./ONBOARDING.md). O QA visual usou
+   respostas interceptadas.
 4. **Coleções de domínio vêm inteiras** (pedidos, títulos, OPs...). Listas
    paginam localmente e os detectores/painéis leem a coleção completa.
    Com volume, recomenda-se paginação no servidor nessas rotas e um
@@ -169,5 +170,6 @@ de empresas.**
    `platform.modules.manage`, mas não há função/rota de escrita.
 7. **Recursos da matriz de permissões usam o código do catálogo** (ex.:
    "Purchase orders"); um rótulo por recurso no catálogo melhoraria a leitura.
-8. **Vincular login a um usuário** (`auth_user_id`) não tem rota; o
-   cadastro cria o usuário e a administração mostra "Sem login".
+8. ~~Vincular login a um usuário~~ — resolvido pelo convite (0071): o
+   vínculo `auth_user_id` só acontece no aceite, pelo banco. Ver
+   [ONBOARDING.md](./ONBOARDING.md).

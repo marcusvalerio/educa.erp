@@ -55,7 +55,7 @@ export type Repository<T extends BaseEntity> = {
   getSnapshot: () => T[];
 };
 
-function createRepository<T extends BaseEntity>(resourcePath: string): Repository<T> {
+export function createRepository<T extends BaseEntity>(resourcePath: string): Repository<T> {
   let items: T[] = [];
   let hydratePromise: Promise<void> | null = null;
   const listeners = new Set<() => void>();
@@ -84,7 +84,15 @@ function createRepository<T extends BaseEntity>(resourcePath: string): Repositor
   }
 
   function hydrate(): Promise<void> {
-    if (!hydratePromise) hydratePromise = fetchAll();
+    if (!hydratePromise) {
+      // Se fetchAll() falhar, a promise em cache é descartada — senão todo
+      // hydrate() seguinte (o botão "Tentar novamente") só reaproveitaria a
+      // mesma promise rejeitada, sem nunca refazer a requisição.
+      hydratePromise = fetchAll().catch((error: unknown) => {
+        hydratePromise = null;
+        throw error;
+      });
+    }
     return hydratePromise;
   }
 

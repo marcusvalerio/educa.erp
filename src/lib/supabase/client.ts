@@ -15,6 +15,13 @@ import { getSupabaseAnonKey, getSupabaseUrl } from "./env";
  */
 export function createClient() {
   return createBrowserClient(getSupabaseUrl(), getSupabaseAnonKey(), {
-    auth: { detectSessionInUrl: false },
+    auth: {
+      detectSessionInUrl: false,
+      // O id do fluxo PKCE viaja no redirect (sb_flow_id) e /auth/callback
+      // escolhe o verificador certo: dois pedidos de "esqueci minha senha"
+      // seguidos não invalidam o primeiro link. Exige Redirect URLs com
+      // curinga (ex.: https://app/auth/callback**) — ver docs/ONBOARDING.md.
+      experimental: { appendPkceFlowIdToRedirects: true },
+    },
   });
 }

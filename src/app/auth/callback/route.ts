@@ -14,13 +14,17 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const next = safeNextPath(searchParams.get("next"));
   const code = searchParams.get("code");
+  // Cada pedido PKCE (ex.: dois "esqueci minha senha" seguidos) tem o seu
+  // verificador; o Auth devolve o id do fluxo em sb_flow_id. Sem ele, só
+  // o link mais recente funcionaria.
+  const flowId = searchParams.get("sb_flow_id");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
 
   const supabase = await createClient();
   let ok = false;
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code, flowId ? { flowId } : undefined);
     ok = !error;
   } else if (tokenHash && type && OTP_TYPES.includes(type)) {
     const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });

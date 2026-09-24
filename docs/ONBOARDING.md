@@ -135,7 +135,8 @@ restrito a quem tem acesso administrativo ao projeto.
 No painel do projeto:
 
 1. **Authentication → URL Configuration**
-   - Site URL: a URL pública do app (a mesma de `APP_URL`).
+   - Site URL: a URL pública do app (a mesma de `APP_URL`; em produção,
+     `https://educaerp.vercel.app`).
    - Redirect URLs — apenas o domínio de produção, sem curinga de domínio:
      - `https://<app>/convite/**`: o convite leva o token no caminho;
      - `https://<app>/auth/callback**`: o `**` é **necessário**, porque o
@@ -479,22 +480,50 @@ Resultados:
 
 ## 8. Estado de produção e pendências
 
-Feito em 2026-09-24: 0071 e 0072 aplicadas e validadas (§1).
+**Domínio de produção:** `https://educaerp.vercel.app`, que é o
+`APP_URL`, sem barra no final. Nas Redirect URLs do Auth entram só estes
+caminhos exatos:
+
+- `https://educaerp.vercel.app/convite/**`
+- `https://educaerp.vercel.app/auth/callback**`
+- `https://educaerp.vercel.app/redefinir-senha**`
+
+Não use o curinga `https://*.vercel.app/**`.
+
+Feito (2026-09-24):
+
+- 0071 e 0072 aplicadas e validadas (§1). O gatilho
+  `guard_users_auth_link` está ativo.
+- `claude/educa-onboarding` integrada em `main` com merge `--no-ff`,
+  preservando os commits. A Vercel concluiu o deploy do commit de merge.
+- `bootstrap_platform_owner` em produção confere com o esperado:
+  - só `service_role` executa;
+  - recusa um segundo Owner ativo;
+  - registra auditoria de plataforma.
+- Estado verificado antes do bootstrap: nenhum Owner, nenhum login no
+  Auth, nenhum cadastro vinculado e o e-mail do Owner não existe em lugar
+  nenhum.
 
 Pendente, com a ação necessária e quem pode fazê-la:
 
-1. **E-mail do primeiro Platform Owner** (dono do produto): informar o
-   e-mail real. Não foi inventado.
-2. **Bootstrap** (quem tem a `service_role`): numa máquina confiável,
-   `node scripts/bootstrap-platform-owner.mjs --email <e-mail> --name "<nome>" --app-url <APP_URL> --dry-run`.
+1. **Supabase Auth** (admin do projeto no painel): sign-up desligado,
+   Confirm email ligado, Site URL = `APP_URL`, as Redirect URLs acima e
+   SMTP próprio (§2).
+2. **Vercel** (admin do projeto na Vercel), variáveis em Production:
+   - `APP_URL=https://educaerp.vercel.app`;
+   - `SUPABASE_SERVICE_ROLE_KEY`, marcada como Sensitive, só servidor.
+
+   Depois, redeploy da produção.
+3. **Bootstrap** (quem tem a `service_role`), numa máquina confiável:
+
+   ```bash
+   node scripts/bootstrap-platform-owner.mjs --email <e-mail do Owner> --name "Marcus Valério" --app-url https://educaerp.vercel.app --dry-run
+   ```
+
    Em seguida, o mesmo comando sem `--dry-run`. Precisa de
    `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY` no ambiente da máquina.
-3. **Supabase Auth** (admin do projeto no painel): sign-up desligado,
-   Confirm email ligado, Site URL e Redirect URLs (§2) e SMTP próprio.
-4. **Vercel** (admin do projeto na Vercel), variáveis em Production:
-   - `APP_URL`;
-   - `SUPABASE_SERVICE_ROLE_KEY`, só servidor.
-
-   Depois, fazer novo deploy.
-5. **Primeiro login real e testes em produção:** dependem de 1–4. Os
-   mesmos cenários passaram na réplica (§5, "E2E real").
+   O e-mail do Owner foi definido pelo dono do produto e não fica
+   versionado aqui.
+4. **Primeiro login real e testes em produção:** dependem de 1–3. Os
+   mesmos cenários passaram na réplica (§5, "E2E real"), inclusive sobre
+   o código de `main` depois do merge.

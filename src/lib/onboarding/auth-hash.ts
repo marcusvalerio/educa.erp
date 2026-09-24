@@ -35,13 +35,29 @@ type AuthLike = {
   };
 };
 
+type HashResult = { type: string | null; error: string | null };
+
+// O fragmento é lido UMA vez por carregamento de página. Quem chamar de
+// novo (ex.: efeito montado duas vezes) recebe o mesmo resultado — e
+// espera a sessão terminar de ser instalada, em vez de ver "sem sessão".
+let consumed: { path: string; result: Promise<HashResult> } | null = null;
+
 /** Instala a sessão do fragmento (se houver) e limpa a URL. Só no navegador. */
-export async function consumeAuthHash(supabase: AuthLike): Promise<{ type: string | null; error: string | null }> {
-  if (typeof window === "undefined") return { type: null, error: null };
+export function consumeAuthHash(supabase: AuthLike): Promise<HashResult> {
+  if (typeof window === "undefined") return Promise.resolve({ type: null, error: null });
+  const path = window.location.pathname;
   const parsed = parseAuthHash(window.location.hash);
-  if (parsed.kind === "none") return { type: null, error: null };
+  if (parsed.kind === "none") {
+    return consumed && consumed.path === path ? consumed.result : Promise.resolve({ type: null, error: null });
+  }
   window.history.replaceState(null, "", window.location.pathname + window.location.search);
-  if (parsed.kind === "error") return { type: null, error: parsed.message };
-  const { error } = await supabase.auth.setSession({ access_token: parsed.accessToken, refresh_token: parsed.refreshToken });
-  return error ? { type: null, error: "Não foi possível validar o link de acesso. Peça um novo ao administrador." } : { type: parsed.type, error: null };
+  const result: Promise<HashResult> =
+    parsed.kind === "error"
+      ? Promise.resolve({ type: null, error: parsed.message })
+      : supabase.auth
+          .setSession({ access_token: parsed.accessToken, refresh_token: parsed.refreshToken })
+          .then(({ error }) => (error ? { type: null, error: "Não foi possível validar o link de acesso. Peça um novo ao administrador." } : { type: parsed.type, error: null }))
+          .catch(() => ({ type: null, error: "Não foi possível validar o link de acesso. Peça um novo ao administrador." }));
+  consumed = { path, result };
+  return result;
 }

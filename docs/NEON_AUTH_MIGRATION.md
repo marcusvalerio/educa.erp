@@ -908,3 +908,28 @@ tokens reais; rollback). Ressalvas **NÃO VALIDADAS**, ambas por falta de
 acesso, não por falha: (1) app em execução contra o Neon real (rede) e
 (2) R1 em produção (segredo). O modo neon **não deve ser ativado** em
 produção antes de fechar as duas.
+
+### 12.9 Última tentativa de fechar os bloqueios (2026-09-25)
+
+**R1 — EXTERNAL BLOCKER.** Investigado sem expor segredo e sem alterar produção:
+
+- Conector Supabase: expõe só metadados e chaves **públicas** (`anon` legada
+  HS256 `disabled:false`; `sb_publishable_…`). Não há ferramenta que leia ou
+  use o segredo JWT nem a configuração de chaves de assinatura.
+- Ambiente: nenhuma credencial do Supabase (sem access token, sem CLI logado).
+- Logs de produção (leitura, 24 h, `/rest/v1`): 134 requisições com JWT de
+  usuário, **todas ES256**, todas 200; **nenhuma** HS256 com papel
+  `authenticated`. Não há evidência de tráfego que prove aceitação de HS256.
+- Caminhos descartados por violarem as regras: Edge Function em produção
+  (deploy; teria acesso ao segredo), SQL lendo o segredo, branch do Supabase
+  (outro segredo, não prova produção).
+- Conclusão: a prova criptográfica exige o segredo de produção →
+  `scripts/verify-bridge-token.mjs` pelo responsável (§12.4).
+
+**E2E app → Neon real — EXTERNAL BLOCKER.** Proxy do ambiente recusa
+`CONNECT` para `ep-green-star-b7aphqm9.neonauth.c-13.us-east-1.aws.neon.tech`
+e `bshvfsxapwwfntowdxyr.supabase.co` (403, `connect_rejected`). O ambiente
+usa o nível "Default – trusted network access"; nenhuma ferramenta da sessão
+altera o acesso de rede — só o dono do ambiente (menu do ambiente → Edit →
+Network access: adicionar `*.neon.tech`). Não foi usado proxy improvisado nem
+alterado código do app.

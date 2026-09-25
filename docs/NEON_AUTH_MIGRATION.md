@@ -785,3 +785,126 @@ senha" uma vez.
 4. Rodar o E2E neon contra o Neon real num ambiente com rede (liberar
    `*.neon.tech`).
 5. Decidir o limite de taxa por IP e desligar o e-mail do Supabase Auth (R3).
+
+---
+
+## 12. Final Validation (2026-09-25)
+
+> Só resultados executados nesta rodada de fechamento. Legenda:
+> **VALIDADO NO NEON REAL** · **VALIDADO SOMENTE EM RÉPLICA** · **VALIDADO**
+> (independe de provedor) · **NÃO VALIDADO**.
+
+### 12.1 Ambiente
+
+| Item | Estado |
+|---|---|
+| Branch | `feat/neon-auth-migration` (sem alteração de código do app nesta rodada; só `poc/` e docs) |
+| Neon real | projeto de teste `educa-neon-auth-test` (`delicate-band-84024217`), Neon Auth `better_auth`, `allow_sign_up: false` |
+| Rede do container | **bloqueada** para `*.neon.tech` e `*.supabase.co` (proxy 403, conferido de novo nesta rodada) |
+| Como o Neon real foi exercitado | o código do app (`src/lib/auth/neon/{client,flows,links}.ts`) empacotado numa Neon Function do projeto de teste (`poc/neon-auth-real/app-probe`), resultados lidos pelos logs; tokens reais levados à ponte local |
+| Banco | réplica local do Supabase (Postgres 17 + PostgREST + GoTrue) com as 328 policies de produção |
+| Produção | não tocada |
+
+### 12.2 Resultados
+
+| # | Fluxo | Resultado | Onde |
+|---|---|---|---|
+| 1 | Login (senha certa) | sessão + JWT EdDSA 900 s, `emailVerified: true` | **VALIDADO NO NEON REAL** |
+| 1b | Login: senha errada / e-mail inexistente | ambos `INVALID_CREDENTIALS` 401 (sem enumeração) | **VALIDADO NO NEON REAL** |
+| 2 | Logout | `signOut` → `get-session` nulo; cookie não reaproveitável | **VALIDADO NO NEON REAL** (+ E2E réplica: cookie antigo → 401) |
+| 3 | Renovação | nova chamada à sessão emite JWT novo (`iat` maior, mesmo usuário), sessão segue válida | **VALIDADO NO NEON REAL** |
+| 4 | Primeiro acesso | link de uso único → senha → **e-mail confirmado pelo servidor** → sessão; 2º uso do link `INVALID_TOKEN` | **VALIDADO NO NEON REAL** |
+| 5 | Convite (lado Neon) | identidade criada **sem senha**, busca por e-mail, e-mail de primeiro acesso disparado | **VALIDADO NO NEON REAL** |
+| 5b | Convite (lado EDUCA: login sombra + vínculo 0073 + `users`/`platform_members`) | 4 identidades → 4 UUIDs do EDUCA, navegador não altera vínculo | **VALIDADO SOMENTE EM RÉPLICA** (E2E neon com dublê) |
+| 6 | Recuperação | pedido aceito; link → nova senha; **as 2 sessões antigas revogadas** | **VALIDADO NO NEON REAL** |
+| 7 | Reset | senha antiga → `INVALID_CREDENTIALS` | **VALIDADO NO NEON REAL** |
+| 8 | Usuário desativado no EDUCA | contexto `inactive`, sem dados (RLS) | **VALIDADO SOMENTE EM RÉPLICA** (tokens reais do Neon + RLS da réplica; E2E) |
+| 9 | Usuário banido no Neon | sessão viva cai na hora; login → `BANNED` 403 | **VALIDADO NO NEON REAL** |
+| 10 | Isolamento A × B | SELECT/INSERT/UPDATE/DELETE cruzados recusados | **VALIDADO SOMENTE EM RÉPLICA**, com **tokens reais do Neon** |
+| 11 | RBAC | leitura sem escrita, operador sem autopromoção, sem `user_roles` direto, `has_permission` | idem |
+| 12 | IDOR | alteração por id de outra empresa recusada | idem |
+| 13 | Expiração do token | tokens reais após `exp` → `INVALID_TOKEN` | **VALIDADO NO NEON REAL** (tokens reais, verificação local) |
+| 14 | Token inválido | adulterado, outra chave/mesmo `kid`, `kid` inexistente, `alg=none`, HS256, `iss`/`aud` errados, **`emailVerified=false` real mesmo com vínculo** → recusados; token do Neon direto no PostgREST → 401 | **VALIDADO NO NEON REAL** (tokens reais) + réplica |
+| 15 | Rollback para Supabase | build padrão (`AUTH_PROVIDER` ausente): E2E 102/102 e 19/19 | **VALIDADO** (réplica) |
+| — | App Next.js em execução falando com o Neon real (navegador → servidor → Neon) | — | **NÃO VALIDADO** — rede do container bloqueada |
+| — | Entrega real de e-mail (SMTP/remetente) | — | **NÃO VALIDADO** — domínio de teste sem caixa; SMTP próprio não configurado |
+| — | R1 (PostgREST de produção aceita o token da ponte) | — | **NÃO VALIDADO** — ver §12.4 |
+
+### 12.3 Regressão final (mesmos números documentados, sem perda de cobertura)
+
+| Suíte | Antes (§11) | Agora |
+|---|---|---|
+| Unitários (inclui ponte, integração, segurança) | 690/690 | **690/690** |
+| Typecheck / lint | 0 / 0 | **0 / 0** |
+| Build modo supabase / modo neon | ok / ok | **ok / ok** |
+| E2E Supabase (réplica) | 102/102 + 19/19 | **102/102 + 19/19** |
+| E2E Neon (app inteiro, dublê local) | 55/55 | **55/55** |
+| Tokens reais → ponte → RLS/multi-tenancy (`run-real.mjs`) | 52/52 | **53/53** (volta o item do token real com e-mail não confirmado) |
+| Tokens reais → ponte atual (`verify-app-tokens.mts`) | 4/4 | **5/5** |
+| Fluxos do app no Neon real (`app-probe`) | 13 passos | **21 passos**, todos com o resultado esperado |
+| Expiração dos tokens reais (`--so-expiracao`) | ok | **4/4** (A1, A2, B1, B2 após `exp` → `INVALID_TOKEN`) |
+| Script R1 contra a réplica | 3/3 | 3/3 (não reexecutado; script inalterado) |
+
+Observação do harness: o gatilho agendado dispara a cada minuto e a
+deduplicação é por instância; uma segunda instância repetiu o roteiro
+(usuário já banido) e foi descartada. Gatilhos desligados ao final.
+
+### 12.4 R1 — pendência externa
+
+- **Validado:** o token curto da ponte é aceito pelo PostgREST da réplica
+  (mesma configuração HS256), e recusado com outro segredo ou expirado
+  (`scripts/verify-bridge-token.mjs`, 3/3). Leitura de produção: a chave
+  anon legada (HS256) está ativa.
+- **Não validado:** aceitação pelo PostgREST **de produção**.
+- **Por quê:** exige o `SUPABASE_JWT_SECRET` de produção (não disponível no
+  ambiente; não pedido nem exposto) e rede até `supabase.co` (bloqueada).
+- **Quem roda:** o responsável pela produção, numa máquina confiável:
+
+  ```
+  SUPABASE_URL=https://bshvfsxapwwfntowdxyr.supabase.co \
+  SUPABASE_ANON_KEY=<chave anon/publicável> \
+  SUPABASE_JWT_SECRET=<segredo JWT legado> \
+  node --import tsx scripts/verify-bridge-token.mjs
+  ```
+
+  Só `GET rpc/current_app_user_id` (função `stable`); nada é gravado nem impresso.
+- **Confirma o R1:** `3/3 verificações passaram` (token da ponte → 200
+  `null`; outro segredo → 401; expirado → 401). Um 401 no primeiro item
+  significa que o segredo legado não é aceito → assinar com chave importada
+  (§11.7) antes de ativar o modo neon.
+
+### 12.5 Limitações e riscos restantes
+
+1. App em execução × Neon real **não** exercitado (rede). Mitigação: o mesmo
+   código de cliente/fluxos rodou no Neon real e o app inteiro rodou contra
+   o dublê do mesmo motor/contrato. Fechar: liberar `*.neon.tech` e rodar
+   `poc/neon-auth/e2e-neon.mjs` com `NEON_BASE` real (requer SMTP ou leitura
+   do token do link no banco do projeto de teste).
+2. R1 aberto (§12.4).
+3. E-mail: SMTP próprio pendente; remetente padrão do Neon é limitado.
+4. Limite de taxa do Neon por IP (3 logins/10 s): com todos os logins saindo
+   do servidor, o repasse de `x-forwarded-for` não teve efeito comprovado.
+5. Configuração do Neon de produção: `allow_localhost` e Google OAuth
+   compartilhado ainda ligados no projeto de teste — desligar em produção.
+6. R3: desligar o provedor de e-mail do Supabase Auth na virada.
+7. 0073 não aplicada em produção (pré-requisito do modo neon).
+
+### 12.6 Rollback
+
+`AUTH_PROVIDER=supabase` (ou variável ausente) + redeploy. Sem código, sem
+banco. Comprovado nesta rodada: build padrão → E2E 102/102 e 19/19.
+
+### 12.7 Produção e `main`
+
+- Produção: **intacta** — nenhuma migration (0073 inclusive), RLS, Auth,
+  SMTP, chave ou deploy alterado; nenhuma leitura nesta rodada.
+- `main`: **intacta** (`d7d448f`), sem merge.
+
+### 12.8 Status
+
+**CONCLUÍDO COM RESSALVA.** A integração está completa e comprovada no que
+o ambiente permite (Neon real pelo código do app; RLS/RBAC/multi-tenancy com
+tokens reais; rollback). Ressalvas **NÃO VALIDADAS**, ambas por falta de
+acesso, não por falha: (1) app em execução contra o Neon real (rede) e
+(2) R1 em produção (segredo). O modo neon **não deve ser ativado** em
+produção antes de fechar as duas.

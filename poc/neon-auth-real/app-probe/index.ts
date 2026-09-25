@@ -30,6 +30,9 @@ async function sql(query: string, params: unknown[] = []): Promise<Array<Record<
   return ((await r.json()) as { rows?: Array<Record<string, unknown>> }).rows ?? [];
 }
 
+const pause = (ms = 5000) => new Promise((r) => setTimeout(r, ms)); // limite de login do Neon: 3 por 10 s por IP
+const iat = (jwt: string | null | undefined) => (jwt ? (JSON.parse(Buffer.from(jwt.split(".")[1], "base64url").toString()).iat as number) : null);
+
 const claims = (jwt: string | null) => {
   if (!jwt) return null;
   const [h, p] = jwt.split(".");
@@ -84,6 +87,7 @@ async function run(runId: string, onlyTokens: boolean) {
   const rows = await sql(`select split_part(identifier,':',2) as t from neon_auth.verification where value=$1 and identifier like 'reset-password:%' order by "createdAt" desc limit 1`, [neonId]);
   const token = String(rows[0]?.t ?? "");
   let dCookie: string | null = null;
+  await pause();
   await step("first-access-flow", async () => {
     const r = await resetPasswordFlow(
       { token, password: pw("pwD"), email: invitee, continueSession: true },
@@ -106,9 +110,11 @@ async function run(runId: string, onlyTokens: boolean) {
 
   // Recuperação com revogação: sessão antiga (x) → reset → x não vale mais.
   let xCookie = "";
+  await pause();
   await step("second-session", async () => ((xCookie = (await signInWithPassword(config, invitee, pw("pwD"))).cookie), { ok: true }));
   await step("recovery-request", async () => requestPasswordReset(config, invitee, buildNeonPasswordLinkUrl(config.origin, invitee)));
   const rows2 = await sql(`select split_part(identifier,':',2) as t from neon_auth.verification where value=$1 and identifier like 'reset-password:%' order by "createdAt" desc limit 1`, [neonId]);
+  await pause();
   await step("recovery-flow", async () => {
     const r = await resetPasswordFlow(
       { token: String(rows2[0]?.t ?? ""), password: pw("pwD3"), email: invitee, continueSession: false },
@@ -123,22 +129,73 @@ async function run(runId: string, onlyTokens: boolean) {
     return r;
   });
   await step("old-sessions-after-recovery", async () => ({ x: !!(await getSession(config, xCookie)), d: dCookie ? !!(await getSession(config, dCookie)) : null }));
+  await pause();
   await step("old-password", async () => signInWithPassword(config, invitee, pw("pwD")).then(() => "ENTROU"));
 
-  await tokens(config);
+  // Login, renovação e logout pelo código do app.
+  const recovered = pw("pwD3");
+  let lCookie = "";
+  await pause();
+  await step("login-ok", async () => {
+    lCookie = (await signInWithPassword(config, invitee, recovered)).cookie;
+    const s = await getSession(config, lCookie);
+    return { valid: !!s, jwt: claims(s?.jwt ?? null) };
+  });
+  await step("renovacao-jwt", async () => {
+    const a = await getSession(config, lCookie);
+    await pause(2000);
+    const b = await getSession(config, lCookie);
+    return { sessionStillValid: !!a && !!b, newJwt: !!a?.jwt && !!b?.jwt && a.jwt !== b.jwt, iatAdvanced: (iat(b?.jwt) ?? 0) > (iat(a?.jwt) ?? 0), sameUser: a?.user.id === b?.user.id };
+  });
+  await step("logout", async () => {
+    await signOut(config, lCookie);
+    return { sessionAfterLogout: !!(await getSession(config, lCookie)) };
+  });
+  await pause();
+  await step("login-senha-errada", () => signInWithPassword(config, invitee, "Errada-123456").then(() => "ENTROU"));
+  await pause();
+  await step("login-inexistente", () => signInWithPassword(config, `ninguem-${runId}@educa-teste.example.com`, "Errada-123456").then(() => "ENTROU"));
 
-  // Limite de taxa x IP repassado pelo servidor (X-Forwarded-For).
-  const burst = async (label: string, ipOf: (i: number) => string) => {
-    const out: string[] = [];
-    for (let i = 0; i < 5; i++) {
-      out.push(await signInWithPassword(config, "ninguem@educa-teste.example.com", "errada-123", { forwardedFor: ipOf(i) }).then(() => "200").catch((e) => (e instanceof NeonAuthError ? e.code : "ERR")));
-    }
-    log("APP", { id: `rate-${label}`, ok: true, result: out });
-  };
-  await new Promise((r) => setTimeout(r, 11000));
-  await burst("mesmo-ip", () => "198.51.100.7");
-  await new Promise((r) => setTimeout(r, 11000));
-  await burst("ips-diferentes", (i) => `203.0.113.${10 + i}`);
+  // Banimento no Neon: sessão viva cai e o login passa a ser recusado.
+  await pause();
+  await step("banimento", async () => {
+    const { cookie } = await signInWithPassword(config, invitee, recovered);
+    const before = !!(await getSession(config, cookie));
+    const r = await fetch(`${config.baseUrl}/admin/ban-user`, { method: "POST", headers: { "content-type": "application/json", origin: config.origin, cookie: admin }, body: JSON.stringify({ userId: neonId, banReason: "probe" }) });
+    return { sessionBefore: before, banStatus: r.status, sessionAfter: !!(await getSession(config, cookie)) };
+  });
+  await pause();
+  await step("login-banido", () => signInWithPassword(config, invitee, recovered).then(() => "ENTROU"));
+
+  // Identidade com e-mail NÃO confirmado: senha definida direto no Neon (fora do
+  // fluxo do app, que confirmaria o e-mail) → token real com emailVerified=false.
+  const unverified = `e-${runId}@educa-teste.example.com`;
+  let eId = "";
+  await step("provision-nao-verificado", async () =>
+    provisionIdentity(
+      { email: unverified, name: "E nao verificado" },
+      {
+        ensureShadowLogin: async () => "00000000-0000-4000-8000-000000000000",
+        findNeonUser: (e) => adminFindUserByEmail(config, admin, e),
+        createNeonUser: async (e, n) => {
+          const u = await adminCreateUser(config, admin, { email: e, name: n });
+          eId = u.id;
+          return u;
+        },
+        link: async () => undefined,
+        sendFirstAccess: (e) => requestPasswordReset(config, e, buildNeonPasswordLinkUrl(config.origin, e, { firstAccess: true, next: "/convite/y" })),
+      }
+    )
+  );
+  const rows3 = await sql(`select split_part(identifier,':',2) as t from neon_auth.verification where value=$1 and identifier like 'reset-password:%' order by "createdAt" desc limit 1`, [eId]);
+  await step("reset-direto-sem-confirmar", () => resetPassword(config, String(rows3[0]?.t ?? ""), pw("pwE")));
+  await pause();
+  await step("token-nao-verificado", async () => {
+    const { cookie } = await signInWithPassword(config, unverified, pw("pwE"));
+    const s = await getSession(config, cookie);
+    if (s?.jwt) log("APP_SECRET", { key: "NAO_VERIFICADO", jwt: s.jwt });
+    return { valid: !!s, jwt: claims(s?.jwt ?? null) };
+  });
   log("APP_END", { runId });
 }
 

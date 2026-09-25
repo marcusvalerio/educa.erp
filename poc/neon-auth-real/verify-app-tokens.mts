@@ -10,5 +10,11 @@ for (const k of Object.keys(T)) links[decodeJwt(T[k]).sub as string] = crypto.ra
 for (const k of Object.keys(T)) {
   const c = decodeJwt(T[k]);
   const r = await bridgeIdentity(T[k], { verify: (t) => verifyProviderToken(t, cfg), resolveLink: async (id) => links[id] ?? null, mint: (id) => mintDatabaseToken({ authUserId: id, secret: new TextEncoder().encode("s".repeat(40)) }) }).catch((e) => e);
+  if (k === "NAO_VERIFICADO") {
+    // Assinatura real válida (verify ok) e vínculo presente: a ponte ainda assim recusa.
+    const signed = await verifyProviderToken(T[k], cfg).then(() => "ok", (e) => e.code);
+    console.log(`${c.emailVerified === false && signed === "ok" && r.code === "EMAIL_NOT_VERIFIED" ? "PASS" : "FAIL"}  ${k}: token real com emailVerified=false recusado mesmo com vínculo (${r.code ?? "ACEITO"})`);
+    continue;
+  }
   console.log(`${r.authUserId && r.externalUserId === c.sub ? "PASS" : "FAIL"}  ${k}: token real (via código do app) verificado no JWKS real e ponte → auth_user_id; exp ${new Date((c.exp as number) * 1000).toISOString()}`);
 }

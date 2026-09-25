@@ -296,6 +296,8 @@ E2E da réplica 102/102 e 19/19 (baseline preservado).
 
 ## 9. Integração com o Neon Auth real — estado em 2026-09-25
 
+> Estado histórico, superado pelas §10 (Neon real testado), §11 (integração) e §12 (validação final).
+
 **Bloqueio de acesso:** este ambiente não tem projeto Neon, conector do
 Neon, credenciais nem rota de rede para `neon.com`, `console.neon.tech`,
 `api.neon.tech` ou `*.neon.tech`. **O Neon real não foi testado.** Nenhum
@@ -666,8 +668,8 @@ Supabase Auth já fazia) — consultas de usuário seguem pelo token do usuário
 | Prova | Resultado |
 |---|---|
 | E2E modo neon (app inteiro, dublê local) | **55/55** — isolamento A/B, IDOR, escalada, Owner × Company Admin, leitura sem escrita, operador sem autopromoção, desativação, banimento |
-| Tokens **reais** do Neon, obtidos pelo `neon/client.ts` do app, pela ponte atual → PostgREST/RLS da réplica | **52/52** (`run-real.mjs`; o 53º item exige token com e-mail não confirmado, coberto nos testes unitários) |
-| Mesmos tokens reais pela ponte endurecida (`verify-app-tokens.mts`) | **4/4** |
+| Tokens **reais** do Neon, obtidos pelo `neon/client.ts` do app, pela ponte atual → PostgREST/RLS da réplica | **52/52** (final: 53/53, §12.3) (`run-real.mjs`; o 53º item exige token com e-mail não confirmado, coberto nos testes unitários) |
+| Mesmos tokens reais pela ponte endurecida (`verify-app-tokens.mts`) | **4/4** (final: 5/5, §12.3) |
 
 ### 11.7 R1 — PostgREST de produção aceita o token da ponte?
 
@@ -841,7 +843,7 @@ senha" uma vez.
 | E2E Neon (app inteiro, dublê local) | 55/55 | **55/55** |
 | Tokens reais → ponte → RLS/multi-tenancy (`run-real.mjs`) | 52/52 | **53/53** (volta o item do token real com e-mail não confirmado) |
 | Tokens reais → ponte atual (`verify-app-tokens.mts`) | 4/4 | **5/5** |
-| Fluxos do app no Neon real (`app-probe`) | 13 passos | **21 passos**, todos com o resultado esperado |
+| Fluxos do app no Neon real (`app-probe`) | 12 passos de fluxo (+ emissão de tokens) | **22/22 passos**, todos com o resultado esperado |
 | Expiração dos tokens reais (`--so-expiracao`) | ok | **4/4** (A1, A2, B1, B2 após `exp` → `INVALID_TOKEN`) |
 | Script R1 contra a réplica | 3/3 | 3/3 (não reexecutado; script inalterado) |
 
@@ -902,6 +904,8 @@ banco. Comprovado nesta rodada: build padrão → E2E 102/102 e 19/19.
 
 ### 12.8 Status
 
+> Veredito de merge atualizado na §12.10: **NÃO PRONTO — BLOQUEIO EXTERNO**.
+
 **CONCLUÍDO COM RESSALVA.** A integração está completa e comprovada no que
 o ambiente permite (Neon real pelo código do app; RLS/RBAC/multi-tenancy com
 tokens reais; rollback). Ressalvas **NÃO VALIDADAS**, ambas por falta de
@@ -933,3 +937,61 @@ usa o nível "Default – trusted network access"; nenhuma ferramenta da sessão
 altera o acesso de rede — só o dono do ambiente (menu do ambiente → Edit →
 Network access: adicionar `*.neon.tech`). Não foi usado proxy improvisado nem
 alterado código do app.
+
+### 12.10 Rodada final (2026-09-25)
+
+**Correção de segurança encontrada na revisão final — login CSRF (modo neon).**
+`POST /api/auth/sign-in`, `/password/reset` e `/password/recover` não exigem
+sessão e as duas primeiras **gravam** o cookie de sessão. Sem checagem de
+origem, uma página de outro site podia enviar um formulário `text/plain` com
+corpo em forma de JSON (aceito por `request.json()`) e deixar o navegador da
+vítima logado na conta do atacante. O modo supabase não tem essa superfície
+(login feito pelo JS do navegador); rotas autenticadas estão protegidas pelo
+cookie `SameSite=Lax`. Correção mínima, sem mudar arquitetura:
+`isTrustedAccountRequest` (`src/lib/auth/neon/flows.ts`) exige
+`application/json` (formulários não enviam; `fetch` de outra origem com JSON
+sofre preflight de CORS), recusa `Sec-Fetch-Site` cross-site/same-site e
+`Origin` diferente da origem do app; aplicada nas 3 rotas (`handlers.ts`).
+Provas: 3 testes unitários novos e 2 checagens novas no E2E neon (formulário
+`text/plain` de outra origem e JSON de outra origem, ambos com credenciais
+**válidas** → 403 sem cookie).
+
+**Regressão após a correção** (novos resultados; os anteriores continuam
+registrados acima):
+
+| Suíte | Resultado |
+|---|---|
+| Unitários | **693/693** (690 + 3 do CSRF) |
+| Typecheck / lint | 0 / 0 |
+| Build modo supabase / modo neon | ok / ok |
+| E2E Supabase (rollback) | **102/102** e **19/19** |
+| E2E neon (app inteiro, dublê local) | **57/57** (55 + 2 do CSRF) |
+| Tokens reais → ponte → RLS / ponte / expiração / fluxos no Neon real | 53/53 · 5/5 · 4/4 · 22/22 — não repetidos: ponte, resolução de sessão e cliente do Neon não mudaram |
+
+**Revisão de segurança (sem outros achados que exijam código).** Identidade
+só vem da sessão viva no Neon + JWT EdDSA verificado (`iss`/`aud`/`exp`/`iat`,
+`banned`, `emailVerified`, `sub` = dono da sessão); vínculo lido só por
+`service_role` na função da 0073; navegador não envia `auth_user_id` nem
+`external_user_id` (corpo com identidade recusado no E2E); `next`/callback só
+internos (`safeNextPath`; Neon recusa callback externo); cookie HttpOnly com a
+sessão assinada do Neon (cookie forjado → 401); cadastro público fechado no
+provedor, sem rota no app e barrado pela ponte (sem vínculo); convite reusado
+e link de senha de uso único; papéis e tenant continuam decididos pelo banco
+(Owner × Company Admin, operador, leitura no E2E e com tokens reais).
+Observações de implantação (não são falhas do código): `x-forwarded-for` é
+repassado ao Neon como dica de IP — a plataforma precisa sobrescrever esse
+cabeçalho (a Vercel o faz); `APP_URL` deve estar definida em produção para a
+origem enviada ao Neon não depender do cabeçalho `Host`.
+
+**Migration 0073 — auditada, pronta para a etapa de cutover (não aplicada).**
+Só aditiva (1 tabela + 2 funções + grants), não altera migrations, dados,
+tabelas nem policies existentes; RLS ligado sem policy e `revoke all` para
+`public/anon/authenticated`; funções `security definer` com `search_path`
+fixo, executáveis só por `service_role`; vincular exige e-mail igual ao do
+login e confirmado; chaves únicas impedem religar identidade ou login.
+Produção (leitura): última migration `0072_protect_auth_user_link`, 0073
+ausente, nenhuma Edge Function.
+
+**Veredito: NÃO PRONTO — BLOQUEIO EXTERNO.** Permanecem só os dois
+bloqueios da §12.9: R1 (segredo de produção) e E2E do app contra o Neon real
+(Network access do ambiente). Nenhum dos dois foi tratado como validado.

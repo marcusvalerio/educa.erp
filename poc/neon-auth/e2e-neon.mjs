@@ -308,6 +308,11 @@ try {
     check("cadastro público recusado no provedor", s.status >= 400);
     const appSignup = await fetch(`${APP}/api/auth/sign-up`, { method: "POST" });
     check("o app não tem rota de cadastro", appSignup.status === 404 || appSignup.status === 405);
+    // Login CSRF: formulário de outro site (text/plain em forma de JSON) com credenciais VÁLIDAS.
+    const csrfForm = await fetch(`${APP}/api/auth/sign-in`, { method: "POST", headers: { "content-type": "text/plain", origin: "https://evil.example", "sec-fetch-site": "cross-site" }, body: `{"email":"${ADMIN_A}","password":"${PASS.adminA}"}` });
+    check("login CSRF: formulário de outro site recusado (403, sem cookie)", csrfForm.status === 403 && !(csrfForm.headers.get("set-cookie") ?? "").includes("educa_session"), csrfForm.status);
+    const csrfJson = await fetch(`${APP}/api/auth/sign-in`, { method: "POST", headers: { "content-type": "application/json", origin: "https://evil.example" }, body: JSON.stringify({ email: ADMIN_A, password: PASS.adminA }) });
+    check("login CSRF: JSON de outra origem recusado (403, sem cookie)", csrfJson.status === 403 && !(csrfJson.headers.get("set-cookie") ?? "").includes("educa_session"), csrfJson.status);
     const evil = await fetch(`${NEON}/request-password-reset`, { method: "POST", headers: { "content-type": "application/json", origin: APP }, body: JSON.stringify({ email: ADMIN_A, redirectTo: "https://evil.example/roubo" }) });
     check("redirect externo no link de senha recusado pelo provedor", evil.status === 403);
     const z = await newCtx(browser);

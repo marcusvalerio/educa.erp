@@ -58,6 +58,27 @@ export async function resolveNeonSession(cookie: string | null | undefined, deps
   };
 }
 
+// ------------------------------------------------------------ origem das rotas de conta
+
+/**
+ * As rotas de conta (entrar, redefinir senha, pedir recuperação) não exigem
+ * sessão e GRAVAM o cookie de sessão: sem esta checagem, uma página de outro
+ * site poderia enviar um formulário (text/plain com corpo em forma de JSON)
+ * e deixar o navegador da vítima logado na conta do atacante (login CSRF).
+ * Exige JSON (formulários não enviam application/json; fetch de outra origem
+ * com JSON sofre preflight de CORS, que o app não libera) e, quando o
+ * navegador informa a origem, que seja a do próprio app.
+ */
+export function isTrustedAccountRequest(
+  request: { contentType: string | null; origin: string | null; secFetchSite: string | null },
+  allowedOrigins: readonly string[]
+): boolean {
+  if (!/^application\/json(\s*;|$)/i.test((request.contentType ?? "").trim())) return false;
+  if (request.secFetchSite && request.secFetchSite !== "same-origin" && request.secFetchSite !== "none") return false;
+  if (request.origin && !allowedOrigins.includes(request.origin)) return false;
+  return true;
+}
+
 // ------------------------------------------------------------ login
 
 export type SignInDeps = {

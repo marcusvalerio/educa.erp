@@ -20,7 +20,7 @@ import {
   type NeonSession,
   type NeonUser,
 } from "@/lib/auth/neon/client";
-import { provisionIdentity, resetPasswordFlow, resolveNeonSession, signInFlow, type ProvisionDeps } from "@/lib/auth/neon/flows";
+import { isTrustedAccountRequest, provisionIdentity, resetPasswordFlow, resolveNeonSession, signInFlow, type ProvisionDeps } from "@/lib/auth/neon/flows";
 import { buildNeonPasswordLinkUrl, firstAccessNextFrom } from "@/lib/auth/neon/links";
 import { bridgeIdentity, IdentityBridgeError, mintDatabaseToken, verifyProviderToken } from "@/lib/auth/neon-bridge";
 
@@ -190,6 +190,30 @@ describe("resolução da sessão (servidor)", () => {
       throw new IdentityBridgeError("UNLINKED", "x");
     };
     assert.deepEqual(await resolveNeonSession("c", { getSession: async () => session(), bridge: unlinked }), { status: "denied", reason: "UNLINKED" });
+  });
+});
+
+describe("rotas de conta: só o próprio app (login CSRF)", () => {
+  const APP = "https://educa.example.com";
+  const req = (contentType: string | null, origin: string | null, secFetchSite: string | null = null) => ({ contentType, origin, secFetchSite });
+
+  test("aceita o fetch JSON do próprio app", () => {
+    assert.equal(isTrustedAccountRequest(req("application/json", APP, "same-origin"), [APP]), true);
+    assert.equal(isTrustedAccountRequest(req("application/json; charset=utf-8", APP), [APP]), true);
+    assert.equal(isTrustedAccountRequest(req("application/json", null), [APP]), true);
+  });
+
+  test("recusa formulário de outro site com corpo em forma de JSON (text/plain)", () => {
+    assert.equal(isTrustedAccountRequest(req("text/plain", "https://evil.example", "cross-site"), [APP]), false);
+    assert.equal(isTrustedAccountRequest(req("application/x-www-form-urlencoded", APP), [APP]), false);
+    assert.equal(isTrustedAccountRequest(req(null, APP), [APP]), false);
+  });
+
+  test("recusa JSON vindo de outra origem ou marcado como cross-site", () => {
+    assert.equal(isTrustedAccountRequest(req("application/json", "https://evil.example"), [APP]), false);
+    assert.equal(isTrustedAccountRequest(req("application/json", "null"), [APP]), false);
+    assert.equal(isTrustedAccountRequest(req("application/json", null, "cross-site"), [APP]), false);
+    assert.equal(isTrustedAccountRequest(req("application/json", null, "same-site"), [APP]), false);
   });
 });
 

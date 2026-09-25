@@ -19,8 +19,8 @@ import {
   type ClientHints,
 } from "./client";
 import { buildNeonPasswordLinkUrl } from "./links";
-import { resetPasswordFlow, resolveNeonSession, signInFlow } from "./flows";
-import { bridgeFor, neonConfig, withServiceSession } from "./server";
+import { isTrustedAccountRequest, resetPasswordFlow, resolveNeonSession, signInFlow } from "./flows";
+import { appOrigin, bridgeFor, neonConfig, withServiceSession } from "./server";
 import { resolveCurrentNeonSession } from "./request";
 
 // Rotas de conta do EDUCA com AUTH_PROVIDER=neon. O navegador fala só com
@@ -31,6 +31,22 @@ const ok = (data: unknown = null) => NextResponse.json({ success: true, data });
 
 function neonOnly() {
   if (authProvider() !== "neon") throw new ApiError("NOT_FOUND", "Rota indisponível.", 404);
+}
+
+/** Só aceita chamadas do próprio app (ver isTrustedAccountRequest: login CSRF). */
+function sameAppOnly(request: NextRequest) {
+  const own = request.nextUrl.origin;
+  const allowed = [own];
+  try {
+    allowed.push(appOrigin(own));
+  } catch {
+    // sem APP_URL: só a origem da própria requisição
+  }
+  const trusted = isTrustedAccountRequest(
+    { contentType: request.headers.get("content-type"), origin: request.headers.get("origin"), secFetchSite: request.headers.get("sec-fetch-site") },
+    allowed
+  );
+  if (!trusted) throw new ApiError("FORBIDDEN_ORIGIN", "Requisição recusada.", 403);
 }
 
 function hintsOf(request: NextRequest): ClientHints {
@@ -64,6 +80,7 @@ const signInSchema = z.object({ email: z.string().trim().toLowerCase().email().m
 export async function neonSignIn(request: NextRequest) {
   try {
     neonOnly();
+    sameAppOnly(request);
     const input = await body(request, signInSchema);
     const config = neonConfig(request.nextUrl.origin);
     const hints = hintsOf(request);
@@ -86,6 +103,7 @@ export async function neonSignIn(request: NextRequest) {
 export async function neonRecoverPassword(request: NextRequest) {
   try {
     neonOnly();
+    sameAppOnly(request);
     const input = await body(request, recoverPasswordSchema);
     const config = neonConfig(request.nextUrl.origin);
     await requestPasswordReset(config, input.email, buildNeonPasswordLinkUrl(config.origin, input.email), hintsOf(request)).catch(() => undefined);
@@ -108,6 +126,7 @@ const resetSchema = z
 export async function neonResetPassword(request: NextRequest) {
   try {
     neonOnly();
+    sameAppOnly(request);
     const input = await body(request, resetSchema);
     const config = neonConfig(request.nextUrl.origin);
     const hints = hintsOf(request);

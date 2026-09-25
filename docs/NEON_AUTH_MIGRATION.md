@@ -396,3 +396,149 @@ a verificação seria enfraquecê-la às cegas.
    teste no projeto Neon), para os links de primeiro acesso e recuperação.
 4. Decidir as ressalvas R1 (assinatura aceita pelo PostgREST de produção)
    e R2 (login sombra) da §8.4.
+
+---
+
+## 10. Neon Auth REAL — validação empírica (2026-09-25)
+
+> Substitui as suposições das §9.3–9.4: tudo abaixo foi **observado** no
+> serviço gerenciado, não lido na documentação.
+
+### 10.1 Ambiente
+
+| Item | Valor |
+|---|---|
+| Projeto Neon | `educa-neon-auth-test` (`delicate-band-84024217`), criado só para isto, aws-us-east-1, PG 17, 0,25 CU |
+| Branch | `main` (`br-ancient-rice-b7nrvkic`) |
+| Neon Auth | `better_auth` (Managed Better Auth) |
+| Base URL | `https://ep-green-star-b7aphqm9.neonauth.c-13.us-east-1.aws.neon.tech/neondb/auth` |
+| JWKS | `<base>/.well-known/jwks.json` — 1 chave `OKP/Ed25519`, `alg EdDSA`, `kid 7df458d1-…` |
+| Usuários | só de teste, domínio reservado `@educa-teste.example.com` (RFC 2606, não entrega e-mail a ninguém) |
+| Banco do EDUCA | **réplica local** (Postgres 17 + PostgREST), policies/RLS de produção intactas |
+| Produção | não tocada (nem Supabase, nem Vercel, nem `main`) |
+
+Como o container não alcança `*.neon.tech` (política de rede, 403), os
+fluxos HTTP rodaram numa **Neon Function** do próprio projeto de teste
+(`poc/neon-auth-real/probe/index.mjs`), acionada por gatilho agendado e
+lida pelos logs via conector. Senhas geradas dentro da função; tokens e
+cookies redigidos nos logs, exceto os JWTs de teste explicitamente
+exportados para a ponte (validade 15 min, já expirados).
+
+### 10.2 Token real (sem expor o token)
+
+| Campo | Observado |
+|---|---|
+| `alg` / `kid` | `EdDSA` / `7df458d1-4e74-4c7f-a18a-8b77781ea804` (presente no JWKS) |
+| `iss` | `https://ep-green-star-b7aphqm9.neonauth.c-13.us-east-1.aws.neon.tech` (origem da base URL) |
+| `aud` | **existe** e é igual ao `iss` |
+| `sub` | UUID = `neon_auth.user.id` (ex.: `8dfaa82e-…`) — ≠ `auth_user_id` do EDUCA |
+| `email` | presente |
+| `emailVerified` | **presente** (boolean) — a documentação não citava |
+| `role` | `"authenticated"` |
+| outros | `name`, `id`, `banned`, `banReason`, `banExpires`, `createdAt`, `updatedAt` |
+| `exp - iat` | **900 s** |
+| Assinatura | válida no JWKS real (Node `crypto` na função e `jose` na ponte) |
+| Entrega | `GET /token` (JSON) e cabeçalho `set-auth-jwt` em `GET /get-session` |
+
+### 10.3 Fluxos do Neon Auth (evidência)
+
+| Teste | Resultado real |
+|---|---|
+| Cadastro público (padrão do projeto) | **aberto**: `POST /sign-up/email` → 200 e já loga, e-mail não confirmado |
+| Cadastro com `disableSignUp` | 400 `EMAIL_PASSWORD_SIGN_UP_DISABLED` ✅ |
+| Criação pelo servidor (admin/MCP) com cadastro fechado | ✅ `admin/create-user`; repetido → `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL` |
+| Conta criada pelo servidor | nasce **sem senha** (credential sem hash) → só entra pelo link de primeiro acesso |
+| Login: senha errada / usuário inexistente / conta sem senha | 401 idêntico `INVALID_EMAIL_OR_PASSWORD` (sem enumeração) ✅ |
+| Rate limit de login | 429 `X-Retry-After: 10` após rajada do mesmo IP |
+| Origin não confiável | 403 `INVALID_ORIGIN` ✅ |
+| Sessão | cookie `__Secure-neon-auth.session_token` (HttpOnly, Secure, SameSite=None, Partitioned), 7 dias; cache `session_data` |
+| Logout | apaga cookies; `get-session` → `null` ✅ |
+| `revoke-other-sessions` / `change-password {revokeOtherSessions}` | outras sessões invalidadas ✅ |
+| Banimento (admin) | sessões encerradas; login → 403 `BANNED_USER` ✅ |
+| Escalada pelo navegador | `admin/set-role`, `admin/update-user` → 403; `update-user {email,emailVerified,role}` → e-mail recusado, demais ignorados (conferido no banco) ✅ |
+| Recuperação: resposta | igual para e-mail existente e inexistente ✅ |
+| `redirectTo` externo | 403 `Invalid redirectURL` ✅ |
+| Link: abrir com callback local | 302 para `/redefinir-senha?token=…` ✅ |
+| Link: callback externo | 403 `INVALID_CALLBACK_URL` ✅ |
+| Link: uso único | 2º uso → `INVALID_TOKEN` ✅ |
+| Link: validade | 3600 s; expirado → `INVALID_TOKEN` ✅ |
+| Link: rate limit | 429 `X-Retry-After: 60` para pedidos repetidos |
+| **Redefinição confirma e-mail?** | **Não** — `emailVerified` continua `false` |
+| **Redefinição revoga sessões antigas?** | **Não** — sessão anterior segue válida (senha antiga deixa de entrar) |
+| OTP de recuperação | guardado com **hash** (não legível), validade 300 s, OTP errado → `INVALID_OTP` |
+| Webhook para URL na infraestrutura Neon | recusado; com a config inválida o serviço **falha fechado** (400 em todas as rotas) |
+
+**E-mail — o que foi e o que não foi provado.** O remetente padrão
+(`auth@mail.myneon.app`) aceitou os pedidos e criou os tokens, mas a
+entrega não foi observável (domínio de teste sem caixa). SMTP próprio
+(`email_provider` configurável) e webhooks `send.otp`/`send.magic_link`
+existem, mas **não foram exercitados**: SMTP exige credenciais de um
+remetente real e o webhook exige um endpoint HTTPS público fora da Neon
+(ex.: rota do EDUCA na Vercel). Limitação do **remetente padrão** ≠
+limitação do Neon Auth: com SMTP/webhook próprio o limite passa a ser o
+do provedor escolhido. Nenhum e-mail foi enviado a pessoas reais.
+
+### 10.4 Neon real → ponte → Postgres do Supabase (réplica)
+
+`poc/neon-auth-real/run-real.mjs` — tokens **emitidos pelo Neon real**,
+verificados pelo JWKS real, pela `src/lib/auth/neon-bridge.ts`
+**sem nenhuma alteração de código** (só configuração: `issuer` = `audience`
+= origem do Neon Auth):
+
+**53/53** — identidade (4 contas), vínculo 0073, `auth.uid()` →
+`current_app_user_id()` → `has_permission()` → RLS; multi-tenant A/B
+(SELECT/INSERT/UPDATE/DELETE cruzados, IDOR, convite cruzado, estado do
+banco conferido); RBAC (leitura sem escrita, sem autopromoção, sem
+`user_roles` direto, gatilho 0072); segurança (payload adulterado, outra
+chave com o mesmo `kid`, `kid` inexistente, `alg=none`, HS256, `iss`/`aud`
+errados, `emailVerified=false`, token do banco forjado/expirado, token do
+Neon direto no PostgREST → 401); desativação no EDUCA.
+
+Os mesmos tokens reais, depois de `exp`: `INVALID_TOKEN`
+(`run-real.mjs --so-expiracao`).
+
+### 10.5 POC local × Neon real
+
+| Item | POC local | Neon real | Compatível? | Adaptação |
+|---|---|---|---|---|
+| JWT | EdDSA, 5 min | EdDSA, 15 min | Sim | nenhuma |
+| JWKS | `/api/auth/jwks` | `/.well-known/jwks.json` | Sim | URL por variável |
+| issuer | `http://localhost:3400` | origem do Neon Auth | Sim | variável |
+| audience | `educa-erp` | = issuer | Sim | variável |
+| sub | id não-UUID | UUID do Neon | Sim | nenhuma (vínculo é texto) |
+| email | claim | claim | Sim | — |
+| email verification | claim via `definePayload` | claim nativa | Sim | **redefinição não confirma** → servidor confirma no primeiro acesso (`admin/update-user`) |
+| exp | 300 s | 900 s | Sim | token do banco segue ≤ 300 s |
+| refresh | `/token` | `/token` e `set-auth-jwt` | Sim | renovar a cada ≤ 15 min |
+| sessão | cookie Better Auth | `__Secure-neon-auth.*`, 7 dias | Sim | servidor confere sessão (ver R6) |
+| logout | revoga sessão | revoga sessão; JWT vale até `exp` | Parcial | ponte checa a sessão, não só o JWT |
+| password reset | `onPasswordReset` confirma e revoga | **não confirma, não revoga** | Parcial | servidor: confirmar + `revoke-user-sessions` |
+| convite | `createUser` | `admin/create-user` sem senha + link | Sim | usuário de serviço admin no servidor |
+| cadastro público | desligado | **aberto por padrão**; `disableSignUp` funciona | Sim | desligar; remover Google compartilhado |
+| webhook | — | existe; exige HTTPS público fora da Neon; falha fechado | Sim | endpoint no EDUCA |
+| SMTP | caixa local | remetente compartilhado; SMTP próprio configurável | A validar | configurar SMTP antes de produção |
+| Next.js SDK | — | não exercitado (sem rede para o app) | A validar | `@neondatabase/auth` na integração |
+| cookies | `better-auth.*` | `__Secure-neon-auth.*`, SameSite=None, Partitioned | Sim | domínio confiável na config |
+
+### 10.6 Riscos atualizados
+
+| # | Estado |
+|---|---|
+| R1 assinatura aceita pelo PostgREST de produção | **aberto** — não testável sem tocar produção |
+| R2 login sombra | mantido (fixtures da réplica) |
+| R4 Neon ≠ Better Auth local | **resolvido** — diferenças medidas em §10.3/10.5 |
+| R5 e-mail | parcialmente: limite é do remetente compartilhado; SMTP/webhook próprio pendente |
+| R6 janela após logout | **ampliado para até 15 min** se a ponte confiar só no JWT → integração deve validar a sessão (`getSession`) a cada troca de token |
+| Novo: Google OAuth compartilhado ligado por padrão | desligar (cadastro por OAuth não passa por `disableSignUp`) — não exercitado |
+| Novo: `allow_localhost: true` por padrão | desligar em produção |
+
+### 10.7 Veredito
+
+🟢 **PLANO A VALIDADO** (arquitetura): Neon Auth real + Postgres do
+Supabase + RLS/RBAC/multi-tenancy atuais funcionam juntos, sem alterar
+policies, sem desligar RLS e sem `service_role` para autorizar usuário.
+Não há incompatibilidade estrutural. A integração no app precisa das
+adaptações das §10.5/10.6 (confirmação de e-mail e revogação de sessões
+no primeiro acesso/redefinição, checagem de sessão na ponte, cadastro e
+OAuth desligados, SMTP/webhook próprio) e da decisão R1 antes de
+produção.

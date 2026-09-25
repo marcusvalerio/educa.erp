@@ -542,3 +542,243 @@ adaptações das §10.5/10.6 (confirmação de e-mail e revogação de sessões
 no primeiro acesso/redefinição, checagem de sessão na ponte, cadastro e
 OAuth desligados, SMTP/webhook próprio) e da decisão R1 antes de
 produção.
+
+---
+
+## 11. Plano A — Etapa 2: integração do Neon Auth ao app (2026-09-25)
+
+> Substitui a §9.5 (desenho): a chave `AUTH_PROVIDER` está **implementada**.
+> Produção, `main`, Supabase de produção e Vercel **não foram tocados**.
+
+### 11.1 Arquitetura final
+
+```
+navegador ──(só rotas do app; cookie HttpOnly educa_session)──▶ Next.js (servidor)
+                                                                 │
+     ┌───────────────────────────────────────────────────────────┤
+     ▼                                                           ▼
+ Neon Auth (Managed Better Auth)                         Supabase PostgreSQL
+  /sign-in, /get-session, /sign-out,                      PostgREST + RLS (328 policies)
+  /request-password-reset, /reset-password,               auth.uid() = auth_user_id do EDUCA
+  /admin/* (conta de serviço)                             current_app_user_id() / has_permission()
+     │  JWT EdDSA 15 min (JWKS)                                   ▲
+     ▼                                                           │ Authorization: Bearer <token curto HS256, 300 s>
+ ponte (src/lib/auth/neon-bridge.ts) ── vínculo 0073 (service_role, só leitura do vínculo) ──┘
+```
+
+**Padrão BFF.** O navegador nunca fala com o Neon Auth nem guarda cookie
+dele. O servidor guarda o par de cookies da sessão do Neon dentro de um
+cookie próprio (`educa_session`: HttpOnly, `Secure` em produção,
+SameSite=Lax, 7 dias). A cada requisição que precisa de identidade:
+
+1. `GET /get-session` no Neon com o cookie (sessão revogada/expirada/banida → sem sessão);
+2. JWT do cabeçalho `set-auth-jwt` verificado no **JWKS remoto** (só `EdDSA`;
+   `iss` = `aud` = origem do Neon Auth; `exp`/`iat`; `emailVerified` obrigatório;
+   `banned` recusa);
+3. `sub` do JWT **tem que ser** o `user.id` da sessão consultada;
+4. vínculo `neon → auth_user_id` lido na tabela 0073 (`fn_resolve_identity_link`, `service_role`);
+5. token curto do banco (HS256, `sub` = `auth_user_id` do EDUCA, `role`/`aud`
+   `authenticated`, 300 s) assinado com `SUPABASE_JWT_SECRET`;
+6. cliente PostgREST do usuário com esse token → RLS/RBAC **inalterados**.
+
+O resultado fica em cache **só em memória, só se "ok", por 10 s**
+(`resolveNeonSessionCached`); logout apaga o cache. Falha do Neon → falha
+fechada (sem sessão).
+
+### 11.2 `AUTH_PROVIDER`
+
+| Valor | Efeito |
+|---|---|
+| ausente / `supabase` (padrão) | comportamento anterior, byte a byte nos ramos Supabase |
+| `neon` | fluxos abaixo pelo Neon Auth |
+| qualquer outro | erro na inicialização (`AUTH_PROVIDER inválido`) |
+
+Um único ponto de decisão: `src/lib/auth/provider.ts` (lido via
+`NEXT_PUBLIC_AUTH_PROVIDER`, embutido no build por `next.config.ts` a partir
+de `AUTH_PROVIDER`). Quem decide: `session.ts` (identidade/logout),
+`supabase/server.ts` (origem do token), `proxy.ts`, `auth/client.ts`
+(telas), `provisioning.ts` (convite/bootstrap), rotas `/api/auth/*`
+(404 fora do modo neon) e `/auth/callback` (inerte no modo neon).
+Consumidores (`governance.ts`, `context.ts`, 222 usos de rotas) não sabem
+qual provedor está ativo.
+
+### 11.3 Fluxos
+
+| Fluxo | Modo neon |
+|---|---|
+| Login | `POST /api/auth/sign-in` → Neon `/sign-in/email` → ponte inteira; sem vínculo ou e-mail não confirmado → 403 `ACCESS_NOT_READY` e a sessão do Neon é encerrada; senha errada/inexistente/banido → 401 genérico; 429 repassado |
+| Logout | `POST /api/auth/logout` → Neon `/sign-out`, cookie apagado, cache esquecido; cookie antigo reaproveitado → 401 |
+| Recuperação | `POST /api/auth/password/recover` sempre 200; link do Neon (1 h, uso único) → `/redefinir-senha` |
+| Redefinição | `POST /api/auth/password/reset`: troca a senha, entra com a senha nova (prova o e-mail), confirma o e-mail (conta de serviço), **revoga todas as outras sessões**, encerra e volta ao login |
+| Primeiro acesso | igual à redefinição, mas continua logado e segue para o convite |
+| Sessão | `GET /api/auth/session` devolve só `{authenticated, email}`; o proxy renova/apaga o cookie local conforme o Neon |
+| Expiração | sessão expirada/revogada no Neon → 401 nas APIs e proxy → `/login?next=` |
+| Usuário desativado | EDUCA `status ≠ active` → contexto `inactive`, RLS sem dados; banido no Neon → sessão cai e login recusado |
+
+O token do link sai da barra de endereço assim que a tela abre
+(`openPasswordLink`) e só vive na memória da página.
+
+### 11.4 Convite, vínculo e login sombra (Fase 6)
+
+`src/lib/auth/provisioning.ts` (`inviteWithNeon`) — só servidor, na ordem:
+
+1. **login sombra** no Supabase Auth (`admin.createUser`, e-mail confirmado,
+   `app_metadata.provider = "neon"`): dá o UUID `auth_user_id` que o RLS usa.
+   O GoTrue guarda um hash aleatório; a senha do Neon **não** autentica nele
+   (provado no E2E);
+2. identidade no Neon (`/admin/create-user`, **sem senha**, papel `user`),
+   reaproveitada se já existir (corrida `USER_EXISTS` tratada);
+3. vínculo 0073 (`fn_link_identity`, `service_role`): `neon_user_id → auth_user_id`;
+4. e-mail de primeiro acesso = link de redefinição do Neon para
+   `/redefinir-senha?primeiro-acesso=1&next=/convite/<token>`.
+
+O UUID do RLS é sempre o do EDUCA. O navegador não escolhe nem altera o
+vínculo: `auth_identity_links` e as duas funções têm `revoke all` de
+`public/anon/authenticated`; `users.auth_user_id` é protegido pela 0072;
+`platform_members.auth_user_id` e `neon_user_id` não são graváveis por
+usuário comum; corpo com `auth_user_id` é recusado (E2E).
+O bootstrap do Owner (`scripts/bootstrap-platform-owner.mjs`, com
+`AUTH_PROVIDER=neon`, rodando com `node --import tsx`) usa o mesmo caminho.
+
+### 11.5 Invite-only (Fase 7)
+
+Três camadas, todas testadas:
+
+1. **No provedor:** `disableSignUp` no Neon Auth (projeto de teste:
+   `neon_auth.project_config`) → `POST /sign-up/email` = 400
+   `EMAIL_PASSWORD_SIGN_UP_DISABLED` (Neon real e dublê);
+2. **No app:** não existe rota de cadastro (E2E);
+3. **Na ponte:** uma identidade que exista no Neon sem vínculo no EDUCA é
+   recusada no login (403, sem cookie) e em qualquer token — mesmo que
+   o cadastro fosse reaberto ou viesse por OAuth.
+
+Pendente para produção: desligar o **Google OAuth compartilhado** (ligado
+por padrão; a camada 3 já barra quem entrar por ele).
+
+### 11.6 RLS, RBAC e multi-tenancy (Fase 8)
+
+Nenhuma policy foi alterada, removida ou criada; RLS não foi desligado;
+`service_role` só lê/grava o vínculo 0073 e cria o login sombra (o que o
+Supabase Auth já fazia) — consultas de usuário seguem pelo token do usuário.
+
+| Prova | Resultado |
+|---|---|
+| E2E modo neon (app inteiro, dublê local) | **55/55** — isolamento A/B, IDOR, escalada, Owner × Company Admin, leitura sem escrita, operador sem autopromoção, desativação, banimento |
+| Tokens **reais** do Neon, obtidos pelo `neon/client.ts` do app, pela ponte atual → PostgREST/RLS da réplica | **52/52** (`run-real.mjs`; o 53º item exige token com e-mail não confirmado, coberto nos testes unitários) |
+| Mesmos tokens reais pela ponte endurecida (`verify-app-tokens.mts`) | **4/4** |
+
+### 11.7 R1 — PostgREST de produção aceita o token da ponte?
+
+**Não validado.** Evidência só leitura: a chave anon legada de produção é
+um JWT HS256 com `disabled: false` (Supabase MCP `get_publishable_keys`),
+logo o PostgREST de produção hoje aceita tokens do segredo legado. A
+aceitação de um token emitido pela ponte **não foi testada**: exige o
+`SUPABASE_JWT_SECRET` de produção (não pedido, não exposto) e rede até
+`supabase.co` (bloqueada neste ambiente).
+
+Para fechar, quem tem o segredo roda numa máquina confiável:
+
+```
+SUPABASE_URL=https://<ref>.supabase.co SUPABASE_ANON_KEY=<anon> \
+SUPABASE_JWT_SECRET=<segredo> node --import tsx scripts/verify-bridge-token.mjs
+```
+
+Só `GET rpc/current_app_user_id` (função `stable`): token da ponte → 200
+`null`; outro segredo → 401; expirado → 401. Nada é gravado nem impresso.
+Validado 3/3 contra a réplica local.
+
+Se o projeto migrar para chaves JWT assimétricas e revogar o segredo
+legado, a ponte precisará assinar com uma chave importada no Supabase —
+mudança de configuração, não de policy.
+
+### 11.8 Variáveis (modo neon)
+
+| Variável | Onde | Uso |
+|---|---|---|
+| `AUTH_PROVIDER` | build | `supabase` (padrão) ou `neon` |
+| `NEON_AUTH_BASE_URL` | servidor | `https://<ep>.neonauth.<região>.aws.neon.tech/neondb/auth` (https obrigatório fora de localhost) |
+| `NEON_AUTH_SERVICE_EMAIL` / `NEON_AUTH_SERVICE_PASSWORD` | servidor | conta de serviço (papel `admin` no Neon Auth): criar usuário, confirmar e-mail, revogar |
+| `SUPABASE_JWT_SECRET` | servidor | assina o token curto do banco |
+| `APP_URL` | servidor | origem dos links de e-mail |
+| existentes | — | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
+
+Nenhum segredo está no código. No Neon Auth: domínio do app como origem
+confiável, `disableSignUp`, Google compartilhado desligado,
+`allow_localhost` desligado, SMTP próprio.
+
+### 11.9 Rollback
+
+`AUTH_PROVIDER=supabase` (ou remover a variável) e **redeploy** (a variável
+entra no build). Nenhum código muda; o banco não muda (0073 é aditiva e só
+é lida no modo neon). Prova: com o build padrão, E2E **102/102** e
+**19/19** (os mesmos da `main`). Efeitos: sessões `educa_session` deixam de
+valer (todos entram de novo pelo Supabase Auth); contas criadas no modo neon
+têm login sombra no Supabase Auth com senha aleatória → usam "esqueci a
+senha" uma vez.
+
+### 11.10 Segurança
+
+- Identidade só vem de sessão viva no Neon + JWT verificado; nada do navegador escolhe o usuário.
+- Só `EdDSA`; HS256/`alg=none`/outra chave/`kid` desconhecido/`iss`/`aud` errados recusados.
+- `sub` do JWT = usuário da sessão (`SUBJECT_MISMATCH`).
+- Token do banco ≤ 300 s; o JWT do Neon nunca chega ao PostgREST (401 se tentar).
+- Janela após logout: 0 (a sessão é consultada no Neon; cache ≤ 10 s por instância).
+- Mensagens de login genéricas; recuperação responde igual para e-mail inexistente.
+- `next` sempre caminho interno; `redirectTo`/callback externo recusado pelo Neon.
+- Redefinição revoga as demais sessões (o Neon sozinho não revoga).
+
+### 11.11 Limitações conhecidas
+
+- **R1** aberto (§11.7).
+- **Rede deste ambiente** não alcança `*.neon.tech` nem `supabase.co`: o **app
+  em execução não foi ligado ao Neon real**. O E2E do app usou o dublê local
+  (mesmo motor, contrato medido); o código do app (`neon/client.ts`,
+  `flows.ts`, `links.ts`) foi exercitado no Neon real dentro de uma Neon
+  Function: conta de serviço, convite sem senha, busca por e-mail
+  (sem diferenciar maiúsculas), primeiro acesso com confirmação de e-mail,
+  link de uso único, recuperação revogando as 2 sessões antigas, senha antiga
+  recusada, tokens reais.
+- **Limite de taxa por IP:** o servidor repassa `x-forwarded-for`, mas o
+  efeito no Neon real foi **inconclusivo** (5 falhas rápidas não deram 429;
+  3 logins certos em ~10 s deram). Risco: todos os usuários parecerem vir
+  do IP do servidor.
+- **R3:** o login sombra torna a recuperação do Supabase Auth um segundo
+  caminho até a virada — desligar o provedor de e-mail do Supabase Auth no
+  cutover.
+- **E-mail:** SMTP próprio e webhooks não exercitados; remetente padrão
+  limitado.
+- Proxy sem `NEON_AUTH_BASE_URL` não redireciona (como o ramo Supabase sem
+  URL); as APIs continuam recusando sem sessão.
+- Cache de identidade de 10 s por instância: desativação no EDUCA leva até
+  10 s para valer em requisições já em cache.
+- SDK `@neondatabase/auth` não usado: a integração fala HTTP com o contrato
+  medido (menos dependência, mas acompanha mudanças do serviço à mão).
+
+### 11.12 POC × implementação real
+
+| Item | POC (Etapa 1) | Etapa 2 |
+|---|---|---|
+| Provedor | Better Auth local | Neon Auth real (projeto de teste) + dublê para E2E |
+| App | intocado | chave `AUTH_PROVIDER`, BFF, rotas `/api/auth/*`, telas neutras |
+| Ponte | `verify` do JWT | + sessão viva, `sub` = sessão, `banned`, só EdDSA, cache 10 s |
+| Convite | fixtures | `inviteWithNeon` + bootstrap do Owner |
+| Redefinição | ganchos do Better Auth | compensações no servidor (confirmar e-mail, revogar sessões) |
+| Testes | 53 (ponte) | 690 unitários, E2E 102 + 19 (supabase) e 55 (neon), 52 + 4 com tokens reais |
+
+### 11.13 O que NÃO foi feito em produção
+
+- Nenhuma migration aplicada (a 0073 **não** está em produção nem na `main`).
+- Nenhuma variável, deploy, configuração de Auth, chave ou policy alterada
+  no Supabase ou na Vercel; nenhum merge.
+- Leitura única em produção: `get_publishable_keys` (metadados das chaves públicas).
+- Nenhum e-mail enviado a pessoas reais; o Owner real não foi usado.
+
+### 11.14 Antes de ligar em produção
+
+1. Fechar R1 (`scripts/verify-bridge-token.mjs`).
+2. Aplicar a 0073 em produção (decisão à parte).
+3. Projeto Neon de produção: origem confiável, `disableSignUp`, Google e
+   `allow_localhost` desligados, SMTP próprio, conta de serviço.
+4. Rodar o E2E neon contra o Neon real num ambiente com rede (liberar
+   `*.neon.tech`).
+5. Decidir o limite de taxa por IP e desligar o e-mail do Supabase Auth (R3).

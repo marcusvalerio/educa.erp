@@ -634,9 +634,11 @@ O token do link sai da barra de endereço assim que a tela abre
 
 O UUID do RLS é sempre o do EDUCA. O navegador não escolhe nem altera o
 vínculo: `auth_identity_links` e as duas funções têm `revoke all` de
-`public/anon/authenticated`; `users.auth_user_id` é protegido pela 0072;
-`platform_members.auth_user_id` e `neon_user_id` não são graváveis por
-usuário comum; corpo com `auth_user_id` é recusado (E2E).
+`public/anon/authenticated` (RLS ligado, sem policy); `users.auth_user_id`
+é protegido pela 0072; não há coluna `neon_user_id` — o id do Neon só existe
+em `auth_identity_links.external_user_id`; corpo de API com `auth_user_id`
+é recusado (E2E). Criar vínculo exige e-mail igual ao do login sombra e já
+confirmado, um vínculo por identidade e um por `auth_user_id`.
 O bootstrap do Owner (`scripts/bootstrap-platform-owner.mjs`, com
 `AUTH_PROVIDER=neon`, rodando com `node --import tsx`) usa o mesmo caminho.
 
@@ -687,9 +689,10 @@ Só `GET rpc/current_app_user_id` (função `stable`): token da ponte → 200
 `null`; outro segredo → 401; expirado → 401. Nada é gravado nem impresso.
 Validado 3/3 contra a réplica local.
 
-Se o projeto migrar para chaves JWT assimétricas e revogar o segredo
-legado, a ponte precisará assinar com uma chave importada no Supabase —
-mudança de configuração, não de policy.
+Atenção: as sessões do Supabase Auth em produção já são **ES256** (chaves
+de assinatura novas, §8.4 R1); o HS256 da ponte depende de o segredo legado
+continuar aceito. Se ele for revogado, a ponte precisará assinar com uma
+chave importada no Supabase — mudança de configuração, não de policy.
 
 ### 11.8 Variáveis (modo neon)
 

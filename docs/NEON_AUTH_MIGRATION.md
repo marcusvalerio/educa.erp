@@ -829,7 +829,7 @@ senha" uma vez.
 | 14 | Token inválido | adulterado, outra chave/mesmo `kid`, `kid` inexistente, `alg=none`, HS256, `iss`/`aud` errados, **`emailVerified=false` real mesmo com vínculo** → recusados; token do Neon direto no PostgREST → 401 | **VALIDADO NO NEON REAL** (tokens reais) + réplica |
 | 15 | Rollback para Supabase | build padrão (`AUTH_PROVIDER` ausente): E2E 102/102 e 19/19 | **VALIDADO** (réplica) |
 | — | App Next.js em execução falando com o Neon real (navegador → servidor → Neon) | — | **NÃO VALIDADO** — rede do container bloqueada |
-| — | Entrega real de e-mail (SMTP/remetente) | — | **NÃO VALIDADO** — domínio de teste sem caixa; SMTP próprio não configurado |
+| — | Entrega real de e-mail (SMTP/remetente) | — | **PRÉ-REQUISITO DE CUTOVER** (configuração do Neon de produção, não código): o Neon aceitou os pedidos e gerou os links; a entrega depende do SMTP próprio |
 | — | R1 (PostgREST de produção aceita o token da ponte) | — | **NÃO VALIDADO** — ver §12.4 |
 
 ### 12.3 Regressão final (mesmos números documentados, sem perda de cobertura)
@@ -995,3 +995,23 @@ ausente, nenhuma Edge Function.
 **Veredito: NÃO PRONTO — BLOQUEIO EXTERNO.** Permanecem só os dois
 bloqueios da §12.9: R1 (segredo de produção) e E2E do app contra o Neon real
 (Network access do ambiente). Nenhum dos dois foi tratado como validado.
+
+**Estado final consolidado.**
+
+- **VALIDADO:** arquitetura (`AUTH_PROVIDER` centralizado, sem imports
+  circulares, nenhum segredo no navegador); segurança (revisão final + correção
+  de login CSRF); ponte (JWKS/EdDSA/`iss`/`aud`/`exp`, tokens reais 5/5);
+  Neon real (22/22 fluxos do código do app); recovery e invite; RLS, RBAC e
+  multi-tenancy com tokens reais (53/53) e no app inteiro (57/57);
+  expiração (4/4); rollback Supabase (102/102 + 19/19); migration 0073
+  auditada; produção intacta. Último commit testado: `d9d2037`.
+- **NÃO VALIDADO (dependências externas, não defeitos):**
+  1. **R1** — exige o segredo JWT de produção, indisponível nesta sessão;
+     fecha com `scripts/verify-bridge-token.mjs` → `3/3`.
+  2. **E2E do app inteiro contra o Neon real** — a política de rede do
+     ambiente recusa `*.neon.tech` (403); fecha liberando o domínio em
+     Network access e rodando `poc/neon-auth/e2e-neon.mjs` contra
+     `educa-neon-auth-test`.
+- **Pré-requisitos de cutover (fora do merge):** aplicar a 0073, SMTP próprio,
+  `allow_localhost` e Google compartilhado desligados no Neon de produção,
+  `APP_URL` definida, desligar o e-mail do Supabase Auth (R3).

@@ -1,10 +1,10 @@
 # Migração Supabase Auth → Neon Auth — auditoria e decisão de arquitetura
 
 Branch: `feat/neon-auth-migration` (a partir de `main` em `d7d448f`).
-Estado: **investigação concluída; implementação NÃO iniciada — parada
-deliberada** pelos bloqueios da §5, conforme a regra da tarefa: "se
-existir limitação que impeça preservar o comportamento atual, pare e
-registre antes de criar um workaround perigoso".
+Estado (2026-09-25): **Plano A — POC concluída (§8)**. As §1–§7 são a
+auditoria de 2026-09-24 e ficam como histórico. O bloqueio B2 da §5 foi
+revisto pela POC: a identidade do Neon Auth chega à RLS do Supabase por
+uma ponte no servidor, sem mover o banco e sem alterar policies.
 
 Nada foi alterado em produção, no banco, na `main` ou em variáveis de
 ambiente. As consultas ao banco de produção foram somente leitura.
@@ -187,3 +187,107 @@ tarefa ("não considerar pronto porque compila") impede entregá-lo.
    real do Neon), tratar como projeto separado de migração de **banco**,
    começando por reconciliar o histórico de migrations do repositório
    com produção (item C1 da auditoria de branches).
+
+---
+
+## 8. Plano A — Neon Auth + Postgres do Supabase (POC, 2026-09-25)
+
+### 8.1 Decisão de arquitetura
+
+```text
+Neon Auth ── login, sessão, e-mail, JWT (EdDSA) publicado em JWKS
+   │  token do provedor
+   ▼
+Servidor do EDUCA — src/lib/auth/neon-bridge.ts
+   1. verifica o token: assinatura pelo JWKS, iss, aud, exp, algoritmo assimétrico
+   2. exige e-mail confirmado no provedor
+   3. traduz sub do provedor → auth_user_id pelo vínculo do banco (0073)
+   4. emite token curto para o PostgREST: sub = auth_user_id, role = authenticated, ≤ 300 s
+   ▼
+PostgREST + Postgres do Supabase (inalterados)
+   auth.uid() → current_app_user_id() → has_permission() → 328 policies de RLS
+```
+
+Respostas às perguntas da tarefa:
+
+| Pergunta | Resposta |
+|---|---|
+| Fonte de identidade | Neon Auth (login, senha, sessão, e-mail) |
+| Dados de negócio | Continuam no Postgres do Supabase |
+| Relação Auth ↔ EDUCA | `auth_identity_links` (0073): `(provider, external_user_id) → auth_user_id`, um-para-um, criado só pelo servidor quando o e-mail do provedor, confirmado, é igual ao do login |
+| RBAC | Intacto: `has_permission()` e papéis no banco; o Neon Auth não guarda papel de negócio |
+| Multi-tenancy | Intacto: `current_user_company_ids()` e RLS |
+| RLS | Nenhuma policy alterada: `auth.uid()` continua sendo o `sub` que o PostgREST valida |
+| Por que `sub` não vai direto | O id do Better Auth/Neon Auth não é UUID (ex.: `5Iyne0AX…`) e `auth.uid()` é `uuid`; e `users.auth_user_id` referencia `auth.users` |
+
+### 8.2 Mapa de dependências (código)
+
+A superfície de integração é pequena:
+
+| Ponto | Onde | Papel |
+|---|---|---|
+| Cliente de dados com a identidade do usuário | `src/lib/supabase/server.ts` → `createClient()` (28 arquivos) | trocar a sessão Supabase pelo token da ponte (`Authorization: Bearer`) |
+| Leitura da identidade no servidor | `src/lib/api/governance.ts:20`, `src/lib/auth/context.ts:26`, `src/proxy.ts:50` (`auth.getUser()`) | passar a usar a identidade verificada pela ponte |
+| Auth no navegador | `login/page.tsx`, `recuperar-senha`, `redefinir-senha`, `convite/[token]` (signIn, resetPassword, updateUser, getUser, signOut) | trocar pelo SDK do Neon Auth |
+| Criação de login no convite | `auth.admin.inviteUserByEmail` (onboarding-handlers, bootstrap) | trocar por criação de conta no Neon Auth + vínculo |
+| Consultas `.from/.rpc` (523) e cliente admin (222) | rotas de API | **não mudam** |
+
+### 8.3 POC — o que foi executado
+
+- **Identidade:** Better Auth **1.4.18** local (a mesma versão do "Managed
+  Better Auth" da Neon), banco próprio separado, cadastro público
+  desligado, plugin JWT (EdDSA/JWKS, `iss`/`aud`, 5 min).
+- **Banco:** réplica local do banco de produção (Postgres 17 + PostgREST,
+  mesmas 171 tabelas/328 policies), com a 0073 aplicada **só na réplica**.
+- **Ponte:** o módulo real `src/lib/auth/neon-bridge.ts`, sem cópia.
+- **Fixtures (só réplica):** POC Empresa A (A1 admin, A2 leitura), POC
+  Empresa B (B1 admin, B2 operador), Owner da plataforma.
+
+Resultado: **56/56** (`poc/neon-auth/run-poc.mjs`, duas execuções
+seguidas sobre réplica recém-recriada).
+
+| Área | Verificações |
+|---|---|
+| Primeiro acesso | contas criadas pelo servidor; cadastro público recusado; conta com e-mail não confirmado não obtém identidade no banco; link por e-mail → senha criada (5 contas); concluir o link confirma o e-mail |
+| Vínculo | 5 vínculos; e-mail divergente recusado; identidade já vinculada não aponta para outro login; anon não lê nem cria |
+| Identidade | `sub` do token do banco = `auth_user_id`; `current_app_user_id()` distingue A1, A2, B1, B2; `fn_user_context` correto |
+| Plataforma | Owner tem permissão de plataforma, Company Admin não; Company Admin não cria empresa |
+| Multi-tenancy | SELECT/INSERT/UPDATE/DELETE cruzados A↔B bloqueados pela RLS; `has_permission(B)` falso para A1; convite cruzado recusado; IDOR por id vazio |
+| RBAC | leitura não cria; leitura e operador não se promovem a admin; insert direto em `user_roles` recusado; admin não troca `auth_user_id` (0072); admin gerencia papéis da própria empresa |
+| Ponte | token forjado (outra chave, mesmo `kid`), payload adulterado, `alg=none`, lixo → recusados; token do banco forjado ou expirado → 401; sem token → nada; identidade sem vínculo → sem acesso |
+| Desativação | cadastro inativo: sem `current_app_user_id`, só a própria linha (desenho do `users_select`), nenhum dado da empresa, nenhuma permissão |
+| Recuperação | token inválido recusado; redirect só para origem confiável; `callbackURL` externo recusado (open redirect); link de uso único; senha antiga para de funcionar; sessões anteriores revogadas; mesma resposta para e-mail existente ou não |
+| Login/logout | senha errada e usuário inexistente → mesma resposta; logout encerra a sessão no provedor |
+
+Testes unitários da ponte (`tests/neon-bridge.test.ts`, 16, no `npm test`):
+verificação (chave errada, `iss`/`aud`, expirado, adulterado, `none`,
+HS256, sem `sub`/e-mail), emissão (claims, validade 30–600 s, UUID,
+segredo curto), ponte (vínculo buscado só pelo `sub` verificado, e-mail não
+confirmado, sem vínculo, token inválido nunca emite) e invariantes (ponte
+fora do navegador, nenhum segredo `NEXT_PUBLIC_`, 0073 sem acesso de
+anon/authenticated).
+
+Regressão da branch: 658/658 testes, typecheck, lint e build limpos;
+E2E da réplica 102/102 e 19/19 (baseline preservado).
+
+### 8.4 Ressalvas — decisões antes de ligar no app
+
+| # | Ponto | Por quê | Decisão/validação necessária |
+|---|---|---|---|
+| R1 | Assinatura aceita pelo PostgREST de **produção** | Na réplica o PostgREST confia no segredo HS256 do projeto. Em produção os tokens observados são **ES256** (chaves de assinatura novas do Supabase) | Validar no painel (Settings → JWT Keys) se o segredo legado ainda é aceito, ou cadastrar uma chave própria de assinatura; a ponte troca de algoritmo sem mudar o resto |
+| R2 | Login "sombra" em `auth.users` para usuários novos | `users.auth_user_id` e `platform_members.auth_user_id` referenciam `auth.users`; manter a FK exige um registro sem senha por pessoa | Aceitar o registro sombra (criado pelo servidor, sem senha) ou planejar migração que desacople a FK |
+| R3 | Dois caminhos de login | Enquanto o Supabase Auth aceitar e-mail/senha, o login antigo continua existindo | Desligar o provedor de e-mail do Supabase Auth na virada |
+| R4 | Neon Auth gerenciado ≠ Better Auth local | No Neon não há `onPasswordReset` (só webhooks); restringir cadastro público é "em breve" na documentação | Validar num projeto Neon: confirmação de e-mail no primeiro acesso e bloqueio de cadastro (webhook `user.before_create`) |
+| R5 | E-mail | O remetente padrão do Neon Auth também é 2/hora | SMTP próprio é necessário em qualquer provedor |
+| R6 | Janela após logout | O token do banco já emitido vale até expirar | ≤ 300 s (hoje o access token do Supabase vale 3600 s); pode ser reduzida |
+| R7 | Segredo de assinatura no servidor | Quem tiver o segredo emite identidade de qualquer usuário | Mesma classe de risco da `service_role` atual: só servidor, nunca `NEXT_PUBLIC_` (teste de invariante) |
+
+### 8.5 Próxima etapa (não executada)
+
+1. Resolver R1 e R4 num projeto Neon real e no painel do Supabase.
+2. Ligar a ponte no app atrás de uma variável de ambiente:
+   `createClient()`, `requireSession()`, `getSessionUser()`, `proxy.ts`;
+   telas de login, recuperação, redefinição e convite no SDK do Neon.
+3. Convite/primeiro acesso: servidor cria a conta no Neon Auth, cria o
+   login sombra (R2), vincula (0073) e o aceite oficial (0071) segue igual.
+4. Repetir E2E 102 + 19 com o Neon Auth real antes de qualquer merge.

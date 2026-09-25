@@ -291,3 +291,108 @@ E2E da réplica 102/102 e 19/19 (baseline preservado).
 3. Convite/primeiro acesso: servidor cria a conta no Neon Auth, cria o
    login sombra (R2), vincula (0073) e o aceite oficial (0071) segue igual.
 4. Repetir E2E 102 + 19 com o Neon Auth real antes de qualquer merge.
+
+---
+
+## 9. Integração com o Neon Auth real — estado em 2026-09-25
+
+**Bloqueio de acesso:** este ambiente não tem projeto Neon, conector do
+Neon, credenciais nem rota de rede para `neon.com`, `console.neon.tech`,
+`api.neon.tech` ou `*.neon.tech`. **O Neon real não foi testado.** Nenhum
+código de integração foi ligado ao app para não construir sobre suposições
+não validadas.
+
+### 9.1 Auditoria — hoje × Neon Auth
+
+| Área | Hoje (Supabase Auth) | Com Neon Auth | Precisa alterar? |
+|---|---|---|---|
+| Login | `signInWithPassword` no navegador (`login/page.tsx`) | SDK do Neon (`createNeonAuth`, handler em rota de API) | Sim |
+| Logout | `POST /api/auth/logout` → `signOut` | sign-out do Neon + limpar estado local | Sim |
+| Primeiro acesso | `/redefinir-senha` (fragmento de sessão, `updateUser`) | conta criada pelo servidor + link do Neon + senha pelo SDK | Sim |
+| Convite | 0071 (token em hash) + `inviteUserByEmail` | 0071 igual + criação da conta no Neon + vínculo 0073 + login sombra | Sim (só a criação do login) |
+| Recuperação | `resetPasswordForEmail` → `/auth/callback` (PKCE, `sb_flow_id`) → `/redefinir-senha` | fluxo de reset do Neon Auth | Sim |
+| Sessão | cookies `@supabase/ssr`; `getUser()` no servidor | cookie do Neon (`NEON_AUTH_COOKIE_SECRET`); `getSession()` no servidor + token da ponte | Sim |
+| Middleware | `src/proxy.ts` (`getUser`) | `middleware()` do SDK ou `getSession()` | Sim |
+| API | `requireSession` / `getSessionUser` (`getUser`) | identidade vinda da ponte | Sim (2 funções) |
+| RLS | `auth.uid()` do PostgREST | igual (token da ponte) | Não |
+| RBAC | `has_permission()` | igual | Não |
+| Admin Central | `has_platform_permission()` | igual | Não |
+
+### 9.2 Dependências do Supabase Auth — classificação
+
+| Ponto | Arquivo | Classe |
+|---|---|---|
+| `signInWithPassword` | `src/app/(auth)/login/page.tsx:48` | SUBSTITUIR |
+| `resetPasswordForEmail` | `src/app/(auth)/recuperar-senha/RecoverPasswordForm.tsx:32` | SUBSTITUIR |
+| `getUser`, `updateUser`, `signOut` (primeiro acesso/redefinição) | `src/app/(auth)/redefinir-senha/ResetPasswordForm.tsx:45,72,96` | SUBSTITUIR |
+| `getUser`, `updateUser` (convite) | `src/app/(auth)/convite/[token]/InvitationFlow.tsx:69,214` | SUBSTITUIR |
+| `setSession` do fragmento (`consumeAuthHash`) e encaminhamento em `/login` | `src/lib/onboarding/auth-hash.ts`, `login/page.tsx` | REMOVER com a virada (formato próprio do Supabase) |
+| `exchangeCodeForSession`, `verifyOtp` | `src/app/auth/callback/route.ts:27,30` | REMOVER com a virada |
+| `signOut` no servidor | `src/app/api/auth/logout/route.ts:10` | SUBSTITUIR |
+| `getUser` no servidor | `src/lib/api/governance.ts:20`, `src/lib/auth/context.ts:26` | SUBSTITUIR (identidade da ponte) |
+| `getUser` no proxy | `src/proxy.ts:50` | SUBSTITUIR |
+| `createServerClient` (cliente de dados do usuário) | `src/lib/supabase/server.ts:17` | MANTER, trocando a origem do token (`Authorization: Bearer` da ponte) |
+| `createBrowserClient` | `src/lib/supabase/client.ts:17` | REMOVER com a virada (usado só para Auth) |
+| `inviteUserByEmail` | `src/lib/api/onboarding-handlers.ts:57` | SUBSTITUIR (conta no Neon + login sombra + vínculo) |
+| `admin.listUsers` / `inviteUserByEmail` no bootstrap | `scripts/bootstrap-platform-owner.mjs:56,89` | SUBSTITUIR (bootstrap do Owner no Neon) |
+| Cliente admin (`createAdminClient`, 222 usos) | rotas de API | MANTER (não é Auth) |
+| `onAuthStateChange` | — | não existe no código |
+
+Durante a migração, tudo o que é SUBSTITUIR fica atrás de `AUTH_PROVIDER`
+(§9.5), com o caminho Supabase intacto como volta imediata.
+
+### 9.3 Neon Auth real × o que a POC assumiu (pela documentação)
+
+| Item | POC local | Neon Auth real (documentação) | Impacto na ponte |
+|---|---|---|---|
+| JWKS | `/api/auth/jwks` | `${NEON_AUTH_BASE_URL}/.well-known/jwks.json` | configuração |
+| `iss` | URL da POC | origem da URL do Neon Auth (ex.: `https://ep-xx.aws.neon.tech`) | configuração |
+| `aud` | `educa-erp` | **não documentado** | ⚪ validar; a ponte hoje exige `aud` |
+| Algoritmo | EdDSA | EdDSA (Ed25519) | nenhum |
+| Claims | `sub`, `email`, `emailVerified` | `sub`, `email`, `role`, `exp`, `iat`; **sem claims customizadas** | 🟠 a ponte hoje exige `emailVerified` no token → recusaria todo token real |
+| Validade | 5 min | 15 min, renovação por `authClient.token()` | configuração |
+| `sub` | id do Better Auth (não UUID) | `neon_auth.user.id` (formato a validar) | nenhum (o vínculo aceita texto) |
+| Variáveis | — | `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET` (≥ 32 caracteres) | novas variáveis de servidor |
+| Cadastro público | `disableSignUp` | restringir cadastro "em breve"; alternativa: webhook `user.before_create` | 🟠 invite-only a garantir |
+| E-mail | caixa local | remetente padrão **2/hora por projeto**; SMTP próprio configurável; webhooks para e-mail próprio | SMTP próprio obrigatório |
+| Gancho após redefinição | `onPasswordReset` | só webhooks | confirmação de e-mail no primeiro acesso a validar |
+
+### 9.4 Adaptações obrigatórias da ponte (depois de validar no Neon real)
+
+1. **E-mail confirmado:** como o token do Neon não traz `emailVerified`, a
+   ponte deve obtê-lo da sessão consultada no servidor (`getSession()` do
+   SDK, que autentica o cookie junto ao Neon) e conferir que o `sub` do
+   token é o `user.id` da sessão.
+2. **`aud`:** se o Neon não emitir `aud`, a verificação passa a exigir
+   `iss` exato (a origem própria do projeto) e o `role` do token; a regra
+   precisa de teste com token real antes de ser afrouxada.
+3. **Endereços e validade:** JWKS e `iss` por variável de ambiente;
+   renovação a cada 15 min.
+
+Nenhuma dessas mudanças foi feita: sem um token real para testar, alterar
+a verificação seria enfraquecê-la às cegas.
+
+### 9.5 Chave `AUTH_PROVIDER` (desenho, não implementado)
+
+- `AUTH_PROVIDER=supabase` (padrão): comportamento atual, sem mudança.
+- `AUTH_PROVIDER=neon`: telas de login/recuperação/convite pelo SDK do
+  Neon; `requireSession`/`getSessionUser`/`proxy.ts` pela identidade da
+  ponte; `createClient()` com o token da ponte.
+- Volta imediata: trocar a variável e fazer redeploy; o banco não muda
+  (0073 é aditiva e só é lida no modo `neon`).
+
+### 9.6 O que falta para testar o Neon real
+
+1. Criar um **projeto Neon de teste** (separado de tudo) com **Auth
+   habilitado** e, na configuração de Auth, cadastrar o domínio de
+   desenvolvimento como origem confiável.
+2. Dar acesso a este ambiente, por **um** destes caminhos:
+   - instalar o conector do **Neon** no claude.ai e habilitá-lo nesta conversa; ou
+   - no ambiente cloud da sessão (barra de título → ambiente → Edit):
+     liberar em Network access o domínio do projeto (`*.neon.tech`) e
+     `neon.com`, e cadastrar `NEON_AUTH_BASE_URL` e
+     `NEON_AUTH_COOKIE_SECRET` como variáveis de ambiente.
+3. Uma caixa de e-mail de teste que você controle (ou SMTP próprio de
+   teste no projeto Neon), para os links de primeiro acesso e recuperação.
+4. Decidir as ressalvas R1 (assinatura aceita pelo PostgREST de produção)
+   e R2 (login sombra) da §8.4.

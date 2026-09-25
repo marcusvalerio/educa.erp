@@ -3,12 +3,12 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { ArrowLeft, KeyRound, MailCheck } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
 import { AuthFrame, AuthHeading } from "@/components/auth/AuthFrame";
-import { buildRecoveryCallbackUrl, recoverPasswordSchema } from "@/lib/onboarding/invitations";
+import { recoverPasswordSchema } from "@/lib/onboarding/invitations";
+import { requestPasswordReset } from "@/lib/auth/client";
 
 // Esqueci minha senha → e-mail → link → nova senha → login.
 // A resposta é SEMPRE a mesma, exista ou não uma conta para o e-mail:
@@ -29,9 +29,8 @@ export function RecoverPasswordForm() {
     setError(null);
     setLoading(true);
     try {
-      await createClient().auth.resetPasswordForEmail(parsed.data.email, { redirectTo: buildRecoveryCallbackUrl(window.location.origin) });
-    } catch {
       // Falha de rede/limite: mesma resposta (sem enumeração de contas).
+      await requestPasswordReset(parsed.data.email);
     } finally {
       setLoading(false);
       setSent(true);

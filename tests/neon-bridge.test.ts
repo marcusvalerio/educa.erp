@@ -48,7 +48,7 @@ async function rejects(p: Promise<unknown>, code: IdentityBridgeError["code"]) {
 describe("verificação do token do provedor (Neon Auth)", () => {
   test("token válido → identidade do provedor", async () => {
     const id = await verifyProviderToken(await providerToken(), cfg());
-    assert.deepEqual(id, { externalUserId: "neon-user-a1", email: "a1@empresa-a.test", emailVerified: true });
+    assert.deepEqual(id, { externalUserId: "neon-user-a1", email: "a1@empresa-a.test", emailVerified: true, banned: false });
   });
   test("assinado por outra chave (mesmo kid) → recusado", async () => {
     const other = await generateKeyPair("EdDSA");

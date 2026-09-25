@@ -4,21 +4,20 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { KeyRound, LinkIcon } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { Alert, Skeleton } from "@/components/ui/Feedback";
 import { AuthFrame, AuthHeading } from "@/components/auth/AuthFrame";
 import { PasswordInput } from "@/components/auth/PasswordInput";
-import { consumeAuthHash } from "@/lib/onboarding/auth-hash";
+import { openPasswordLink, savePasswordFromLink } from "@/lib/auth/client";
 import { newPasswordSchema } from "@/lib/onboarding/invitations";
 import { postLoginDestination } from "@/lib/onboarding/access";
 import { clearClientSessionState, primeSession } from "@/lib/session/client-state";
 import type { SessionContext } from "@/lib/session/types";
 
-// Nova senha, a partir de uma sessão de recuperação (link do e-mail,
-// trocado em /auth/callback) ou de primeiro acesso (convite do Auth
-// para membro da plataforma, sessão no fragmento da URL).
+// Nova senha, a partir do link do e-mail — recuperação ou primeiro acesso
+// (src/lib/auth/client.ts: sessão do Supabase Auth ou token de uso único
+// do Neon Auth, conforme AUTH_PROVIDER).
 //   recuperação     → grava a senha, encerra a sessão, volta ao login;
 //   primeiro acesso → grava a senha e segue para o ambiente da pessoa.
 export function ResetPasswordForm() {
@@ -40,17 +39,15 @@ export function ResetPasswordForm() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const supabase = createClient();
-      const fromHash = await consumeAuthHash(supabase);
-      const { data } = await supabase.auth.getUser();
+      const link = await openPasswordLink();
       if (cancelled) return;
-      if (fromHash.error || !data.user) {
-        setLinkError(fromHash.error);
+      if (link.status === "invalid") {
+        setLinkError(link.message);
         setPhase("invalid");
         return;
       }
-      setEmail(data.user.email ?? null);
-      setPendingPassword(data.user.user_metadata?.educa_password_pending === true);
+      setEmail(link.email);
+      setPendingPassword(link.pendingPassword);
       setPhase("ready");
     })();
     return () => {
@@ -68,19 +65,12 @@ export function ResetPasswordForm() {
     if (Object.keys(found).length) return;
     setSaving(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ password, data: { educa_password_pending: false } });
-      if (error) {
-        setErrors({
-          form: /different from the old|same_password/i.test(error.message + (error.code ?? ""))
-            ? "A nova senha precisa ser diferente da anterior."
-            : /weak|pwned/i.test(error.message + (error.code ?? ""))
-              ? "Esta senha é fraca ou conhecida em vazamentos. Escolha outra."
-              : "Não foi possível salvar a senha. O link pode ter expirado — solicite um novo.",
-        });
+      const saved = await savePasswordFromLink(password, firstAccess);
+      if (!saved.ok) {
+        setErrors({ form: saved.message });
         return;
       }
-      if (firstAccess) {
+      if (firstAccess && saved.signedIn) {
         const res = await fetch("/api/session/context", { cache: "no-store" });
         const body = await res.json().catch(() => null);
         if (res.ok && body?.success) {
@@ -92,8 +82,7 @@ export function ResetPasswordForm() {
         router.replace("/acesso");
         return;
       }
-      // Recuperação: encerra a sessão de recuperação e volta ao login.
-      await supabase.auth.signOut();
+      // Recuperação (sessão já encerrada): volta ao login.
       clearClientSessionState();
       router.replace("/login?reset=ok");
     } finally {

@@ -21,19 +21,22 @@ import { SignJWT, jwtVerify, type JWTVerifyGetKey } from "jose";
 
 export const DB_TOKEN_MAX_TTL_SECONDS = 600;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-// Algoritmos assimétricos aceitos para o token do provedor. HS* e "none"
-// ficam de fora: um segredo compartilhado permitiria forjar identidade.
-const PROVIDER_ALGORITHMS = ["EdDSA", "ES256", "RS256", "PS256"];
+// Algoritmo do token do provedor: o Neon Auth assina com EdDSA (Ed25519)
+// — observado no serviço real (docs/NEON_AUTH_MIGRATION.md §10.2). Só
+// ele é aceito: HS*, "none" e qualquer outro algoritmo são recusados.
+const PROVIDER_ALGORITHMS = ["EdDSA"];
 
 export type ProviderIdentity = {
   externalUserId: string;
   email: string;
   emailVerified: boolean;
+  /** Claim `banned` do Neon Auth (conta bloqueada no provedor). */
+  banned: boolean;
 };
 
 export class IdentityBridgeError extends Error {
   constructor(
-    readonly code: "INVALID_TOKEN" | "UNLINKED" | "EMAIL_NOT_VERIFIED" | "INVALID_LINK",
+    readonly code: "INVALID_TOKEN" | "UNLINKED" | "EMAIL_NOT_VERIFIED" | "INVALID_LINK" | "DISABLED",
     message: string
   ) {
     super(message);
@@ -60,7 +63,7 @@ export async function verifyProviderToken(token: string, config: ProviderTokenCo
   const sub = typeof payload.sub === "string" ? payload.sub.trim() : "";
   const email = typeof payload.email === "string" ? payload.email.trim().toLowerCase() : "";
   if (!sub || !email) throw new IdentityBridgeError("INVALID_TOKEN", "Token sem identidade.");
-  return { externalUserId: sub, email, emailVerified: payload.emailVerified === true };
+  return { externalUserId: sub, email, emailVerified: payload.emailVerified === true, banned: payload.banned === true };
 }
 
 export type DbTokenInput = {
@@ -94,11 +97,14 @@ export type BridgeDeps = {
 };
 
 /** Token do provedor → token do banco. Qualquer falha recusa; nada vem do cliente. */
-export async function bridgeIdentity(providerToken: string, deps: BridgeDeps): Promise<{ authUserId: string; dbToken: string; email: string }> {
+export type BridgeResult = { authUserId: string; dbToken: string; email: string; externalUserId: string };
+
+export async function bridgeIdentity(providerToken: string, deps: BridgeDeps): Promise<BridgeResult> {
   const identity = await deps.verify(providerToken);
+  if (identity.banned) throw new IdentityBridgeError("DISABLED", "Conta bloqueada no provedor de identidade.");
   if (!identity.emailVerified) throw new IdentityBridgeError("EMAIL_NOT_VERIFIED", "E-mail ainda não confirmado.");
   const authUserId = await deps.resolveLink(identity.externalUserId);
   if (!authUserId) throw new IdentityBridgeError("UNLINKED", "Esta conta ainda não tem acesso configurado no EDUCA.");
   if (!UUID.test(authUserId)) throw new IdentityBridgeError("INVALID_LINK", "Vínculo de identidade inválido.");
-  return { authUserId, dbToken: await deps.mint(authUserId), email: identity.email };
+  return { authUserId, dbToken: await deps.mint(authUserId), email: identity.email, externalUserId: identity.externalUserId };
 }

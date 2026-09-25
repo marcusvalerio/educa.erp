@@ -3,6 +3,7 @@ import "server-only";
 import { NextRequest } from "next/server";
 import type { ZodType } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { getSessionIdentity } from "@/lib/auth/session";
 import { ApiError, translatePostgresError, unauthorizedError, validationError } from "@/lib/database/errors";
 
 // Base comum das rotas de governança (sessão, /admin, /admincentral).
@@ -15,11 +16,13 @@ import { ApiError, translatePostgresError, unauthorizedError, validationError } 
 
 export type UserClient = Awaited<ReturnType<typeof createClient>>;
 
+// Identidade pela camada de autenticação (Supabase Auth ou Neon Auth +
+// ponte — src/lib/auth/session.ts); dados sempre pelo cliente do usuário.
 export async function requireSession(): Promise<{ supabase: UserClient; authUserId: string; email: string | null }> {
+  const identity = await getSessionIdentity();
+  if (!identity) throw unauthorizedError();
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw unauthorizedError();
-  return { supabase, authUserId: data.user.id, email: data.user.email ?? null };
+  return { supabase, authUserId: identity.authUserId, email: identity.email };
 }
 
 // Empresa do usuário autenticado, resolvida pelo próprio vínculo em

@@ -4,14 +4,13 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Ban, CheckCircle2, Clock, KeyRound, LinkIcon, MailOpen, ShieldCheck } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { Alert, Skeleton } from "@/components/ui/Feedback";
 import { AuthFrame, AuthHeading } from "@/components/auth/AuthFrame";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { PasswordInput } from "@/components/auth/PasswordInput";
-import { consumeAuthHash } from "@/lib/onboarding/auth-hash";
+import { currentAccount, setPasswordForCurrentAccount } from "@/lib/auth/client";
 import { newPasswordSchema } from "@/lib/onboarding/invitations";
 import { primeSession } from "@/lib/session/client-state";
 import { formatDateTime } from "@/lib/format";
@@ -52,8 +51,8 @@ export function InvitationFlow({ token }: { token: string }) {
     let cancelled = false;
     (async () => {
       try {
-        const supabase = createClient();
-        const fromHash = await consumeAuthHash(supabase);
+        // Primeiro a conta/link (o fragmento do Supabase sai da URL já), depois a prévia.
+        const accountPromise = currentAccount().catch(() => ({ account: null, linkError: null }));
         const res = await fetch(`/api/onboarding/invitations/${encodeURIComponent(token)}`, { cache: "no-store" });
         const body = await res.json().catch(() => null);
         if (cancelled) return;
@@ -66,15 +65,13 @@ export function InvitationFlow({ token }: { token: string }) {
           setPhase({ step: "closed", preview });
           return;
         }
-        const { data } = await supabase.auth.getUser();
+        const { account, linkError } = await accountPromise;
         if (cancelled) return;
-        if (!data.user) {
-          setPhase({ step: "sign-in", preview, linkError: fromHash.error });
+        if (!account) {
+          setPhase({ step: "sign-in", preview, linkError });
           return;
         }
-        const email = data.user.email ?? "";
-        const passwordPending = fromHash.type === "invite" || data.user.user_metadata?.educa_password_pending === true;
-        setPhase(passwordPending ? { step: "password", preview, email } : { step: "accept", preview, email });
+        setPhase(account.passwordPending ? { step: "password", preview, email: account.email } : { step: "accept", preview, email: account.email });
       } catch {
         if (!cancelled) setPhase({ step: "error", message: "Não foi possível conectar ao servidor. Tente novamente." });
       }
@@ -211,9 +208,9 @@ function PasswordStep({ preview, email, onDone }: { preview: Preview; email: str
     if (Object.keys(found).length) return;
     setSaving(true);
     try {
-      const { error } = await createClient().auth.updateUser({ password, data: { educa_password_pending: false } });
-      if (error) {
-        setErrors({ form: /weak|pwned/i.test(error.message + (error.code ?? "")) ? "Esta senha é fraca ou conhecida em vazamentos. Escolha outra." : "Não foi possível salvar a senha. Tente novamente." });
+      const result = await setPasswordForCurrentAccount(password);
+      if (!result.ok) {
+        setErrors({ form: result.message });
         return;
       }
       onDone();

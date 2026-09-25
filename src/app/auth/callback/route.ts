@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/server";
+import { createSupabaseSessionClient } from "@/lib/supabase/server";
+import { authProvider } from "@/lib/auth/provider";
 import { safeNextPath } from "@/lib/navigation/access";
 
 // Retorno dos links do Supabase Auth (recuperação de senha, confirmação
@@ -21,9 +22,13 @@ export async function GET(request: NextRequest) {
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
 
-  const supabase = await createClient();
+  // Formato próprio do Supabase Auth. Com AUTH_PROVIDER=neon os links do
+  // Neon Auth voltam direto para /redefinir-senha e esta rota não é usada.
+  const supabase = authProvider() === "supabase" ? await createSupabaseSessionClient() : null;
   let ok = false;
-  if (code) {
+  if (!supabase) {
+    ok = false;
+  } else if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code, flowId ? { flowId } : undefined);
     ok = !error;
   } else if (tokenHash && type && OTP_TYPES.includes(type)) {

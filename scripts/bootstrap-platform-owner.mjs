@@ -72,6 +72,10 @@ async function findAuthUserId(admin, email) {
  * Executa o bootstrap com um cliente service_role já criado (injetável nos testes).
  * `provision` (opcional): identidade num provedor externo (Neon Auth); recebe
  * { email, name, redirectTo } e devolve { authUserId, delivered }.
+ * @param {any} admin
+ * @param {{ email: string, name: string, appUrl: string | null, dryRun: boolean }} args
+ * @param {(msg: string) => void} [log]
+ * @param {((p: { email: string, name: string, redirectTo: string }) => Promise<{ authUserId: string | null, delivered: boolean }>) | null} [provision]
  */
 export async function bootstrapOwner(admin, { email, name, appUrl, dryRun }, log = console.log, provision = null) {
   const { data: owners, error: ownersError } = await admin
@@ -82,8 +86,23 @@ export async function bootstrapOwner(admin, { email, name, appUrl, dryRun }, log
   if (ownersError) throw new Error(`Não foi possível verificar os Owners: ${ownersError.message}`);
   if ((owners ?? []).length > 0) {
     if (owners.some((o) => (o.email ?? "").toLowerCase() === email)) {
-      log(`Nada a fazer: ${email} já é Platform Owner ativo.`);
-      return { status: "already_owner" };
+      if (!provision) {
+        log(`Nada a fazer: ${email} já é Platform Owner ativo.`);
+        return { status: "already_owner" };
+      }
+      // Virada para AUTH_PROVIDER=neon: o Owner que já existe precisa de
+      // identidade no provedor + vínculo (0073) para continuar entrando.
+      // Idempotente; não registra outro Owner nem mexe em platform_members.
+      if (!appUrl) throw new Error("Informe --app-url (ou APP_URL) para o link de primeiro acesso.");
+      const redirectTo = `${appUrl}/redefinir-senha?primeiro-acesso=1&next=${encodeURIComponent("/admincentral")}`;
+      if (dryRun) {
+        log(`[simulação] Garantiria identidade no provedor e vínculo para o Owner existente ${email} (retorno: ${redirectTo}).`);
+        return { status: "dry_run" };
+      }
+      const result = await provision({ email, name, redirectTo });
+      if (!result.authUserId) throw new Error("Não foi possível provisionar a identidade do Owner.");
+      log(result.delivered ? `${email} já é Owner; identidade criada no provedor e link de primeiro acesso enviado.` : `${email} já é Owner e já tem identidade com senha no provedor.`);
+      return { status: "already_owner", provisioned: true, invited: result.delivered };
     }
     throw new Error("Já existe um Platform Owner ativo. Novos Owners são concedidos por um Owner, na Administração Central.");
   }

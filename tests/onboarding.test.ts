@@ -297,6 +297,26 @@ describe("bootstrap do primeiro Platform Owner (script de servidor)", () => {
     assert.deepEqual(await bootstrapOwner(admin, { email: "dono@educa.com", name: "D", appUrl: null, dryRun: false }, quiet), { status: "already_owner" });
     assert.deepEqual(calls, []);
   });
+  test("neon: Owner já existente ganha identidade no provedor + vínculo (virada), sem novo registro", async () => {
+    const { admin, calls } = fakeAdmin({ owners: [{ email: "dono@educa.com" }] });
+    const provisioned: string[] = [];
+    const provision = async ({ email, redirectTo }: { email: string; redirectTo: string }) => {
+      provisioned.push(`${email}:${redirectTo}`);
+      return { authUserId: "auth-1", delivered: true };
+    };
+    assert.deepEqual(
+      await bootstrapOwner(admin, { email: "dono@educa.com", name: "D", appUrl: "https://erp.exemplo.com", dryRun: false }, quiet, provision),
+      { status: "already_owner", provisioned: true, invited: true }
+    );
+    assert.deepEqual(provisioned, ["dono@educa.com:https://erp.exemplo.com/redefinir-senha?primeiro-acesso=1&next=%2Fadmincentral"]);
+    assert.deepEqual(calls, []);
+    await assert.rejects(bootstrapOwner(admin, { email: "dono@educa.com", name: "D", appUrl: null, dryRun: false }, quiet, provision), /--app-url/);
+  });
+  test("neon: outro Owner já ativo continua recusando um segundo Owner", async () => {
+    const { admin } = fakeAdmin({ owners: [{ email: "outro@educa.com" }] });
+    const provision = async () => ({ authUserId: "x", delivered: true });
+    await assert.rejects(bootstrapOwner(admin, { email: "dono@educa.com", name: "D", appUrl: "https://x.com", dryRun: false }, quiet, provision), /Já existe um Platform Owner/);
+  });
   test("já existe outro Owner → recusa sem criar login", async () => {
     const { admin, calls } = fakeAdmin({ owners: [{ email: "outro@educa.com" }] });
     await assert.rejects(bootstrapOwner(admin, { email: "dono@educa.com", name: "D", appUrl: "https://x.com", dryRun: false }, quiet), /Já existe um Platform Owner/);

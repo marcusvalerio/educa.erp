@@ -772,7 +772,10 @@ senha" uma vez.
 
 ### 11.13 O que NÃO foi feito em produção
 
-- Nenhuma migration aplicada (a 0073 **não** está em produção nem na `main`).
+> Estado de 2026-09-25, **superado** pela §13: a 0073 está na `main` (merge
+> `415161c`) e aplicada em produção (`20260926032523`).
+
+- Nenhuma migration aplicada (na época, a 0073 ainda não estava em produção nem na `main`).
 - Nenhuma variável, deploy, configuração de Auth, chave ou policy alterada
   no Supabase ou na Vercel; nenhum merge.
 - Leitura única em produção: `get_publishable_keys` (metadados das chaves públicas).
@@ -781,7 +784,7 @@ senha" uma vez.
 ### 11.14 Antes de ligar em produção
 
 1. Fechar R1 (`scripts/verify-bridge-token.mjs`).
-2. Aplicar a 0073 em produção (decisão à parte).
+2. ~~Aplicar a 0073 em produção~~ — feito em 2026-09-26 (§13.2).
 3. Projeto Neon de produção: origem confiável, `disableSignUp`, Google e
    `allow_localhost` desligados, SMTP próprio, conta de serviço.
 4. Rodar o E2E neon contra o Neon real num ambiente com rede (liberar
@@ -889,7 +892,7 @@ deduplicação é por instância; uma segunda instância repetiu o roteiro
 5. Configuração do Neon de produção: `allow_localhost` e Google OAuth
    compartilhado ainda ligados no projeto de teste — desligar em produção.
 6. R3: desligar o provedor de e-mail do Supabase Auth na virada.
-7. 0073 não aplicada em produção (pré-requisito do modo neon).
+7. ~~0073 não aplicada em produção~~ — aplicada em 2026-09-26 (§13.2).
 
 ### 12.6 Rollback
 
@@ -897,6 +900,8 @@ deduplicação é por instância; uma segunda instância repetiu o roteiro
 banco. Comprovado nesta rodada: build padrão → E2E 102/102 e 19/19.
 
 ### 12.7 Produção e `main`
+
+> Estado de 2026-09-25, superado pela §13 (merge `415161c`; 0073 aplicada).
 
 - Produção: **intacta** — nenhuma migration (0073 inclusive), RLS, Auth,
   SMTP, chave ou deploy alterado; nenhuma leitura nesta rodada.
@@ -983,7 +988,8 @@ repassado ao Neon como dica de IP — a plataforma precisa sobrescrever esse
 cabeçalho (a Vercel o faz); `APP_URL` deve estar definida em produção para a
 origem enviada ao Neon não depender do cabeçalho `Host`.
 
-**Migration 0073 — auditada, pronta para a etapa de cutover (não aplicada).**
+**Migration 0073 — auditada, pronta para a etapa de cutover** (aplicada em
+produção depois, em 2026-09-26 — §13.2).
 Só aditiva (1 tabela + 2 funções + grants), não altera migrations, dados,
 tabelas nem policies existentes; RLS ligado sem policy e `revoke all` para
 `public/anon/authenticated`; funções `security definer` com `search_path`
@@ -1012,6 +1018,141 @@ bloqueios da §12.9: R1 (segredo de produção) e E2E do app contra o Neon real
      ambiente recusa `*.neon.tech` (403); fecha liberando o domínio em
      Network access e rodando `poc/neon-auth/e2e-neon.mjs` contra
      `educa-neon-auth-test`.
-- **Pré-requisitos de cutover (fora do merge):** aplicar a 0073, SMTP próprio,
+- **Pré-requisitos de cutover (fora do merge):** ~~aplicar a 0073~~ (feito, §13.2), SMTP próprio,
   `allow_localhost` e Google compartilhado desligados no Neon de produção,
   `APP_URL` definida, desligar o e-mail do Supabase Auth (R3).
+
+---
+
+## 13. Estado real e cutover de produção (2026-09-26)
+
+> Esta seção é a fonte de verdade. As §11.13, §12.5 (item 7), §12.7 e a nota
+> "não aplicada" da §12.10 descrevem o estado de 2026-09-25 e foram marcadas
+> como superadas.
+
+### 13.1 Código e deploy
+
+| Item | Estado |
+|---|---|
+| `main` | merge da `feat/neon-auth-migration` em `415161c` (inclui a correção de login CSRF `d9d2037`), mais o commit desta seção |
+| Deploy | a Vercel publica a `main` automaticamente; **não verificável neste ambiente** (o proxy recusa `educaerp.vercel.app` e a API da Vercel) |
+| Modo em produção | `supabase`: sem `AUTH_PROVIDER` no build, o app usa o Supabase Auth, e nada muda para quem usa hoje. Não foi possível ler as variáveis da Vercel |
+
+### 13.2 Migration 0073 em produção — APLICADA
+
+- **Versão:** `20260926032523` (`0073_external_identity_links`), aplicada pelo conector oficial do Supabase (`apply_migration`), o mesmo caminho das anteriores.
+- **Validação em produção:**
+  - RLS ligado, **0 policies** na tabela;
+  - `anon`/`authenticated` sem nenhum privilégio na tabela e nas 2 funções;
+  - as funções são `security definer`, executáveis só por `service_role`;
+  - 5 constraints (PK, única por `auth_user_id`, FK, 2 checks);
+  - **0 linhas**;
+  - as **328 policies** de `public` intactas.
+- **Efeito no modo supabase:** nenhum. A tabela só é lida no modo neon.
+- O cabeçalho do arquivo da migration ainda diz "NÃO aplicada em produção". É o texto histórico: migrations não são editadas depois de aplicadas.
+
+### 13.3 Neon Auth de produção — NÃO EXISTE
+
+- A organização tem só `educa-neon-auth-test` (`delicate-band-84024217`) ligado ao EDUCA. Os outros projetos (`sentinel`, `jarvis-wms`, `aegis-production`, `CORTEX.OS`) não são do EDUCA e não foram tocados.
+- O projeto de teste **não** deve virar produção. Ele guarda identidades, contas de serviço e Functions de teste, `allow_localhost` e Google compartilhado ficam ligados, e o SMTP é o padrão.
+- O projeto de produção **não foi criado** nesta rodada. Os segredos dele (senha da conta de serviço e segredo JWT do Supabase) precisam nascer e ficar com o responsável pela produção, e só ele cadastra as variáveis na Vercel.
+- O que ficou preparado:
+  - o runbook abaixo;
+  - `scripts/neon-service-account.mjs`: gera a senha localmente e imprime só o hash em SQL. O SQL foi testado num Postgres descartável com o esquema `neon_auth` real: cria a credencial, é idempotente e deixa `role = admin`;
+  - as variáveis documentadas em `.env.local.example`.
+
+### 13.4 Owner
+
+- **Produção hoje** (leitura): **1** Owner ativo, com e-mail confirmado no Supabase Auth; **0** vínculos 0073.
+- **O que faltava no código** (corrigido):
+  - Antes, no modo neon, o bootstrap respondia "já é Owner" e **não** criava a identidade no Neon. Com isso, o Owner existente ficaria sem login depois da virada.
+  - Agora o bootstrap garante, de forma idempotente, a identidade no Neon, o vínculo 0073 e o link de primeiro acesso, sem mexer em `platform_members`.
+  - No modo supabase, nada muda.
+  - Outro e-mail continua recusado: um segundo Owner só é concedido por um Owner.
+  - 2 testes novos cobrem isso.
+- **`marcus_admin@educaerp.com`:**
+  - existe **só no Neon de teste**, onde o login real **PASSOU** (sign-in 200, identidade `8a25cc59-…`);
+  - em produção **não existe** (0 logins). A identidade, o `auth_user_id` e a senha do teste **não** serão reaproveitados.
+  - Depois da virada, o Owner atual concede na Administração Central (convite de Owner). O fluxo cria a identidade no Neon de produção, o login sombra e o vínculo, e envia o primeiro acesso.
+
+### 13.5 Runbook de cutover (ordem exata)
+
+Pré-requisito: máquina confiável com o repositório na `main` e `npm ci`.
+
+1. **R1.** Confirma que o PostgREST de produção aceita o token da ponte. Resultado esperado: `3/3`. Um 401 no 1º item interrompe o cutover (ver §11.7).
+   ```
+   SUPABASE_URL=https://bshvfsxapwwfntowdxyr.supabase.co SUPABASE_ANON_KEY=<anon> \
+   SUPABASE_JWT_SECRET=<segredo JWT legado> node --import tsx scripts/verify-bridge-token.mjs
+   ```
+2. **Neon de produção.** Criar o projeto no Neon Console (ex.: `educa-auth-prod`) e habilitar o Neon Auth. Configurar:
+   - origem confiável `https://educaerp.vercel.app` (e o domínio próprio, se houver);
+   - cadastro público desligado;
+   - `allow_localhost` desligado;
+   - Google compartilhado desligado;
+   - **SMTP próprio** com remetente do domínio do EDUCA.
+
+   Anotar a URL do Auth (`https://<ep>.neonauth.<região>.aws.neon.tech/neondb/auth`).
+3. **Conta de serviço.**
+   1. Neon Console → Auth → Users: criar `svc-educa@<domínio>`.
+   2. Rodar:
+      ```
+      node scripts/neon-service-account.mjs --email svc-educa@<domínio>
+      ```
+   3. Colar o SQL impresso no SQL Editor desse projeto.
+   4. A senha fica só em `./.neon-service.env`, que está no `.gitignore`.
+4. **Vercel → Settings → Environment Variables (Production):**
+   - `AUTH_PROVIDER=neon`
+   - `NEON_AUTH_BASE_URL=<url do passo 2>`
+   - `NEON_AUTH_SERVICE_EMAIL` e `NEON_AUTH_SERVICE_PASSWORD` (de `.neon-service.env`)
+   - `SUPABASE_JWT_SECRET` (o mesmo do passo 1)
+   - `APP_URL=https://educaerp.vercel.app`
+
+   As variáveis do Supabase continuam como estão.
+5. **Redeploy** da produção (a variável entra no build) e aguardar "Ready".
+6. **Owner atual.** Com as mesmas variáveis na máquina confiável:
+   ```
+   AUTH_PROVIDER=neon ... node --import tsx scripts/bootstrap-platform-owner.mjs \
+     --email <e-mail do Owner atual> --name "<nome>" --app-url https://educaerp.vercel.app
+   ```
+   O Owner recebe o link de primeiro acesso (vale 1 h, uso único), define a senha no Neon e cai em `/admincentral`.
+7. **Conferências:**
+   - login e logout do Owner;
+   - `/admincentral` abre;
+   - cookie `educa_session` HttpOnly, sem cookie do Neon no navegador;
+   - login de outro site recusado (CSRF).
+8. **R3:** desligar o provedor de e-mail do Supabase Auth, para fechar o segundo caminho de recuperação.
+9. **Segundo Owner** (`marcus_admin@educaerp.com`): conceder pela Administração Central.
+10. **E2E contra o Neon real:** `poc/neon-auth/e2e-neon.mjs` com `NEON_BASE` real, num ambiente com rede até `*.neon.tech`.
+
+### 13.6 Rollback
+
+- Como voltar: `AUTH_PROVIDER=supabase` (ou remover a variável) e redeploy. Não muda código nem banco.
+- A 0073 fica, porque é aditiva e não é lida no modo supabase.
+- O Owner volta a entrar com a senha do Supabase Auth.
+- Quem foi criado já no modo neon usa "esqueci a senha" uma vez.
+- Comprovado com o build padrão: 102/102 + 19/19.
+
+### 13.7 Números (último estado)
+
+| Suíte | Resultado |
+|---|---|
+| Unitários | **698/698** (693 + 2 do bootstrap do Owner existente + 3 do script da conta de serviço) |
+| Typecheck / lint | 0 / 0 |
+| E2E Supabase (rollback) | 102/102 e 19/19 |
+| E2E neon (app inteiro, dublê local) | 57/57 |
+| Tokens reais → ponte → RLS / ponte / expiração / fluxos no Neon real | 53/53 · 5/5 · 4/4 · 22/22 |
+| SQL da conta de serviço (Postgres descartável, esquema `neon_auth` real) | cria a credencial, idempotente, `role = admin`, hash confere com scrypt |
+
+Os E2E e os testes com tokens reais **não** foram repetidos. Esta rodada não mudou o app (rotas, ponte, cliente do Neon, sessão). Só mudou o script de bootstrap, que roda fora do app, e entrou um script novo.
+
+### 13.8 Pendências (todas externas; nenhuma de código)
+
+1. **R1:** exige o `SUPABASE_JWT_SECRET` de produção (passo 1).
+2. **Neon Auth de produção + SMTP próprio + variáveis na Vercel** (passos 2–5): só o dono das contas faz, porque são segredos.
+3. **E2E do app contra o Neon real:** a rede deste ambiente recusa `*.neon.tech`.
+4. **Deploy da Vercel:** não verificável daqui.
+
+Restos no projeto de **teste** (não é produção; apagar é ação destrutiva, fica para o dono):
+- Functions `appprobe`, `authprobe` e `logintest` (esta guarda senhas de teste nas variáveis);
+- o gatilho da `logintest` (desligado);
+- as contas `svc-admin` e `svc-local`.

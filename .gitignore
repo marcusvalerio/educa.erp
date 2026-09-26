@@ -33,6 +33,8 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.local.example
+# senha da conta de serviço do Neon Auth (scripts/neon-service-account.mjs)
+.neon-service.env
 
 # vercel
 .vercel

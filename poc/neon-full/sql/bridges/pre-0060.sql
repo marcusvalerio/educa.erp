@@ -1,0 +1,3 @@
+-- Ponte: chaves (id, company_id) que a versão de produção criou antes/nesta etapa.
+do $$ begin if not exists (select 1 from pg_constraint where conrelid = 'public.users'::regclass and contype in ('u','p') and pg_get_constraintdef(oid) = 'UNIQUE (id, company_id)') then alter table public.users add constraint users_id_company_id_key unique (id, company_id); end if; end $$;
+do $$ begin if not exists (select 1 from pg_constraint where conrelid = 'public.roles'::regclass and contype in ('u','p') and pg_get_constraintdef(oid) = 'UNIQUE (id, company_id)') then alter table public.roles add constraint roles_id_company_id_key unique (id, company_id); end if; end $$;

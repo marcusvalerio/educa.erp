@@ -6,6 +6,7 @@ import { dbError, parseJson, requireCompanyUser, requirePlatformMember, requireS
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ApiError, validationError } from "@/lib/database/errors";
+import { existingLoginNeedsIdentity, inviteIdentity } from "@/lib/auth/provisioning";
 import {
   acceptInvitationSchema,
   buildFirstAccessUrl,
@@ -32,6 +33,8 @@ import {
 // (auth.admin.inviteUserByEmail), DEPOIS que o banco já aceitou o
 // convite. O e-mail enviado é sempre o que o banco devolveu — nunca um
 // valor vindo do navegador — e nenhum dado do Auth volta para o cliente.
+// Com AUTH_PROVIDER=neon o envio é o provisionamento de identidade do
+// Neon Auth (src/lib/auth/provisioning.ts), no mesmo ponto e mesma ordem.
 
 const ok = (data: unknown, status = 200) => NextResponse.json({ success: true, data }, { status });
 
@@ -49,12 +52,14 @@ function appOrigin(request: NextRequest): string {
   return resolveAppOrigin(process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL, request.nextUrl.origin);
 }
 
-async function sendAuthInvite(email: string, redirectTo: string): Promise<Delivery> {
+async function sendAuthInvite(email: string, redirectTo: string, name: string): Promise<Delivery> {
   // Sem service role configurada, não há envio: o link continua válido
   // para entrega manual.
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return { delivered: false, reason: "email_unavailable" };
-  const admin = createAdminClient();
-  return deliverAuthInvite((to, options) => admin.auth.admin.inviteUserByEmail(to, options), email, redirectTo);
+  return inviteIdentity({ email, name, redirectTo }, () => {
+    const admin = createAdminClient();
+    return deliverAuthInvite((to, options) => admin.auth.admin.inviteUserByEmail(to, options), email, redirectTo);
+  });
 }
 
 /** Resposta de convite para quem convidou: sem token cru fora do link, sem ids do Auth. */
@@ -145,7 +150,7 @@ export async function createUserInvitation(request: NextRequest, context: IdRout
     if (error) throw dbError(error);
     const result = data as InvitationRpcResult;
     const inviteUrl = buildInviteUrl(appOrigin(request), result.token);
-    const delivery = await sendAuthInvite(result.email, inviteUrl);
+    const delivery = await sendAuthInvite(result.email, inviteUrl, result.user_name);
     return ok(invitationResponse(result, inviteUrl, delivery), 201);
   } catch (error) {
     return jsonError(error);
@@ -209,7 +214,7 @@ export async function inviteCompanyAdmin(request: NextRequest, context: IdRouteC
     if (error) throw dbError(error);
     const result = data as InvitationRpcResult;
     const inviteUrl = buildInviteUrl(appOrigin(request), result.token);
-    const delivery = await sendAuthInvite(result.email, inviteUrl);
+    const delivery = await sendAuthInvite(result.email, inviteUrl, result.user_name);
     return ok(invitationResponse(result, inviteUrl, delivery), 201);
   } catch (error) {
     return jsonError(error);
@@ -242,17 +247,19 @@ export async function invitePlatformMember(request: NextRequest) {
     if (found.error) throw dbError(found.error);
     let authUserId = (found.data as string | null) ?? null;
     let emailSent = false;
-    if (!authUserId) {
+    if (!authUserId || existingLoginNeedsIdentity()) {
       if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
         throw new ApiError("SERVICE_UNAVAILABLE", "O envio de convites não está configurado neste ambiente.", 503);
       }
       const redirectTo = buildFirstAccessUrl(appOrigin(request), "/admincentral");
-      const delivery = await sendAuthInvite(body.email, redirectTo);
-      if (!delivery.delivered || !delivery.authUserId) {
+      const delivery = await sendAuthInvite(body.email, redirectTo, body.name);
+      if (delivery.delivered && delivery.authUserId) {
+        authUserId = delivery.authUserId;
+        emailSent = true;
+      } else if (!authUserId || delivery.delivered || delivery.reason !== "existing_account") {
+        // Neon: login já existia e a identidade já está pronta = segue; qualquer outra falha recusa.
         throw new ApiError("SERVICE_UNAVAILABLE", "Não foi possível enviar o convite por e-mail agora. Tente novamente em instantes.", 503);
       }
-      authUserId = delivery.authUserId;
-      emailSent = true;
     }
 
     const { data, error } = await supabase.rpc("fn_upsert_platform_member", {

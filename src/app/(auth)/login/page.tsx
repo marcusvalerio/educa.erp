@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { signInWithPassword } from "@/lib/auth/client";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
@@ -44,14 +44,9 @@ function LoginForm() {
     setLoading(true);
     setError(null);
     try {
-      const supabase = createClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-      if (signInError) {
-        setError(
-          signInError.code === "email_not_confirmed"
-            ? "Confirme o seu e-mail pelo link recebido antes de entrar."
-            : "E-mail ou senha inválidos. Confira os dados e tente novamente."
-        );
+      const result = await signInWithPassword(email, password);
+      if (!result.ok) {
+        setError(result.message);
         return;
       }
       // Primeiro login e seguintes: o servidor resolve o contexto (vínculo,

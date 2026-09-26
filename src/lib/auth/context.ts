@@ -1,10 +1,11 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSessionIdentity } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEV_ACTOR_LABEL } from "@/lib/database/constants";
 
-// Resolve o usuário autenticado (Supabase Auth) para o cadastro
+// Resolve o usuário autenticado (Supabase Auth ou Neon Auth — src/lib/auth/session.ts) para o cadastro
 // correspondente em public.users e sua empresa. Esta é a ÚNICA fonte de
 // verdade para "quem está fazendo a chamada" e "de qual empresa" — as
 // rotas de API nunca devem confiar em um company_id vindo do cliente.
@@ -22,21 +23,20 @@ export type AuthContext = {
 };
 
 export async function getAuthContext(): Promise<AuthContext | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) return null;
+  const identity = await getSessionIdentity();
+  if (!identity) return null;
 
   const admin = createAdminClient();
   const { data: appUser, error: userError } = await admin
     .from("users")
     .select("id, company_id, name, email, status")
-    .eq("auth_user_id", data.user.id)
+    .eq("auth_user_id", identity.authUserId)
     .maybeSingle();
 
   if (userError || !appUser || appUser.status !== "active") return null;
 
   return {
-    authUserId: data.user.id,
+    authUserId: identity.authUserId,
     appUserId: appUser.id as string,
     companyId: appUser.company_id as string,
     actorLabel: (appUser.name as string | null) ?? (appUser.email as string | null) ?? DEV_ACTOR_LABEL,

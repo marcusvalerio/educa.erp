@@ -1,0 +1,11 @@
+{
+  "name": "educa-neon-auth-poc",
+  "private": true,
+  "type": "module",
+  "description": "POC isolada: Better Auth 1.4.18 (motor do Neon Auth) como identidade → ponte → Postgres do Supabase com RLS. Não faz parte do app.",
+  "dependencies": {
+    "better-auth": "1.4.18",
+    "jose": "6.2.12",
+    "pg": "8.13.1"
+  }
+}

@@ -20,6 +20,12 @@
 //      service_role, recusa se já houver Owner e registra auditoria.
 //
 // Não cria empresa, usuário de empresa, nem acesso a dados operacionais.
+//
+// Com AUTH_PROVIDER=neon (Plano A — docs/NEON_AUTH_MIGRATION.md), o passo 2
+// vira o provisionamento de identidade do Neon Auth: login "sombra" sem
+// senha em auth.users + identidade no Neon + vínculo (0073) + link de
+// primeiro acesso do Neon. Rodar com: node --import tsx scripts/bootstrap-platform-owner.mjs …
+// (exige NEON_AUTH_BASE_URL, NEON_AUTH_SERVICE_EMAIL/PASSWORD e APP_URL).
 
 import { pathToFileURL } from "node:url";
 
@@ -62,8 +68,12 @@ async function findAuthUserId(admin, email) {
   return null;
 }
 
-/** Executa o bootstrap com um cliente service_role já criado (injetável nos testes). */
-export async function bootstrapOwner(admin, { email, name, appUrl, dryRun }, log = console.log) {
+/**
+ * Executa o bootstrap com um cliente service_role já criado (injetável nos testes).
+ * `provision` (opcional): identidade num provedor externo (Neon Auth); recebe
+ * { email, name, redirectTo } e devolve { authUserId, delivered }.
+ */
+export async function bootstrapOwner(admin, { email, name, appUrl, dryRun }, log = console.log, provision = null) {
   const { data: owners, error: ownersError } = await admin
     .from("platform_members")
     .select("email")
@@ -80,7 +90,19 @@ export async function bootstrapOwner(admin, { email, name, appUrl, dryRun }, log
 
   let authUserId = await findAuthUserId(admin, email);
   let invited = false;
-  if (!authUserId) {
+  if (provision) {
+    if (!appUrl) throw new Error("Informe --app-url (ou APP_URL) para o link de primeiro acesso.");
+    const redirectTo = `${appUrl}/redefinir-senha?primeiro-acesso=1&next=${encodeURIComponent("/admincentral")}`;
+    if (dryRun) {
+      log(`[simulação] Garantiria login, identidade no provedor e vínculo para ${email} (retorno: ${redirectTo}).`);
+    } else {
+      const result = await provision({ email, name, redirectTo });
+      if (!result.authUserId) throw new Error("Não foi possível provisionar a identidade.");
+      authUserId = result.authUserId;
+      invited = result.delivered;
+      log(result.delivered ? `Link de primeiro acesso enviado para ${email}.` : `${email} já tem identidade com senha no provedor.`);
+    }
+  } else if (!authUserId) {
     if (!appUrl) throw new Error("Não há login para este e-mail. Informe --app-url para enviar o convite de primeiro acesso.");
     const redirectTo = `${appUrl}/redefinir-senha?primeiro-acesso=1&next=${encodeURIComponent("/admincentral")}`;
     if (dryRun) {
@@ -113,7 +135,42 @@ async function main() {
   args.appUrl ??= process.env.APP_URL ? new URL(process.env.APP_URL).origin : null;
   const { createClient } = await import("@supabase/supabase-js");
   const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
-  await bootstrapOwner(admin, args);
+  const provision = (process.env.AUTH_PROVIDER ?? "").trim().toLowerCase() === "neon" ? await neonProvisioner(admin) : null;
+  await bootstrapOwner(admin, args, console.log, provision);
+}
+
+// Identidade no Neon Auth, com as MESMAS regras do app (src/lib/auth/neon/flows.ts).
+async function neonProvisioner(admin) {
+  const client = await import("../src/lib/auth/neon/client.ts");
+  const { provisionIdentity } = await import("../src/lib/auth/neon/flows.ts");
+  const { buildNeonPasswordLinkUrl, firstAccessNextFrom } = await import("../src/lib/auth/neon/links.ts");
+  const need = (n) => {
+    if (!process.env[n]) throw new Error(`Defina ${n} (AUTH_PROVIDER=neon).`);
+    return process.env[n];
+  };
+  const appUrl = new URL(need("APP_URL")).origin;
+  const config = { baseUrl: need("NEON_AUTH_BASE_URL").replace(/\/+$/, ""), origin: appUrl };
+  const { cookie: adminCookie } = await client.signInWithPassword(config, need("NEON_AUTH_SERVICE_EMAIL"), need("NEON_AUTH_SERVICE_PASSWORD"));
+  return async ({ email, name, redirectTo }) =>
+    provisionIdentity(
+      { email, name },
+      {
+        ensureShadowLogin: async (e) => {
+          const existing = await findAuthUserId(admin, e);
+          if (existing) return existing;
+          const { data, error } = await admin.auth.admin.createUser({ email: e, email_confirm: true, app_metadata: { provider: "neon" } });
+          if (error || !data?.user) throw new Error(`Não foi possível registrar o login: ${error?.message ?? "sem usuário"}`);
+          return data.user.id;
+        },
+        findNeonUser: (e) => client.adminFindUserByEmail(config, adminCookie, e),
+        createNeonUser: (e, n) => client.adminCreateUser(config, adminCookie, { email: e, name: n }),
+        link: async (neonUserId, e, authUserId) => {
+          const { error } = await admin.rpc("fn_link_identity", { p_provider: "neon", p_external_user_id: neonUserId, p_email: e, p_auth_user_id: authUserId });
+          if (error) throw new Error(`O banco recusou o vínculo: ${error.message}`);
+        },
+        sendFirstAccess: (e) => client.requestPasswordReset(config, e, buildNeonPasswordLinkUrl(appUrl, e, { firstAccess: true, next: firstAccessNextFrom(redirectTo) })),
+      }
+    );
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

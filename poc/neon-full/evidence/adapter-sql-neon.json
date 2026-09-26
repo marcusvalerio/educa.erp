@@ -1,0 +1,40 @@
+{
+ "preamble": [
+  "set local role authenticated",
+  "select set_config('request.jwt.claims', '{\"role\":\"authenticated\",\"sub\":\"aa000000-0000-4000-8000-000000000001\"}', true), set_config('request.jwt.claim.sub', 'aa000000-0000-4000-8000-000000000001', true), set_config('request.jwt.claim.role', 'authenticated', true)"
+ ],
+ "queries": [
+  {
+   "label": "Q1 lista de produtos: embutido many-to-one (FK composta), .or, ordem, faixa, contagem",
+   "sql": "select coalesce(json_agg(row_to_json(q)), '[]'::json) as data from (select t0.\"id\", t0.\"code\", t0.\"name\", (select row_to_json(x) from (select e1.\"name\" from public.\"units\" e1 where e1.\"company_id\" = t0.\"company_id\" and e1.\"code\" = t0.\"unit\") x limit 1) as \"unidade\" from public.\"products\" t0 where t0.\"company_id\" = '0a000000-0000-4000-8000-00000000000a' and (t0.\"code\" ilike '%ALFA%' or t0.\"name\" ilike '%Alfa%') order by t0.\"code\" asc limit 10 offset 0) q"
+  },
+  {
+   "label": "Q1 lista de produtos: embutido many-to-one (FK composta), .or, ordem, faixa, contagem",
+   "sql": "select count(*)::bigint as n from public.\"products\" t0 where t0.\"company_id\" = '0a000000-0000-4000-8000-00000000000a' and (t0.\"code\" ilike '%ALFA%' or t0.\"name\" ilike '%Alfa%')"
+  },
+  {
+   "label": "Q2 pedidos: embutidos one-to-many e many-to-one",
+   "sql": "select coalesce(json_agg(row_to_json(q)), '[]'::json) as data from (select t0.\"id\", (select row_to_json(x) from (select e2.\"name\" from public.\"customers\" e2 where e2.\"id\" = t0.\"customer_id\" and e2.\"company_id\" = t0.\"company_id\") x limit 1) as \"customers\", (select coalesce(json_agg(row_to_json(x)), '[]'::json) from (select e3.* from public.\"sales_order_items\" e3 where e3.\"order_id\" = t0.\"id\" and e3.\"company_id\" = t0.\"company_id\") x) as \"sales_order_items\" from public.\"sales_orders\" t0 limit 5) q"
+  },
+  {
+   "label": "Q3 upsert de produto com retorno",
+   "sql": "with m as (insert into public.\"products\" (\"company_id\", \"code\", \"name\", \"unit\") select \"company_id\", \"code\", \"name\", \"unit\" from json_populate_recordset(null::public.\"products\", '[{\"company_id\":\"0a000000-0000-4000-8000-00000000000a\",\"code\":\"P-NEON-ADAPTER\",\"name\":\"Via adaptador\",\"unit\":\"UN\"}]'::json) on conflict (\"company_id\", \"code\") do update set \"name\" = excluded.\"name\", \"unit\" = excluded.\"unit\" returning *) select coalesce(json_agg(row_to_json(q)), '[]'::json) as data from (select t0.\"id\", t0.\"code\", t0.\"name\" from m t0) q"
+  },
+  {
+   "label": "Q4 update com retorno",
+   "sql": "with m as (update public.\"products\" t0 set \"name\" = s.\"name\" from json_populate_record(null::public.\"products\", '{\"name\":\"Via adaptador (editado)\"}'::json) s where t0.\"company_id\" = '0a000000-0000-4000-8000-00000000000a' and t0.\"code\" = 'P-NEON-ADAPTER' returning t0.*) select coalesce(json_agg(row_to_json(q)), '[]'::json) as data from (select t0.\"code\", t0.\"name\" from m t0) q"
+  },
+  {
+   "label": "R1 rpc set-returning",
+   "sql": "select coalesce(json_agg(r), '[]'::json) as data from public.\"current_user_company_ids\"() r"
+  },
+  {
+   "label": "R2 rpc escalar",
+   "sql": "select to_json(public.\"has_permission\"(\"p_company_id\" := '0a000000-0000-4000-8000-00000000000a'::uuid, \"p_code\" := 'products.create'::text)) as data"
+  },
+  {
+   "label": "R3 rpc composta (id inexistente → erro do banco)",
+   "sql": "select case when r is null then null else to_json(r) end as data from public.\"fn_activate_bom\"(\"p_bom_id\" := '00000000-0000-4000-8000-000000000000'::uuid) r"
+  }
+ ]
+}

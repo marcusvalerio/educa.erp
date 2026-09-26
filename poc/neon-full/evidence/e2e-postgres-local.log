@@ -1,0 +1,107 @@
+PASS  owner: link do e-mail passa pelo Neon Auth e abre 'Crie sua senha'
+PASS  owner: token do link sai da barra de endereço
+PASS  owner: depois de criar a senha vai para /admincentral
+PASS  owner: contexto = plataforma OWNER, sem tenant
+PASS  vínculo: Neon → auth_user_id = platform_members.auth_user_id = login sombra
+PASS  login sombra: auth.users não guarda senha (sem GoTrue)
+PASS  app sem nenhuma variável SUPABASE_* (DATA_BACKEND=postgres)
+PASS  Neon: e-mail confirmado pelo primeiro acesso (servidor)
+PASS  sessão: cookie do EDUCA HttpOnly + SameSite=Lax; nenhum cookie do Neon no navegador
+PASS  sessão: /api/auth/session devolve só autenticado + e-mail
+PASS  link de primeiro acesso não funciona duas vezes
+PASS  logout: API sem sessão (401)
+PASS  logout: cookie local apagado
+PASS  logout: cookie antigo reaproveitado não vale (sessão revogada no Neon)
+PASS  cookie forjado → 401
+PASS  proxy: sem sessão → /login?next=
+PASS  login: senha errada e e-mail inexistente → mesma mensagem
+PASS  login: Owner volta para /admincentral
+PASS  empresa Alfa criada pelo Owner
+PASS  convite admin A1: criado e e-mail de primeiro acesso do Neon enviado
+PASS  A1: link de primeiro acesso volta para o convite depois da senha
+PASS  A1: contexto = Alfa, papel admin, sem plataforma
+PASS  A1: users.auth_user_id = vínculo do Neon (UUID do EDUCA)
+PASS  convite A2 (leitura): e-mail do Neon enviado
+PASS  A2: contexto Alfa com papel leitura
+PASS  B1 admin e B2 operador na Beta
+PASS  4 identidades Neon vinculadas a 4 UUIDs distintos do EDUCA
+PASS  A1 lista só usuários da Alfa
+PASS  B1 não vê A1/A2
+PASS  IDOR: A1 não altera usuário da Beta pelo id
+PASS  A1 não convida usuário da Beta
+PASS  A2 (leitura) não cria usuário
+PASS  B2 (operador) não se promove a admin
+PASS  Company Admin não acessa a Administração Central
+PASS  Owner não acessa dados de empresa (/api/admin/users 403)
+PASS  identidade no corpo é recusada (auth_user_id)
+PASS  banco: nenhum vínculo/usuário cruzado entre empresas
+PASS  A2: segunda sessão aberta antes da recuperação
+PASS  recuperação: e-mail inexistente recebe a mesma resposta
+PASS  recuperação: nova senha → volta ao login
+PASS  recuperação: sessões anteriores revogadas (as duas)
+PASS  recuperação: senha antiga recusada, nova aceita
+PASS  recuperação: link de uso único
+PASS  desativado no EDUCA: contexto 'inactive' e sem dados
+PASS  banido no Neon: sessão cai (401)
+PASS  banido no Neon: login recusado com mensagem genérica
+PASS  identidade Neon válida SEM vínculo no EDUCA: login recusado (403), sem cookie
+PASS  e-mail não confirmado no Neon: login recusado mesmo com vínculo
+PASS  cadastro público recusado no provedor
+PASS  o app não tem rota de cadastro
+PASS  login CSRF: formulário de outro site recusado (403, sem cookie)
+PASS  login CSRF: JSON de outra origem recusado (403, sem cookie)
+PASS  redirect externo no link de senha recusado pelo provedor
+PASS  login com next externo fica no app
+PASS  callback do Supabase inerte com AUTH_PROVIDER=neon
+PASS  sem cookie: API 401
+PASS  sessão expirada no Neon → 401 no app
+PASS  sessão expirada → proxy leva ao login
+PASS  linha de base: categorias sem permissão no catálogo (403, igual a produção)
+PASS  linha de base: unidades sem permissão no catálogo (403, igual a produção)
+PASS  catálogo: unidades padrão criadas junto com a empresa (UN existe na Alfa)
+PASS  catálogo: produto com unidade inexistente recusado pela FK composta (4xx, nada gravado)
+PASS  CRUD catálogo: criar produto (201)
+PASS  CRUD catálogo: ler produto por id (numérico volta como número)
+PASS  CRUD catálogo: editar produto
+PASS  CRUD catálogo: listar com busca, ordenação, paginação e total
+PASS  CRUD estoque: criar depósito
+PASS  CRUD estoque: editar depósito
+PASS  linha de base: POST de local falha por warehouse_id NOT NULL (igual a produção; nada gravado)
+PASS  CRUD estoque: ler local pela API (RLS da Alfa)
+PASS  CRUD estoque: editar local pela API
+PASS  estoque: entrada via função do banco (rpc) atualiza saldo
+PASS  estoque: mesma chave de idempotência não duplica a entrada
+PASS  CRUD compras: criar fornecedor
+PASS  compras: criar solicitação com itens (função transacional)
+PASS  compras: enviar solicitação para aprovação (workflow no banco)
+PASS  CRUD vendas: criar cliente
+PASS  vendas: criar pedido de venda com itens
+PASS  vendas: ler pedido (total calculado pelo banco — coluna gerada)
+PASS  CRUD logística: criar transportadora
+PASS  CRUD logística: editar transportadora
+PASS  CRUD logística: excluir transportadora
+PASS  auditoria: operações registradas em audit_logs da Alfa
+PASS  cross-tenant: B1 não lê produto da Alfa pelo id (404)
+PASS  cross-tenant: B1 não vê produtos da Alfa na lista
+PASS  cross-tenant: B1 não altera depósito da Alfa
+PASS  cross-tenant: B1 não exclui transportadora da Alfa
+PASS  cross-tenant: B1 não lê pedido de venda da Alfa
+PASS  cross-tenant: B1 não movimenta estoque da Alfa (função do banco recusa)
+PASS  papel leitura: A2 lista produtos (200)
+PASS  papel leitura: A2 não cria produto (403)
+PASS  papel leitura: A2 não exclui (403)
+PASS  papel operador: B2 cria na própria empresa
+PASS  papel operador: B2 não exclui (403)
+PASS  injeção: busca com SQL vira texto (0 resultados, 200)
+PASS  injeção de filtro (.or): erro genérico igual a produção, sem vazar SQL nem dados
+PASS  injeção de filtro válida (.or com coluna real): RLS mantém só a Alfa
+PASS  injeção na ordenação: erro genérico (igual a produção); tabela intacta
+PASS  injeção na ordenação: nada no log de 'erro não tratado' (erro devolvido como {error}, como no supabase-js)
+PASS  banco: papel de login da app (educa_app) sem privilégio direto
+PASS  banco: educa_app não assume papel de dono/superusuário
+PASS  banco: 'authenticated' sem claims não vê nada (RLS)
+PASS  banco: com as claims de A1, RLS esconde outras empresas mesmo sem filtro
+PASS  banco: A1 não insere linha na Beta nem por SQL direto (RLS)
+PASS  banco: auth_user_id não pode ser trocado nem pelo próprio usuário
+PASS  banco: vínculo de identidade (0073) invisível para authenticated
+106/106 verificações passaram

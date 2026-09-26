@@ -1062,7 +1062,7 @@ bloqueios da §12.9: R1 (segredo de produção) e E2E do app contra o Neon real
 | Origem confiável | `https://educaerp.vercel.app` (única) |
 | Google compartilhado | **removido** (nenhum provedor OAuth) |
 | E-mail | remetente compartilhado do Neon (`auth@mail.myneon.app`); SMTP próprio não configurado (§13.8) |
-| Cadastro público (`allow_sign_up`) e `allow_localhost` | **ainda ligados**: o conector do Neon não altera essas chaves. Falta a Console (Auth → Configuration) ou a API (`PATCH …/auth/email_and_password`, `…/auth/allow_localhost`) com uma chave do Neon. Risco enquanto isso: uma conta criada por cadastro público **não entra** no EDUCA, porque sem vínculo 0073 a ponte recusa (provado no E2E) |
+| Console (2026-09-26, feito pelo dono) | leitura da configuração pelo conector: `allow_localhost: false` ✔; `trusted_origins` = só `https://educaerp.vercel.app` ✔; nenhum OAuth ✔. **Divergência:** `email_password.enabled: false` e `allow_sign_up: true`, o inverso do pretendido. Com `enabled: false`, o login por e-mail e senha fica desligado e o modo neon não autentica ninguém. No projeto de teste, onde o login funciona, o estado é `enabled: true` e `allow_sign_up: false`. **Pré-condição do cutover:** deixar o login por e-mail ligado e o cadastro desligado |
 
 Identidades no Neon de produção (e nada mais):
 

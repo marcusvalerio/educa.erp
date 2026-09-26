@@ -1180,3 +1180,43 @@ Restos no projeto de **teste** (não é produção; apagar é ação destrutiva,
 - Functions `appprobe`, `authprobe` e `logintest` (esta guarda senhas de teste nas variáveis);
 - o gatilho da `logintest` (desligado);
 - as contas `svc-admin` e `svc-local`.
+
+### 13.9 Tentativa de cutover — 2026-09-26 (estado verificado)
+
+Execução da §13.5 numa sessão do Claude. **O cutover não começou**: parou no
+passo 1 (R1) por bloqueio externo. Nada foi alterado em produção (Supabase,
+Neon ou Vercel).
+
+**Verificado nesta sessão:**
+
+| Item | Resultado |
+|---|---|
+| Git | `main` remota = `1c5727c`, igual ao branch de trabalho (0 à frente, 0 atrás) |
+| Migration 0073 em produção | última migration `20260926032523` (`0073_external_identity_links`); RLS ligado, 0 policies, 0 grants para `anon`/`authenticated`/`public`, 5 constraints, as 2 funções `security definer` com `search_path` fixo e executáveis só por `service_role`; 328 policies em `public` |
+| Owner no Supabase | 1 Owner ativo, `platform_members` com 1 registro, e-mail confirmado; 1 vínculo `neon` apontando para o mesmo `auth_user_id` |
+| Owner no Neon de produção | a identidade do vínculo existe, papel `user`, sem senha, e-mail não confirmado, 0 sessões (esperado antes do primeiro acesso) |
+| Conta de serviço no Neon | existe, papel `admin`, sem senha (a senha só é gerada junto com o cadastro na Vercel, §13.8 item 3) |
+| Neon Auth de produção | `allow_localhost: false`, origem confiável só `https://educaerp.vercel.app`, nenhum OAuth. **Continua divergente:** `email_password.enabled: false` e `allow_sign_up: true`. O e-mail sai pelo provedor compartilhado (`auth@mail.myneon.app`, nome do remetente "Neon Auth") |
+| Unitários / typecheck / lint | **698/698** · 0 · 0 |
+| Build modo supabase / modo neon | ok / ok |
+
+Não repetidos: os E2E (neon com dublê e Supabase/rollback) exigem a réplica
+local do banco (Postgres em `54322`, PostgREST em `53000`), ausente neste
+ambiente; o código do app não mudou desde a última rodada (§13.7).
+
+**Por que parou (bloqueios externos):**
+
+1. `SUPABASE_JWT_SECRET` ausente no ambiente da sessão — sem ele o R1 não
+   roda e a ponte não assina tokens em produção.
+2. `VERCEL_TOKEN` ausente — sem ele não há como gravar as variáveis do
+   passo 4, fazer o redeploy nem acompanhar o deploy.
+3. `NEON_API_KEY` ausente — o conector do Neon só altera o nome do app no
+   Neon Auth (`update_auth_config` aceita apenas `name`); ligar o login por
+   e-mail e desligar o cadastro exige a API do Neon ou o Console.
+4. Network access: o proxy recusa `*.supabase.co`, `api.vercel.com`,
+   `educaerp.vercel.app`, `console.neon.tech` e `*.neonauth.*.neon.tech`
+   (necessários para R1, Vercel, API do Neon e smoke test).
+
+A conta de serviço não recebeu senha de propósito: sem acesso à Vercel, a
+senha ficaria sem destino seguro. Ela é criada no passo 3, na mesma sessão
+que grava as variáveis na Vercel.

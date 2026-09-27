@@ -187,7 +187,8 @@ O convite é enviado a partir de um **cadastro de usuário**. Se a pessoa ainda 
 Com o convite pendente, o painel mostra **Reenviar convite**, **Cancelar convite** e **Desativar acesso**.
 
 - **Reenviar convite** gera um novo link e substitui o anterior.
-- **Cancelar convite** pede confirmação: *"Cancelar convite? O link enviado deixa de funcionar imediatamente. Você pode enviar um novo convite depois."* Aviso: *"Convite cancelado."*
+- **Cancelar convite** pede confirmação: *"Cancelar convite? O link enviado deixa de funcionar imediatamente. Você pode enviar um novo convite depois."* Aviso: *"Convite cancelado."* *(Confirmação aberta e conferida; o cancelamento não foi confirmado neste manual.)*
+- **Reenviar convite** foi executado durante a elaboração do manual.
 
 ![Cancelar convite](assets/admin/12-cancelar-convite-confirmar.webp)
 *Figura 13 — Confirmação de cancelamento do convite.*
@@ -323,7 +324,7 @@ Clique no papel na lista à esquerda. À direita aparece a **matriz de permissõ
 ![Permissões salvas](assets/admin/53-papel-permissoes-salvas.webp)
 *Figura 28 — Permissões salvas.*
 
-**Para editar nome, descrição, setor ou situação** de um papel, clique em **Editar** no topo da matriz.
+**Para editar nome, descrição, setor ou situação** de um papel, clique em **Editar** no topo da matriz. *(Botão conferido na tela; edição não executada neste manual.)*
 
 **Cuidados ao montar um papel:**
 
@@ -507,7 +508,7 @@ Ao suspender, o sistema avisa: *"A empresa deixa de operar normalmente. Os dados
 ![Convidar membro](assets/central/14-convidar-membro.webp)
 *Figura 47 — Janela "Convidar membro da plataforma".*
 
-**Editar um membro:** **⋯ › Editar membro** › altere **Nome**, **Papel** ou **Status** › **Salvar**. O e-mail (login) não muda por aqui.
+**Editar um membro:** **⋯ › Editar membro** › altere **Nome**, **Papel** ou **Status** › **Salvar**. O e-mail (login) não muda por aqui. *(Janelas de convite e edição abertas e conferidas; nenhum membro foi convidado ou alterado neste manual.)*
 
 > **Regra de governança:** *"O último Owner ativo não pode ser rebaixado nem desativado — a plataforma sempre mantém um Owner."* Admins gerenciam apenas Admins; Owners são geridos somente por Owners.
 
@@ -571,7 +572,7 @@ Estrutura de setores da empresa (pode ter **Setor superior**). Setores orientam 
 
 ### 10.2 Cargos
 
-🔐 `positions.view` / `positions.create` / `positions.update` · Mesma mecânica: **Novo(a) cargo**.
+🔐 `positions.view` / `positions.create` / `positions.update` · Mesma mecânica: **Novo(a) cargo**. *(Janela aberta e conferida; criação não executada neste manual.)*
 
 ![Cargos](assets/admin/19-cargos.webp)
 *Figura 54 — Cargos.*
@@ -581,7 +582,7 @@ Estrutura de setores da empresa (pode ter **Setor superior**). Setores orientam 
 
 ### 10.3 Unidades
 
-🔐 `branches.read` / `branches.manage` · Filiais e unidades de operação. O acesso de cada usuário é liberado por unidade. **Novo(a) unidade** › **Código** (até 32 caracteres, ex.: MATRIZ, SP01) e **Nome** › **Criar**.
+🔐 `branches.read` / `branches.manage` · Filiais e unidades de operação. O acesso de cada usuário é liberado por unidade. **Novo(a) unidade** › **Código** (até 32 caracteres, ex.: MATRIZ, SP01) e **Nome** › **Criar**. *(Janela aberta e conferida; criação não executada neste manual.)*
 
 ![Unidades](assets/admin/21-unidades.webp)
 *Figura 56 — Unidades (nenhuma cadastrada no ambiente de teste).*
@@ -599,6 +600,8 @@ Módulos contratados pela empresa e quais estão habilitados. *"Desabilitar um m
 2. Confirme em **Desabilitar** (ou **Habilitar**). Ao desabilitar: *"Ninguém da empresa poderá usar este módulo até ele ser habilitado de novo. Os dados são mantidos."*
 3. Aviso: *"<módulo> desabilitado."*
 
+*(Confirmação aberta e conferida; a desabilitação não foi confirmada neste manual.)*
+
 ![Módulos](assets/admin/23-modulos.webp)
 *Figura 58 — Módulos da empresa.*
 
@@ -612,7 +615,7 @@ Módulos contratados pela empresa e quais estão habilitados. *"Desabilitar um m
 Define quais áreas aparecem primeiro nos painéis (bloco **Seu foco**) para cada setor, cargo ou papel. As regras da empresa complementam o padrão da plataforma.
 
 1. **Nova regra** › **Tipo de público** (Setor, Cargo ou Papel) › o público › **Foco** › **Prioridade** (menor número aparece primeiro) › opcional **Ocultar este foco para o público** › **Salvar regra**.
-2. Aviso: *"Regra de foco salva."* (ou *"Foco ocultado para este escopo."*).
+2. Aviso: *"Regra de foco salva."* (ou *"Foco ocultado para este escopo."*). *(Janela aberta e conferida; nenhuma regra foi salva neste manual.)*
 
 ![Configurações](assets/admin/25-configuracoes.webp)
 *Figura 60 — Foco dos painéis.*

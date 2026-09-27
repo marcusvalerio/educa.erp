@@ -259,6 +259,8 @@ Menu da conta › **Sair**.
 | Operações | `shipments.view`, `stock.view` ou `production_orders.view` |
 | TI e acessos | `users.read` |
 
+*Painéis abertos e conferidos neste manual: Executivo, Comercial, Financeiro, Produção, TI e acessos e Operações. Os demais seguem a mesma estrutura e foram listados a partir do menu do sistema.*
+
 ![Painel executivo](assets/inicio/06-painel-executivo.webp)
 *Figura 20 — Painel executivo.*
 
@@ -353,7 +355,7 @@ Os botões aparecem conforme o **status** do pedido **e** a sua permissão. Toda
 | **Enviar para aprovação** | Rascunho | `sales_orders.update` | Pedido vai para *Aguardando aprovação*. Aviso: *"Pedido enviado para aprovação."* |
 | **Aprovar** | Aguardando aprovação | `sales_orders.approve` | Pedido *Aprovado*. Aviso: *"Pedido aprovado."* |
 | **Reservar estoque** | Aprovado ou Reserva pendente | `sales_orders.reserve` | Reserva as quantidades no local escolhido. Aviso: *"Estoque reservado."* |
-| **Liberar reserva** | Reservado ou Reserva pendente | `sales_orders.update` | Devolve as quantidades reservadas ao estoque. |
+| **Liberar reserva** | Reservado ou Reserva pendente | `sales_orders.update` | Devolve as quantidades reservadas ao estoque. *(Botão conferido na tela; ação não executada neste manual.)* |
 | **Gerar conta a receber** | Aprovado em diante | `accounts_receivable.approve` | Cria o título a receber. Aviso: *"Conta a receber gerada."* |
 | **Cancelar pedido** | Rascunho até Reservado | `sales_orders.cancel` | Cancela o pedido e libera reservas. **Não pode ser desfeito.** |
 
@@ -614,6 +616,8 @@ Se o cliente tiver vínculos, o sistema recusa com *"Exclusão não permitida."*
 ### 5.2 Fornecedores, Transportadoras, Motoristas e Veículos
 
 Funcionam exatamente como Clientes (seção 5.1): botão de criação, painel lateral, **⋯** com Visualizar / Editar / Inativar / Excluir, lote e exportação. A mesma ⚠️ limitação de inativação vale para todos.
+
+> **Cobertura:** estas telas foram abertas e conferidas (lista, painel de criação, visualização). O fluxo completo de criar, editar, inativar e excluir foi executado apenas em **Clientes**, que usa o mesmo componente.
 
 | Cadastro | Botão | Campos obrigatórios |
 |---|---|---|
@@ -1006,7 +1010,7 @@ Todas as listas do EDUCA.ERP seguem o mesmo padrão.
 | **Ordenar** | Clique no título da coluna. |
 | **Configurar colunas** | Ícone de colunas › marque ou desmarque em **Colunas visíveis**. |
 | **Alternar densidade** | Ícone de linhas: deixa a tabela mais compacta. |
-| **Exportar CSV** | Ícone de download. Em listas grandes, exporta a **página atual**; nas demais, o resultado filtrado. |
+| **Exportar CSV** | Ícone de download. Em listas grandes, exporta a **página atual**; nas demais, o resultado filtrado. *(Botão conferido; o download não foi executado neste manual.)* |
 | **Seleção em lote** | Caixas à esquerda. Aparece a barra com **Exportar seleção**. |
 | **Abrir registro** | Clique na linha ou **⋯ › Abrir**. Alguns registros têm página própria (**Abrir página do registro**). |
 | **Paginação** | No rodapé: **Por página** e navegação entre páginas. |

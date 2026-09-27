@@ -22,6 +22,24 @@ arquivos, 2.731 comandos, 0 erro** (registro em `educa_migration.build_runs/buil
 | ext | 5 | btree_gist 1.7, ltree **1.3**, moddatetime 1.0, pgcrypto 1.3, uuid-ossp 1.1 @extensions | idem | ltree 1.2 (POC) |
 | collation | — | `en_US.UTF-8` ICU 153.120 · ordem `a,Á,a_b,a-b,ab,b,B,é,Z` | ICU 153.121 · mesma ordem | **C.UTF-8** (divergente) |
 
+### Correção (2026-09-27): corpo das funções
+
+A categoria `fn` acima compara assinatura, tipo de retorno, linguagem, segurança
+e configuração. Ela **não** compara o corpo (`prosrc`). A comparação do corpo
+(md5 de `prosrc`, 330 funções públicas) foi feita depois, porque o E2E dos
+módulos pediu:
+
+| Comparação | Resultado |
+|---|---|
+| `md5(prosrc)` idêntico | **323/330** |
+| Divergentes | `fn_evaluate_workflow_rule`, `fn_post_financial_transaction`, `fn_post_stock_movement`, `fn_release_production_order`, `fn_reserve_sales_order_stock`, `fn_start_workflow`, `fn_update_product_fiscal_profile_notes` |
+| As 7, removendo as linhas inteiras de comentário `--` da versão Neon/repositório | md5 **igual ao de produção nas 7** → 330/330 |
+
+Conclusão: produção tem essas 7 funções **sem as linhas de comentário** (foram
+aplicadas por um caminho que remove comentários). A lógica é idêntica. Não há
+mudança funcional, e nada foi alterado no Neon. Status: **PASS COM RESSALVA**
+(diferença só de comentário, provada por hash).
+
 `auth.uid()/jwt()/role()`: mesma lógica do Supabase (só espaçamento difere).
 Coluna `product_categories.path`: o tipo aparece como `extensions.ltree` no Neon e
 `ltree` no Supabase (search_path); é o mesmo tipo.

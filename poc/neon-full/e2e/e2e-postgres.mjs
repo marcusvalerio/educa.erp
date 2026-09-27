@@ -15,6 +15,7 @@
 import fs from "node:fs";
 import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { runModuleE2E } from "./e2e-modules.mjs";
 
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE ?? "/opt/node22/lib/node_modules/playwright/index.mjs");
 const need = (n) => {
@@ -505,6 +506,9 @@ try {
     const link = appSql(`begin; set local role authenticated; ${claims(a1Auth)}; select count(*) from public.auth_identity_links; commit;`);
     check("banco: vínculo de identidade (0073) invisível para authenticated", link.startsWith("ERRO"), link.slice(0, 120));
   }
+
+  // ================================================================ 14. módulos: Financeiro, Fiscal, Produção, CRM, Qualidade, Projetos, Workflow, Importação
+  await runModuleE2E({ APP, api, sql, check, a1, a2, b1, companyA, companyB, made, crypto });
 } catch (error) {
   check("execução sem exceção", false, error?.stack ?? String(error));
 } finally {

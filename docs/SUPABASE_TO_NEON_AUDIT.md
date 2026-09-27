@@ -390,6 +390,24 @@ senha do dono trocada), `rehearsal-2-educa`, `rehearsal-2-probes`, `homolog` (+ 
 `authdb` com Neon Auth); banco `neondb` de `main` com `CONNECT` revogado. A limpeza
 depende de aprovação (runbook passo 28).
 
+## 18. Homologação real — tentativa de 2026-09-27
+
+- **Canal:** esta sessão não alcança Vercel nem Neon por HTTP (política de rede,
+  403) e não tem conector da Vercel. O único caminho para a internet é o runner do
+  GitHub Actions: a sonda `homolog-probe` roda nele a cada push da homologação.
+- **Achados da sonda** (`poc/neon-full/evidence/homolog-probe.md`): o Preview da
+  branch existe (integração Vercel↔GitHub), mas está atrás da **Vercel
+  Authentication**; produção continua em `AUTH_PROVIDER=supabase`; as **funções de
+  produção rodam em `iad1`**, e o cutover precisa de `gru1`.
+- **Aplicado pelo MCP, só na homologação:** OAuth Google removido; trusted origin
+  restrita ao Preview; conta de serviço e Owner criados **sem senha**; vínculo do
+  Owner apontado só no banco da branch `homolog`.
+- **Correções de infraestrutura de teste:** o `workflow_dispatch` não roda fora da
+  branch padrão, então o E2E agora também dispara por push em `homolog/RUN_E2E`;
+  Playwright ganhou pasta própria; a sonda detecta proteção por redirecionamento.
+- **E2E contra o Preview: NÃO EXECUTADO.** Depende de itens que só o dono faz
+  (Vercel, Console, senhas). A lista objetiva está em `docs/PRE_CUTOVER_CHECKLIST.md`.
+
 ---
 
 DATABASE: **PASS**
@@ -400,7 +418,7 @@ CRUD: **PASS**
 SECURITY: **PASS**
 E2E: **PASS** (210/210)
 DADOS (ensaio): **PASS** (173/173)
-HOMOLOGAÇÃO: **BLOQUEADO** (acesso à Vercel)
+HOMOLOGAÇÃO: **BLOQUEADO** (Preview protegido e sem variáveis; ver §18)
 CUTOVER: **NÃO EXECUTADO** (aguarda portões A–E + aprovação)
 
 POC: **PASS**

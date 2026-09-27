@@ -9,7 +9,8 @@ servidor fixa papel e claims na própria transação (`src/lib/database/pg`), e
 abaixo estiverem verdes e o dono aprovar. Cada passo marcado 🔒 altera produção e
 exige aprovação explícita na hora.
 
-Referências: `docs/SUPABASE_TO_NEON_AUDIT.md` (auditoria e estado),
+Referências: `docs/PRE_CUTOVER_CHECKLIST.md` (estado verificado de cada pré-condição),
+`docs/SUPABASE_TO_NEON_AUDIT.md` (auditoria e estado),
 `poc/neon-full/migrate/copy-data.sh` (cópia), `poc/neon-full/evidence/*`
 (provas), `poc/neon-full/homolog/README.md` (homologação),
 `docs/DEBITOS_PRE_EXISTENTES.md` (bugs anteriores à migração, fora do cutover).
@@ -33,7 +34,7 @@ Referências: `docs/SUPABASE_TO_NEON_AUDIT.md` (auditoria e estado),
 | B — Dados | ensaio 173/173 tabelas + 43 sequences iguais; script testado | **PASS** no ensaio por MCP; `copy-data.sh` testado localmente, **NÃO EXECUTADO** contra Supabase→Neon (sem rede nem senha do Supabase) |
 | C — Segurança | sondas sobre os dados migrados | **PASS** 56/56 |
 | D — App | E2E local 210/210, `npm test` 719/719, 2 builds | **PASS** |
-| E — Homologação | `homolog-e2e` verde contra o Preview | **BLOQUEADO** (acesso à Vercel) |
+| E — Homologação | `homolog-e2e` verde contra o Preview | **BLOQUEADO**: o Preview da branch existe, mas está atrás da Vercel Authentication e sem as variáveis de homologação (`evidence/homolog-probe.md`) |
 
 ## Passos
 
@@ -51,8 +52,8 @@ Referências: `docs/SUPABASE_TO_NEON_AUDIT.md` (auditoria e estado),
 4. 🔒 **Senha do `educa_app`** em `main` (Console → Roles → Reset). A string
    **pooled** (`…-pooler…/educa?sslmode=require`) vai só para a variável de
    Produção da Vercel. Nunca para o Git, chat ou log.
-5. **Região das funções da Vercel** = `gru1` (São Paulo), a mesma do banco. Conferir
-   em Settings → Functions.
+5. 🔒 **Região das funções da Vercel** = `gru1` (São Paulo), a mesma do banco. **Hoje
+   está em `iad1` (Washington)**, conforme a sonda de 2026-09-27. Settings → Functions.
 6. 🔒 **Backup do Supabase:** `pg_dump -Fc` de produção guardado fora do Git (com a
    senha do banco, pelo dono). Anotar o horário para PITR.
 7. **Backup do Neon:** branch `pre-cutover` a partir de `main` (esquema vazio de

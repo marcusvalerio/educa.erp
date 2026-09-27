@@ -502,7 +502,8 @@
       const word = q(".cv-word", svg);
       const lensC = pathsEls.map(dashLen);
       const vertical = svg.classList.contains("cv-m");
-      const tl = gsap.timeline({ scrollTrigger: { trigger: conv, start: "top 88%", end: "center 55%", scrub: 0.7 } });
+      // Toca inteira uma vez (sem scrub): quem para no meio da rolagem vê a cena completa.
+      const tl = gsap.timeline({ scrollTrigger: { trigger: conv, start: "top 78%", toggleActions: "play none none none" } }).timeScale(0.8);
       tl.fromTo(
         silosEls,
         { x: (i) => (vertical ? (i % 2 ? 14 : -14) : -40 - (i % 3) * 18), y: (i) => (vertical ? -10 - (i % 3) * 6 : (i - 2.5) * 10), opacity: 0.45 },

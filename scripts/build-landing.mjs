@@ -238,7 +238,7 @@ function hero() {
   const hots = sats
     .map(
       ({ s }) =>
-        `<span class="hs-hot hs-hot-${s.kind}" style="left:${pct(s.hotspot[0] - ox, ow)};top:${pct(s.hotspot[1] - oy, oh)}" title="${esc(s.hotspotLabel)}">${s.n}</span>`,
+        `<span class="hs-hot hs-hot-${s.kind}" data-hot="${s.n - 1}" style="left:${pct(s.hotspot[0] - ox, ow)};top:${pct(s.hotspot[1] - oy, oh)}" title="${esc(s.hotspotLabel)}">${s.n}</span>`,
     )
     .join("");
 
@@ -261,13 +261,23 @@ function hero() {
     return { id: `hs-g${i}`, kind: "tela", d: `M${f1(x0)} ${f1(y0)} C${f1(x0 + 36)} ${f1(y0)}, ${f1(x1 - 44)} ${f1(y1)}, ${f1(x1)} ${f1(y1)}` };
   });
   const paths = [...outPaths, ...inPaths];
+  // Portas: onde cada ligação sai e chega (aparecem primeiro, como sinais).
+  const ends = (d) => {
+    const n = d.match(/-?\d+(\.\d+)?/g).map(Number);
+    return [
+      [n[0], n[1]],
+      [n[n.length - 2], n[n.length - 1]],
+    ];
+  };
+  const ports = paths.flatMap((p, i) => ends(p.d).map(([x, y], k) => `<circle class="hs-port" data-port="${i}-${k}" cx="${f1(x)}" cy="${f1(y)}" r="3.2"/>`)).join("");
   const svg = `<svg class="hs-lines" viewBox="0 0 ${HS.W} ${HS.H}" aria-hidden="true" focusable="false">
     <defs>${paths.map((p) => `<mask id="${p.id}-m" maskUnits="userSpaceOnUse" x="0" y="0" width="${HS.W}" height="${HS.H}"><path class="hs-draw" d="${p.d}"/></mask>`).join("")}</defs>
+    <g class="hs-ports">${ports}</g>
     ${paths
       .map(
         (p, i) => `<g class="hs-link hs-${p.kind}" data-link="${i}">
       <path id="${p.id}" class="hs-path" d="${p.d}" mask="url(#${p.id}-m)"/>
-      <circle class="hs-sig" r="3.2"><animateMotion dur="${(2.6 + (i % 4) * 0.35).toFixed(2)}s" repeatCount="indefinite" begin="indefinite" rotate="auto"><mpath href="#${p.id}"/></animateMotion></circle>
+      <circle class="hs-sig" r="3.2" cx="-20" cy="-20"><animateMotion dur="${(2.6 + (i % 4) * 0.35).toFixed(2)}s" repeatCount="indefinite" begin="indefinite" rotate="auto"><mpath href="#${p.id}"/></animateMotion></circle>
     </g>`,
       )
       .join("")}
@@ -306,7 +316,8 @@ function hero() {
         ${svg}
         <figure class="hs-frag hs-order" style="${posStyle(order)}" data-depth="0.5">
           ${tag(null, H.order.area, H.order.code, "tela")}
-          <div class="hs-media">${frag(H.order, order, true)}${hots}</div>
+          <div class="hs-media">${frag(H.order, order, true)}${hots}<span class="hs-scan" aria-hidden="true"></span></div>
+          <span class="hs-ghost" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <figcaption class="hs-cap">${esc(H.order.text)}</figcaption>
         </figure>
         ${sats
@@ -314,6 +325,7 @@ function hero() {
             ({ s, b }, i) => `<figure class="hs-frag hs-sat hs-${s.kind}" style="${posStyle(b)}" data-sat="${i}" data-depth="${(0.9 + i * 0.15).toFixed(2)}">
           ${tag(s.n, s.area, s.code, s.kind)}
           <div class="hs-media">${frag(s, b, true)}</div>
+          <span class="hs-ghost" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <figcaption class="hs-cap">${esc(s.text)}</figcaption>
         </figure>`,
           )
@@ -321,6 +333,7 @@ function hero() {
         <figure class="hs-frag hs-gestao" style="${posStyle(g)}" data-depth="1.4">
           ${tag(null, H.gestao.area, H.gestao.code, "tela")}
           <div class="hs-media">${frag(H.gestao, g, true)}</div>
+          <span class="hs-ghost" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <figcaption class="hs-cap">${esc(H.gestao.text)}</figcaption>
         </figure>
         <div class="hs-signals" aria-hidden="true">${signals}</div>
@@ -408,6 +421,7 @@ function journey() {
   const J = C.JOURNEY;
   const steps = J.steps;
   const lane = `<ol class="lane" aria-hidden="true">
+      <li class="lane-origin"><span class="lane-n">00</span><span class="lane-name">${esc(J.origin)}</span></li>
       ${steps.map((s, i) => `<li data-lane="${i}"${i === 0 ? ' class="is-active"' : ""}><span class="lane-n">${pad(i + 1)}</span><span class="lane-name">${esc(s.area)}</span><span class="lane-status">${esc(s.status)}</span></li>`).join("")}
       <li class="lane-track"><span class="lane-fire"></span><span class="lane-token"><i></i></span></li>
     </ol>`;
@@ -441,6 +455,7 @@ function journey() {
             <figure class="step-shot shot">
               ${route(s)}
               <div class="shot-frame cam-frame" style="aspect-ratio:${images.get(imgKey(s)).w}/${images.get(imgKey(s)).h}">${cam(s, { sizes: "(min-width: 1100px) 55vw, 100vw" })}</div>
+              <p class="callout"><span>Em foco</span>${esc(s.callout)}</p>
               ${resultTag(s)}${apiCard(s)}
             </figure>
           </li>`,
@@ -452,6 +467,7 @@ function journey() {
             <div class="shot-bar"><span class="shot-mark"><i></i><i></i><i></i></span>${steps.map((s, i) => `<span class="shot-route" data-route="${i}">${esc(s.route)}</span>`).join("")}</div>
             <div class="jc-view" style="aspect-ratio:${VIEW_RATIO}">
               ${steps.map((s, i) => `<div class="jc-layer" data-layer="${i}">${cam(s, { viewRatio: VIEW_RATIO, inert: true, sizes: "(min-width: 1100px) 58vw, 100vw" })}</div>`).join("")}
+              ${steps.map((s, i) => `<p class="callout jc-callout" data-callout="${i}"><span>Em foco</span>${esc(s.callout)}</p>`).join("")}
             </div>
           </div>
           ${steps.map((s, i) => `<div class="jc-over" data-over="${i}">${resultTag(s)}${apiCard(s)}</div>`).join("")}
@@ -494,10 +510,26 @@ function viewer(id, screens, { label }) {
 </div>`;
 }
 
+// Ligação de um módulo com outro, na linguagem de conexões: origem → destino.
+// O sentido e o estado (na tela / na API) vêm das ligações conferidas em
+// NETWORK; ligações sem aresta no mapa aparecem sem selo.
+const shortName = (id) => ({ estoque: "Estoque", painel: "Painéis", projetos: "Projetos", ativos: "Ativos", cadastros: "Cadastros" })[id] ?? moduleName(id);
+function connRow(m, to, what) {
+  const edge = C.NETWORK.edges.find(([a, b]) => (a === m.id && b === to) || (a === to && b === m.id));
+  const inbound = edge && edge[0] === to;
+  const [from, dest] = inbound ? [to, m.id] : [m.id, to];
+  const target = to === "cadastros" ? "#base" : `#mod-${to}`;
+  return `<li><a href="${target}" data-conn="${edge ? edge[3] : "rel"}">
+    <span class="lk-path"><span class="lk-node${from === m.id ? " is-self" : ""}">${esc(shortName(from))}</span><span class="lk-line" aria-hidden="true"><i></i></span><span class="lk-node${dest === m.id ? " is-self" : ""}">${esc(shortName(dest))}</span></span>
+    <span class="lk-what">${esc(what)}</span>${edge ? chip(edge[3]) : ""}
+  </a></li>`;
+}
+
 function moduleSection(m, index) {
   const side = index % 2 ? "m-flip" : "";
   return `<article class="module ${side}" id="mod-${m.id}" aria-labelledby="mod-${m.id}-title">
   <header class="m-head">
+    <span class="m-ghost" aria-hidden="true">${pad(index + 1)}</span>
     <p class="m-index"><span>${pad(index + 1)}</span>${esc(m.name)}</p>
     <h3 id="mod-${m.id}-title" class="display-3">${esc(m.tagline)}</h3>
     <div class="m-state"><span class="m-label">Estado atual</span>${stateBar(m.does)}<ul class="state-sum" aria-label="Capacidades por estado">${stateCounts(m.does)}</ul></div>
@@ -508,7 +540,7 @@ function moduleSection(m, index) {
   </div>
   <div class="m-rail">
     <p class="m-label">O processo no sistema</p>
-    <ol>${m.flow.map((f, i) => `<li style="--i:${i}"><span>${esc(f)}</span></li>`).join("")}</ol>
+    <ol>${m.flow.map((f, i) => `<li style="--i:${i}"${i === 0 ? ' data-cap="Entrada"' : i === m.flow.length - 1 ? ' data-cap="Resultado"' : ""}><span>${esc(f)}</span></li>`).join("")}</ol>
     <span class="m-run" aria-hidden="true"><i></i></span>
   </div>
   <div class="m-main">
@@ -524,12 +556,7 @@ function moduleSection(m, index) {
       </div>
       <div class="m-part">
         <h4 class="m-label">Como se conecta</h4>
-        <ul class="links">${m.links
-          .map(([to, what]) => {
-            const target = to === "cadastros" ? "#base" : `#mod-${to}`;
-            return `<li><a href="${target}"><span class="links-to">${esc(moduleName(to))}</span><span class="links-what">${esc(what)}</span></a></li>`;
-          })
-          .join("")}</ul>
+        <ul class="links conn">${m.links.map(([to, what]) => connRow(m, to, what)).join("")}</ul>
       </div>
     </div>
   </div>
@@ -566,10 +593,20 @@ function platform() {
         <h2 id="platform-title" class="display-2">${esc(P.title)}</h2>
         <p class="section-lead">${esc(P.body)}</p>
       </div>
-      <dl class="numbers">
-        ${P.numbers.map((n) => `<div><dt>${esc(n.label)}</dt><dd class="num"><span data-count="${n.value}">${n.value.toLocaleString("pt-BR")}</span></dd><dd class="num-note">${esc(n.note)}</dd></div>`).join("")}
-      </dl>
     </div>
+    <dl class="numbers">
+      ${[...P.numbers]
+        .sort((a, b) => a.value - b.value)
+        .map(
+          (n) => `<div class="nb${n.value > 100 ? " nb-dense" : ""}">
+        <dd class="units" aria-hidden="true">${"<i></i>".repeat(n.value)}</dd>
+        <dt>${esc(n.label)}</dt>
+        <dd class="num"><span data-count="${n.value}">${n.value.toLocaleString("pt-BR")}</span></dd>
+        <dd class="num-note">${esc(n.note)}</dd>
+      </div>`,
+        )
+        .join("")}
+    </dl>
     <ol class="envs">
       ${P.environments
         .map(
@@ -625,7 +662,7 @@ function netSvg({ W, H, key, px, py, fs, nodeH, minW, charW, id }) {
         .map(
           (e) => `<g class="edge edge-${e.kind}" data-edge="${e.i}" data-a="${e.a}" data-b="${e.b}">
         <path id="${id}-e${e.i}" class="edge-line" d="${e.d}" marker-end="url(#${id}-arrow)"/>
-        <circle class="edge-sig" r="${key === "m" ? 2.6 : 3.4}"><animateMotion dur="${(e.kind === "api" ? 3.6 : 2.4) + (e.i % 3) * 0.3}s" repeatCount="indefinite" begin="indefinite"><mpath href="#${id}-e${e.i}"/></animateMotion></circle>
+        <circle class="edge-sig" r="${key === "m" ? 2.6 : 3.4}" cx="-20" cy="-20"/>
       </g>`,
         )
         .join("")}
@@ -689,13 +726,48 @@ function network() {
 </section>`;
 }
 
+// Final: as áreas separadas convergem para uma marca só (desktop: da
+// esquerda para a direita; celular: de cima para baixo).
+function converge(labels) {
+  const markSvg = (cx, cy, size) => {
+    const u = size / 24;
+    const x = cx - size / 2;
+    const y = cy - size / 2;
+    return `<g class="cv-mark"><rect x="${f1(x + u)}" y="${f1(y + u)}" width="${f1(22 * u)}" height="${f1(22 * u)}" rx="${f1(5 * u)}" class="cv-mark-bg"/><rect x="${f1(x + 7 * u)}" y="${f1(y + 6.5 * u)}" width="${f1(11 * u)}" height="${f1(2.5 * u)}" rx="${f1(u)}" class="cv-mark-bar"/><rect x="${f1(x + 7 * u)}" y="${f1(y + 10.75 * u)}" width="${f1(8 * u)}" height="${f1(2.5 * u)}" rx="${f1(u)}" class="cv-mark-fire"/><rect x="${f1(x + 7 * u)}" y="${f1(y + 15 * u)}" width="${f1(11 * u)}" height="${f1(2.5 * u)}" rx="${f1(u)}" class="cv-mark-bar"/></g>`;
+  };
+  const pill = (x, y, w, h, label, i) =>
+    `<g class="cv-silo" data-silo="${i}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}"/><text x="${x + w / 2}" y="${f1(y + h / 2 + 4)}" text-anchor="middle">${esc(label.toUpperCase())}</text></g>`;
+  // desktop 1000 × 380
+  const dPaths = labels.map((_, i) => {
+    const y = 28 + i * 62 + 22;
+    return `M200 ${y} C 430 ${y}, 560 190, 690 190`;
+  });
+  const desk = `<svg class="cv cv-d" viewBox="0 0 1000 380" aria-hidden="true" focusable="false">
+    ${dPaths.map((d, i) => `<path id="cvd${i}" class="cv-path" d="${d}"/><circle class="cv-sig" r="3.4" cx="-20" cy="-20"><animateMotion dur="${(2.4 + i * 0.22).toFixed(2)}s" repeatCount="indefinite" begin="indefinite"><mpath href="#cvd${i}"/></animateMotion></circle>`).join("")}
+    ${labels.map((l, i) => pill(0, 28 + i * 62, 200, 44, l, i)).join("")}
+    ${markSvg(745, 190, 110)}
+    <text class="cv-word" x="815" y="206">EDUCA</text>
+  </svg>`;
+  // celular 360 × 470
+  const cols = [15, 195];
+  const mPill = labels.map((_, i) => ({ x: cols[i % 2], y: 8 + Math.floor(i / 2) * 50 }));
+  const mPaths = mPill.map(({ x, y }) => `M${x + 75} ${y + 36} C ${x + 75} ${y + 150}, 180 ${f1(210)}, 180 285`);
+  const mob = `<svg class="cv cv-m" viewBox="0 0 360 470" aria-hidden="true" focusable="false">
+    ${mPaths.map((d, i) => `<path id="cvm${i}" class="cv-path" d="${d}"/><circle class="cv-sig" r="3" cx="-20" cy="-20"><animateMotion dur="${(2.2 + i * 0.2).toFixed(2)}s" repeatCount="indefinite" begin="indefinite"><mpath href="#cvm${i}"/></animateMotion></circle>`).join("")}
+    ${labels.map((l, i) => pill(mPill[i].x, mPill[i].y, 150, 36, l, i)).join("")}
+    ${markSvg(180, 335, 100)}
+    <text class="cv-word" x="180" y="440" text-anchor="middle">EDUCA</text>
+  </svg>`;
+  return `<div class="converge">${desk}${mob}</div>`;
+}
+
 function closing(sizes, { preview = false } = {}) {
   const K = C.CLOSING;
   return `<section class="closing stage" id="comecar" aria-labelledby="closing-title">
   <div class="wrap closing-in">
     <h2 id="closing-title" class="display-2 closing-q">${esc(K.title)}</h2>
-    <div class="silos" aria-hidden="true">${K.silos.map((s, i) => `<span class="silo" style="--i:${i}">${esc(s)}</span>`).join("")}<i class="silo-fire"></i></div>
-    <p class="closing-a"><span class="closing-mark">${mark(40, "mark mark-xl")}</span>${esc(K.answer)}</p>
+    ${converge(K.silos)}
+    <p class="closing-a">${esc(K.answer)}</p>
     <p class="section-lead">${esc(K.body)}</p>
     <div class="actions">
       ${K.actions

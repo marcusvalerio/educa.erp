@@ -8,7 +8,11 @@
   const hasIO = "IntersectionObserver" in window;
   const EDUCA = (window.EDUCA = window.EDUCA || {});
 
-  // Inicia/pausa as animações SMIL (sinais nas linhas) de um <svg>.
+  // Inicia as animações SMIL (sinais nas linhas) de um <svg>; fora da tela, pausam.
+  const pauseWhenHidden = (svg) => {
+    if (!hasIO || typeof svg.pauseAnimations !== "function") return;
+    new IntersectionObserver(([e]) => (e.isIntersecting ? svg.unpauseAnimations() : svg.pauseAnimations())).observe(svg);
+  };
   const startSignals = (svg) => {
     if (reduce || !svg || svg.dataset.live) return;
     svg.dataset.live = "1";
@@ -19,12 +23,9 @@
         /* navegador sem SMIL: as linhas continuam paradas */
       }
     });
+    pauseWhenHidden(svg);
   };
   EDUCA.startSignals = startSignals;
-  const pauseWhenHidden = (svg) => {
-    if (!hasIO || !svg || typeof svg.pauseAnimations !== "function") return;
-    new IntersectionObserver(([e]) => (e.isIntersecting ? svg.unpauseAnimations() : svg.pauseAnimations())).observe(svg);
-  };
 
   // "Siga um pedido" em lista: a etapa no centro da tela acende a raia.
   const journey = document.querySelector(".journey");
@@ -41,7 +42,8 @@
         el.classList.toggle("is-active", k === i);
         el.classList.toggle("is-done", k < i);
       });
-      lane?.style.setProperty("--p", i);
+      // -1: o pedido ainda está na origem da raia, antes da primeira etapa.
+      lane?.style.setProperty("--p", i < 0 ? -0.85 : i);
     };
     EDUCA.journeyActivate(0);
     if (hasIO) {
@@ -105,7 +107,6 @@
   // Mapa de conexões: capítulos acendem cadeias; tocar uma área mostra as dela.
   const net = document.querySelector(".network");
   if (net) {
-    const svgs = [...net.querySelectorAll(".net-svg")];
     const nodes = [...net.querySelectorAll("[data-node]")];
     const edges = [...net.querySelectorAll(".edge")];
     const chapters = [...net.querySelectorAll("[data-chapter]")];
@@ -130,6 +131,9 @@
       const active = Boolean(pinned || chapterEdges);
       net.classList.toggle("has-chapter", active);
       edges.forEach((el) => el.classList.toggle("is-on", !active || on.has(el.dataset.edge)));
+      // Sinais (motion.js): só correm nas ligações acesas.
+      const lit = active ? [...on].map(Number) : [...new Set(edges.map((el) => Number(el.dataset.edge)))];
+      EDUCA.netSignals?.(lit);
       nodes.forEach((n) => {
         n.classList.toggle("is-on", n.dataset.node === pinned);
         n.classList.toggle("is-peer", peers.has(n.dataset.node));
@@ -154,13 +158,10 @@
       chapters.forEach((c) => io.observe(c));
       new IntersectionObserver(
         ([e]) => {
-          if (!e.isIntersecting) return;
-          net.classList.add("is-live");
-          svgs.forEach(startSignals);
+          if (e.isIntersecting) net.classList.add("is-live");
         },
         { threshold: 0.15 },
       ).observe(net);
-      svgs.forEach(pauseWhenHidden);
     }
     nodes.forEach((n) => {
       const id = n.dataset.node;

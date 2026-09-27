@@ -33,13 +33,23 @@ for (const t of targets) {
   const base = t.url.replace(/\/+$/, "");
   out(`## ${t.name}: ${base}`);
   const login = await hit(`${base}/login`);
-  const vid = login.headers.get("x-vercel-id") ?? "";
-  const protectedByVercel = login.status === 401 && /vercel|sso|authentication required/i.test(login.text + (login.headers.get("set-cookie") ?? ""));
-  out(`- GET /login → ${login.status}${login.status === 0 ? ` (${clip(login.text)})` : ""}; x-vercel-id: ${vid || "—"}; região da função: ${vid.split("::")[1] ?? "—"}`);
-  out(`- Deployment Protection da Vercel: ${protectedByVercel ? "SIM (precisa de VERCEL_BYPASS_TOKEN)" : login.status === 0 || login.status === 404 ? "indeterminado" : "não"}`);
+  const where = login.headers.get("location") ?? "";
+  // Proteção da Vercel: 401 com página de login da Vercel, ou redirecionamento
+  // para o SSO da Vercel (vercel.com/sso-api…, cookie _vercel_sso_nonce).
+  const protectedByVercel =
+    (login.status === 401 && /vercel|sso|authentication required/i.test(login.text)) ||
+    ([301, 302, 303, 307, 308].includes(login.status) && /vercel\.com\/(sso|login)|_vercel_sso/i.test(where + (login.headers.get("set-cookie") ?? "")));
+  out(`- GET /login → ${login.status}${login.status === 0 ? ` (${clip(login.text)})` : ""}${where ? `; redireciona para ${clip(where.split("?")[0], 80)}` : ""}; borda: ${(login.headers.get("x-vercel-id") ?? "—").split("::")[0]}`);
+  out(`- Deployment Protection da Vercel: ${protectedByVercel ? "SIM (Vercel Authentication; o E2E precisa de VERCEL_BYPASS_TOKEN ou da proteção desligada para este Preview)" : login.status === 0 || login.status === 404 ? "indeterminado" : "não"}`);
+  if (t.auth) {
+    const ok = await hit(`${t.auth.replace(/\/+$/, "")}/ok`);
+    out(`- Neon Auth ${t.auth} /ok → ${ok.status}`);
+  }
   if (protectedByVercel || login.status === 0) continue;
   const ctx = await hit(`${base}/api/session/context`);
-  out(`- GET /api/session/context sem cookie → ${ctx.status} ${clip(ctx.text, 90)}`);
+  // x-vercel-id de uma rota dinâmica: "<borda>::<região da função>::<id>".
+  const regions = (ctx.headers.get("x-vercel-id") ?? "").split("::").filter((x) => /^[a-z]{3}\d$/.test(x));
+  out(`- GET /api/session/context sem cookie → ${ctx.status} ${clip(ctx.text, 90)}; borda/função: ${regions.join(" → ") || "—"}`);
   const signIn = await hit(`${base}/api/auth/sign-in`, {
     method: "POST",
     headers: { "content-type": "application/json", origin: "https://sonda-de-outra-origem.invalid" },
@@ -47,10 +57,7 @@ for (const t of targets) {
   });
   const mode = signIn.status === 404 ? "AUTH_PROVIDER=supabase" : signIn.status === 403 ? "AUTH_PROVIDER=neon" : `indeterminado (${signIn.status})`;
   out(`- POST /api/auth/sign-in de outra origem → ${signIn.status} ⇒ ${mode}`);
-  if (t.auth) {
-    const ok = await hit(`${t.auth.replace(/\/+$/, "")}/ok`);
-    out(`- Neon Auth ${t.auth} /ok → ${ok.status}`);
-  }
+
 }
 if (process.env.GITHUB_STEP_SUMMARY) {
   const fs = await import("node:fs");

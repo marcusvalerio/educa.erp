@@ -33,6 +33,27 @@ const iconButton = (variant: Variant) =>
   );
 
 // ------------------------------------------------------------ busca
+// No desktop a busca mora no topo da navegação (sempre à mão, sem competir
+// com a trilha); no mobile vira o ícone do cabeçalho.
+export function SidebarSearch({ onOpen, variant = "default" }: { onOpen: () => void; variant?: Variant }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={cn(
+        "flex h-8 w-full items-center gap-2 rounded-md border px-2.5 text-left text-sm transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+        variant === "platform"
+          ? "border-platform-border bg-platform-hover text-platform-muted hover:text-platform-foreground"
+          : "border-border-subtle bg-surface/70 text-subtle-foreground shadow-xs hover:border-border hover:bg-surface hover:text-muted-foreground"
+      )}
+    >
+      <Search size={14} aria-hidden />
+      <span className="flex-1 truncate">Buscar ou ir para…</span>
+      <Kbd className={variant === "platform" ? "border-platform-border bg-platform text-platform-muted" : "bg-surface"}>Ctrl K</Kbd>
+    </button>
+  );
+}
+
 export function SearchTrigger({ onOpen, variant = "default" }: { onOpen: () => void; variant?: Variant }) {
   return (
     <>
@@ -98,9 +119,11 @@ export function UnitSwitcher() {
   const current = branches.find((b) => b.id === branchId);
   const label = current ? current.name : branches.length === 0 ? "Sem unidade vinculada" : "Todas as unidades";
 
-  if (branches.length <= 1) {
+  // Sem unidade vinculada: o Início já explica; o cabeçalho não repete.
+  if (branches.length === 0) return null;
+  if (branches.length === 1) {
     return (
-      <span className="hidden items-center gap-1.5 truncate text-sm text-muted-foreground lg:flex" title="Unidade">
+      <span className="hidden max-w-48 items-center gap-1.5 truncate text-sm text-muted-foreground lg:flex" title="Unidade">
         <MapPin size={14} className="shrink-0 text-subtle-foreground" aria-hidden />
         <span className="truncate">{label}</span>
       </span>
@@ -110,7 +133,7 @@ export function UnitSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="hidden h-8 max-w-56 items-center gap-1.5 rounded-md px-2 text-sm text-foreground transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-ring lg:flex"
+        className="hidden h-8 max-w-56 items-center gap-1.5 rounded-md border border-border-subtle bg-surface px-2 text-sm text-foreground shadow-xs transition-colors hover:border-border focus-visible:outline-2 focus-visible:outline-ring lg:flex"
         aria-label={`Unidade em foco: ${label}`}
       >
         <MapPin size={14} className="shrink-0 text-subtle-foreground" aria-hidden />
@@ -175,14 +198,14 @@ export function NotificationsButton() {
       <PopoverTrigger aria-label={count > 0 ? `Pendências: ${count}` : "Pendências"} className={cn(iconButton("default"), "relative")}>
         <Bell size={16} />
         {count > 0 && (
-          <span className="absolute top-1 right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-accent px-0.5 text-[9px] font-semibold text-warning-contrast tabular-nums">
+          <span className="absolute top-1 right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-accent px-0.5 text-[9px] font-semibold text-warning-contrast tabular-nums ring-2 ring-background">
             {count > 9 ? "9+" : count}
           </span>
         )}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
-        <div className="border-b border-border px-3 py-2.5">
-          <p className="text-sm font-medium">Aprovações pendentes</p>
+        <div className="border-b border-border-subtle px-3.5 py-3">
+          <p className="text-sm font-semibold tracking-title">Aprovações pendentes</p>
           <p className="text-xs text-subtle-foreground">Etapas de workflow aguardando sua decisão.</p>
         </div>
         <div className="max-h-80 overflow-y-auto">
@@ -193,7 +216,7 @@ export function NotificationsButton() {
           ) : items.length === 0 ? (
             <p className="px-3 py-6 text-center text-sm text-muted-foreground">Nenhuma aprovação aguardando você.</p>
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-border-subtle">
               {items.map((item) => {
                 const overdue = item.due_at ? new Date(item.due_at).getTime() < now : false;
                 return (
@@ -264,7 +287,7 @@ export function UserMenu({ variant = "default", adminHref, platformHref, erpHref
           </div>
         </div>
         {tenant && (
-          <div className="mx-2 mb-1 rounded-sm border border-border bg-surface-muted px-2 py-1.5 text-xs">
+          <div className="mx-2 mb-1 rounded-md border border-border-subtle bg-surface-muted px-2.5 py-2 text-xs">
             <p className="flex items-center gap-1.5 font-medium text-foreground">
               <Building2 size={12} className="text-subtle-foreground" /> {tenant.company.name}
             </p>

@@ -13,9 +13,9 @@ import { breadcrumbFor, canAccess, routeRequirement, visibleSections } from "@/l
 import { statusMeta } from "@/lib/status";
 import { SessionProvider, useSession } from "./SessionProvider";
 import { Sidebar } from "./Sidebar";
-import { BreadcrumbTailProvider, Breadcrumbs, useBreadcrumbTailValue } from "./Breadcrumbs";
+import { BreadcrumbTailProvider, Breadcrumbs, ShellSectionProvider, useBreadcrumbTailValue } from "./Breadcrumbs";
 import { CommandMenu } from "./CommandMenu";
-import { NotificationsButton, SearchTrigger, ThemeToggle, UnitSwitcher, UserMenu } from "./ShellControls";
+import { NotificationsButton, SearchTrigger, SidebarSearch, ThemeToggle, UnitSwitcher, UserMenu } from "./ShellControls";
 import { EducaMark, EducaWordmark } from "./Brand";
 import { BranchPrompt } from "./BranchPrompt";
 import { AuthFrame } from "@/components/auth/AuthFrame";
@@ -28,6 +28,11 @@ import { LogoutButton } from "@/components/auth/LogoutButton";
 //   platform — Administração Central da plataforma (/admincentral)
 // São ambientes distintos (sidebar, cabeçalho, trilha e linguagem
 // próprios), não uma mesma sidebar com itens a mais.
+//
+// Composição: a navegação vive no "chrome" (moldura) e a página numa folha
+// (background) com cantos arredondados e rolagem própria no desktop; o
+// cabeçalho fica fixo no topo da folha, translúcido. No mobile a folha
+// ocupa a tela inteira e a navegação vira gaveta.
 
 export type Environment = "erp" | "admin" | "platform";
 
@@ -54,21 +59,25 @@ function FullPageState({ children }: { children: ReactNode }) {
 
 function ShellSkeleton() {
   return (
-    <div className="flex min-h-dvh bg-background" aria-busy="true" aria-label="Carregando">
-      <div className="hidden w-60 border-r border-sidebar-border bg-sidebar p-3 lg:block">
-        <Skeleton className="h-6 w-32" />
-        <div className="mt-6 flex flex-col gap-2">
+    <div className="flex min-h-dvh bg-chrome" aria-busy="true" aria-label="Carregando">
+      <div className="hidden w-64 p-3.5 lg:block">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="mt-4 h-8 w-full" />
+        <div className="mt-6 flex flex-col gap-2.5">
           {Array.from({ length: 9 }, (_, i) => (
             <Skeleton key={i} className="h-5 w-full" />
           ))}
         </div>
       </div>
-      <div className="flex-1">
-        <div className="h-14 border-b border-border bg-surface" />
-        <div className="mx-auto max-w-screen-2xl p-6">
-          <Skeleton className="h-7 w-64" />
-          <Skeleton className="mt-6 h-24 w-full" />
-          <Skeleton className="mt-4 h-64 w-full" />
+      <div className="flex min-w-0 flex-1 flex-col lg:h-dvh lg:py-2 lg:pr-2">
+        <div className="flex-1 bg-background lg:rounded-xl lg:border lg:border-border">
+          <div className="h-14 border-b border-border-subtle" />
+          <div className="mx-auto max-w-screen-2xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="mt-3 h-7 w-72" />
+            <Skeleton className="mt-8 h-28 w-full" />
+            <Skeleton className="mt-4 h-72 w-full" />
+          </div>
         </div>
       </div>
     </div>
@@ -221,6 +230,10 @@ function ShellInner({ environment, children }: { environment: Environment; child
   const requirement = routeRequirement(env.nav, pathname);
   const allowed = canAccess(requirement, permissionCheck);
   const crumbs = [...breadcrumbFor(env.nav, pathname, env.rootLabel, env.rootHref), ...tail];
+  // Módulo da página (sobrelinha do PageHeader): no ERP o 2º nível da
+  // trilha (Início › Comercial › …); nos ambientes administrativos, o
+  // próprio ambiente.
+  const section = environment === "erp" ? (crumbs.length >= 3 ? crumbs[1] : null) : crumbs.length >= 2 ? crumbs[0] : null;
   const tenant = data?.tenant;
   const platform = environment === "platform";
   const lifecycle = tenant ? statusMeta("company_lifecycle", tenant.company.lifecycle_status) : null;
@@ -282,79 +295,89 @@ function ShellInner({ environment, children }: { environment: Environment; child
   ];
 
   return (
-    <div className={cn("flex min-h-dvh", platform ? "bg-background" : "bg-background")} data-environment={environment}>
+    <div className={cn("flex min-h-dvh", platform ? "bg-platform" : "bg-chrome")} data-environment={environment}>
       <Sidebar
         variant={environment}
         sections={sections}
         icons={environment === "admin" ? ADMIN_ICONS : environment === "platform" ? PLATFORM_ICONS : undefined}
         header={sidebarHeader}
+        search={<SidebarSearch onOpen={() => setCommandOpen(true)} variant={platform ? "platform" : "default"} />}
         footer={sidebarFooter}
         collapsed={collapsed}
         onToggleCollapsed={toggleCollapsed}
         mobileOpen={mobileOpen}
         onMobileOpenChange={setMobileOpen}
       />
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Faixa de ambiente: deixa explícito onde o usuário está. */}
-        {environment === "admin" && (
-          <div className="flex h-8 items-center gap-2 border-b border-accent/40 bg-accent-soft px-4 text-xs text-foreground sm:px-6">
-            <ShieldCheck size={13} className="shrink-0 text-warning-fg" aria-hidden />
-            <span className="truncate">
-              <span className="font-medium">Administração da Empresa</span>
-              <span className="text-muted-foreground"> · {tenant?.company.name} · alterações aqui afetam somente esta empresa</span>
-            </span>
-            <Link href="/" className="ml-auto shrink-0 font-medium underline-offset-4 hover:underline">
-              Voltar ao ERP
-            </Link>
-          </div>
-        )}
-        {environment === "platform" && <div aria-hidden className="h-0.5 bg-platform-accent" />}
-        <header
+      <div className="flex min-w-0 flex-1 flex-col lg:h-dvh lg:py-2 lg:pr-2">
+        <div
+          id="folha"
           className={cn(
-            "sticky top-0 z-30 flex h-14 items-center gap-2 border-b px-3 sm:px-5",
-            platform ? "border-platform-border bg-platform text-platform-foreground" : "border-border bg-surface"
+            "relative flex min-h-0 flex-1 flex-col bg-background lg:overflow-y-auto lg:rounded-xl lg:border lg:shadow-xs",
+            platform ? "lg:border-platform-border" : "lg:border-border"
           )}
         >
-          <button
-            type="button"
-            aria-label="Abrir menu"
-            onClick={() => setMobileOpen(true)}
-            className={cn("inline-flex h-8 w-8 items-center justify-center rounded-md lg:hidden", platform ? "text-platform-muted hover:bg-platform-hover" : "text-muted-foreground hover:bg-surface-hover")}
-          >
-            <Menu size={18} />
-          </button>
-          <Breadcrumbs items={crumbs} tone={platform ? "platform" : "default"} className="flex-1" />
-          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-            {environment === "platform" && (
-              <Badge tone="critical" className="hidden border-platform-accent bg-transparent text-platform-accent-fg sm:inline-flex">
-                Plataforma EDUCA
-              </Badge>
-            )}
-            {environment !== "platform" && lifecycle && tenant && tenant.company.lifecycle_status !== "ACTIVE" && (
-              <Badge tone={lifecycle.tone} className="hidden sm:inline-flex">
-                {lifecycle.label}
-              </Badge>
-            )}
-            {environment === "erp" && <UnitSwitcher />}
-            <SearchTrigger onOpen={() => setCommandOpen(true)} variant={platform ? "platform" : "default"} />
-            {environment === "erp" && <NotificationsButton />}
-            <ThemeToggle variant={platform ? "platform" : "default"} />
-            <UserMenu
-              variant={platform ? "platform" : "default"}
-              adminHref={environment === "admin" ? null : adminHref}
-              platformHref={environment === "platform" ? null : platformHref}
-              erpHref={environment === "erp" ? null : erpHref}
-            />
-          </div>
-        </header>
-        {tenant && !tenant.company.operational && environment === "erp" && (
-          <div role="alert" className="border-b border-warning/40 bg-warning-soft px-4 py-2 text-sm text-warning-fg sm:px-6">
-            A empresa está com status &quot;{lifecycle?.label}&quot; na plataforma. As operações ficam indisponíveis até a regularização.
-          </div>
-        )}
-        <main id="conteudo" className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-screen-2xl">{allowed ? children : <NoAccess backHref={env.rootHref} />}</div>
-        </main>
+          {/* Faixa de ambiente: deixa explícito onde o usuário está. */}
+          {environment === "platform" && <div aria-hidden className="h-0.5 shrink-0 bg-platform-accent lg:rounded-t-xl" />}
+          {environment === "admin" && (
+            <div className="flex min-h-9 shrink-0 items-center gap-2 border-b border-accent/30 bg-accent-soft px-4 py-1.5 text-xs text-foreground sm:px-6 lg:rounded-t-xl lg:px-8">
+              <ShieldCheck size={13} className="shrink-0 text-accent-fg" aria-hidden />
+              <span className="truncate">
+                <span className="font-semibold">Administração da Empresa</span>
+                <span className="text-muted-foreground"> · {tenant?.company.name} · alterações aqui afetam somente esta empresa</span>
+              </span>
+              <Link href="/" className="ml-auto shrink-0 font-medium underline-offset-4 hover:underline">
+                Voltar ao ERP
+              </Link>
+            </div>
+          )}
+          <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle bg-background/85 px-3 backdrop-blur-md sm:px-5 lg:px-8">
+            <button
+              type="button"
+              aria-label="Abrir menu"
+              onClick={() => setMobileOpen(true)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-surface-hover lg:hidden"
+            >
+              <Menu size={18} />
+            </button>
+            <Breadcrumbs items={crumbs} className="flex-1" />
+            <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+              {environment === "platform" && (
+                <Badge tone="critical" className="hidden sm:inline-flex">
+                  Plataforma EDUCA
+                </Badge>
+              )}
+              {environment !== "platform" && lifecycle && tenant && tenant.company.lifecycle_status !== "ACTIVE" && (
+                <Badge tone={lifecycle.tone} className="hidden sm:inline-flex">
+                  {lifecycle.label}
+                </Badge>
+              )}
+              {environment === "erp" && <UnitSwitcher />}
+              <div className="lg:hidden">
+                <SearchTrigger onOpen={() => setCommandOpen(true)} />
+              </div>
+              {environment === "erp" && <NotificationsButton />}
+              <ThemeToggle />
+              <span aria-hidden className="mx-1 hidden h-5 w-px bg-border sm:block" />
+              <UserMenu
+                adminHref={environment === "admin" ? null : adminHref}
+                platformHref={environment === "platform" ? null : platformHref}
+                erpHref={environment === "erp" ? null : erpHref}
+              />
+            </div>
+          </header>
+          {tenant && !tenant.company.operational && environment === "erp" && (
+            <div role="alert" className="border-b border-warning/40 bg-warning-soft px-4 py-2 text-sm text-warning-fg sm:px-6 lg:px-8">
+              A empresa está com status &quot;{lifecycle?.label}&quot; na plataforma. As operações ficam indisponíveis até a regularização.
+            </div>
+          )}
+          <main id="conteudo" className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            <ShellSectionProvider value={section}>
+              <div className="mx-auto w-full max-w-screen-2xl animate-rise-in">
+                {allowed ? children : <NoAccess backHref={env.rootHref} />}
+              </div>
+            </ShellSectionProvider>
+          </main>
+        </div>
       </div>
       {environment === "erp" && <BranchPrompt />}
       <CommandMenu open={commandOpen} onOpenChange={setCommandOpen} sections={sections} environmentLinks={environmentLinks} />

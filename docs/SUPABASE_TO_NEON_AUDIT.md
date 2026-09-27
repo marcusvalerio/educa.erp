@@ -1,13 +1,16 @@
 # EDUCA.ERP — SUPABASE → NEON MIGRATION AUDIT
 
-Data: 2026-09-26 · Branch: `poc/supabase-to-neon` · POC: `poc/neon-full/` (ver README)
-Alvo: `Next.js → Backend (rotas/Server) → PostgreSQL Neon → Neon Auth`
+Data: 2026-09-26 (auditoria) · atualizado em 2026-09-27 (preparação da migração, §17)
+Branch: `poc/supabase-to-neon` · POC: `poc/neon-full/` (ver README) · Runbook: `docs/CUTOVER_RUNBOOK.md`
+Alvo: `Neon Auth → Next.js → PostgreSQL Neon` (RLS/RBAC/funções/gatilhos no banco;
+**sem** ponte JWT do Supabase e sem migração híbrida: `SUPABASE_JWT_SECRET` não é
+lido com `DATA_BACKEND=postgres`)
 
-**Produção não foi alterada.** Todo acesso a produção nesta auditoria foi leitura
-(`select` pelo MCP do Supabase). Tudo o que foi escrito ficou em banco local, no
-projeto Neon isolado `educa-neon-poc` ou na branch da POC. Não houve deploy,
-mudança de DNS, SMTP, domínio, Vercel, `AUTH_PROVIDER` de produção nem migration
-em produção.
+**A produção em uso (Supabase + Vercel) não foi alterada.** Todo acesso ao Supabase
+foi leitura (`select` pelo MCP). Em 2026-09-27 foi criado o **destino** no Neon
+(projeto `educa-erp-prod`, §17): esquema em `main`, e dados só em branches de
+ensaio/homologação. Não houve deploy, mudança de DNS, SMTP, domínio, Vercel,
+`AUTH_PROVIDER` de produção nem troca de banco. O cutover **não** foi executado.
 
 ---
 
@@ -35,8 +38,10 @@ pontos que exigiam `SUPABASE_SERVICE_ROLE_KEY`.
 | API | **PASS** | as rotas reais do app sobre PostgreSQL direto; 219/219 RPCs literais resolvem no catálogo; 256/256 nomes `fn_*` existem |
 | CRUD | **PASS** | catálogo, estoque, compras, vendas, logística, usuários, empresas (E2E) |
 | SECURITY | **PASS** | Neon real 35/35; E2E: cross-tenant, IDOR, injeção, papel de login sem privilégio |
-| E2E | **PASS** | **106/106** a partir de ambiente zerado |
+| E2E | **PASS** | **210/210** a partir de ambiente zerado (106 + 104 dos 8 módulos, §17) |
 | **POC** | **PASS** | |
+| DADOS (ensaio) | **PASS** | 173/173 tabelas e 43/43 sequences iguais ao Supabase (§17) |
+| HOMOLOGAÇÃO | **BLOQUEADO** | Neon pronto; falta só o Preview na Vercel (§17) |
 
 O ponto aberto é um **BLOQUEIO EXTERNO de ambiente**: este contêiner não alcança
 `*.neon.tech`. O app foi provado contra PostgreSQL local com esquema idêntico ao de
@@ -271,11 +276,14 @@ Código da POC nesta branch:
 
 | Bateria | Resultado | Onde |
 |---|---|---|
-| E2E navegador → app → Neon Auth (dublê) → PostgreSQL (AUTH, SESSION, RECOVERY, ADMIN, RBAC, CRUD, MULTI-TENANCY, SECURITY) | **106/106 PASS** | `poc/neon-full/evidence/e2e-postgres-local.log` |
+| E2E navegador → app → Neon Auth (dublê) → PostgreSQL (AUTH, SESSION, RECOVERY, ADMIN, RBAC, CRUD, MULTI-TENANCY, SECURITY) + 8 módulos | **210/210 PASS** | `poc/neon-full/evidence/e2e-postgres-local.log` |
+| E2E de homologação (só HTTP/navegador), validado contra a pilha local | **33/33 PASS** | `evidence/homolog-e2e-local.log` |
+| Ensaio de dados Supabase → Neon (contagem + md5) | **173/173 + 43/43 PASS** | `evidence/rehearsal-data.md` |
+| Segurança sobre os dados migrados (branch filha) | **56/56 PASS** | idem |
 | Neon real: RLS/RBAC/escalada por SQL com papel e claims | **35/35 PASS** | `evidence/neon-real-security.md` §1 |
 | Neon real: SQL gerado pelo adaptador (embutidos, `.or`, count, upsert, update, RPC conjunto/escalar/composta) | **8/8 PASS** | idem §2 |
 | Cobertura de RPC (catálogo) | **219/219** + 256/256 nomes | `evidence/rpc-coverage.json` |
-| `npm test` (todo o repositório, inclui `tests/pg-postgrest-compat.test.ts`: geração de SQL, parâmetros, erros, RPC, sessão, invariantes; integração opcional com `POC_DATABASE_URL`) | **718/718 PASS** | — |
+| `npm test` (todo o repositório, inclui `tests/pg-postgrest-compat.test.ts`: geração de SQL, parâmetros, erros, RPC, sessão, invariantes; integração opcional com `POC_DATABASE_URL`) | **719/719 PASS** | — |
 | `tsc --noEmit`, `eslint` | 0 erros (1 aviso em arquivo da POC) | — |
 | `next build` modo Supabase (padrão) e modo postgres | **PASS / PASS** | — |
 
@@ -290,13 +298,14 @@ Durante as rodadas, os erros encontrados foram classificados antes de corrigir:
 
 | Risco | Prob. | Impacto | Mitigação |
 |---|---|---|---|
-| Diferença sutil adaptador × PostgREST num módulo sem E2E (Financeiro, Fiscal, Produção…) | média | médio | cobertura estática feita; antes do cutover, estender o E2E por módulo ou rodar em homologação com tráfego real |
+| Diferença sutil adaptador × PostgREST | baixa | médio | E2E dos 8 módulos achou 1 (chave `undefined` no update), corrigida e testada; homologação com o Preview |
 | Latência Vercel → Neon (região) | média | médio | Neon em sa-east-1; pooler; 1 ida por chamada (2 com `count`) |
 | Pool esgotado em serverless | baixa | alto | URL pooled do Neon, `DATABASE_POOL_MAX` baixo, idle 10 s; ouvinte de erro no pool |
 | Esquema reconstruído pelas migrations do repo em vez do plano | alta se ignorado | alto | usar **só** o plano da POC; corrigir o repo (0057/0058/0059/0060 e pontes) numa tarefa separada |
 | Senhas não migráveis | certa | baixo (1 usuário) | primeiro acesso/recuperação |
 | `service_role` via `educa_app` = superpoder do servidor | — | alto se vazar | senha só no env da Vercel; mesma superfície da service key de hoje |
-| Neon Auth de produção com divergência de configuração (`email_password`) | conhecida | médio | conferir no Console antes do cutover |
+| Neon Auth de produção: `email_password.enabled=false`, `allow_sign_up=true` | certa | alto (ninguém entra) | runbook passo 3 |
+| Retenção de histórico do Neon em 6 h | certa | médio | subir para ≥ 7 dias (runbook passo 25) |
 | Bugs de linha de base expostos ao testar | certa | baixo | correções pequenas separadas (§15) |
 
 ## 13. Esforço estimado
@@ -304,7 +313,7 @@ Durante as rodadas, os erros encontrados foram classificados antes de corrigir:
 | Etapa | Esforço |
 |---|---|
 | E1 esquema no Neon de produção (plano pronto) | 0,5 dia |
-| E2 dados: 1.664 linhas, ordem por FK com gatilhos desligados (`session_replication_role=replica`), `setval` das 43 sequences, conferência por contagem/hash | 1 dia |
+| E2 dados: 1.664 linhas; gatilhos de usuário desligados (`session_replication_role` não é permitido no Neon), FKs recriadas (há ciclos), `setval` das 43 sequences, conferência por contagem/hash — **feito no ensaio** | 1 dia |
 | E3 auth: Owner já vinculado; demais pelo convite | 0,5 dia |
 | E4 app: pronto na POC. Resta ampliar E2E por módulo e revisão | 3–5 dias |
 | E5 infra: env da Vercel, preview apontando para Neon, snapshot, janela | 1 dia |
@@ -329,17 +338,16 @@ Durante as rodadas, os erros encontrados foram classificados antes de corrigir:
 
 ## 15. O que ainda falta (para o cutover)
 
-1. **BLOQUEIO EXTERNO de rede:** rodar `run-all.sh` com `DATABASE_URL` no Neon a
-   partir de um ambiente com saída para `*.neon.tech` (preview da Vercel ou máquina
-   local). Precisa de senha para `educa_app`, criada no Console e colocada só no env.
-2. Criar o banco de **produção** no Neon (projeto/branch novo, sa-east-1) e aplicar o
-   plano. Não usar `educa-neon-poc` nem o projeto de teste.
-3. Script de cópia de dados (E2) e ensaio completo num branch do Neon.
-4. Ampliar o E2E para Financeiro, Fiscal, Produção, CRM, Qualidade, Projetos,
-   Workflow e Importação.
-5. Correções de linha de base, separadas desta migração: permissões
-   `product_categories.*`/`units.*`, `warehouse_id` no mapper de locais, escapar
-   vírgula/parênteses na busca de `table.ts`.
+1. ~~Banco de produção no Neon~~ **feito** (§17). ~~Script de cópia e ensaio~~
+   **feito** (§17). ~~E2E dos 8 módulos~~ **feito** (§17).
+2. **BLOQUEADO — homologação:** Preview da Vercel com as variáveis de
+   `poc/neon-full/homolog/README.md` e o workflow `homolog-e2e`. Falta só o acesso
+   à Vercel. O mesmo Preview também resolve o bloqueio de rede (o app falando com o
+   Neon real).
+3. Pré-condições do runbook: configuração do Neon Auth de produção, senha do
+   `educa_app`, região `gru1`, retenção de histórico.
+4. Débitos de produção (bugs anteriores à migração) em
+   `docs/DEBITOS_PRE_EXISTENTES.md`, fora do cutover.
 6. Depois de estável: remover `@supabase/ssr`, `supabase/client.ts`, callback, envs
    `SUPABASE_*`; trocar o tipo `SupabaseClient` por uma interface própria.
 7. Corrigir as migrations do repositório para reconstruírem produção (ou adotar o
@@ -358,6 +366,30 @@ módulos sem E2E, e isso se resolve com testes, não com redesenho. Ordem:
 5. manter o Supabase **intacto e só leitura** por 2 semanas como caminho de volta.
    O rollback é voltar as env para `DATA_BACKEND=supabase`/`AUTH_PROVIDER=supabase`.
 
+## 17. Preparação da migração (2026-09-27)
+
+Plano anterior (ponte JWT/híbrido) abandonado. Alvo: Neon Auth → Next.js →
+PostgreSQL Neon.
+
+| Fase | Status | Resultado |
+|---|---|---|
+| Projeto de produção Neon | **PASS** | `educa-erp-prod` `old-butterfly-53570465`, aws-sa-east-1, PG 17.11; branch `main`; banco `educa` (ICU en-US) |
+| Esquema | **PASS COM RESSALVA** | 92/92 arquivos, 2.731 comandos; 13/13 categorias iguais ao Supabase; corpo das funções 323/330 idêntico, e as 7 restantes diferem só por linhas de comentário (330/330 sem comentários). Collation: o `neondb` padrão nasce C.UTF-8 (a POC tinha a mesma divergência); corrigido com o banco `educa` ICU en-US (`evidence/prod-schema-fingerprint.md`) |
+| Papéis | **PASS** | dono, `educa_app` (sem senha até o ambiente ser ligado), anon, authenticated, service_role separados |
+| Ensaio de dados | **PASS** | branch `rehearsal-2-educa`: 1.665 linhas, 173/173 tabelas e 43/43 sequences iguais (md5), 171 gatilhos ativos, Owner íntegro (`evidence/rehearsal-data.md`) |
+| Script reproduzível | **PASS COM RESSALVA** | `migrate/copy-data.sh` testado localmente (achou e corrigiu: ciclos de FK, `is_called`); não executado Supabase→Neon por falta de rede e da senha do banco do Supabase |
+| Segurança nos dados reais | **PASS** | 56/56 sondas (anon, sem claims, admin, leitura, outra empresa, Owner, sub forjado, service_role) |
+| Owner vs Supabase | **PASS** | mesma visão nos dois bancos (7/7) |
+| E2E dos 8 módulos | **PASS** | 104 verificações novas; total 210/210. Achou 1 bug do adaptador (chave `undefined`), corrigido. Achou 5 bugs de produção, registrados sem correção |
+| Auth/segurança (bateria) | **PASS** | as 106 de antes, de novo. A troca de senha logado **não existe** no app (débito 8); a troca por recuperação está coberta |
+| Homologação | **BLOQUEADO** | Neon `homolog` + Neon Auth em sa-east-1 prontos; script 33/33 contra a pilha local; falta o Preview na Vercel |
+| Runbook + rollback | **PASS** (documento) | `docs/CUTOVER_RUNBOOK.md` (28 passos); **NÃO EXECUTADO** |
+
+Recursos criados no Neon (nada apagado): branches `rehearsal-1` (ensaio anterior,
+senha do dono trocada), `rehearsal-2-educa`, `rehearsal-2-probes`, `homolog` (+ banco
+`authdb` com Neon Auth); banco `neondb` de `main` com `CONNECT` revogado. A limpeza
+depende de aprovação (runbook passo 28).
+
 ---
 
 DATABASE: **PASS**
@@ -366,8 +398,11 @@ RBAC: **PASS**
 API: **PASS**
 CRUD: **PASS**
 SECURITY: **PASS**
-E2E: **PASS** (106/106)
+E2E: **PASS** (210/210)
+DADOS (ensaio): **PASS** (173/173)
+HOMOLOGAÇÃO: **BLOQUEADO** (acesso à Vercel)
+CUTOVER: **NÃO EXECUTADO** (aguarda portões A–E + aprovação)
 
 POC: **PASS**
 
-PRODUÇÃO: **INTACTA**
+PRODUÇÃO EM USO (Supabase/Vercel): **INTACTA**

@@ -94,4 +94,4 @@ daqui**. A prova foi feita em duas partes que se completam:
 
 Para rodar o E2E com o Neon diretamente, basta um ambiente com saída para
 `*.neon.tech`: `DATABASE_URL=<string do papel educa_app>` e
-`poc/neon-full/README.md` §E2E.
+`poc/neon-full/README.md` §E2E. Atualização 2026-09-27: `evidence/rehearsal-data.md` (dados de produção no Neon, 56/56 sondas).

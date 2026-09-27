@@ -38,7 +38,9 @@ os 718 testes provam nos dois modos.
 | `bundle/` + `functions/schemaapply` | pacote verificado por sha256, aplicado no Neon por uma Neon Function (gatilho desativado) |
 | `e2e/` | E2E com Playwright (106 verificações), caixa de e-mail local, reinício do ambiente |
 | `tools/` | divisor de SQL, gerador do pacote, cobertura das RPCs, SQL do adaptador para o Neon |
-| `evidence/` | resultados: E2E 106/106, Neon real 35/35 + 8/8, RPC 219/219 |
+| `migrate/` | cópia de dados reproduzível (`copy-data.sh`) e hash por tabela (`table-hashes.sql`) |
+| `homolog/` | homologação: E2E remoto (`e2e-homolog.mjs`), passos e variáveis do Preview |
+| `evidence/` | resultados: E2E 210/210, ensaio de dados 173/173, sondas 56/56, Neon real 35/35 + 8/8, RPC 219/219, homologação local 33/33 |
 
 ## Como rodar (local, sem Supabase e sem segredos no Git)
 

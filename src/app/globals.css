@@ -446,6 +446,14 @@
   font-feature-settings: "tnum";
 }
 
+/* Pautas de livro-razão (painel do login): identidade, não decoração solta. */
+.auth-ledger {
+  background-image:
+    repeating-linear-gradient(to bottom, transparent 0 39px, var(--color-platform-border) 39px 40px),
+    linear-gradient(to right, transparent 0 72px, color-mix(in oklab, var(--color-platform-accent) 55%, transparent) 72px 73px, transparent 73px);
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
 .code {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;

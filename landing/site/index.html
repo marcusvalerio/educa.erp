@@ -1,0 +1,1198 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EDUCA.ERP · Uma venda não termina na venda</title>
+<meta name="description" content="O EDUCA conecta vendas, compras, estoque, finanças, fiscal, qualidade, projetos e manutenção em uma operação só. Conheça o produto pelas telas reais.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:title" content="EDUCA.ERP">
+<meta property="og:description" content="O EDUCA conecta vendas, compras, estoque, finanças, fiscal, qualidade, projetos e manutenção em uma operação só. Conheça o produto pelas telas reais.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20width%3D%2224%22%20height%3D%2224%22%20aria-hidden%3D%22true%22%3E%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%2222%22%20height%3D%2222%22%20rx%3D%225%22%20fill%3D%22%23100c08%22%2F%3E%3Crect%20x%3D%227%22%20y%3D%226.5%22%20width%3D%2211%22%20height%3D%222.5%22%20rx%3D%221%22%20fill%3D%22%23f5f6f6%22%2F%3E%3Crect%20x%3D%227%22%20y%3D%2210.75%22%20width%3D%228%22%20height%3D%222.5%22%20rx%3D%221%22%20fill%3D%22%23ff9408%22%2F%3E%3Crect%20x%3D%227%22%20y%3D%2215%22%20width%3D%2211%22%20height%3D%222.5%22%20rx%3D%221%22%20fill%3D%22%23f5f6f6%22%2F%3E%3C%2Fsvg%3E">
+<link rel="preload" href="fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/instrument-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+<header class="topbar" data-stage>
+  <div class="wrap topbar-in">
+    <a class="brand" href="#inicio" aria-label="EDUCA.ERP, início da página"><svg class="mark" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="currentColor"/><rect x="7" y="6.5" width="11" height="2.5" rx="1" class="mark-bar"/><rect x="7" y="10.75" width="8" height="2.5" rx="1" class="mark-fire"/><rect x="7" y="15" width="11" height="2.5" rx="1" class="mark-bar"/></svg><span>EDUCA<span class="brand-dim">.ERP</span></span></a>
+    <nav aria-label="Seções" class="topnav"><a href="#siga-um-pedido">Como funciona</a><a href="#areas">Áreas</a><a href="#acesso">Acesso</a><a href="#conexoes">Conexões</a></nav>
+    <a class="btn btn-ghost btn-sm" href="https://educaerp.vercel.app/login">Entrar</a>
+  </div>
+</header>
+<main id="conteudo">
+<section class="hero stage" id="inicio" aria-labelledby="hero-title">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="eyebrow-bar" aria-hidden="true"></span>EDUCA.ERP · gestão integrada</p>
+      <h1 id="hero-title" class="display"><span class="ln">Uma venda não</span> <span class="ln">termina na</span> <span class="ln ln-last"><em>venda.</em><span class="fire-bar" aria-hidden="true"></span></span></h1>
+      <p class="lead">No EDUCA, o pedido aprovado reserva estoque, gera o título a receber, entra no fluxo da logística e aparece nos painéis de gestão. Cada área trabalha a mesma operação, do seu ponto de vista.</p>
+      <div class="actions">
+        <a class="btn btn-fire" href="#siga-um-pedido">Ver como funciona<span aria-hidden="true">↓</span></a>
+        <a class="btn btn-ghost" href="https://educaerp.vercel.app/login">Entrar no EDUCA<span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+    <div class="hero-visual" aria-label="O EDUCA em uso: um pedido, o título que ele gerou e as pendências da gestão">
+      <div class="hv-main"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/pedidos-venda/:id</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/520"><a class="shot-zoom" href="img/comercial-17-pedido-receber-gerado-0-80-1176-520.webp" data-zoom data-w="1176" data-h="520" data-caption="Pedido de venda PV-001013, aprovado, com total de R$ 36.011,62 e as ações Reservar estoque, Gerar conta a receber e Cancelar pedido" aria-label="Ampliar tela: Pedido de venda PV-001013, aprovado, com total de R$ 36.011,62 e as ações Reservar estoque, Gerar conta a receber e Cancelar pedido"><img src="img/comercial-17-pedido-receber-gerado-0-80-1176-520.webp" srcset="img/comercial-17-pedido-receber-gerado-0-80-1176-520-760.webp 760w, img/comercial-17-pedido-receber-gerado-0-80-1176-520.webp 1176w" sizes="(min-width: 1100px) 56vw, 100vw" width="1176" height="520" alt="Pedido de venda PV-001013, aprovado, com total de R$ 36.011,62 e as ações Reservar estoque, Gerar conta a receber e Cancelar pedido" loading="eager" decoding="async" fetchpriority="high"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div>
+      <div class="hv-finance"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">Financeiro · títulos do pedido</span></div>
+  <div class="shot-frame" style="aspect-ratio:552/150"><a class="shot-zoom" href="img/comercial-17-pedido-receber-gerado-596-812-552-150.webp" data-zoom data-w="552" data-h="150" data-caption="Bloco Financeiro do pedido: título CR-0002, vencimento 27/09/2026, R$ 36.011,62, em aberto" aria-label="Ampliar tela: Bloco Financeiro do pedido: título CR-0002, vencimento 27/09/2026, R$ 36.011,62, em aberto"><img src="img/comercial-17-pedido-receber-gerado-596-812-552-150.webp" width="552" height="150" alt="Bloco Financeiro do pedido: título CR-0002, vencimento 27/09/2026, R$ 36.011,62, em aberto" loading="eager" decoding="async" fetchpriority="high"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div>
+      <div class="hv-attention"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">Início · Precisa de atenção</span></div>
+  <div class="shot-frame" style="aspect-ratio:680/405"><a class="shot-zoom" href="img/inicio-01-inicio-20-455-680-405.webp" data-zoom data-w="680" data-h="405" data-caption="Precisa de atenção: 7 não conformidades graves, 14 contas a receber vencidas, 9 contas a pagar vencidas e 5 pedidos aguardando aprovação" aria-label="Ampliar tela: Precisa de atenção: 7 não conformidades graves, 14 contas a receber vencidas, 9 contas a pagar vencidas e 5 pedidos aguardando aprovação"><img src="img/inicio-01-inicio-20-455-680-405.webp" width="680" height="405" alt="Precisa de atenção: 7 não conformidades graves, 14 contas a receber vencidas, 9 contas a pagar vencidas e 5 pedidos aguardando aprovação" loading="eager" decoding="async" fetchpriority="high"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div>
+    </div>
+  </div>
+  <div class="wrap">
+    <ol class="trail" aria-label="O mesmo pedido em três áreas">
+      <li style="--i:0"><span class="trail-area">Comercial</span><code>PV-001013</code><span class="trail-text">Pedido aprovado</span></li><li style="--i:1"><span class="trail-area">Financeiro</span><code>CR-0002</code><span class="trail-text">Título a receber gerado · R$ 36.011,62</span></li><li style="--i:2"><span class="trail-area">Gestão</span><code>5 pedidos</code><span class="trail-text">Aguardando aprovação no Início</span></li>
+    </ol>
+  </div>
+</section>
+<section class="legend-band" aria-labelledby="legenda-title">
+  <div class="wrap legend-in">
+    <p id="legenda-title" class="legend-title">Como ler esta página</p>
+    <p class="legend-text">Tudo o que aparece aqui foi conferido no produto. Cada capacidade leva um selo que diz como ela está disponível hoje.</p>
+    <ul class="legend-list">
+      <li><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span><span>Ação disponível na interface</span></li><li><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span><span>Lista, filtros e detalhe na interface</span></li><li><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span><span>No núcleo da plataforma, sem botão na tela</span></li><li><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span><span>Parcial ou com limitação conhecida</span></li>
+    </ul>
+  </div>
+</section>
+<section class="scenario paper" id="cenario" aria-labelledby="scenario-title">
+  <div class="wrap scenario-grid">
+    <div class="section-head scenario-head">
+      <p class="kicker"><span>O cenário</span></p>
+      <h2 id="scenario-title" class="display-2">Cada área cuida de um pedaço da mesma operação.</h2>
+      <p class="section-lead">O vendedor fecha o pedido. O estoque precisa separar. O financeiro precisa cobrar. O fiscal precisa documentar. A gestão precisa enxergar tudo isso junto.</p><p class="section-lead">Quando cada área registra o seu pedaço em um lugar diferente, a empresa perde o fio: o mesmo cliente é digitado três vezes, o estoque não sabe o que foi vendido e o financeiro descobre a venda no fim do mês.</p>
+    </div>
+    <figure class="ledger">
+      <ol>
+        <li style="--i:0"><span class="lg-area">Comercial</span><span class="lg-record">Pedido de venda</span><code class="lg-code">PV-001013</code></li><li style="--i:1"><span class="lg-area">CRM</span><span class="lg-record">Oportunidade</span><code class="lg-code">OPP-0004</code></li><li style="--i:2"><span class="lg-area">Suprimentos</span><span class="lg-record">Pedido de compra</span><code class="lg-code">PC-00002</code></li><li style="--i:3"><span class="lg-area">Estoque</span><span class="lg-record">Local de estoque</span><code class="lg-code">FIL03 rua 05</code></li><li style="--i:4"><span class="lg-area">Financeiro</span><span class="lg-record">Título a receber</span><code class="lg-code">CR-0002</code></li><li style="--i:5"><span class="lg-area">Fiscal</span><span class="lg-record">CFOP</span><code class="lg-code">5102</code></li><li style="--i:6"><span class="lg-area">Qualidade</span><span class="lg-record">Checklist de inspeção</span><code class="lg-code">REC-01</code></li><li style="--i:7"><span class="lg-area">Ativos</span><span class="lg-record">Ordem de manutenção</span><code class="lg-code">OM-0003</code></li><li style="--i:8"><span class="lg-area">Cadastros</span><span class="lg-record">Cliente</span><code class="lg-code">CLI-0005</code></li><li style="--i:9"><span class="lg-area">Administração</span><span class="lg-record">Papel de acesso</span><code class="lg-code">Comprador</code></li>
+      </ol>
+      <figcaption>Um registro típico de cada área, com os códigos que aparecem nas telas do EDUCA (dados fictícios).</figcaption>
+    </figure>
+  </div>
+</section>
+<section class="platform stage" id="plataforma" aria-labelledby="platform-title">
+  <div class="wrap">
+    <div class="platform-head">
+      <div class="section-head">
+        <p class="kicker"><span>O EDUCA</span></p>
+        <h2 id="platform-title" class="display-2">Uma base só, três ambientes.</h2>
+        <p class="section-lead">Todas as áreas gravam na mesma base. O que muda é quem vê o quê: cada pessoa entra com papéis que definem os módulos e as ações disponíveis para ela.</p>
+      </div>
+      <dl class="numbers">
+        <div><dt>áreas no menu do ERP</dt><dd class="num"><span data-count="15">15</span></dd><dd class="num-note">de Comercial a Controladoria</dd></div><div><dt>painéis de gestão</dt><dd class="num"><span data-count="13">13</span></dd><dd class="num-note">um por área, com pendências e tendências</dd></div><div><dt>módulos contratáveis</dt><dd class="num"><span data-count="19">19</span></dd><dd class="num-note">habilitados por empresa</dd></div><div><dt>permissões no papel Administrador</dt><dd class="num"><span data-count="352">352</span></dd><dd class="num-note">cada ação tem a sua</dd></div>
+      </dl>
+    </div>
+    <ol class="envs">
+      <li class="env">
+        <div class="env-copy">
+          <p class="env-n">01</p>
+          <h3 class="env-name">ERP</h3>
+          <p class="env-who">Toda a empresa</p>
+          <p class="env-what">A operação: vendas, compras, estoque, finanças, fiscal, qualidade, projetos, manutenção e gestão.</p>
+        </div>
+        <figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/gestao/dashboard</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/884"><a class="shot-zoom" href="img/inicio-06-painel-executivo.webp" data-zoom data-w="1176" data-h="884" data-caption="Painel executivo do EDUCA" aria-label="Ampliar tela: Painel executivo do EDUCA"><img src="img/inicio-06-painel-executivo.webp" srcset="img/inicio-06-painel-executivo-760.webp 760w, img/inicio-06-painel-executivo.webp 1176w" sizes="(min-width: 1100px) 30vw, 100vw" width="1176" height="884" alt="Painel executivo do EDUCA" loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure>
+      </li><li class="env">
+        <div class="env-copy">
+          <p class="env-n">02</p>
+          <h3 class="env-name">Administração da Empresa</h3>
+          <p class="env-who">Administrador da empresa</p>
+          <p class="env-what">Usuários, convites, papéis, setores, cargos, unidades, módulos e auditoria da própria empresa.</p>
+        </div>
+        <figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/admin</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/884"><a class="shot-zoom" href="img/admin-01-visao-geral.webp" data-zoom data-w="1176" data-h="884" data-caption="Visão geral da Administração da Empresa" aria-label="Ampliar tela: Visão geral da Administração da Empresa"><img src="img/admin-01-visao-geral.webp" srcset="img/admin-01-visao-geral-760.webp 760w, img/admin-01-visao-geral.webp 1176w" sizes="(min-width: 1100px) 30vw, 100vw" width="1176" height="884" alt="Visão geral da Administração da Empresa" loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure>
+      </li><li class="env">
+        <div class="env-copy">
+          <p class="env-n">03</p>
+          <h3 class="env-name">Administração Central</h3>
+          <p class="env-who">Owner e Admin da plataforma</p>
+          <p class="env-what">Empresas clientes, ciclo de vida e módulos contratados. Não enxerga dados operacionais das empresas.</p>
+        </div>
+        <figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/admincentral</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/1079"><a class="shot-zoom" href="img/central-01-visao-geral.webp" data-zoom data-w="1176" data-h="1079" data-caption="Visão geral da Administração Central" aria-label="Ampliar tela: Visão geral da Administração Central"><img src="img/central-01-visao-geral.webp" srcset="img/central-01-visao-geral-760.webp 760w, img/central-01-visao-geral.webp 1176w" sizes="(min-width: 1100px) 30vw, 100vw" width="1176" height="1079" alt="Visão geral da Administração Central" loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure>
+      </li>
+    </ol>
+  </div>
+</section>
+<section class="journey paper" id="siga-um-pedido" aria-labelledby="journey-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker"><span>Como funciona</span></p>
+      <h2 id="journey-title" class="display-2">Siga um pedido.</h2>
+      <p class="section-lead">Uma venda atravessa seis áreas. Role para acompanhar o que cada uma recebe e onde isso aparece no EDUCA.</p>
+    </div>
+    <ol class="lane" aria-hidden="true">
+      <li data-lane="0" class="is-active"><span class="lane-n">01</span><span class="lane-name">Venda</span></li><li data-lane="1"><span class="lane-n">02</span><span class="lane-name">Estoque</span></li><li data-lane="2"><span class="lane-n">03</span><span class="lane-name">Financeiro</span></li><li data-lane="3"><span class="lane-n">04</span><span class="lane-name">Fiscal</span></li><li data-lane="4"><span class="lane-n">05</span><span class="lane-name">Logística</span></li><li data-lane="5"><span class="lane-n">06</span><span class="lane-name">Gestão</span></li>
+      <li class="lane-fire" style="--p:0"></li>
+    </ol>
+    <div class="journey-grid">
+      <ol class="steps">
+        <li class="step is-active" data-step="0">
+          <div class="step-head"><span class="step-n">01</span><span class="step-area">Venda</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></div>
+          <h3 class="step-title">O pedido é aprovado</h3>
+          <p class="step-text">O pedido sai do rascunho, vai para aprovação e é aprovado por quem tem a permissão. Cada ação pede confirmação e fica no histórico.</p>
+          <dl class="step-meta">
+            <div><dt>Na prática</dt><dd>Enviar para aprovação → Aprovar</dd></div>
+            <div><dt>Permissão</dt><dd><code>sales_orders.approve</code></dd></div>
+          </dl>
+          <div class="step-shot"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/pedidos-venda/:id</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/comercial-12-pedido-aprovar-confirmar-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Confirmação para aprovar um pedido de venda" aria-label="Ampliar tela: Confirmação para aprovar um pedido de venda"><img src="img/comercial-12-pedido-aprovar-confirmar-257-0-1183-900.webp" srcset="img/comercial-12-pedido-aprovar-confirmar-257-0-1183-900-760.webp 760w, img/comercial-12-pedido-aprovar-confirmar-257-0-1183-900.webp 1183w" sizes="100vw" width="1183" height="900" alt="Confirmação para aprovar um pedido de venda" loading="lazy" decoding="async"><span class="focus" aria-hidden="true" style="left:20.20%;top:41.33%;width:37.70%;height:16.67%"></span><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div>
+        </li><li class="step" data-step="1">
+          <div class="step-head"><span class="step-n">02</span><span class="step-area">Estoque</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></div>
+          <h3 class="step-title">O estoque fica reservado</h3>
+          <p class="step-text">Com o pedido aprovado, Reservar estoque separa as quantidades no local escolhido. Itens sem saldo ficam com reserva pendente.</p>
+          <dl class="step-meta">
+            <div><dt>Na prática</dt><dd>Reservar estoque → local de estoque</dd></div>
+            <div><dt>Permissão</dt><dd><code>sales_orders.reserve</code></dd></div>
+          </dl>
+          <div class="step-shot"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/pedidos-venda/:id</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/comercial-14-pedido-reservar-dialogo-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Janela Reservar estoque com a lista de locais" aria-label="Ampliar tela: Janela Reservar estoque com a lista de locais"><img src="img/comercial-14-pedido-reservar-dialogo-257-0-1183-900.webp" srcset="img/comercial-14-pedido-reservar-dialogo-257-0-1183-900-760.webp 760w, img/comercial-14-pedido-reservar-dialogo-257-0-1183-900.webp 1183w" sizes="100vw" width="1183" height="900" alt="Janela Reservar estoque com a lista de locais" loading="lazy" decoding="async"><span class="focus" aria-hidden="true" style="left:22.91%;top:34.67%;width:32.29%;height:62.22%"></span><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div>
+        </li><li class="step" data-step="2">
+          <div class="step-head"><span class="step-n">03</span><span class="step-area">Financeiro</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></div>
+          <h3 class="step-title">Nasce o título a receber</h3>
+          <p class="step-text">Gerar conta a receber cria o título a partir do valor e das condições do pedido. Ele aparece no próprio pedido e em Contas a receber.</p>
+          <dl class="step-meta">
+            <div><dt>Na prática</dt><dd>CR-0002 · R$ 36.011,62 · Em aberto</dd></div>
+            <div><dt>Permissão</dt><dd><code>accounts_receivable.approve</code></dd></div>
+          </dl>
+          <div class="step-shot"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/pedidos-venda/:id</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/900"><a class="shot-zoom" href="img/comercial-17-pedido-receber-gerado-0-80-1176-900.webp" data-zoom data-w="1176" data-h="900" data-caption="Pedido com o título CR-0002 no bloco Financeiro" aria-label="Ampliar tela: Pedido com o título CR-0002 no bloco Financeiro"><img src="img/comercial-17-pedido-receber-gerado-0-80-1176-900.webp" srcset="img/comercial-17-pedido-receber-gerado-0-80-1176-900-760.webp 760w, img/comercial-17-pedido-receber-gerado-0-80-1176-900.webp 1176w" sizes="100vw" width="1176" height="900" alt="Pedido com o título CR-0002 no bloco Financeiro" loading="lazy" decoding="async"><span class="focus" aria-hidden="true" style="left:50.68%;top:81.33%;width:46.94%;height:16.67%"></span><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div>
+        </li><li class="step" data-step="3">
+          <div class="step-head"><span class="step-n">04</span><span class="step-area">Fiscal</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></div>
+          <h3 class="step-title">O documento fiscal parte do pedido</h3>
+          <p class="step-text">O núcleo cria o documento fiscal a partir do pedido e calcula os impostos pelas regras tributárias. Na tela, Faturamento e Fiscal listam os documentos.</p>
+          <dl class="step-meta">
+            <div><dt>Na prática</dt><dd>Documento do pedido e cálculo de impostos pela API; consulta na tela</dd></div>
+            <div><dt>Permissão</dt><dd><code>fiscal_documents.view</code></dd></div>
+          </dl>
+          <div class="step-shot"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/faturamento</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/comercial-21-faturamento-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Faturamento com documentos fiscais das vendas" aria-label="Ampliar tela: Faturamento com documentos fiscais das vendas"><img src="img/comercial-21-faturamento-257-0-1183-592.webp" srcset="img/comercial-21-faturamento-257-0-1183-592-760.webp 760w, img/comercial-21-faturamento-257-0-1183-592.webp 1183w" sizes="100vw" width="1183" height="592" alt="Faturamento com documentos fiscais das vendas" loading="lazy" decoding="async"><span class="focus" aria-hidden="true" style="left:2.79%;top:57.43%;width:95.52%;height:13.51%"></span><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div>
+        </li><li class="step" data-step="4">
+          <div class="step-head"><span class="step-n">05</span><span class="step-area">Logística</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></div>
+          <h3 class="step-title">Separação, expedição e entrega</h3>
+          <p class="step-text">Listas de separação, embalagem, expedição, transporte e eventos de entrega rodam no núcleo. O Início mostra o fluxo do pedido à entrega com os números do período.</p>
+          <dl class="step-meta">
+            <div><dt>Na prática</dt><dd>Pedidos → Em preparação → Expedidos → Entregues</dd></div>
+            <div><dt>Permissão</dt><dd><code>shipments.view</code></dd></div>
+          </dl>
+          <div class="step-shot"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/884"><a class="shot-zoom" href="img/inicio-04-fluxo-do-erp.webp" data-zoom data-w="1176" data-h="884" data-caption="Fluxo do ERP no Início: pedidos do período em aprovação, preparação e expedição" aria-label="Ampliar tela: Fluxo do ERP no Início: pedidos do período em aprovação, preparação e expedição"><img src="img/inicio-04-fluxo-do-erp.webp" srcset="img/inicio-04-fluxo-do-erp-760.webp 760w, img/inicio-04-fluxo-do-erp.webp 1176w" sizes="100vw" width="1176" height="884" alt="Fluxo do ERP no Início: pedidos do período em aprovação, preparação e expedição" loading="lazy" decoding="async"><span class="focus" aria-hidden="true" style="left:2.55%;top:7.92%;width:94.81%;height:45.25%"></span><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div>
+        </li><li class="step" data-step="5">
+          <div class="step-head"><span class="step-n">06</span><span class="step-area">Gestão</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></div>
+          <h3 class="step-title">Tudo vira pendência e indicador</h3>
+          <p class="step-text">Pedidos aguardando aprovação, títulos vencidos e contas a pagar vencidas aparecem em Precisa de atenção, com valor e atalho para a lista filtrada.</p>
+          <dl class="step-meta">
+            <div><dt>Na prática</dt><dd>Precisa de atenção · O que mudou · Seu foco</dd></div>
+            <div><dt>Permissão</dt><dd><code>reports.view</code></dd></div>
+          </dl>
+          <div class="step-shot"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/</span></div>
+  <div class="shot-frame" style="aspect-ratio:680/405"><a class="shot-zoom" href="img/inicio-01-inicio-20-455-680-405.webp" data-zoom data-w="680" data-h="405" data-caption="Bloco Precisa de atenção no Início com pendências e valores" aria-label="Ampliar tela: Bloco Precisa de atenção no Início com pendências e valores"><img src="img/inicio-01-inicio-20-455-680-405.webp" width="680" height="405" alt="Bloco Precisa de atenção no Início com pendências e valores" loading="lazy" decoding="async"><span class="focus" aria-hidden="true" style="left:2.06%;top:69.88%;width:95.88%;height:12.84%"></span><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div>
+        </li>
+      </ol>
+      <div class="journey-stage" aria-hidden="true">
+        <div class="stage-stack">
+          <div class="stage-item is-active" data-stage-item="0"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/pedidos-venda/:id</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/comercial-12-pedido-aprovar-confirmar-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Confirmação para aprovar um pedido de venda" tabindex="-1"><img src="img/comercial-12-pedido-aprovar-confirmar-257-0-1183-900.webp" srcset="img/comercial-12-pedido-aprovar-confirmar-257-0-1183-900-760.webp 760w, img/comercial-12-pedido-aprovar-confirmar-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 58vw, 100vw" width="1183" height="900" alt="" loading="lazy" decoding="async"><span class="focus" aria-hidden="true" style="left:20.20%;top:41.33%;width:37.70%;height:16.67%"></span><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div><div class="stage-item" data-stage-item="1"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/pedidos-venda/:id</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/comercial-14-pedido-reservar-dialogo-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Janela Reservar estoque com a lista de locais" tabindex="-1"><img src="img/comercial-14-pedido-reservar-dialogo-257-0-1183-900.webp" srcset="img/comercial-14-pedido-reservar-dialogo-257-0-1183-900-760.webp 760w, img/comercial-14-pedido-reservar-dialogo-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 58vw, 100vw" width="1183" height="900" alt="" loading="lazy" decoding="async"><span class="focus" aria-hidden="true" style="left:22.91%;top:34.67%;width:32.29%;height:62.22%"></span><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div><div class="stage-item" data-stage-item="2"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/pedidos-venda/:id</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/900"><a class="shot-zoom" href="img/comercial-17-pedido-receber-gerado-0-80-1176-900.webp" data-zoom data-w="1176" data-h="900" data-caption="Pedido com o título CR-0002 no bloco Financeiro" tabindex="-1"><img src="img/comercial-17-pedido-receber-gerado-0-80-1176-900.webp" srcset="img/comercial-17-pedido-receber-gerado-0-80-1176-900-760.webp 760w, img/comercial-17-pedido-receber-gerado-0-80-1176-900.webp 1176w" sizes="(min-width: 1100px) 58vw, 100vw" width="1176" height="900" alt="" loading="lazy" decoding="async"><span class="focus" aria-hidden="true" style="left:50.68%;top:81.33%;width:46.94%;height:16.67%"></span><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div><div class="stage-item" data-stage-item="3"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/faturamento</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/comercial-21-faturamento-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Faturamento com documentos fiscais das vendas" tabindex="-1"><img src="img/comercial-21-faturamento-257-0-1183-592.webp" srcset="img/comercial-21-faturamento-257-0-1183-592-760.webp 760w, img/comercial-21-faturamento-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 58vw, 100vw" width="1183" height="592" alt="" loading="lazy" decoding="async"><span class="focus" aria-hidden="true" style="left:2.79%;top:57.43%;width:95.52%;height:13.51%"></span><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div><div class="stage-item" data-stage-item="4"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/884"><a class="shot-zoom" href="img/inicio-04-fluxo-do-erp.webp" data-zoom data-w="1176" data-h="884" data-caption="Fluxo do ERP no Início: pedidos do período em aprovação, preparação e expedição" tabindex="-1"><img src="img/inicio-04-fluxo-do-erp.webp" srcset="img/inicio-04-fluxo-do-erp-760.webp 760w, img/inicio-04-fluxo-do-erp.webp 1176w" sizes="(min-width: 1100px) 58vw, 100vw" width="1176" height="884" alt="" loading="lazy" decoding="async"><span class="focus" aria-hidden="true" style="left:2.55%;top:7.92%;width:94.81%;height:45.25%"></span><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div><div class="stage-item" data-stage-item="5"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/</span></div>
+  <div class="shot-frame" style="aspect-ratio:680/405"><a class="shot-zoom" href="img/inicio-01-inicio-20-455-680-405.webp" data-zoom data-w="680" data-h="405" data-caption="Bloco Precisa de atenção no Início com pendências e valores" tabindex="-1"><img src="img/inicio-01-inicio-20-455-680-405.webp" width="680" height="405" alt="" loading="lazy" decoding="async"><span class="focus" aria-hidden="true" style="left:2.06%;top:69.88%;width:95.88%;height:12.84%"></span><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  
+</figure></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="areas paper" id="areas" aria-labelledby="areas-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker"><span>Áreas, uma a uma</span></p>
+      <h2 id="areas-title" class="display-2">O que cada área faz, e com quem ela fala.</h2>
+      <p class="section-lead">Para cada área: o problema que ela resolve, o que dá para fazer hoje, como o trabalho anda, que informação ela guarda e para onde essa informação vai.</p>
+    </div>
+    <nav class="area-index" aria-label="Mapa das áreas"><ol><li><a href="#mod-comercial" class="tile">
+      <span class="tile-n">01</span>
+      <span class="tile-name">Comercial</span>
+      <span class="tile-tag">Do orçamento ao faturamento das vendas.</span>
+      <span class="sbar" role="img" aria-label="7 capacidades: 4 na tela, 1 consulta, 1 na api, 1 em evolução"><i class="sb-tela" style="flex:4"></i><i class="sb-consulta" style="flex:1"></i><i class="sb-api" style="flex:1"></i><i class="sb-evolucao" style="flex:1"></i></span>
+    </a></li><li><a href="#mod-crm" class="tile">
+      <span class="tile-n">02</span>
+      <span class="tile-name">CRM</span>
+      <span class="tile-tag">Leads, funil e atividades comerciais.</span>
+      <span class="sbar" role="img" aria-label="5 capacidades: 1 na tela, 2 consulta, 1 na api, 1 em evolução"><i class="sb-tela" style="flex:1"></i><i class="sb-consulta" style="flex:2"></i><i class="sb-api" style="flex:1"></i><i class="sb-evolucao" style="flex:1"></i></span>
+    </a></li><li><a href="#mod-suprimentos" class="tile">
+      <span class="tile-n">03</span>
+      <span class="tile-name">Suprimentos</span>
+      <span class="tile-tag">Da necessidade de compra à mercadoria recebida.</span>
+      <span class="sbar" role="img" aria-label="5 capacidades: 1 na tela, 1 consulta, 3 na api"><i class="sb-tela" style="flex:1"></i><i class="sb-consulta" style="flex:1"></i><i class="sb-api" style="flex:3"></i></span>
+    </a></li><li><a href="#mod-estoque" class="tile">
+      <span class="tile-n">04</span>
+      <span class="tile-name">Estoque e Logística</span>
+      <span class="tile-tag">Onde está cada item e para onde ele vai.</span>
+      <span class="sbar" role="img" aria-label="5 capacidades: 3 consulta, 2 na api"><i class="sb-consulta" style="flex:3"></i><i class="sb-api" style="flex:2"></i></span>
+    </a></li><li><a href="#mod-financeiro" class="tile">
+      <span class="tile-n">05</span>
+      <span class="tile-name">Financeiro</span>
+      <span class="tile-tag">O que entra, o que sai e o que vem pela frente.</span>
+      <span class="sbar" role="img" aria-label="5 capacidades: 1 na tela, 3 consulta, 1 na api"><i class="sb-tela" style="flex:1"></i><i class="sb-consulta" style="flex:3"></i><i class="sb-api" style="flex:1"></i></span>
+    </a></li><li><a href="#mod-fiscal" class="tile">
+      <span class="tile-n">06</span>
+      <span class="tile-name">Fiscal</span>
+      <span class="tile-tag">Documentos, classificação e regras de imposto.</span>
+      <span class="sbar" role="img" aria-label="5 capacidades: 2 consulta, 2 na api, 1 em evolução"><i class="sb-consulta" style="flex:2"></i><i class="sb-api" style="flex:2"></i><i class="sb-evolucao" style="flex:1"></i></span>
+    </a></li><li><a href="#mod-qualidade" class="tile">
+      <span class="tile-n">07</span>
+      <span class="tile-name">Qualidade</span>
+      <span class="tile-tag">Inspecionar, registrar o desvio e agir.</span>
+      <span class="sbar" role="img" aria-label="4 capacidades: 2 consulta, 2 na api"><i class="sb-consulta" style="flex:2"></i><i class="sb-api" style="flex:2"></i></span>
+    </a></li><li><a href="#mod-projetos" class="tile">
+      <span class="tile-n">08</span>
+      <span class="tile-name">Projetos e Serviços</span>
+      <span class="tile-tag">Projetos, tarefas, horas e ordens de serviço.</span>
+      <span class="sbar" role="img" aria-label="4 capacidades: 2 consulta, 2 na api"><i class="sb-consulta" style="flex:2"></i><i class="sb-api" style="flex:2"></i></span>
+    </a></li><li><a href="#mod-ativos" class="tile">
+      <span class="tile-n">09</span>
+      <span class="tile-name">Ativos e Manutenção</span>
+      <span class="tile-tag">Equipamentos, planos e ordens de manutenção.</span>
+      <span class="sbar" role="img" aria-label="4 capacidades: 3 consulta, 1 na api"><i class="sb-consulta" style="flex:3"></i><i class="sb-api" style="flex:1"></i></span>
+    </a></li><li><a href="#mod-painel" class="tile">
+      <span class="tile-n">10</span>
+      <span class="tile-name">Início, Painéis e Controladoria</span>
+      <span class="tile-tag">O que mudou, o que precisa de atenção e onde agir.</span>
+      <span class="sbar" role="img" aria-label="6 capacidades: 4 na tela, 1 consulta, 1 em evolução"><i class="sb-tela" style="flex:4"></i><i class="sb-consulta" style="flex:1"></i><i class="sb-evolucao" style="flex:1"></i></span>
+    </a></li><li><a href="#base" class="tile tile-base">
+      <span class="tile-n">11</span>
+      <span class="tile-name">Cadastros</span>
+      <span class="tile-tag">Clientes, fornecedores, transportadoras, motoristas e veículos.</span>
+      <span class="sbar" role="img" aria-label="4 capacidades: 2 na tela, 1 consulta, 1 em evolução"><i class="sb-tela" style="flex:2"></i><i class="sb-consulta" style="flex:1"></i><i class="sb-evolucao" style="flex:1"></i></span>
+    </a></li><li><a href="#evolucao" class="tile tile-evo">
+      <span class="tile-n">12</span>
+      <span class="tile-name">Em evolução</span>
+      <span class="tile-tag">Produção, Workflow, Importação: o que já existe e o que falta.</span>
+      <span class="sbar" aria-hidden="true"><i class="sb-evolucao" style="flex:1"></i></span>
+    </a></li></ol>
+    <p class="area-index-note">A barra de cada área mostra como as capacidades dela estão disponíveis hoje: <span class="ai-key"><i class="sb-tela"></i>Na tela</span><span class="ai-key"><i class="sb-consulta"></i>Consulta</span><span class="ai-key"><i class="sb-api"></i>Na API</span><span class="ai-key"><i class="sb-evolucao"></i>Em evolução</span></p>
+  </nav>
+    <article class="module" id="mod-comercial" aria-labelledby="mod-comercial-title">
+  <div class="module-top">
+    <div class="module-intro">
+      <p class="module-index"><span>01</span>Comercial</p>
+      <h3 id="mod-comercial-title" class="display-3">Do orçamento ao faturamento das vendas.</h3>
+      <div class="ps">
+        <div class="ps-row ps-problem"><p class="q">O problema</p><p>Pedido aprovado por mensagem, estoque que ninguém reservou e cobrança que só aparece no fim do mês.</p></div>
+        <div class="ps-row ps-solution"><p class="q">No EDUCA</p><p>Vendas e atendimento comercial. Acompanha propostas, faz o pedido andar da aprovação à reserva e liga a venda ao financeiro.</p></div>
+      </div>
+      <p class="who"><span>Para quem</span>Vendedores, gestores comerciais e quem aprova pedidos.</p>
+      <ul class="state-sum" aria-label="Capacidades por estado"><li><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span><b>4</b></li><li><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span><b>1</b></li><li><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span><b>1</b></li><li><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span><b>1</b></li></ul>
+    </div>
+    <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Telas do módulo Comercial">
+    <button role="tab" type="button" id="v-comercial-tab-0" aria-controls="v-comercial-panel-0" aria-selected="true" tabindex="0">Pedidos</button><button role="tab" type="button" id="v-comercial-tab-1" aria-controls="v-comercial-panel-1" aria-selected="false" tabindex="-1">Detalhe</button><button role="tab" type="button" id="v-comercial-tab-2" aria-controls="v-comercial-panel-2" aria-selected="false" tabindex="-1">Reservado</button><button role="tab" type="button" id="v-comercial-tab-3" aria-controls="v-comercial-panel-3" aria-selected="false" tabindex="-1">Orçamentos</button><button role="tab" type="button" id="v-comercial-tab-4" aria-controls="v-comercial-panel-4" aria-selected="false" tabindex="-1">Visão</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-comercial-panel-0" aria-labelledby="v-comercial-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/pedidos-venda</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/comercial-04-pedidos-lista-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Lista de pedidos com visões, busca, status e exportação." aria-label="Ampliar tela: Lista de pedidos com visões, busca, status e exportação."><img src="img/comercial-04-pedidos-lista-257-0-1183-900.webp" srcset="img/comercial-04-pedidos-lista-257-0-1183-900-760.webp 760w, img/comercial-04-pedidos-lista-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Lista de pedidos com visões, busca, status e exportação." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Lista de pedidos com visões, busca, status e exportação.</figcaption>
+</figure></div><div role="tabpanel" id="v-comercial-panel-1" aria-labelledby="v-comercial-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/pedidos-venda/:id</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/comercial-13-pedido-aprovado-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Pedido aprovado: total, itens, reservado, expedido e as ações do momento." aria-label="Ampliar tela: Pedido aprovado: total, itens, reservado, expedido e as ações do momento."><img src="img/comercial-13-pedido-aprovado-257-0-1183-900.webp" srcset="img/comercial-13-pedido-aprovado-257-0-1183-900-760.webp 760w, img/comercial-13-pedido-aprovado-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Pedido aprovado: total, itens, reservado, expedido e as ações do momento." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Pedido aprovado: total, itens, reservado, expedido e as ações do momento.</figcaption>
+</figure></div><div role="tabpanel" id="v-comercial-panel-2" aria-labelledby="v-comercial-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/pedidos-venda/:id</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/comercial-15-pedido-reservado-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Depois de reservar, o pedido oferece Liberar reserva e Gerar conta a receber." aria-label="Ampliar tela: Depois de reservar, o pedido oferece Liberar reserva e Gerar conta a receber."><img src="img/comercial-15-pedido-reservado-257-0-1183-900.webp" srcset="img/comercial-15-pedido-reservado-257-0-1183-900-760.webp 760w, img/comercial-15-pedido-reservado-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Depois de reservar, o pedido oferece Liberar reserva e Gerar conta a receber." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Depois de reservar, o pedido oferece Liberar reserva e Gerar conta a receber.</figcaption>
+</figure></div><div role="tabpanel" id="v-comercial-panel-3" aria-labelledby="v-comercial-tab-3" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/orcamentos</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/comercial-03-orcamentos-detalhe-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Orçamento com cliente, validade, total e histórico." aria-label="Ampliar tela: Orçamento com cliente, validade, total e histórico."><img src="img/comercial-03-orcamentos-detalhe-257-0-1183-900.webp" srcset="img/comercial-03-orcamentos-detalhe-257-0-1183-900-760.webp 760w, img/comercial-03-orcamentos-detalhe-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Orçamento com cliente, validade, total e histórico." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Orçamento com cliente, validade, total e histórico.</figcaption>
+</figure></div><div role="tabpanel" id="v-comercial-panel-4" aria-labelledby="v-comercial-tab-4" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/884"><a class="shot-zoom" href="img/comercial-01-workspace.webp" data-zoom data-w="1176" data-h="884" data-caption="Página do módulo: valor em pedidos, ticket médio e pedidos pendentes." aria-label="Ampliar tela: Página do módulo: valor em pedidos, ticket médio e pedidos pendentes."><img src="img/comercial-01-workspace.webp" srcset="img/comercial-01-workspace-760.webp 760w, img/comercial-01-workspace.webp 1176w" sizes="(min-width: 1100px) 60vw, 100vw" width="1176" height="884" alt="Página do módulo: valor em pedidos, ticket médio e pedidos pendentes." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Página do módulo: valor em pedidos, ticket médio e pedidos pendentes.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+  </div>
+  <div class="module-body">
+    <div class="mb-col">
+      <h4 id="mod-comercial-does" class="q-title"><span>1</span>O que você faz</h4>
+      <ul class="does"><li class="does-tela"><span>Acompanhar pedidos por visões: entrega atrasada, aguardando aprovação, em andamento</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Enviar para aprovação, aprovar e cancelar pedidos</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Reservar e liberar estoque do pedido</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Gerar a conta a receber a partir do pedido</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-consulta"><span>Consultar orçamentos e o faturamento</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-api"><span>Gerar documento fiscal, separação e expedição do pedido</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li class="does-evolucao"><span>Criar e editar pedidos pela tela</span><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span></li></ul>
+    </div>
+    <div class="mb-col">
+      <h4 id="mod-comercial-flow" class="q-title"><span>2</span>Como funciona</h4>
+      <ol class="flow"><li style="--i:0"><span>Rascunho</span></li><li style="--i:1"><span>Aguardando aprovação</span></li><li style="--i:2"><span>Aprovado</span></li><li style="--i:3"><span>Reservado</span></li><li style="--i:4"><span>Em separação</span></li><li style="--i:5"><span>Expedido</span></li><li style="--i:6"><span>Concluído</span></li></ol>
+    </div>
+    <div class="mb-col">
+      <div class="mb-part">
+        <h4 id="mod-comercial-ctl" class="q-title"><span>3</span>O que você controla</h4>
+        <ul class="controls"><li>Pedidos de venda (PV)</li><li>Itens, total, frete e desconto</li><li>Reserva e expedição por pedido</li><li>Orçamentos (ORC)</li><li>Documentos de faturamento</li></ul>
+      </div>
+      <div class="mb-part">
+        <h4 id="mod-comercial-links" class="q-title"><span>4</span>Como se conecta</h4>
+        <ul class="links"><li><a href="#mod-estoque"><span class="links-to">Estoque e Logística</span><span class="links-what">reserva de estoque</span></a></li><li><a href="#mod-financeiro"><span class="links-to">Financeiro</span><span class="links-what">título a receber</span></a></li><li><a href="#mod-fiscal"><span class="links-to">Fiscal</span><span class="links-what">documento fiscal do pedido</span></a></li><li><a href="#mod-painel"><span class="links-to">Início, Painéis e Controladoria</span><span class="links-what">pedidos no fluxo e nas pendências</span></a></li></ul>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="module" id="mod-crm" aria-labelledby="mod-crm-title">
+  <div class="module-top">
+    <div class="module-intro">
+      <p class="module-index"><span>02</span>CRM</p>
+      <h3 id="mod-crm-title" class="display-3">Leads, funil e atividades comerciais.</h3>
+      <div class="ps">
+        <div class="ps-row ps-problem"><p class="q">O problema</p><p>Oportunidades na planilha de cada vendedor: ninguém sabe o que está perto de fechar nem o que ficou sem retorno.</p></div>
+        <div class="ps-row ps-solution"><p class="q">No EDUCA</p><p>Organiza o que acontece antes do pedido: quem são os contatos, em que estágio está cada oportunidade e o que precisa ser feito.</p></div>
+      </div>
+      <p class="who"><span>Para quem</span>Vendedores e gestores comerciais.</p>
+      <ul class="state-sum" aria-label="Capacidades por estado"><li><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span><b>1</b></li><li><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span><b>2</b></li><li><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span><b>1</b></li><li><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span><b>1</b></li></ul>
+    </div>
+    <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Telas do módulo CRM">
+    <button role="tab" type="button" id="v-crm-tab-0" aria-controls="v-crm-panel-0" aria-selected="true" tabindex="0">Pipeline</button><button role="tab" type="button" id="v-crm-tab-1" aria-controls="v-crm-panel-1" aria-selected="false" tabindex="-1">Oportunidade</button><button role="tab" type="button" id="v-crm-tab-2" aria-controls="v-crm-panel-2" aria-selected="false" tabindex="-1">Leads</button><button role="tab" type="button" id="v-crm-tab-3" aria-controls="v-crm-panel-3" aria-selected="false" tabindex="-1">Atividades</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-crm-panel-0" aria-labelledby="v-crm-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/crm/pipeline</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/crm-05-pipeline-mover-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Cada cartão avança ou volta um estágio pelas setas; o valor total do estágio atualiza." aria-label="Ampliar tela: Cada cartão avança ou volta um estágio pelas setas; o valor total do estágio atualiza."><img src="img/crm-05-pipeline-mover-257-0-1183-900.webp" srcset="img/crm-05-pipeline-mover-257-0-1183-900-760.webp 760w, img/crm-05-pipeline-mover-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Cada cartão avança ou volta um estágio pelas setas; o valor total do estágio atualiza." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Cada cartão avança ou volta um estágio pelas setas; o valor total do estágio atualiza.</figcaption>
+</figure></div><div role="tabpanel" id="v-crm-panel-1" aria-labelledby="v-crm-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/crm/oportunidades</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/crm-07-oportunidades-detalhe-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Oportunidade com cliente, valor estimado, probabilidade e previsão." aria-label="Ampliar tela: Oportunidade com cliente, valor estimado, probabilidade e previsão."><img src="img/crm-07-oportunidades-detalhe-257-0-1183-900.webp" srcset="img/crm-07-oportunidades-detalhe-257-0-1183-900-760.webp 760w, img/crm-07-oportunidades-detalhe-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Oportunidade com cliente, valor estimado, probabilidade e previsão." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Oportunidade com cliente, valor estimado, probabilidade e previsão.</figcaption>
+</figure></div><div role="tabpanel" id="v-crm-panel-2" aria-labelledby="v-crm-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/crm/leads</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/636"><a class="shot-zoom" href="img/crm-02-leads-lista-257-0-1183-636.webp" data-zoom data-w="1183" data-h="636" data-caption="Leads com empresa, qualificação e status." aria-label="Ampliar tela: Leads com empresa, qualificação e status."><img src="img/crm-02-leads-lista-257-0-1183-636.webp" srcset="img/crm-02-leads-lista-257-0-1183-636-760.webp 760w, img/crm-02-leads-lista-257-0-1183-636.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="636" alt="Leads com empresa, qualificação e status." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Leads com empresa, qualificação e status.</figcaption>
+</figure></div><div role="tabpanel" id="v-crm-panel-3" aria-labelledby="v-crm-tab-3" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/crm/atividades</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/crm-08-atividades-lista-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Atividades pendentes e atrasadas por prazo." aria-label="Ampliar tela: Atividades pendentes e atrasadas por prazo."><img src="img/crm-08-atividades-lista-257-0-1183-592.webp" srcset="img/crm-08-atividades-lista-257-0-1183-592-760.webp 760w, img/crm-08-atividades-lista-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Atividades pendentes e atrasadas por prazo." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Atividades pendentes e atrasadas por prazo.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+  </div>
+  <div class="module-body">
+    <div class="mb-col">
+      <h4 id="mod-crm-does" class="q-title"><span>1</span>O que você faz</h4>
+      <ul class="does"><li class="does-tela"><span>Mover oportunidades entre os estágios do funil</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-consulta"><span>Consultar leads por visão: novos e qualificados</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-consulta"><span>Consultar oportunidades e atividades, com atrasadas e pendentes</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-api"><span>Converter oportunidade em orçamento ou pedido</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li class="does-evolucao"><span>Converter lead em oportunidade</span><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span></li></ul>
+    </div>
+    <div class="mb-col">
+      <h4 id="mod-crm-flow" class="q-title"><span>2</span>Como funciona</h4>
+      <ol class="flow"><li style="--i:0"><span>Prospecção</span></li><li style="--i:1"><span>Qualificação</span></li><li style="--i:2"><span>Proposta</span></li><li style="--i:3"><span>Negociação</span></li></ol>
+    </div>
+    <div class="mb-col">
+      <div class="mb-part">
+        <h4 id="mod-crm-ctl" class="q-title"><span>3</span>O que você controla</h4>
+        <ul class="controls"><li>Leads (LEAD)</li><li>Oportunidades (OPP) com valor e chance</li><li>Estágios e funis</li><li>Atividades: ligações, reuniões, retornos</li></ul>
+      </div>
+      <div class="mb-part">
+        <h4 id="mod-crm-links" class="q-title"><span>4</span>Como se conecta</h4>
+        <ul class="links"><li><a href="#mod-comercial"><span class="links-to">Comercial</span><span class="links-what">oportunidade vira orçamento ou pedido</span></a></li><li><a href="#base"><span class="links-to">Cadastros</span><span class="links-what">cliente da oportunidade</span></a></li><li><a href="#mod-painel"><span class="links-to">Início, Painéis e Controladoria</span><span class="links-what">funil no painel comercial</span></a></li></ul>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="module" id="mod-suprimentos" aria-labelledby="mod-suprimentos-title">
+  <div class="module-top">
+    <div class="module-intro">
+      <p class="module-index"><span>03</span>Suprimentos</p>
+      <h3 id="mod-suprimentos-title" class="display-3">Da necessidade de compra à mercadoria recebida.</h3>
+      <div class="ps">
+        <div class="ps-row ps-problem"><p class="q">O problema</p><p>Compra pedida no corredor, cotação no e-mail e mercadoria que chega sem ninguém saber de qual pedido ela é.</p></div>
+        <div class="ps-row ps-solution"><p class="q">No EDUCA</p><p>Dá rastro à compra: quem pediu, quais fornecedores cotaram, o que foi pedido e o que chegou.</p></div>
+      </div>
+      <p class="who"><span>Para quem</span>Compradores, almoxarifado e quem aprova compras.</p>
+      <ul class="state-sum" aria-label="Capacidades por estado"><li><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span><b>1</b></li><li><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span><b>1</b></li><li><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span><b>3</b></li></ul>
+    </div>
+    <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Telas do módulo Suprimentos">
+    <button role="tab" type="button" id="v-suprimentos-tab-0" aria-controls="v-suprimentos-panel-0" aria-selected="true" tabindex="0">Pedidos</button><button role="tab" type="button" id="v-suprimentos-tab-1" aria-controls="v-suprimentos-panel-1" aria-selected="false" tabindex="-1">Detalhe</button><button role="tab" type="button" id="v-suprimentos-tab-2" aria-controls="v-suprimentos-panel-2" aria-selected="false" tabindex="-1">Solicitações</button><button role="tab" type="button" id="v-suprimentos-tab-3" aria-controls="v-suprimentos-panel-3" aria-selected="false" tabindex="-1">Cotações</button><button role="tab" type="button" id="v-suprimentos-tab-4" aria-controls="v-suprimentos-panel-4" aria-selected="false" tabindex="-1">Fluxo</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-suprimentos-panel-0" aria-labelledby="v-suprimentos-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/suprimentos/pedidos-compra</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/suprimentos-03-pedidos-compra-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Pedidos de compra com fornecedor, emissão, total e status." aria-label="Ampliar tela: Pedidos de compra com fornecedor, emissão, total e status."><img src="img/suprimentos-03-pedidos-compra-257-0-1183-900.webp" srcset="img/suprimentos-03-pedidos-compra-257-0-1183-900-760.webp 760w, img/suprimentos-03-pedidos-compra-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Pedidos de compra com fornecedor, emissão, total e status." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Pedidos de compra com fornecedor, emissão, total e status.</figcaption>
+</figure></div><div role="tabpanel" id="v-suprimentos-panel-1" aria-labelledby="v-suprimentos-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/suprimentos/pedidos-compra</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/suprimentos-03b-pedidos-compra-detalhe-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Detalhe do pedido de compra." aria-label="Ampliar tela: Detalhe do pedido de compra."><img src="img/suprimentos-03b-pedidos-compra-detalhe-257-0-1183-900.webp" srcset="img/suprimentos-03b-pedidos-compra-detalhe-257-0-1183-900-760.webp 760w, img/suprimentos-03b-pedidos-compra-detalhe-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Detalhe do pedido de compra." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Detalhe do pedido de compra.</figcaption>
+</figure></div><div role="tabpanel" id="v-suprimentos-panel-2" aria-labelledby="v-suprimentos-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/suprimentos/solicitacao-compra</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/suprimentos-01-solicitacao-compra-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Solicitações de compra por setor, prioridade e prazo." aria-label="Ampliar tela: Solicitações de compra por setor, prioridade e prazo."><img src="img/suprimentos-01-solicitacao-compra-257-0-1183-592.webp" srcset="img/suprimentos-01-solicitacao-compra-257-0-1183-592-760.webp 760w, img/suprimentos-01-solicitacao-compra-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Solicitações de compra por setor, prioridade e prazo." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Solicitações de compra por setor, prioridade e prazo.</figcaption>
+</figure></div><div role="tabpanel" id="v-suprimentos-panel-3" aria-labelledby="v-suprimentos-tab-3" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/suprimentos/cotacoes</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/suprimentos-02-cotacoes-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Cotações enviadas aos fornecedores." aria-label="Ampliar tela: Cotações enviadas aos fornecedores."><img src="img/suprimentos-02-cotacoes-257-0-1183-592.webp" srcset="img/suprimentos-02-cotacoes-257-0-1183-592-760.webp 760w, img/suprimentos-02-cotacoes-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Cotações enviadas aos fornecedores." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Cotações enviadas aos fornecedores.</figcaption>
+</figure></div><div role="tabpanel" id="v-suprimentos-panel-4" aria-labelledby="v-suprimentos-tab-4" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/admin-55-usuario-com-papel-inicio-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="No Início de quem compra: pedidos aguardando fornecedor, recebidos e em conferência." aria-label="Ampliar tela: No Início de quem compra: pedidos aguardando fornecedor, recebidos e em conferência."><img src="img/admin-55-usuario-com-papel-inicio-257-0-1183-900.webp" srcset="img/admin-55-usuario-com-papel-inicio-257-0-1183-900-760.webp 760w, img/admin-55-usuario-com-papel-inicio-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="No Início de quem compra: pedidos aguardando fornecedor, recebidos e em conferência." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>No Início de quem compra: pedidos aguardando fornecedor, recebidos e em conferência.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+  </div>
+  <div class="module-body">
+    <div class="mb-col">
+      <h4 id="mod-suprimentos-does" class="q-title"><span>1</span>O que você faz</h4>
+      <ul class="does"><li class="does-consulta"><span>Consultar solicitações, cotações, pedidos de compra e agendamentos</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-tela"><span>Acompanhar o fluxo Compra ao recebimento no Início e nos painéis</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-api"><span>Aprovar solicitações e pedidos de compra</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li class="does-api"><span>Confirmar o recebimento e dar entrada no estoque</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li class="does-api"><span>Gerar conta a pagar e documento fiscal a partir do recebimento</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li></ul>
+    </div>
+    <div class="mb-col">
+      <h4 id="mod-suprimentos-flow" class="q-title"><span>2</span>Como funciona</h4>
+      <ol class="flow"><li style="--i:0"><span>Solicitação</span></li><li style="--i:1"><span>Cotação</span></li><li style="--i:2"><span>Pedido de compra</span></li><li style="--i:3"><span>Recebimento</span></li><li style="--i:4"><span>Entrada no estoque</span></li></ol>
+    </div>
+    <div class="mb-col">
+      <div class="mb-part">
+        <h4 id="mod-suprimentos-ctl" class="q-title"><span>3</span>O que você controla</h4>
+        <ul class="controls"><li>Solicitações de compra</li><li>Cotações com fornecedores</li><li>Pedidos de compra (PC)</li><li>Agendamentos e recebimentos</li></ul>
+      </div>
+      <div class="mb-part">
+        <h4 id="mod-suprimentos-links" class="q-title"><span>4</span>Como se conecta</h4>
+        <ul class="links"><li><a href="#mod-estoque"><span class="links-to">Estoque e Logística</span><span class="links-what">entrada da mercadoria</span></a></li><li><a href="#mod-financeiro"><span class="links-to">Financeiro</span><span class="links-what">conta a pagar do recebimento</span></a></li><li><a href="#mod-fiscal"><span class="links-to">Fiscal</span><span class="links-what">documento fiscal de entrada</span></a></li><li><a href="#base"><span class="links-to">Cadastros</span><span class="links-what">fornecedores</span></a></li></ul>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="module" id="mod-estoque" aria-labelledby="mod-estoque-title">
+  <div class="module-top">
+    <div class="module-intro">
+      <p class="module-index"><span>04</span>Estoque e Logística</p>
+      <h3 id="mod-estoque-title" class="display-3">Onde está cada item e para onde ele vai.</h3>
+      <div class="ps">
+        <div class="ps-row ps-problem"><p class="q">O problema</p><p>Saldo que não bate, item vendido que não estava lá e expedição que só descobre o pedido quando o cliente liga.</p></div>
+        <div class="ps-row ps-solution"><p class="q">No EDUCA</p><p>Controla o saldo por local, as movimentações e o caminho da mercadoria até o cliente.</p></div>
+      </div>
+      <p class="who"><span>Para quem</span>Almoxarifado, expedição e transporte.</p>
+      <ul class="state-sum" aria-label="Capacidades por estado"><li><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span><b>3</b></li><li><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span><b>2</b></li></ul>
+    </div>
+    <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Telas do módulo Estoque e Logística">
+    <button role="tab" type="button" id="v-estoque-tab-0" aria-controls="v-estoque-panel-0" aria-selected="true" tabindex="0">Fluxo</button><button role="tab" type="button" id="v-estoque-tab-1" aria-controls="v-estoque-panel-1" aria-selected="false" tabindex="-1">Reserva</button><button role="tab" type="button" id="v-estoque-tab-2" aria-controls="v-estoque-panel-2" aria-selected="false" tabindex="-1">Rotinas</button><button role="tab" type="button" id="v-estoque-tab-3" aria-controls="v-estoque-panel-3" aria-selected="false" tabindex="-1">Separação</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-estoque-panel-0" aria-labelledby="v-estoque-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/884"><a class="shot-zoom" href="img/inicio-04-fluxo-do-erp.webp" data-zoom data-w="1176" data-h="884" data-caption="Pedido à entrega: quantos pedidos do período estão em aprovação, em preparação e expedidos." aria-label="Ampliar tela: Pedido à entrega: quantos pedidos do período estão em aprovação, em preparação e expedidos."><img src="img/inicio-04-fluxo-do-erp.webp" srcset="img/inicio-04-fluxo-do-erp-760.webp 760w, img/inicio-04-fluxo-do-erp.webp 1176w" sizes="(min-width: 1100px) 60vw, 100vw" width="1176" height="884" alt="Pedido à entrega: quantos pedidos do período estão em aprovação, em preparação e expedidos." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Pedido à entrega: quantos pedidos do período estão em aprovação, em preparação e expedidos.</figcaption>
+</figure></div><div role="tabpanel" id="v-estoque-panel-1" aria-labelledby="v-estoque-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/comercial/pedidos-venda/:id</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/comercial-14-pedido-reservar-dialogo-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="A reserva do pedido escolhe o local de estoque: armazenagem, picking, expedição, quarentena." aria-label="Ampliar tela: A reserva do pedido escolhe o local de estoque: armazenagem, picking, expedição, quarentena."><img src="img/comercial-14-pedido-reservar-dialogo-257-0-1183-900.webp" srcset="img/comercial-14-pedido-reservar-dialogo-257-0-1183-900-760.webp 760w, img/comercial-14-pedido-reservar-dialogo-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="A reserva do pedido escolhe o local de estoque: armazenagem, picking, expedição, quarentena." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>A reserva do pedido escolhe o local de estoque: armazenagem, picking, expedição, quarentena.</figcaption>
+</figure></div><div role="tabpanel" id="v-estoque-panel-2" aria-labelledby="v-estoque-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/logistica</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/884"><a class="shot-zoom" href="img/logistica-00-workspace.webp" data-zoom data-w="1176" data-h="884" data-caption="Expedições, entregas, trânsito e falhas do período, e as doze rotinas do módulo." aria-label="Ampliar tela: Expedições, entregas, trânsito e falhas do período, e as doze rotinas do módulo."><img src="img/logistica-00-workspace.webp" srcset="img/logistica-00-workspace-760.webp 760w, img/logistica-00-workspace.webp 1176w" sizes="(min-width: 1100px) 60vw, 100vw" width="1176" height="884" alt="Expedições, entregas, trânsito e falhas do período, e as doze rotinas do módulo." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Expedições, entregas, trânsito e falhas do período, e as doze rotinas do módulo.</figcaption>
+</figure></div><div role="tabpanel" id="v-estoque-panel-3" aria-labelledby="v-estoque-tab-3" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/logistica/picking</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/logistica-08-picking-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Listas de separação geradas a partir dos pedidos confirmados. No ambiente das capturas, ainda sem registros." aria-label="Ampliar tela: Listas de separação geradas a partir dos pedidos confirmados. No ambiente das capturas, ainda sem registros."><img src="img/logistica-08-picking-257-0-1183-592.webp" srcset="img/logistica-08-picking-257-0-1183-592-760.webp 760w, img/logistica-08-picking-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Listas de separação geradas a partir dos pedidos confirmados. No ambiente das capturas, ainda sem registros." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Listas de separação geradas a partir dos pedidos confirmados. No ambiente das capturas, ainda sem registros.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+  </div>
+  <div class="module-body">
+    <div class="mb-col">
+      <h4 id="mod-estoque-does" class="q-title"><span>1</span>O que você faz</h4>
+      <ul class="does"><li class="does-consulta"><span>Consultar saldo com visões sem disponibilidade e com reserva</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-consulta"><span>Consultar movimentações, transferências, inventários e endereçamento</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-consulta"><span>Consultar separação, embalagem, expedição, transportes e devoluções</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-api"><span>Registrar entradas, saídas e transferências de estoque</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li class="does-api"><span>Separar, embalar, expedir, transportar e registrar a entrega</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li></ul>
+    </div>
+    <div class="mb-col">
+      <h4 id="mod-estoque-flow" class="q-title"><span>2</span>Como funciona</h4>
+      <ol class="flow"><li style="--i:0"><span>Pedido reservado</span></li><li style="--i:1"><span>Separação</span></li><li style="--i:2"><span>Embalagem</span></li><li style="--i:3"><span>Expedição</span></li><li style="--i:4"><span>Transporte</span></li><li style="--i:5"><span>Entrega</span></li></ol>
+    </div>
+    <div class="mb-col">
+      <div class="mb-part">
+        <h4 id="mod-estoque-ctl" class="q-title"><span>3</span>O que você controla</h4>
+        <ul class="controls"><li>Saldo por produto e local</li><li>Endereços: armazém, rua, módulo, nível, posição</li><li>Movimentações e transferências</li><li>Listas de separação e expedições</li><li>Eventos de entrega</li></ul>
+      </div>
+      <div class="mb-part">
+        <h4 id="mod-estoque-links" class="q-title"><span>4</span>Como se conecta</h4>
+        <ul class="links"><li><a href="#mod-comercial"><span class="links-to">Comercial</span><span class="links-what">reserva e expedição do pedido</span></a></li><li><a href="#mod-suprimentos"><span class="links-to">Suprimentos</span><span class="links-what">recebimento de compras</span></a></li><li><a href="#mod-ativos"><span class="links-to">Ativos e Manutenção</span><span class="links-what">peças usadas na manutenção</span></a></li><li><a href="#mod-painel"><span class="links-to">Início, Painéis e Controladoria</span><span class="links-what">fluxo pedido à entrega</span></a></li></ul>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="module" id="mod-financeiro" aria-labelledby="mod-financeiro-title">
+  <div class="module-top">
+    <div class="module-intro">
+      <p class="module-index"><span>05</span>Financeiro</p>
+      <h3 id="mod-financeiro-title" class="display-3">O que entra, o que sai e o que vem pela frente.</h3>
+      <div class="ps">
+        <div class="ps-row ps-problem"><p class="q">O problema</p><p>Título lançado à mão depois da venda e vencimentos que só aparecem quando já estão atrasados.</p></div>
+        <div class="ps-row ps-solution"><p class="q">No EDUCA</p><p>Reúne os títulos a receber e a pagar, projeta o caixa e mostra o que está vencido.</p></div>
+      </div>
+      <p class="who"><span>Para quem</span>Financeiro, contas a receber e a pagar, gestão.</p>
+      <ul class="state-sum" aria-label="Capacidades por estado"><li><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span><b>1</b></li><li><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span><b>3</b></li><li><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span><b>1</b></li></ul>
+    </div>
+    <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Telas do módulo Financeiro">
+    <button role="tab" type="button" id="v-financeiro-tab-0" aria-controls="v-financeiro-panel-0" aria-selected="true" tabindex="0">Vencidos</button><button role="tab" type="button" id="v-financeiro-tab-1" aria-controls="v-financeiro-panel-1" aria-selected="false" tabindex="-1">Caixa</button><button role="tab" type="button" id="v-financeiro-tab-2" aria-controls="v-financeiro-panel-2" aria-selected="false" tabindex="-1">Título</button><button role="tab" type="button" id="v-financeiro-tab-3" aria-controls="v-financeiro-panel-3" aria-selected="false" tabindex="-1">Visão</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-financeiro-panel-0" aria-labelledby="v-financeiro-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/financeiro/contas-receber</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/financeiro-90-receber-vencidos-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Contas a receber na visão Vencidos." aria-label="Ampliar tela: Contas a receber na visão Vencidos."><img src="img/financeiro-90-receber-vencidos-257-0-1183-900.webp" srcset="img/financeiro-90-receber-vencidos-257-0-1183-900-760.webp 760w, img/financeiro-90-receber-vencidos-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Contas a receber na visão Vencidos." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Contas a receber na visão Vencidos.</figcaption>
+</figure></div><div role="tabpanel" id="v-financeiro-panel-1" aria-labelledby="v-financeiro-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/financeiro/fluxo-caixa</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/834"><a class="shot-zoom" href="img/financeiro-03-fluxo-caixa-257-0-1183-834.webp" data-zoom data-w="1183" data-h="834" data-caption="Saldo em contas, a receber, a pagar e saldo projetado por semana." aria-label="Ampliar tela: Saldo em contas, a receber, a pagar e saldo projetado por semana."><img src="img/financeiro-03-fluxo-caixa-257-0-1183-834.webp" srcset="img/financeiro-03-fluxo-caixa-257-0-1183-834-760.webp 760w, img/financeiro-03-fluxo-caixa-257-0-1183-834.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="834" alt="Saldo em contas, a receber, a pagar e saldo projetado por semana." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Saldo em contas, a receber, a pagar e saldo projetado por semana.</figcaption>
+</figure></div><div role="tabpanel" id="v-financeiro-panel-2" aria-labelledby="v-financeiro-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/financeiro/contas-receber</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/financeiro-01b-contas-receber-detalhe-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Título com cliente, vencimento, valor e histórico." aria-label="Ampliar tela: Título com cliente, vencimento, valor e histórico."><img src="img/financeiro-01b-contas-receber-detalhe-257-0-1183-900.webp" srcset="img/financeiro-01b-contas-receber-detalhe-257-0-1183-900-760.webp 760w, img/financeiro-01b-contas-receber-detalhe-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Título com cliente, vencimento, valor e histórico." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Título com cliente, vencimento, valor e histórico.</figcaption>
+</figure></div><div role="tabpanel" id="v-financeiro-panel-3" aria-labelledby="v-financeiro-tab-3" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/financeiro</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/884"><a class="shot-zoom" href="img/financeiro-00-workspace.webp" data-zoom data-w="1176" data-h="884" data-caption="Pendências do módulo e títulos recentes." aria-label="Ampliar tela: Pendências do módulo e títulos recentes."><img src="img/financeiro-00-workspace.webp" srcset="img/financeiro-00-workspace-760.webp 760w, img/financeiro-00-workspace.webp 1176w" sizes="(min-width: 1100px) 60vw, 100vw" width="1176" height="884" alt="Pendências do módulo e títulos recentes." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Pendências do módulo e títulos recentes.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+  </div>
+  <div class="module-body">
+    <div class="mb-col">
+      <h4 id="mod-financeiro-does" class="q-title"><span>1</span>O que você faz</h4>
+      <ul class="does"><li class="does-consulta"><span>Consultar contas a receber com visões vencidos e em aberto</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-consulta"><span>Consultar contas a pagar e centros de custo</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-consulta"><span>Ver o saldo acumulado e a projeção semanal do caixa</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-tela"><span>Receber no Financeiro o título criado por uma ação na tela do pedido de venda</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-api"><span>Baixar parcelas, lançar títulos e conciliar</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li></ul>
+    </div>
+    <div class="mb-col">
+      <h4 id="mod-financeiro-flow" class="q-title"><span>2</span>Como funciona</h4>
+      <ol class="flow"><li style="--i:0"><span>Pedido aprovado</span></li><li style="--i:1"><span>Título a receber</span></li><li style="--i:2"><span>Em aberto</span></li><li style="--i:3"><span>Vencido ou recebido</span></li><li style="--i:4"><span>Fluxo de caixa</span></li></ol>
+    </div>
+    <div class="mb-col">
+      <div class="mb-part">
+        <h4 id="mod-financeiro-ctl" class="q-title"><span>3</span>O que você controla</h4>
+        <ul class="controls"><li>Títulos a receber (CR) e a pagar</li><li>Vencimento, valor e situação</li><li>Saldo em contas e saldo projetado</li><li>Centros de custo</li></ul>
+      </div>
+      <div class="mb-part">
+        <h4 id="mod-financeiro-links" class="q-title"><span>4</span>Como se conecta</h4>
+        <ul class="links"><li><a href="#mod-comercial"><span class="links-to">Comercial</span><span class="links-what">título do pedido de venda</span></a></li><li><a href="#mod-suprimentos"><span class="links-to">Suprimentos</span><span class="links-what">conta a pagar do recebimento</span></a></li><li><a href="#mod-painel"><span class="links-to">Início, Painéis e Controladoria</span><span class="links-what">vencidos em Precisa de atenção</span></a></li></ul>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="module" id="mod-fiscal" aria-labelledby="mod-fiscal-title">
+  <div class="module-top">
+    <div class="module-intro">
+      <p class="module-index"><span>06</span>Fiscal</p>
+      <h3 id="mod-fiscal-title" class="display-3">Documentos, classificação e regras de imposto.</h3>
+      <div class="ps">
+        <div class="ps-row ps-problem"><p class="q">O problema</p><p>NCM, CFOP e alíquotas em uma planilha à parte, desencontrados do que foi vendido e comprado.</p></div>
+        <div class="ps-row ps-solution"><p class="q">No EDUCA</p><p>Mantém as tabelas fiscais da empresa e os documentos emitidos a partir das vendas e das compras.</p></div>
+      </div>
+      <p class="who"><span>Para quem</span>Fiscal, contabilidade e faturamento.</p>
+      <ul class="state-sum" aria-label="Capacidades por estado"><li><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span><b>2</b></li><li><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span><b>2</b></li><li><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span><b>1</b></li></ul>
+    </div>
+    <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Telas do módulo Fiscal">
+    <button role="tab" type="button" id="v-fiscal-tab-0" aria-controls="v-fiscal-panel-0" aria-selected="true" tabindex="0">NF-e</button><button role="tab" type="button" id="v-fiscal-tab-1" aria-controls="v-fiscal-panel-1" aria-selected="false" tabindex="-1">Documento</button><button role="tab" type="button" id="v-fiscal-tab-2" aria-controls="v-fiscal-panel-2" aria-selected="false" tabindex="-1">CFOP</button><button role="tab" type="button" id="v-fiscal-tab-3" aria-controls="v-fiscal-panel-3" aria-selected="false" tabindex="-1">Regras</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-fiscal-panel-0" aria-labelledby="v-fiscal-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/fiscal/nfe</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/fiscal-02-nfe-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Notas fiscais eletrônicas com número, cliente e status." aria-label="Ampliar tela: Notas fiscais eletrônicas com número, cliente e status."><img src="img/fiscal-02-nfe-257-0-1183-592.webp" srcset="img/fiscal-02-nfe-257-0-1183-592-760.webp 760w, img/fiscal-02-nfe-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Notas fiscais eletrônicas com número, cliente e status." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Notas fiscais eletrônicas com número, cliente e status.</figcaption>
+</figure></div><div role="tabpanel" id="v-fiscal-panel-1" aria-labelledby="v-fiscal-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/fiscal/nfe</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/fiscal-02b-nfe-detalhe-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Documento fiscal com os dados principais e o histórico." aria-label="Ampliar tela: Documento fiscal com os dados principais e o histórico."><img src="img/fiscal-02b-nfe-detalhe-257-0-1183-900.webp" srcset="img/fiscal-02b-nfe-detalhe-257-0-1183-900-760.webp 760w, img/fiscal-02b-nfe-detalhe-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Documento fiscal com os dados principais e o histórico." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Documento fiscal com os dados principais e o histórico.</figcaption>
+</figure></div><div role="tabpanel" id="v-fiscal-panel-2" aria-labelledby="v-fiscal-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/fiscal/cfop</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/fiscal-04-cfop-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Códigos CFOP com direção e escopo." aria-label="Ampliar tela: Códigos CFOP com direção e escopo."><img src="img/fiscal-04-cfop-257-0-1183-592.webp" srcset="img/fiscal-04-cfop-257-0-1183-592-760.webp 760w, img/fiscal-04-cfop-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Códigos CFOP com direção e escopo." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Códigos CFOP com direção e escopo.</figcaption>
+</figure></div><div role="tabpanel" id="v-fiscal-panel-3" aria-labelledby="v-fiscal-tab-3" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/fiscal/impostos</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/fiscal-05-impostos-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Regras tributárias por UF e regime." aria-label="Ampliar tela: Regras tributárias por UF e regime."><img src="img/fiscal-05-impostos-257-0-1183-592.webp" srcset="img/fiscal-05-impostos-257-0-1183-592-760.webp 760w, img/fiscal-05-impostos-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Regras tributárias por UF e regime." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Regras tributárias por UF e regime.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+  </div>
+  <div class="module-body">
+    <div class="mb-col">
+      <h4 id="mod-fiscal-does" class="q-title"><span>1</span>O que você faz</h4>
+      <ul class="does"><li class="does-consulta"><span>Consultar documentos fiscais e NF-e</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-consulta"><span>Consultar NCM, CFOP e regras tributárias</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-api"><span>Criar documento, incluir itens e calcular impostos</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li class="does-api"><span>Gerar documento a partir do pedido de venda ou do recebimento</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li class="does-evolucao"><span>Emitir e transmitir NF-e pela tela</span><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span></li></ul>
+    </div>
+    <div class="mb-col">
+      <h4 id="mod-fiscal-flow" class="q-title"><span>2</span>Como funciona</h4>
+      <ol class="flow"><li style="--i:0"><span>Pedido ou recebimento</span></li><li style="--i:1"><span>Documento fiscal</span></li><li style="--i:2"><span>Itens com NCM e CFOP</span></li><li style="--i:3"><span>Cálculo pelas regras</span></li><li style="--i:4"><span>Documento calculado</span></li></ol>
+    </div>
+    <div class="mb-col">
+      <div class="mb-part">
+        <h4 id="mod-fiscal-ctl" class="q-title"><span>3</span>O que você controla</h4>
+        <ul class="controls"><li>Documentos fiscais e NF-e</li><li>NCM (ex.: 39232190)</li><li>CFOP (ex.: 5102, 6102)</li><li>Regras por UF de origem e destino e regime</li><li>Estabelecimentos e naturezas de operação</li></ul>
+      </div>
+      <div class="mb-part">
+        <h4 id="mod-fiscal-links" class="q-title"><span>4</span>Como se conecta</h4>
+        <ul class="links"><li><a href="#mod-comercial"><span class="links-to">Comercial</span><span class="links-what">documento do pedido</span></a></li><li><a href="#mod-suprimentos"><span class="links-to">Suprimentos</span><span class="links-what">documento de entrada</span></a></li><li><a href="#mod-financeiro"><span class="links-to">Financeiro</span><span class="links-what">valores faturados</span></a></li></ul>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="module" id="mod-qualidade" aria-labelledby="mod-qualidade-title">
+  <div class="module-top">
+    <div class="module-intro">
+      <p class="module-index"><span>07</span>Qualidade</p>
+      <h3 id="mod-qualidade-title" class="display-3">Inspecionar, registrar o desvio e agir.</h3>
+      <div class="ps">
+        <div class="ps-row ps-problem"><p class="q">O problema</p><p>O desvio é resolvido na hora, mas não fica registrado; o mesmo problema volta no próximo lote.</p></div>
+        <div class="ps-row ps-solution"><p class="q">No EDUCA</p><p>Registra inspeções, abre não conformidades quando algo falha e acompanha as ações corretivas e preventivas até o fim.</p></div>
+      </div>
+      <p class="who"><span>Para quem</span>Qualidade, recebimento e produção.</p>
+      <ul class="state-sum" aria-label="Capacidades por estado"><li><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span><b>2</b></li><li><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span><b>2</b></li></ul>
+    </div>
+    <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Telas do módulo Qualidade">
+    <button role="tab" type="button" id="v-qualidade-tab-0" aria-controls="v-qualidade-panel-0" aria-selected="true" tabindex="0">NCs</button><button role="tab" type="button" id="v-qualidade-tab-1" aria-controls="v-qualidade-panel-1" aria-selected="false" tabindex="-1">Detalhe</button><button role="tab" type="button" id="v-qualidade-tab-2" aria-controls="v-qualidade-panel-2" aria-selected="false" tabindex="-1">Inspeções</button><button role="tab" type="button" id="v-qualidade-tab-3" aria-controls="v-qualidade-panel-3" aria-selected="false" tabindex="-1">Ações</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-qualidade-panel-0" aria-labelledby="v-qualidade-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/qualidade/nao-conformidades</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/816"><a class="shot-zoom" href="img/qualidade-01-nao-conformidades-257-0-1183-816.webp" data-zoom data-w="1183" data-h="816" data-caption="Não conformidades com gravidade e situação." aria-label="Ampliar tela: Não conformidades com gravidade e situação."><img src="img/qualidade-01-nao-conformidades-257-0-1183-816.webp" srcset="img/qualidade-01-nao-conformidades-257-0-1183-816-760.webp 760w, img/qualidade-01-nao-conformidades-257-0-1183-816.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="816" alt="Não conformidades com gravidade e situação." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Não conformidades com gravidade e situação.</figcaption>
+</figure></div><div role="tabpanel" id="v-qualidade-panel-1" aria-labelledby="v-qualidade-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/qualidade/nao-conformidades</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/qualidade-01b-nao-conformidades-detalhe-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Detalhe da não conformidade." aria-label="Ampliar tela: Detalhe da não conformidade."><img src="img/qualidade-01b-nao-conformidades-detalhe-257-0-1183-900.webp" srcset="img/qualidade-01b-nao-conformidades-detalhe-257-0-1183-900-760.webp 760w, img/qualidade-01b-nao-conformidades-detalhe-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Detalhe da não conformidade." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Detalhe da não conformidade.</figcaption>
+</figure></div><div role="tabpanel" id="v-qualidade-panel-2" aria-labelledby="v-qualidade-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/qualidade/inspecoes</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/qualidade-02-inspecoes-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Inspeções de qualidade por tipo e resultado." aria-label="Ampliar tela: Inspeções de qualidade por tipo e resultado."><img src="img/qualidade-02-inspecoes-257-0-1183-592.webp" srcset="img/qualidade-02-inspecoes-257-0-1183-592-760.webp 760w, img/qualidade-02-inspecoes-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Inspeções de qualidade por tipo e resultado." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Inspeções de qualidade por tipo e resultado.</figcaption>
+</figure></div><div role="tabpanel" id="v-qualidade-panel-3" aria-labelledby="v-qualidade-tab-3" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/qualidade/acoes</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/qualidade-03-acoes-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Ações corretivas e preventivas com prazo." aria-label="Ampliar tela: Ações corretivas e preventivas com prazo."><img src="img/qualidade-03-acoes-257-0-1183-592.webp" srcset="img/qualidade-03-acoes-257-0-1183-592-760.webp 760w, img/qualidade-03-acoes-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Ações corretivas e preventivas com prazo." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Ações corretivas e preventivas com prazo.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+  </div>
+  <div class="module-body">
+    <div class="mb-col">
+      <h4 id="mod-qualidade-does" class="q-title"><span>1</span>O que você faz</h4>
+      <ul class="does"><li class="does-consulta"><span>Consultar não conformidades por gravidade e situação</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-consulta"><span>Consultar inspeções, ações e checklists</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-api"><span>Finalizar inspeção como aprovada ou rejeitada</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li class="does-api"><span>Abrir não conformidade a partir da inspeção e acompanhar ações</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li></ul>
+    </div>
+    <div class="mb-col">
+      <h4 id="mod-qualidade-flow" class="q-title"><span>2</span>Como funciona</h4>
+      <ol class="flow"><li style="--i:0"><span>Checklist</span></li><li style="--i:1"><span>Inspeção</span></li><li style="--i:2"><span>Resultado</span></li><li style="--i:3"><span>Não conformidade</span></li><li style="--i:4"><span>Ação corretiva ou preventiva</span></li></ol>
+    </div>
+    <div class="mb-col">
+      <div class="mb-part">
+        <h4 id="mod-qualidade-ctl" class="q-title"><span>3</span>O que você controla</h4>
+        <ul class="controls"><li>Inspeções por tipo (recebimento, produção, expedição…)</li><li>Não conformidades com gravidade</li><li>Ações com prazo e responsável</li><li>Checklists (ex.: REC-01)</li></ul>
+      </div>
+      <div class="mb-part">
+        <h4 id="mod-qualidade-links" class="q-title"><span>4</span>Como se conecta</h4>
+        <ul class="links"><li><a href="#base"><span class="links-to">Cadastros</span><span class="links-what">produto e lote inspecionados</span></a></li><li><a href="#mod-projetos"><span class="links-to">Projetos e Serviços</span><span class="links-what">inspeção a partir da ordem de serviço</span></a></li><li><a href="#mod-painel"><span class="links-to">Início, Painéis e Controladoria</span><span class="links-what">NCs graves em Precisa de atenção</span></a></li></ul>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="module" id="mod-projetos" aria-labelledby="mod-projetos-title">
+  <div class="module-top">
+    <div class="module-intro">
+      <p class="module-index"><span>08</span>Projetos e Serviços</p>
+      <h3 id="mod-projetos-title" class="display-3">Projetos, tarefas, horas e ordens de serviço.</h3>
+      <div class="ps">
+        <div class="ps-row ps-problem"><p class="q">O problema</p><p>Horas sem apontamento e ordens de serviço sem histórico: o custo do projeto só aparece no fim.</p></div>
+        <div class="ps-row ps-solution"><p class="q">No EDUCA</p><p>Acompanha projetos por cliente, as tarefas de cada um, as horas apontadas e as ordens de serviço em campo.</p></div>
+      </div>
+      <p class="who"><span>Para quem</span>Gestores de projeto, técnicos e serviços.</p>
+      <ul class="state-sum" aria-label="Capacidades por estado"><li><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span><b>2</b></li><li><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span><b>2</b></li></ul>
+    </div>
+    <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Telas do módulo Projetos e Serviços">
+    <button role="tab" type="button" id="v-projetos-tab-0" aria-controls="v-projetos-panel-0" aria-selected="true" tabindex="0">Projetos</button><button role="tab" type="button" id="v-projetos-tab-1" aria-controls="v-projetos-panel-1" aria-selected="false" tabindex="-1">Detalhe</button><button role="tab" type="button" id="v-projetos-tab-2" aria-controls="v-projetos-panel-2" aria-selected="false" tabindex="-1">Horas</button><button role="tab" type="button" id="v-projetos-tab-3" aria-controls="v-projetos-panel-3" aria-selected="false" tabindex="-1">OS</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-projetos-panel-0" aria-labelledby="v-projetos-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/projetos/lista</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/projetos-01-lista-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Projetos com cliente, orçamento e status." aria-label="Ampliar tela: Projetos com cliente, orçamento e status."><img src="img/projetos-01-lista-257-0-1183-592.webp" srcset="img/projetos-01-lista-257-0-1183-592-760.webp 760w, img/projetos-01-lista-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Projetos com cliente, orçamento e status." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Projetos com cliente, orçamento e status.</figcaption>
+</figure></div><div role="tabpanel" id="v-projetos-panel-1" aria-labelledby="v-projetos-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/projetos/lista</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/projetos-01b-lista-detalhe-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Detalhe do projeto." aria-label="Ampliar tela: Detalhe do projeto."><img src="img/projetos-01b-lista-detalhe-257-0-1183-900.webp" srcset="img/projetos-01b-lista-detalhe-257-0-1183-900-760.webp 760w, img/projetos-01b-lista-detalhe-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Detalhe do projeto." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Detalhe do projeto.</figcaption>
+</figure></div><div role="tabpanel" id="v-projetos-panel-2" aria-labelledby="v-projetos-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/projetos/apontamentos</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/projetos-03-apontamentos-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Apontamentos de horas por tarefa." aria-label="Ampliar tela: Apontamentos de horas por tarefa."><img src="img/projetos-03-apontamentos-257-0-1183-592.webp" srcset="img/projetos-03-apontamentos-257-0-1183-592-760.webp 760w, img/projetos-03-apontamentos-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Apontamentos de horas por tarefa." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Apontamentos de horas por tarefa.</figcaption>
+</figure></div><div role="tabpanel" id="v-projetos-panel-3" aria-labelledby="v-projetos-tab-3" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/projetos/ordens-servico</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/projetos-04-ordens-servico-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Ordens de serviço com cliente e agenda." aria-label="Ampliar tela: Ordens de serviço com cliente e agenda."><img src="img/projetos-04-ordens-servico-257-0-1183-592.webp" srcset="img/projetos-04-ordens-servico-257-0-1183-592-760.webp 760w, img/projetos-04-ordens-servico-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Ordens de serviço com cliente e agenda." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Ordens de serviço com cliente e agenda.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+  </div>
+  <div class="module-body">
+    <div class="mb-col">
+      <h4 id="mod-projetos-does" class="q-title"><span>1</span>O que você faz</h4>
+      <ul class="does"><li class="does-consulta"><span>Consultar projetos com cliente e orçamento</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-consulta"><span>Consultar tarefas, apontamentos de horas e ordens de serviço</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-api"><span>Avançar ordens de serviço entre situações</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li class="does-api"><span>Gerar orçamento a partir do projeto ou da OS; inspeção a partir da OS</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li></ul>
+    </div>
+    <div class="mb-col">
+      <h4 id="mod-projetos-flow" class="q-title"><span>2</span>Como funciona</h4>
+      <ol class="flow"><li style="--i:0"><span>Projeto</span></li><li style="--i:1"><span>Tarefas</span></li><li style="--i:2"><span>Apontamento de horas</span></li><li style="--i:3"><span>Ordem de serviço</span></li><li style="--i:4"><span>Inspeção</span></li></ol>
+    </div>
+    <div class="mb-col">
+      <div class="mb-part">
+        <h4 id="mod-projetos-ctl" class="q-title"><span>3</span>O que você controla</h4>
+        <ul class="controls"><li>Projetos com cliente e orçamento</li><li>Tarefas com prioridade e horas estimadas</li><li>Apontamentos por data e duração</li><li>Ordens de serviço com agenda e prioridade</li></ul>
+      </div>
+      <div class="mb-part">
+        <h4 id="mod-projetos-links" class="q-title"><span>4</span>Como se conecta</h4>
+        <ul class="links"><li><a href="#base"><span class="links-to">Cadastros</span><span class="links-what">cliente do projeto</span></a></li><li><a href="#mod-qualidade"><span class="links-to">Qualidade</span><span class="links-what">inspeção da OS</span></a></li><li><a href="#mod-comercial"><span class="links-to">Comercial</span><span class="links-what">orçamento do projeto</span></a></li></ul>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="module" id="mod-ativos" aria-labelledby="mod-ativos-title">
+  <div class="module-top">
+    <div class="module-intro">
+      <p class="module-index"><span>09</span>Ativos e Manutenção</p>
+      <h3 id="mod-ativos-title" class="display-3">Equipamentos, planos e ordens de manutenção.</h3>
+      <div class="ps">
+        <div class="ps-row ps-problem"><p class="q">O problema</p><p>Manutenção feita quando a máquina para, sem plano, sem histórico e sem saber quais peças foram usadas.</p></div>
+        <div class="ps-row ps-solution"><p class="q">No EDUCA</p><p>Registra máquinas, equipamentos e veículos, onde estão, quanto custaram e cada manutenção que receberam.</p></div>
+      </div>
+      <p class="who"><span>Para quem</span>Manutenção, facilities e operação.</p>
+      <ul class="state-sum" aria-label="Capacidades por estado"><li><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span><b>3</b></li><li><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span><b>1</b></li></ul>
+    </div>
+    <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Telas do módulo Ativos e Manutenção">
+    <button role="tab" type="button" id="v-ativos-tab-0" aria-controls="v-ativos-panel-0" aria-selected="true" tabindex="0">Ativo</button><button role="tab" type="button" id="v-ativos-tab-1" aria-controls="v-ativos-panel-1" aria-selected="false" tabindex="-1">OMs</button><button role="tab" type="button" id="v-ativos-tab-2" aria-controls="v-ativos-panel-2" aria-selected="false" tabindex="-1">Detalhe</button><button role="tab" type="button" id="v-ativos-tab-3" aria-controls="v-ativos-panel-3" aria-selected="false" tabindex="-1">Planos</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-ativos-panel-0" aria-labelledby="v-ativos-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/ativos/lista/:id</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/884"><a class="shot-zoom" href="img/ativos-90-ativo-pagina.webp" data-zoom data-w="1176" data-h="884" data-caption="Página do ativo: dados, ordens de manutenção e histórico." aria-label="Ampliar tela: Página do ativo: dados, ordens de manutenção e histórico."><img src="img/ativos-90-ativo-pagina.webp" srcset="img/ativos-90-ativo-pagina-760.webp 760w, img/ativos-90-ativo-pagina.webp 1176w" sizes="(min-width: 1100px) 60vw, 100vw" width="1176" height="884" alt="Página do ativo: dados, ordens de manutenção e histórico." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Página do ativo: dados, ordens de manutenção e histórico.</figcaption>
+</figure></div><div role="tabpanel" id="v-ativos-panel-1" aria-labelledby="v-ativos-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/ativos/ordens-manutencao</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/ativos-02-ordens-manutencao-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Ordens de manutenção com ativo, prioridade e situação." aria-label="Ampliar tela: Ordens de manutenção com ativo, prioridade e situação."><img src="img/ativos-02-ordens-manutencao-257-0-1183-592.webp" srcset="img/ativos-02-ordens-manutencao-257-0-1183-592-760.webp 760w, img/ativos-02-ordens-manutencao-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Ordens de manutenção com ativo, prioridade e situação." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Ordens de manutenção com ativo, prioridade e situação.</figcaption>
+</figure></div><div role="tabpanel" id="v-ativos-panel-2" aria-labelledby="v-ativos-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/ativos/ordens-manutencao</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/ativos-02b-ordens-manutencao-detalhe-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Detalhe da ordem de manutenção." aria-label="Ampliar tela: Detalhe da ordem de manutenção."><img src="img/ativos-02b-ordens-manutencao-detalhe-257-0-1183-900.webp" srcset="img/ativos-02b-ordens-manutencao-detalhe-257-0-1183-900-760.webp 760w, img/ativos-02b-ordens-manutencao-detalhe-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Detalhe da ordem de manutenção." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Detalhe da ordem de manutenção.</figcaption>
+</figure></div><div role="tabpanel" id="v-ativos-panel-3" aria-labelledby="v-ativos-tab-3" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/ativos/planos-manutencao</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/ativos-03-planos-manutencao-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Planos de manutenção preventiva." aria-label="Ampliar tela: Planos de manutenção preventiva."><img src="img/ativos-03-planos-manutencao-257-0-1183-592.webp" srcset="img/ativos-03-planos-manutencao-257-0-1183-592-760.webp 760w, img/ativos-03-planos-manutencao-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Planos de manutenção preventiva." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Planos de manutenção preventiva.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+  </div>
+  <div class="module-body">
+    <div class="mb-col">
+      <h4 id="mod-ativos-does" class="q-title"><span>1</span>O que você faz</h4>
+      <ul class="does"><li class="does-consulta"><span>Abrir a página de cada ativo com informações, OMs e histórico</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-consulta"><span>Consultar ordens de manutenção: atrasadas e aguardando peças</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-consulta"><span>Consultar planos preventivos, categorias e locais</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-api"><span>Avançar ordens de manutenção e registrar peças consumidas</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li></ul>
+    </div>
+    <div class="mb-col">
+      <h4 id="mod-ativos-flow" class="q-title"><span>2</span>Como funciona</h4>
+      <ol class="flow"><li style="--i:0"><span>Ativo</span></li><li style="--i:1"><span>Plano preventivo</span></li><li style="--i:2"><span>Ordem de manutenção</span></li><li style="--i:3"><span>Em execução</span></li><li style="--i:4"><span>Histórico do ativo</span></li></ol>
+    </div>
+    <div class="mb-col">
+      <div class="mb-part">
+        <h4 id="mod-ativos-ctl" class="q-title"><span>3</span>O que você controla</h4>
+        <ul class="controls"><li>Ativos (AST) com fabricante, série e custo</li><li>Ordens de manutenção (OM)</li><li>Planos preventivos por periodicidade</li><li>Categorias e locais de instalação</li></ul>
+      </div>
+      <div class="mb-part">
+        <h4 id="mod-ativos-links" class="q-title"><span>4</span>Como se conecta</h4>
+        <ul class="links"><li><a href="#mod-estoque"><span class="links-to">Estoque e Logística</span><span class="links-what">peças consumidas</span></a></li><li><a href="#mod-painel"><span class="links-to">Início, Painéis e Controladoria</span><span class="links-what">painel de manutenção</span></a></li></ul>
+      </div>
+    </div>
+  </div>
+</article>
+<article class="module" id="mod-painel" aria-labelledby="mod-painel-title">
+  <div class="module-top">
+    <div class="module-intro">
+      <p class="module-index"><span>10</span>Início, Painéis e Controladoria</p>
+      <h3 id="mod-painel-title" class="display-3">O que mudou, o que precisa de atenção e onde agir.</h3>
+      <div class="ps">
+        <div class="ps-row ps-problem"><p class="q">O problema</p><p>Cada área tem o seu relatório, e a gestão monta o quadro geral no fim do mês, com números que já mudaram.</p></div>
+        <div class="ps-row ps-solution"><p class="q">No EDUCA</p><p>Traduz o que as áreas registram em pendências, indicadores e fluxos, sempre com atalho para a lista de onde o número veio.</p></div>
+      </div>
+      <p class="who"><span>Para quem</span>Todos, cada um vendo as áreas que o seu papel permite.</p>
+      <ul class="state-sum" aria-label="Capacidades por estado"><li><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span><b>4</b></li><li><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span><b>1</b></li><li><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span><b>1</b></li></ul>
+    </div>
+    <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Telas do módulo Início, Painéis e Controladoria">
+    <button role="tab" type="button" id="v-painel-tab-0" aria-controls="v-painel-panel-0" aria-selected="true" tabindex="0">Início</button><button role="tab" type="button" id="v-painel-tab-1" aria-controls="v-painel-panel-1" aria-selected="false" tabindex="-1">Investigação</button><button role="tab" type="button" id="v-painel-tab-2" aria-controls="v-painel-panel-2" aria-selected="false" tabindex="-1">Comercial</button><button role="tab" type="button" id="v-painel-tab-3" aria-controls="v-painel-panel-3" aria-selected="false" tabindex="-1">Auditoria</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-painel-panel-0" aria-labelledby="v-painel-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/884"><a class="shot-zoom" href="img/inicio-01-inicio.webp" data-zoom data-w="1176" data-h="884" data-caption="Início: resumo, pendências, o que mudou e o foco de cada pessoa." aria-label="Ampliar tela: Início: resumo, pendências, o que mudou e o foco de cada pessoa."><img src="img/inicio-01-inicio.webp" srcset="img/inicio-01-inicio-760.webp 760w, img/inicio-01-inicio.webp 1176w" sizes="(min-width: 1100px) 60vw, 100vw" width="1176" height="884" alt="Início: resumo, pendências, o que mudou e o foco de cada pessoa." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Início: resumo, pendências, o que mudou e o foco de cada pessoa.</figcaption>
+</figure></div><div role="tabpanel" id="v-painel-panel-1" aria-labelledby="v-painel-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/gestao/dashboard/financeiro</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/884"><a class="shot-zoom" href="img/inicio-10-grafico-tabela.webp" data-zoom data-w="1176" data-h="884" data-caption="Investigação com gráfico ou tabela, por faixa de vencimento e por cliente." aria-label="Ampliar tela: Investigação com gráfico ou tabela, por faixa de vencimento e por cliente."><img src="img/inicio-10-grafico-tabela.webp" srcset="img/inicio-10-grafico-tabela-760.webp 760w, img/inicio-10-grafico-tabela.webp 1176w" sizes="(min-width: 1100px) 60vw, 100vw" width="1176" height="884" alt="Investigação com gráfico ou tabela, por faixa de vencimento e por cliente." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Investigação com gráfico ou tabela, por faixa de vencimento e por cliente.</figcaption>
+</figure></div><div role="tabpanel" id="v-painel-panel-2" aria-labelledby="v-painel-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/gestao/dashboard/comercial</span></div>
+  <div class="shot-frame" style="aspect-ratio:1176/884"><a class="shot-zoom" href="img/inicio-07-painel-comercial.webp" data-zoom data-w="1176" data-h="884" data-caption="Painel comercial com valor em pedidos e pendências do período." aria-label="Ampliar tela: Painel comercial com valor em pedidos e pendências do período."><img src="img/inicio-07-painel-comercial.webp" srcset="img/inicio-07-painel-comercial-760.webp 760w, img/inicio-07-painel-comercial.webp 1176w" sizes="(min-width: 1100px) 60vw, 100vw" width="1176" height="884" alt="Painel comercial com valor em pedidos e pendências do período." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Painel comercial com valor em pedidos e pendências do período.</figcaption>
+</figure></div><div role="tabpanel" id="v-painel-panel-3" aria-labelledby="v-painel-tab-3" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/gestao/auditoria</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/controladoria-03-auditoria-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Auditoria: data, usuário, entidade e ação." aria-label="Ampliar tela: Auditoria: data, usuário, entidade e ação."><img src="img/controladoria-03-auditoria-257-0-1183-900.webp" srcset="img/controladoria-03-auditoria-257-0-1183-900-760.webp 760w, img/controladoria-03-auditoria-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Auditoria: data, usuário, entidade e ação." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Auditoria: data, usuário, entidade e ação.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+  </div>
+  <div class="module-body">
+    <div class="mb-col">
+      <h4 id="mod-painel-does" class="q-title"><span>1</span>O que você faz</h4>
+      <ul class="does"><li class="does-tela"><span>Ver resumo, Precisa de atenção, O que mudou e Seu foco</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Acompanhar três fluxos: pedido à entrega, compra ao recebimento e produção</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Trocar o período e alternar entre gráfico e tabela</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Abrir 13 painéis por área</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-consulta"><span>Consultar a auditoria: quem fez o quê e quando</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-evolucao"><span>Resumo dos painéis de Produção, Fiscal e Estoque</span><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span></li></ul>
+    </div>
+    <div class="mb-col">
+      <h4 id="mod-painel-flow" class="q-title"><span>2</span>Como funciona</h4>
+      <ol class="flow"><li style="--i:0"><span>Registros das áreas</span></li><li style="--i:1"><span>Pendências</span></li><li style="--i:2"><span>Indicadores do período</span></li><li style="--i:3"><span>Fluxos</span></li><li style="--i:4"><span>Lista filtrada</span></li></ol>
+    </div>
+    <div class="mb-col">
+      <div class="mb-part">
+        <h4 id="mod-painel-ctl" class="q-title"><span>3</span>O que você controla</h4>
+        <ul class="controls"><li>Período de análise</li><li>Foco por setor, cargo ou papel</li><li>Relatórios por área</li><li>Trilha de auditoria</li></ul>
+      </div>
+      <div class="mb-part">
+        <h4 id="mod-painel-links" class="q-title"><span>4</span>Como se conecta</h4>
+        <ul class="links"><li><a href="#mod-comercial"><span class="links-to">Comercial</span><span class="links-what">pedidos</span></a></li><li><a href="#mod-financeiro"><span class="links-to">Financeiro</span><span class="links-what">títulos vencidos</span></a></li><li><a href="#mod-qualidade"><span class="links-to">Qualidade</span><span class="links-what">NCs graves</span></a></li><li><a href="#mod-suprimentos"><span class="links-to">Suprimentos</span><span class="links-what">compras em andamento</span></a></li></ul>
+      </div>
+    </div>
+  </div>
+</article>
+  </div>
+</section>
+<section class="base sheet" id="base" aria-labelledby="base-title">
+  <div class="wrap">
+    <div class="module-top">
+      <div class="module-intro">
+        <p class="kicker"><span>Base comum</span></p>
+        <h2 id="base-title" class="display-3">Os cadastros que todas as áreas usam.</h2>
+        <p class="lead-p">Cliente, fornecedor, transportadora, motorista e veículo são cadastrados uma vez e usados por vendas, compras, logística e fiscal. Cada cadastro tem código automático, validação de documento, listas relacionadas e histórico.</p>
+        <ul class="does"><li class="does-tela"><span>Clientes, fornecedores, transportadoras, motoristas e veículos: criar, validar, editar, inativar e excluir</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Ações em lote e exportação em CSV</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-consulta"><span>Locais de estoque: consulta</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li><li class="does-evolucao"><span>Produtos: a lista depende das permissões de catálogo, ainda ausentes</span><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span></li></ul>
+      </div>
+      <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Telas de Cadastros">
+    <button role="tab" type="button" id="v-cadastros-tab-0" aria-controls="v-cadastros-panel-0" aria-selected="true" tabindex="0">Clientes</button><button role="tab" type="button" id="v-cadastros-tab-1" aria-controls="v-cadastros-panel-1" aria-selected="false" tabindex="-1">Novo</button><button role="tab" type="button" id="v-cadastros-tab-2" aria-controls="v-cadastros-panel-2" aria-selected="false" tabindex="-1">Fornecedor</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-cadastros-panel-0" aria-labelledby="v-cadastros-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/cadastros/clientes</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/cadastros-02-clientes-lista-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Clientes com código, documento, cidade, telefone e limite de crédito." aria-label="Ampliar tela: Clientes com código, documento, cidade, telefone e limite de crédito."><img src="img/cadastros-02-clientes-lista-257-0-1183-900.webp" srcset="img/cadastros-02-clientes-lista-257-0-1183-900-760.webp 760w, img/cadastros-02-clientes-lista-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Clientes com código, documento, cidade, telefone e limite de crédito." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Clientes com código, documento, cidade, telefone e limite de crédito.</figcaption>
+</figure></div><div role="tabpanel" id="v-cadastros-panel-1" aria-labelledby="v-cadastros-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/cadastros/clientes</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/cadastros-03-clientes-novo-vazio-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Novo cliente: dados principais, contato, endereço e condições comerciais." aria-label="Ampliar tela: Novo cliente: dados principais, contato, endereço e condições comerciais."><img src="img/cadastros-03-clientes-novo-vazio-257-0-1183-900.webp" srcset="img/cadastros-03-clientes-novo-vazio-257-0-1183-900-760.webp 760w, img/cadastros-03-clientes-novo-vazio-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Novo cliente: dados principais, contato, endereço e condições comerciais." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Novo cliente: dados principais, contato, endereço e condições comerciais.</figcaption>
+</figure></div><div role="tabpanel" id="v-cadastros-panel-2" aria-labelledby="v-cadastros-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/cadastros/fornecedores</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/cadastros-25-fornecedores-detalhe-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Fornecedor aberto para consulta, com as listas relacionadas." aria-label="Ampliar tela: Fornecedor aberto para consulta, com as listas relacionadas."><img src="img/cadastros-25-fornecedores-detalhe-257-0-1183-900.webp" srcset="img/cadastros-25-fornecedores-detalhe-257-0-1183-900-760.webp 760w, img/cadastros-25-fornecedores-detalhe-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Fornecedor aberto para consulta, com as listas relacionadas." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Fornecedor aberto para consulta, com as listas relacionadas.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+    </div>
+    <div class="evolving" id="evolucao" aria-labelledby="evo-title">
+      <div class="section-head">
+        <p class="kicker"><span>Em evolução</span></p>
+        <h2 id="evo-title" class="display-3">O que ainda está chegando à tela.</h2>
+        <p class="section-lead">Estas áreas já têm estrutura no núcleo, mas ainda não estão completas na interface. Elas aparecem aqui como são hoje.</p>
+      </div>
+      <ul class="evo-list">
+        <li class="evo">
+          <div class="evo-head"><h3>Produção</h3><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span></div>
+          <dl>
+            <div><dt>Hoje</dt><dd>Ordens de produção e estruturas (BOM) em consulta.</dd></div>
+            <div><dt>Ainda não</dt><dd>Criar ordens de produção ainda não está disponível; o resumo do painel de produção não carrega.</dd></div>
+          </dl>
+        </li><li class="evo">
+          <div class="evo-head"><h3>Workflow</h3><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span></div>
+          <dl>
+            <div><dt>Hoje</dt><dd>O sino mostra as aprovações que aguardam você. Workflows, versões e etapas são configurados pela API.</dd></div>
+            <div><dt>Ainda não</dt><dd>Iniciar um workflow e aprovar etapas pela tela ainda não funciona.</dd></div>
+          </dl>
+        </li><li class="evo">
+          <div class="evo-head"><h3>Importação</h3><span class="chip chip-evolucao" title="Parcial ou com limitação conhecida">Em evolução</span></div>
+          <dl>
+            <div><dt>Hoje</dt><dd>Importação em lote pela API, com mapeamento, validação e erros por linha. Todas as listas exportam CSV.</dd></div>
+            <div><dt>Ainda não</dt><dd>Não há tela de importação.</dd></div>
+          </dl>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="access paper" id="acesso" aria-labelledby="access-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker"><span>Quem acessa o quê</span></p>
+      <h2 id="access-title" class="display-2">Cada pessoa vê o que o seu papel permite.</h2>
+      <p class="section-lead">O acesso é sempre por convite. O administrador cadastra a pessoa, envia o convite e atribui papéis. Um papel reúne permissões; o acesso de cada pessoa é a soma dos seus papéis.</p>
+    </div>
+    <ol class="chain" aria-label="Como o acesso é montado, no exemplo real do manual">
+      <li style="--i:0"><span class="ch-label">Usuário</span><span class="ch-value">Carla Mendes</span><span class="ch-note">entra pelo convite</span></li><li style="--i:1"><span class="ch-label">Papel</span><span class="ch-value">Comprador</span><span class="ch-note">criado pela empresa</span></li><li style="--i:2"><span class="ch-label">Permissões</span><span class="ch-value">23 de Compras</span><span class="ch-note">marcadas na matriz</span></li><li style="--i:3"><span class="ch-label">Módulos</span><span class="ch-value">Suprimentos</span><span class="ch-note">aparece no menu</span></li>
+    </ol>
+    <div class="access-grid">
+      <div class="access-copy">
+        <h3 class="q-title"><span>✓</span>Na Administração da Empresa</h3>
+        <ul class="does"><li class="does-tela"><span>Usuários com situação de acesso: conta ativa, convite pendente, sem login, desativado</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Convite, reenvio e cancelamento de convite</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Papéis com matriz de permissões por módulo e ação</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Setores, cargos, unidades e foco dos painéis por público</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Habilitar e desabilitar módulos contratados</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-consulta"><span>Auditoria de acesso, estrutura e cadastros</span><span class="chip chip-consulta" title="Lista, filtros e detalhe na interface">Consulta</span></li></ul>
+        <p class="note">Exemplo do manual: a usuária convidada entra sem papel, recebe o papel Comprador e passa a ver Suprimentos, mas continua sem acesso ao Financeiro.</p>
+      </div>
+      <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Do convite ao acesso, passo a passo">
+    <button role="tab" type="button" id="v-acesso-tab-0" aria-controls="v-acesso-panel-0" aria-selected="true" tabindex="0">1 · Convite</button><button role="tab" type="button" id="v-acesso-tab-1" aria-controls="v-acesso-panel-1" aria-selected="false" tabindex="-1">2 · Sem papel</button><button role="tab" type="button" id="v-acesso-tab-2" aria-controls="v-acesso-panel-2" aria-selected="false" tabindex="-1">3 · Papel</button><button role="tab" type="button" id="v-acesso-tab-3" aria-controls="v-acesso-panel-3" aria-selected="false" tabindex="-1">4 · Atribuição</button><button role="tab" type="button" id="v-acesso-tab-4" aria-controls="v-acesso-panel-4" aria-selected="false" tabindex="-1">5 · Acesso</button><button role="tab" type="button" id="v-acesso-tab-5" aria-controls="v-acesso-panel-5" aria-selected="false" tabindex="-1">6 · Limite</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-acesso-panel-0" aria-labelledby="v-acesso-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/convite</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/711"><a class="shot-zoom" href="img/admin-43-convite-aceitar-257-0-1183-711.webp" data-zoom data-w="1183" data-h="711" data-caption="A pessoa convidada cria a senha e aceita o convite." aria-label="Ampliar tela: A pessoa convidada cria a senha e aceita o convite."><img src="img/admin-43-convite-aceitar-257-0-1183-711.webp" srcset="img/admin-43-convite-aceitar-257-0-1183-711-760.webp 760w, img/admin-43-convite-aceitar-257-0-1183-711.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="711" alt="A pessoa convidada cria a senha e aceita o convite." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>A pessoa convidada cria a senha e aceita o convite.</figcaption>
+</figure></div><div role="tabpanel" id="v-acesso-panel-1" aria-labelledby="v-acesso-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/admin-44-convite-aceito-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Sem papel, ela entra e vê apenas Início e Configurações." aria-label="Ampliar tela: Sem papel, ela entra e vê apenas Início e Configurações."><img src="img/admin-44-convite-aceito-257-0-1183-592.webp" srcset="img/admin-44-convite-aceito-257-0-1183-592-760.webp 760w, img/admin-44-convite-aceito-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Sem papel, ela entra e vê apenas Início e Configurações." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Sem papel, ela entra e vê apenas Início e Configurações.</figcaption>
+</figure></div><div role="tabpanel" id="v-acesso-panel-2" aria-labelledby="v-acesso-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/admin/roles</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/admin-52-papel-permissoes-marcadas-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="O papel Comprador recebe as 23 permissões do grupo Compras." aria-label="Ampliar tela: O papel Comprador recebe as 23 permissões do grupo Compras."><img src="img/admin-52-papel-permissoes-marcadas-257-0-1183-900.webp" srcset="img/admin-52-papel-permissoes-marcadas-257-0-1183-900-760.webp 760w, img/admin-52-papel-permissoes-marcadas-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="O papel Comprador recebe as 23 permissões do grupo Compras." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>O papel Comprador recebe as 23 permissões do grupo Compras.</figcaption>
+</figure></div><div role="tabpanel" id="v-acesso-panel-3" aria-labelledby="v-acesso-tab-3" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/admin/users</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/admin-54-papel-atribuido-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="O papel é atribuído no painel do usuário e vale na hora." aria-label="Ampliar tela: O papel é atribuído no painel do usuário e vale na hora."><img src="img/admin-54-papel-atribuido-257-0-1183-900.webp" srcset="img/admin-54-papel-atribuido-257-0-1183-900-760.webp 760w, img/admin-54-papel-atribuido-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="O papel é atribuído no painel do usuário e vale na hora." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>O papel é atribuído no painel do usuário e vale na hora.</figcaption>
+</figure></div><div role="tabpanel" id="v-acesso-panel-4" aria-labelledby="v-acesso-tab-4" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/suprimentos/pedidos-compra</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/900"><a class="shot-zoom" href="img/admin-56-usuario-com-papel-modulo-257-0-1183-900.webp" data-zoom data-w="1183" data-h="900" data-caption="Agora ela vê Suprimentos e os pedidos de compra." aria-label="Ampliar tela: Agora ela vê Suprimentos e os pedidos de compra."><img src="img/admin-56-usuario-com-papel-modulo-257-0-1183-900.webp" srcset="img/admin-56-usuario-com-papel-modulo-257-0-1183-900-760.webp 760w, img/admin-56-usuario-com-papel-modulo-257-0-1183-900.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="900" alt="Agora ela vê Suprimentos e os pedidos de compra." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Agora ela vê Suprimentos e os pedidos de compra.</figcaption>
+</figure></div><div role="tabpanel" id="v-acesso-panel-5" aria-labelledby="v-acesso-tab-5" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/financeiro/contas-receber</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/592"><a class="shot-zoom" href="img/admin-57-usuario-com-papel-sem-acesso-257-0-1183-592.webp" data-zoom data-w="1183" data-h="592" data-caption="Contas a receber continua bloqueado: o papel não inclui o Financeiro." aria-label="Ampliar tela: Contas a receber continua bloqueado: o papel não inclui o Financeiro."><img src="img/admin-57-usuario-com-papel-sem-acesso-257-0-1183-592.webp" srcset="img/admin-57-usuario-com-papel-sem-acesso-257-0-1183-592-760.webp 760w, img/admin-57-usuario-com-papel-sem-acesso-257-0-1183-592.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="592" alt="Contas a receber continua bloqueado: o papel não inclui o Financeiro." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Contas a receber continua bloqueado: o papel não inclui o Financeiro.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+    </div>
+  </div>
+</section>
+<section class="central sheet" id="central" aria-labelledby="central-title">
+  <div class="wrap module-top">
+    <div class="module-intro">
+      <p class="kicker"><span>Administração Central</span></p>
+      <h2 id="central-title" class="display-3">A plataforma cuida das empresas. As empresas cuidam da operação.</h2>
+      <p class="lead-p">A Administração Central cria empresas clientes, convida o primeiro administrador de cada uma, controla o ciclo de vida e os módulos contratados. Ela não acessa pedidos, estoque, financeiro ou cadastros das empresas, e não existe modo de entrar como empresa.</p>
+      <ul class="does"><li class="does-tela"><span>Criar empresa com unidade inicial e convidar o administrador</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Ciclo de vida: avaliação, ativa, suspensa, cancelada, com motivo registrado</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Contratar e descontratar módulos por empresa</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li class="does-tela"><span>Membros da plataforma: Owner e Admin, com o último Owner protegido</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li></ul>
+    </div>
+    <div class="module-screens"><div class="viewer" data-viewer>
+  <div class="viewer-tabs" role="tablist" aria-label="Telas da Administração Central">
+    <button role="tab" type="button" id="v-central-tab-0" aria-controls="v-central-panel-0" aria-selected="true" tabindex="0">Empresas</button><button role="tab" type="button" id="v-central-tab-1" aria-controls="v-central-panel-1" aria-selected="false" tabindex="-1">Nova empresa</button><button role="tab" type="button" id="v-central-tab-2" aria-controls="v-central-panel-2" aria-selected="false" tabindex="-1">Políticas</button>
+  </div>
+  <div class="viewer-panels">
+    <div role="tabpanel" id="v-central-panel-0" aria-labelledby="v-central-tab-0" class="is-on"><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/admincentral/companies</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/610"><a class="shot-zoom" href="img/central-02-empresas-257-0-1183-610.webp" data-zoom data-w="1183" data-h="610" data-caption="Empresas identificadas por código, com ciclo de vida e módulos." aria-label="Ampliar tela: Empresas identificadas por código, com ciclo de vida e módulos."><img src="img/central-02-empresas-257-0-1183-610.webp" srcset="img/central-02-empresas-257-0-1183-610-760.webp 760w, img/central-02-empresas-257-0-1183-610.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="610" alt="Empresas identificadas por código, com ciclo de vida e módulos." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Empresas identificadas por código, com ciclo de vida e módulos.</figcaption>
+</figure></div><div role="tabpanel" id="v-central-panel-1" aria-labelledby="v-central-tab-1" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/admincentral/companies</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/735"><a class="shot-zoom" href="img/central-06-empresa-criada-257-0-1183-735.webp" data-zoom data-w="1183" data-h="735" data-caption="Empresa criada; próximo passo: convidar o administrador." aria-label="Ampliar tela: Empresa criada; próximo passo: convidar o administrador."><img src="img/central-06-empresa-criada-257-0-1183-735.webp" srcset="img/central-06-empresa-criada-257-0-1183-735-760.webp 760w, img/central-06-empresa-criada-257-0-1183-735.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="735" alt="Empresa criada; próximo passo: convidar o administrador." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Empresa criada; próximo passo: convidar o administrador.</figcaption>
+</figure></div><div role="tabpanel" id="v-central-panel-2" aria-labelledby="v-central-tab-2" aria-hidden="true" inert><figure class="shot ">
+  <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">/admincentral/settings</span></div>
+  <div class="shot-frame" style="aspect-ratio:1183/731"><a class="shot-zoom" href="img/central-18-politicas-257-0-1183-731.webp" data-zoom data-w="1183" data-h="731" data-caption="Regras de governança garantidas pelo banco." aria-label="Ampliar tela: Regras de governança garantidas pelo banco."><img src="img/central-18-politicas-257-0-1183-731.webp" srcset="img/central-18-politicas-257-0-1183-731-760.webp 760w, img/central-18-politicas-257-0-1183-731.webp 1183w" sizes="(min-width: 1100px) 60vw, 100vw" width="1183" height="731" alt="Regras de governança garantidas pelo banco." loading="lazy" decoding="async"><span class="zoom-hint" aria-hidden="true">Ampliar</span></a></div>
+  <figcaption>Regras de governança garantidas pelo banco.</figcaption>
+</figure></div>
+  </div>
+</div></div>
+  </div>
+</section>
+<section class="network stage" id="conexoes" aria-labelledby="net-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker kicker-stage"><span>A operação integrada</span></p>
+      <h2 id="net-title" class="display-2">Um registro em uma área vira trabalho na outra.</h2>
+      <p class="section-lead">Linha contínua: a ligação acontece por uma ação na tela. Linha tracejada: a ligação existe no núcleo da plataforma (API e regras no banco), ainda sem botão na interface. Toque em uma área para ver só as ligações dela.</p>
+    </div>
+    <div class="net-grid">
+      <div><div class="net-canvas"><svg class="net-svg" viewBox="0 0 1000 520" role="group" aria-labelledby="net-svg-title">
+    <title id="net-svg-title">Mapa das ligações entre as áreas do EDUCA</title>
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#a9a29a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    </defs>
+    <g class="net-edges">
+      <g class="edge edge-api" data-a="crm" data-b="comercial">
+        <path class="edge-line" d="M149.6 90.9 Q237.0 137.0 314.7 144.1" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M149.6 90.9 Q237.0 137.0 314.7 144.1" pathLength="100" style="--d:0.00s"/>
+      </g><g class="edge edge-tela" data-a="comercial" data-b="estoque">
+        <path class="edge-line" d="M412.1 171.2 Q504.0 232.0 545.0 239.9" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M412.1 171.2 Q504.0 232.0 545.0 239.9" pathLength="100" style="--d:0.37s"/>
+      </g><g class="edge edge-tela" data-a="comercial" data-b="financeiro">
+        <path class="edge-line" d="M392.8 172.5 Q484.0 332.0 620.6 437.3" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M392.8 172.5 Q484.0 332.0 620.6 437.3" pathLength="100" style="--d:0.74s"/>
+      </g><g class="edge edge-api" data-a="comercial" data-b="fiscal">
+        <path class="edge-line" d="M443.3 142.1 Q524.0 132.0 611.5 82.0" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M443.3 142.1 Q524.0 132.0 611.5 82.0" pathLength="100" style="--d:1.11s"/>
+      </g><g class="edge edge-api" data-a="suprimentos" data-b="estoque">
+        <path class="edge-line" d="M452.6 363.7 Q527.0 347.0 618.2 282.5" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M452.6 363.7 Q527.0 347.0 618.2 282.5" pathLength="100" style="--d:1.48s"/>
+      </g><g class="edge edge-api" data-a="suprimentos" data-b="financeiro">
+        <path class="edge-line" d="M419.6 400.9 Q507.0 447.0 580.0 453.6" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M419.6 400.9 Q507.0 447.0 580.0 453.6" pathLength="100" style="--d:1.85s"/>
+      </g><g class="edge edge-api" data-a="suprimentos" data-b="fiscal">
+        <path class="edge-line" d="M407.0 358.5 Q547.0 247.0 636.6 84.3" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M407.0 358.5 Q547.0 247.0 636.6 84.3" pathLength="100" style="--d:2.22s"/>
+      </g><g class="edge edge-api" data-a="projetos" data-b="qualidade">
+        <path class="edge-line" d="M105.4 282.9 Q91.0 355.0 105.0 425.1" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M105.4 282.9 Q91.0 355.0 105.0 425.1" pathLength="100" style="--d:2.59s"/>
+      </g><g class="edge edge-api" data-a="projetos" data-b="comercial">
+        <path class="edge-line" d="M168.5 248.8 Q256.0 232.0 346.3 172.3" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M168.5 248.8 Q256.0 232.0 346.3 172.3" pathLength="100" style="--d:2.96s"/>
+      </g><g class="edge edge-api" data-a="ativos" data-b="estoque">
+        <path class="edge-line" d="M873.9 408.1 Q789.5 320.5 699.3 281.4" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M873.9 408.1 Q789.5 320.5 699.3 281.4" pathLength="100" style="--d:3.33s"/>
+      </g><g class="edge edge-tela" data-a="comercial" data-b="painel">
+        <path class="edge-line" d="M443.2 162.6 Q637.5 201.5 839.2 161.2" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M443.2 162.6 Q637.5 201.5 839.2 161.2" pathLength="100" style="--d:3.70s"/>
+      </g><g class="edge edge-tela" data-a="financeiro" data-b="painel">
+        <path class="edge-line" d="M675.4 438.4 Q803.5 329.5 882.6 174.3" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M675.4 438.4 Q803.5 329.5 882.6 174.3" pathLength="100" style="--d:4.07s"/>
+      </g><g class="edge edge-tela" data-a="estoque" data-b="painel">
+        <path class="edge-line" d="M737.1 240.1 Q783.5 229.5 863.5 172.5" marker-end="url(#arrow)"/>
+        <path class="edge-pulse" d="M737.1 240.1 Q783.5 229.5 863.5 172.5" pathLength="100" style="--d:4.44s"/>
+      </g>
+    </g>
+    <g class="net-nodes">
+      <g class="node" data-node="crm" transform="translate(110 70)" tabindex="0" role="button" aria-label="CRM: destacar ligações">
+          <rect x="-46" y="-19" width="92" height="38" rx="9"/>
+          <rect class="node-bar" x="-34" y="-2.5" width="10" height="5" rx="1.5"/>
+          <text x="-16" y="5">CRM</text>
+        </g><g class="node" data-node="projetos" transform="translate(110 260)" tabindex="0" role="button" aria-label="Projetos: destacar ligações">
+          <rect x="-54.6" y="-19" width="109.2" height="38" rx="9"/>
+          <rect class="node-bar" x="-42.6" y="-2.5" width="10" height="5" rx="1.5"/>
+          <text x="-24.6" y="5">Projetos</text>
+        </g><g class="node" data-node="qualidade" transform="translate(110 450)" tabindex="0" role="button" aria-label="Qualidade: destacar ligações">
+          <rect x="-59.300000000000004" y="-19" width="118.60000000000001" height="38" rx="9"/>
+          <rect class="node-bar" x="-47.300000000000004" y="-2.5" width="10" height="5" rx="1.5"/>
+          <text x="-29.300000000000004" y="5">Qualidade</text>
+        </g><g class="node" data-node="comercial" transform="translate(380 150)" tabindex="0" role="button" aria-label="Comercial: destacar ligações">
+          <rect x="-59.300000000000004" y="-19" width="118.60000000000001" height="38" rx="9"/>
+          <rect class="node-bar" x="-47.300000000000004" y="-2.5" width="10" height="5" rx="1.5"/>
+          <text x="-29.300000000000004" y="5">Comercial</text>
+        </g><g class="node" data-node="suprimentos" transform="translate(380 380)" tabindex="0" role="button" aria-label="Suprimentos: destacar ligações">
+          <rect x="-68.7" y="-19" width="137.4" height="38" rx="9"/>
+          <rect class="node-bar" x="-56.7" y="-2.5" width="10" height="5" rx="1.5"/>
+          <text x="-38.7" y="5">Suprimentos</text>
+        </g><g class="node" data-node="fiscal" transform="translate(650 60)" tabindex="0" role="button" aria-label="Fiscal: destacar ligações">
+          <rect x="-46" y="-19" width="92" height="38" rx="9"/>
+          <rect class="node-bar" x="-34" y="-2.5" width="10" height="5" rx="1.5"/>
+          <text x="-16" y="5">Fiscal</text>
+        </g><g class="node" data-node="estoque" transform="translate(650 260)" tabindex="0" role="button" aria-label="Estoque e Logística: destacar ligações">
+          <rect x="-106.3" y="-19" width="212.6" height="38" rx="9"/>
+          <rect class="node-bar" x="-94.3" y="-2.5" width="10" height="5" rx="1.5"/>
+          <text x="-76.3" y="5">Estoque e Logística</text>
+        </g><g class="node" data-node="financeiro" transform="translate(650 460)" tabindex="0" role="button" aria-label="Financeiro: destacar ligações">
+          <rect x="-64" y="-19" width="128" height="38" rx="9"/>
+          <rect class="node-bar" x="-52" y="-2.5" width="10" height="5" rx="1.5"/>
+          <text x="-34" y="5">Financeiro</text>
+        </g><g class="node" data-node="painel" transform="translate(895 150)" tabindex="0" role="button" aria-label="Painéis: destacar ligações">
+          <rect x="-49.9" y="-19" width="99.8" height="38" rx="9"/>
+          <rect class="node-bar" x="-37.9" y="-2.5" width="10" height="5" rx="1.5"/>
+          <text x="-19.9" y="5">Painéis</text>
+        </g><g class="node" data-node="ativos" transform="translate(895 430)" tabindex="0" role="button" aria-label="Ativos: destacar ligações">
+          <rect x="-46" y="-19" width="92" height="38" rx="9"/>
+          <rect class="node-bar" x="-34" y="-2.5" width="10" height="5" rx="1.5"/>
+          <text x="-16" y="5">Ativos</text>
+        </g>
+    </g>
+  </svg></div><p class="net-hint">Arraste o mapa para o lado para ver todas as áreas. A lista abaixo traz as mesmas ligações.</p></div>
+      <div class="net-side">
+      <p class="net-sum"><b>13</b> ligações conferidas · <b>5</b> na tela · <b>8</b> no núcleo, pela API</p>
+      <ul class="net-list" aria-label="Ligações entre áreas">
+        <li data-a="crm" data-b="comercial"><span class="nl-path"><b>CRM</b><span aria-hidden="true">→</span><b>Comercial</b></span><span class="nl-what">oportunidade → orçamento ou pedido</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li data-a="comercial" data-b="estoque"><span class="nl-path"><b>Comercial</b><span aria-hidden="true">→</span><b>Estoque e Logística</b></span><span class="nl-what">reserva de estoque</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li data-a="comercial" data-b="financeiro"><span class="nl-path"><b>Comercial</b><span aria-hidden="true">→</span><b>Financeiro</b></span><span class="nl-what">título a receber</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li data-a="comercial" data-b="fiscal"><span class="nl-path"><b>Comercial</b><span aria-hidden="true">→</span><b>Fiscal</b></span><span class="nl-what">documento fiscal do pedido</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li data-a="suprimentos" data-b="estoque"><span class="nl-path"><b>Suprimentos</b><span aria-hidden="true">→</span><b>Estoque e Logística</b></span><span class="nl-what">entrada do recebimento</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li data-a="suprimentos" data-b="financeiro"><span class="nl-path"><b>Suprimentos</b><span aria-hidden="true">→</span><b>Financeiro</b></span><span class="nl-what">conta a pagar</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li data-a="suprimentos" data-b="fiscal"><span class="nl-path"><b>Suprimentos</b><span aria-hidden="true">→</span><b>Fiscal</b></span><span class="nl-what">documento de entrada</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li data-a="projetos" data-b="qualidade"><span class="nl-path"><b>Projetos</b><span aria-hidden="true">→</span><b>Qualidade</b></span><span class="nl-what">inspeção da OS</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li data-a="projetos" data-b="comercial"><span class="nl-path"><b>Projetos</b><span aria-hidden="true">→</span><b>Comercial</b></span><span class="nl-what">orçamento do projeto</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li data-a="ativos" data-b="estoque"><span class="nl-path"><b>Ativos</b><span aria-hidden="true">→</span><b>Estoque e Logística</b></span><span class="nl-what">peças da manutenção</span><span class="chip chip-api" title="No núcleo da plataforma, sem botão na tela">Na API</span></li><li data-a="comercial" data-b="painel"><span class="nl-path"><b>Comercial</b><span aria-hidden="true">→</span><b>Painéis</b></span><span class="nl-what">pedidos e pendências</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li data-a="financeiro" data-b="painel"><span class="nl-path"><b>Financeiro</b><span aria-hidden="true">→</span><b>Painéis</b></span><span class="nl-what">vencidos e caixa</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li><li data-a="estoque" data-b="painel"><span class="nl-path"><b>Estoque e Logística</b><span aria-hidden="true">→</span><b>Painéis</b></span><span class="nl-what">fluxo pedido à entrega</span><span class="chip chip-tela" title="Ação disponível na interface">Na tela</span></li>
+      </ul>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="closing stage" id="comecar" aria-labelledby="closing-title">
+  <div class="wrap closing-in">
+    <p class="closing-mark" aria-hidden="true"><svg class="mark mark-xl" viewBox="0 0 24 24" width="56" height="56" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="currentColor"/><rect x="7" y="6.5" width="11" height="2.5" rx="1" class="mark-bar"/><rect x="7" y="10.75" width="8" height="2.5" rx="1" class="mark-fire"/><rect x="7" y="15" width="11" height="2.5" rx="1" class="mark-bar"/></svg></p>
+    <h2 id="closing-title" class="display-2">Conheça o EDUCA pela operação da sua empresa.</h2>
+    <p class="section-lead">Os manuais mostram cada tela, passo a passo, com as mesmas capturas desta página.</p>
+    <div class="actions">
+      <a class="btn btn-fire" href="https://educaerp.vercel.app/login">Entrar no EDUCA<span aria-hidden="true">→</span></a><a class="btn btn-ghost" href="manuais/EDUCA-Manual-do-Usuario.pdf" download>Manual do Usuário<small class="btn-meta">PDF · 18 MB</small><span aria-hidden="true">↓</span></a><a class="btn btn-ghost" href="manuais/EDUCA-Manual-de-Administracao.pdf" download>Manual de Administração<small class="btn-meta">PDF · 8 MB</small><span aria-hidden="true">↓</span></a>
+    </div>
+    <ol class="coda" aria-label="O caminho de uma venda no EDUCA">
+      <li style="--i:0"><span>01</span>Venda</li><li style="--i:1"><span>02</span>Estoque</li><li style="--i:2"><span>03</span>Financeiro</li><li style="--i:3"><span>04</span>Fiscal</li><li style="--i:4"><span>05</span>Logística</li><li style="--i:5"><span>06</span>Gestão</li>
+    </ol>
+  </div>
+</section>
+</main>
+<footer class="footer stage">
+  <div class="wrap footer-in">
+    <a class="brand" href="#inicio"><svg class="mark" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="currentColor"/><rect x="7" y="6.5" width="11" height="2.5" rx="1" class="mark-bar"/><rect x="7" y="10.75" width="8" height="2.5" rx="1" class="mark-fire"/><rect x="7" y="15" width="11" height="2.5" rx="1" class="mark-bar"/></svg><span>EDUCA<span class="brand-dim">.ERP</span></span></a>
+    <p class="footer-note">Telas da versão redesenhada, capturadas em 27/09/2026 com dados fictícios. Os selos seguem o inventário em <code>docs/landing/INVENTARIO.md</code>.</p>
+  </div>
+</footer>
+<dialog class="lightbox" aria-label="Tela ampliada">
+  <div class="lb-bar"><p class="lb-caption"></p><button type="button" class="btn btn-ghost btn-sm" data-close>Fechar <span aria-hidden="true">✕</span></button></div>
+  <div class="lb-body"><img alt=""></div>
+</dialog>
+<script src="main.js" defer></script>
+</body>
+</html>

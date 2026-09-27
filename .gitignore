@@ -43,3 +43,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 /poc/*/node_modules
+# landing: PDFs copiados pelo build (já versionados em docs/manual/pdf)
+/landing/site/manuais/

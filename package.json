@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --import tsx --test tests/**/*.test.ts",
-    "manuals:pdf": "node scripts/build-manuals.mjs"
+    "manuals:pdf": "node scripts/build-manuals.mjs",
+    "landing:build": "node scripts/build-landing.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.6",

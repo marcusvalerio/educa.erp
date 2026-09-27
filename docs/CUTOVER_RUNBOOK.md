@@ -34,7 +34,7 @@ Referências: `docs/PRE_CUTOVER_CHECKLIST.md` (estado verificado de cada pré-co
 | B — Dados | ensaio 173/173 tabelas + 43 sequences iguais; script testado | **PASS** no ensaio por MCP; `copy-data.sh` testado localmente, **NÃO EXECUTADO** contra Supabase→Neon (sem rede nem senha do Supabase) |
 | C — Segurança | sondas sobre os dados migrados | **PASS** 56/56 |
 | D — App | E2E local 210/210, `npm test` 719/719, 2 builds | **PASS** |
-| E — Homologação | `homolog-e2e` verde contra o Preview | **BLOQUEADO**: o Preview da branch existe, mas está atrás da Vercel Authentication e sem as variáveis de homologação (`evidence/homolog-probe.md`, run 36293119479). Contas de teste já são automáticas (`homolog/bootstrap-homolog.mjs`) |
+| E — Homologação | `homolog-e2e` verde contra o Preview | **BLOQUEADO** (rodada 5, 2026-09-27): Preview ainda atrás da Vercel Authentication e sem variáveis (sonda run 36336628971); conta de serviço de homologação existe como admin, mas sem senha; segredos do Environment `homolog` inexistentes. E2E não executado. Contas de teste já são automáticas (`homolog/bootstrap-homolog.mjs`) |
 
 ## Passos
 

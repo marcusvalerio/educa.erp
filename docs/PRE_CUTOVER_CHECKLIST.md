@@ -1,4 +1,4 @@
-# Checklist pré-cutover — estado verificado em 2026-09-27 (rodada 4)
+# Checklist pré-cutover — estado verificado em 2026-09-27 (rodada 5)
 
 Cada linha foi conferida nesta data. Neon e Supabase pelo MCP, só leitura em
 produção. Vercel e Neon Auth pela sonda no runner do GitHub
@@ -8,6 +8,20 @@ virada. **Veredito: NÃO pronto**, porque o portão E (homologação real) não 
 
 Legenda: ✅ pronto · ❌ falta · ⚠️ pronto com ressalva · 👤 depende do dono ·
 🤖 feito por mim
+
+## Rodada 5 — preflight de 2026-09-27 (sessão sem acesso à Vercel)
+
+| Verificação | Resultado |
+|---|---|
+| Vercel (API e `*.vercel.app`) a partir da sessão | **bloqueado** pela política de rede do ambiente (proxy recusa `api.vercel.com` e os domínios `vercel.app` com 403); nenhum token da Vercel no ambiente |
+| GitHub a partir da sessão | token com admin no repositório, mas as APIs de **Environments** e **Actions secrets** respondem **403**: não dá para criar o Environment `homolog` nem cadastrar segredos |
+| Neon (MCP) | acessível. Branch `homolog` = `br-icy-cell-b62lgh06`; Neon Auth `better_auth`, banco `authdb`, base `ep-royal-flower-b6tz0xde…/authdb/auth` |
+| Conta de serviço `svc-educa@educaerp.com` (branch `homolog`) | existe, papel **admin**, credencial criada **sem senha**, `emailVerified` falso (o SQL do script corrige os dois) |
+| Senha da conta de serviço | **não provisionada de propósito**: sem cofre de segredos acessível (GitHub 403, Vercel bloqueada), uma senha gerada nesta sessão ficaria só no contêiner efêmero e teria de ser trocada de novo |
+| Sonda no runner (run 36336628971) | Preview ainda atrás da **Vercel Authentication** (302 para `vercel.com/sso-api`); Neon Auth de homologação 200; recuperação OK e redirect de outra origem recusado (403); **`allow_localhost` e `allow_sign_up` ainda ligados**; produção intacta (`AUTH_PROVIDER=supabase`) |
+| E2E de homologação | **NÃO EXECUTADO** nesta rodada (0/33): sem Preview acessível nem segredos |
+
+Nada foi alterado em produção, no Supabase ou nas branches do Neon nesta rodada.
 
 ## Destino (Neon de produção `educa-erp-prod`)
 
@@ -56,13 +70,13 @@ Legenda: ✅ pronto · ❌ falta · ⚠️ pronto com ressalva · 👤 depende d
 |---|---|---|
 | Banco `homolog` | cópia fiel de produção (173 tabelas) | ✅ |
 | Neon Auth de homologação | e-mail/senha ligado; OAuth removido 🤖; trusted origin só o Preview 🤖; recuperação provada (200; redirect de outra origem 403) 🤖 | ✅ |
-| `allow_sign_up` / `allow_localhost` | **ligados** (MCP e sonda). O MCP não altera | ❌ 👤 Console |
+| `allow_sign_up` / `allow_localhost` | **ligados** (sonda da rodada 5, run 36336628971). O MCP não altera | ❌ 👤 Console |
 | Owner de homologação | 1 identidade (`2cdfefb7…`); vínculo só na branch `homolog`; 1 OWNER ativo; nenhum duplicado | ✅ |
 | Contas de teste | automáticas: `bootstrap-homolog.mjs` 🤖, 33/33 local duas vezes seguidas | ✅ |
-| Conta de serviço (senha) | não existe | ❌ 👤 |
+| Conta de serviço (senha) | usuário `svc-educa@educaerp.com` existe como **admin**, credencial **sem senha** (rodada 5, MCP) | ❌ 👤 |
 | `educa_app` em `homolog` (senha) | não existe | ❌ 👤 |
-| Preview: variáveis + bypass | não configurados; Vercel Authentication ativa | ❌ 👤 |
-| Segredos do GitHub (`homolog`) | não existem | ❌ 👤 |
+| Preview: variáveis + bypass | não configurados; Vercel Authentication ativa (rodada 5). A sessão não alcança a Vercel | ❌ 👤 |
+| Segredos do GitHub (`homolog`) | não existem; a sessão recebe 403 nas APIs de Environments/secrets | ❌ 👤 |
 | E2E contra o Preview | **NÃO EXECUTADO** | ❌ roda assim que os itens 👤 acima estiverem prontos |
 
 ## Rollback

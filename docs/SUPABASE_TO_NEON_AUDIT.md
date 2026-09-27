@@ -444,3 +444,16 @@ CUTOVER: **NÃO EXECUTADO** (aguarda portões A–E + aprovação)
 POC: **PASS**
 
 PRODUÇÃO EM USO (Supabase/Vercel): **INTACTA**
+
+## 20. Rodada 5 — preflight de homologação (2026-09-27)
+
+Objetivo: executar sozinho tudo o que as ferramentas da sessão permitissem para destravar o portão E.
+
+**Acessos.** Neon: sim (MCP, admin nos projetos). GitHub: sim para código e Actions, **não** para Environments e segredos (403). Vercel: **não** — a política de rede do ambiente recusa `api.vercel.com` e `*.vercel.app`, e não há token.
+
+**Neon Auth de homologação.** Na branch `homolog` (`br-icy-cell-b62lgh06`, banco `authdb`) a conta `svc-educa@educaerp.com` existe com papel `admin`, mas a credencial está sem senha e o e-mail não está verificado. A senha não foi gerada nesta sessão porque não havia onde guardá-la com segurança (sem GitHub secrets, sem Vercel): ela ficaria só no contêiner efêmero. O caminho continua sendo `scripts/neon-service-account.mjs` na máquina do dono, que também marca o e-mail como verificado.
+
+**Sonda** (Actions, run 36336628971): Preview atrás da Vercel Authentication; Neon Auth de homologação respondendo; recuperação de senha com origem confiável OK e redirect estrangeiro recusado; `allow_localhost` e `allow_sign_up` ainda ligados; produção intacta com `AUTH_PROVIDER=supabase`.
+
+**Resultado.** E2E de homologação não executado (0/33). Nenhuma alteração em produção, no Supabase, nas branches do Neon ou na `main`. Ações pendentes do dono: `docs/PRE_CUTOVER_CHECKLIST.md`, §Rodada 5 e §AÇÃO HUMANA.
+

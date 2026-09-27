@@ -169,13 +169,13 @@
       dockTo(7, cv + 0.3, gest);
 
       // Sistema completo: a câmera recua e a declaração de marca entra.
-      const cam = cv + 0.75;
+      const cam = cv + 0.45;
       tl.to(hs, { y: 0, scale: 1, duration: 1.3, ease: "power3.inOut" }, cam);
       tl.set(q(".hero-head", hero), { opacity: 1 }, cam + 0.2);
       tl.fromTo(q(".eyebrow", hero), { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, cam + 0.3);
       tl.fromTo(titleLines, { yPercent: 112, opacity: 1 }, { yPercent: 0, opacity: 1, duration: 1.1, ease: "expo.out", stagger: 0.12 }, cam + 0.4);
       tl.fromTo(q(".fire-bar", hero), { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: "power3.inOut" }, cam + 1.15);
-      tl.fromTo(side, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out", stagger: 0.09 }, cam + 0.9);
+      tl.fromTo(side, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out", stagger: 0.09 }, cam + 0.6);
     } else if (wide(700)) {
       // Tablet: pedido e áreas em grade, revelados em ordem de causa.
       tl.fromTo(q(".eyebrow", hero), { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.2);
@@ -200,6 +200,17 @@
         t.fromTo(media(f), { clipPath: "inset(0% 100% 0% 0% round 8px)", opacity: 0.4 }, { clipPath: "inset(0% 0% 0% 0% round 8px)", opacity: 1, duration: 0.5, ease: "power2.out" }, 0.4);
       });
     }
+
+    // A sequência completa roda uma vez por sessão; nas visitas seguintes a
+    // página abre no estado final (com os sinais vivos).
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem("educa-intro") === "1";
+      sessionStorage.setItem("educa-intro", "1");
+    } catch {
+      /* armazenamento bloqueado: a sequência roda normalmente */
+    }
+    if (seen) tl.progress(1);
 
     done();
 
@@ -299,8 +310,8 @@
   if (envs.length && wide(1100)) {
     gsap.fromTo(
       envs,
-      { xPercent: (i) => [70, 0, -70][i], yPercent: (i) => [8, 0, 8][i], rotationY: (i) => [-14, 0, 14][i], scale: (i) => (i === 1 ? 1 : 0.9), transformPerspective: 1400, opacity: (i) => (i === 1 ? 1 : 0.55) },
-      { xPercent: 0, yPercent: 0, rotationY: 0, scale: 1, opacity: 1, ease: "none", scrollTrigger: { trigger: q(".envs"), start: "top 88%", end: "top 38%", scrub: 0.7 } },
+      { xPercent: (i) => [70, 0, -70][i], yPercent: (i) => [8, 0, 8][i], rotationY: (i) => [-14, 0, 14][i], scale: (i) => (i === 1 ? 1 : 0.9), transformPerspective: 1400 },
+      { xPercent: 0, yPercent: 0, rotationY: 0, scale: 1, ease: "none", scrollTrigger: { trigger: q(".envs"), start: "top 88%", end: "top 38%", scrub: 0.7 } },
     );
   }
 

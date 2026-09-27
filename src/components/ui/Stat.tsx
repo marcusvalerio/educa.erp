@@ -79,7 +79,7 @@ export function Stat({ label, value, hint, delta, tone = "neutral", href, loadin
   );
   const classes = cn(
     "group relative block min-w-0 bg-surface",
-    lead ? "px-5 py-5" : "px-4 py-4",
+    lead ? "px-5 py-4" : "px-4 py-4",
     tone !== "neutral" && "before:absolute before:top-4 before:bottom-4 before:left-0 before:w-0.5 before:rounded-full",
     TONE_BAR[tone],
     href && "transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-ring",

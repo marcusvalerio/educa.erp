@@ -28,6 +28,7 @@ export function SummaryStrip({
   enabled,
   keys,
   columns = 4,
+  lead = false,
 }: {
   report: ReportDef;
   range: DateRange;
@@ -35,6 +36,8 @@ export function SummaryStrip({
   enabled: boolean;
   keys?: string[];
   columns?: 2 | 3 | 4 | 5 | 6;
+  /** Destaca a primeira métrica (só com exatamente 4 — faixa sem célula vazia). */
+  lead?: boolean;
 }) {
   const { current, prior } = useReportPair(report, range, previous, enabled);
   const metrics = keys ? report.metrics.filter((m) => keys.includes(m.key)) : report.metrics.slice(0, 8);
@@ -47,8 +50,8 @@ export function SummaryStrip({
     );
   }
   return (
-    <StatStrip columns={columns}>
-      {metrics.map((metric) => {
+    <StatStrip columns={columns} lead={lead && metrics.length === 4}>
+      {metrics.map((metric, index) => {
         const c = current.data?.[metric.key];
         const p = prior.data?.[metric.key];
         const hasBoth = c !== undefined && p !== undefined && c !== null && p !== null;
@@ -60,6 +63,7 @@ export function SummaryStrip({
             value={formatMetric(c, metric.format)}
             loading={current.loading}
             href={metric.href}
+            lead={lead && metrics.length === 4 && index === 0}
             delta={hasBoth ? { pct, goodWhen: metric.goodWhen ?? "up", label: metric.position ? "vs. posição anterior" : "vs. período anterior" } : undefined}
           />
         );
@@ -86,13 +90,13 @@ export function ChangesPanel({ report, range, previous, enabled }: { report: Rep
       ) : changes.length === 0 ? (
         <p className="px-4 py-5 text-sm text-muted-foreground">Sem variações entre os períodos comparados.</p>
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className="divide-y divide-border-subtle">
           {changes.map((change) => {
             const up = change.current > change.previous;
             const Icon = up ? ArrowUpRight : ArrowDownRight;
             const tone = change.good === null ? "text-muted-foreground" : change.good ? "text-success-fg" : "text-danger-fg";
             const row = (
-              <div className="flex items-center gap-3 px-4 py-2">
+              <div className="flex items-center gap-3 px-4 py-2.5">
                 <Icon size={15} className={cn("shrink-0", tone)} aria-hidden />
                 <span className="min-w-0 flex-1 truncate text-sm">{change.metric.label}</span>
                 <span className="hidden text-xs text-subtle-foreground tabular-nums sm:inline">

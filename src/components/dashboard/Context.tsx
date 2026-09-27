@@ -4,8 +4,11 @@ import { useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Building2, Calendar, MapPin, Target, UserRound } from "lucide-react";
+import { cn } from "@/lib/cn";
 import { Segmented } from "@/components/ui/Controls";
 import { Panel, PanelHeader } from "@/components/ui/Panel";
+import { EYEBROW_CLASS } from "@/components/ui/PageHeader";
+import { AutoEyebrow } from "@/components/shell/Breadcrumbs";
 import { useSession } from "@/components/shell/SessionProvider";
 import { ERP_NAV } from "@/lib/nav";
 import { canAccess } from "@/lib/navigation/access";
@@ -68,18 +71,24 @@ export function PeriodPicker() {
   );
 }
 
-export function DashboardHeader({ title, description, actions }: { title: string; description?: ReactNode; actions?: ReactNode }) {
+/**
+ * Cabeçalho dos painéis. `hero` (só no Início): momento editorial — data
+ * como sobrelinha, saudação na serifada em 44px e o contexto logo abaixo.
+ * Nos painéis por área, o mesmo ritmo do PageHeader (sobrelinha do módulo).
+ */
+export function DashboardHeader({ title, description, actions, hero = false }: { title: string; description?: ReactNode; actions?: ReactNode; hero?: boolean }) {
   const { data, branchId } = useSession();
   const tenant = data?.tenant;
   const branch = tenant?.branches.find((b) => b.id === branchId);
   const weekday = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
   const today = weekday.charAt(0).toUpperCase() + weekday.slice(1);
   return (
-    <header className="flex flex-col gap-3 border-b border-border pb-4 lg:flex-row lg:items-end lg:justify-between">
+    <header className={cn("flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between", hero ? "pb-2" : "pb-1")}>
       <div className="min-w-0">
-        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
-        {description && <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p>}
-        <ul className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <div className={cn("mb-1.5 empty:hidden", EYEBROW_CLASS)}>{hero ? today : <AutoEyebrow />}</div>
+        <h1 className={cn("text-balance text-foreground", hero ? "font-display text-4xl tracking-title" : "text-xl font-semibold tracking-title")}>{title}</h1>
+        {description && <p className={cn("max-w-2xl text-sm text-pretty text-muted-foreground", hero ? "mt-2" : "mt-1.5")}>{description}</p>}
+        <ul className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
           {tenant && (
             <li className="flex items-center gap-1.5">
               <Building2 size={13} className="text-subtle-foreground" aria-hidden />
@@ -96,10 +105,12 @@ export function DashboardHeader({ title, description, actions }: { title: string
               {[tenant?.department?.name, tenant?.position?.name].filter(Boolean).join(" · ")}
             </li>
           )}
-          <li className="flex items-center gap-1.5">
-            <Calendar size={13} className="text-subtle-foreground" aria-hidden />
-            {today}
-          </li>
+          {!hero && (
+            <li className="flex items-center gap-1.5">
+              <Calendar size={13} className="text-subtle-foreground" aria-hidden />
+              {today}
+            </li>
+          )}
         </ul>
       </div>
       <div className="flex shrink-0 flex-wrap items-end gap-2">{actions ?? <PeriodPicker />}</div>
@@ -141,13 +152,13 @@ export function FocusPanel() {
         <div className="flex flex-col gap-3 p-4">
           <ul className="flex flex-wrap gap-1.5">
             {focus.slice(0, 10).map((area) => (
-              <li key={area.focus_code} className="rounded-sm border border-border bg-surface-muted px-2 py-0.5 text-xs text-foreground" title={area.description ?? undefined}>
+              <li key={area.focus_code} className="rounded-sm border border-border-subtle bg-surface-muted px-2 py-0.5 text-xs text-foreground" title={area.description ?? undefined}>
                 {area.name}
               </li>
             ))}
           </ul>
           {shortcuts.length > 0 && (
-            <ul className="divide-y divide-border rounded-md border border-border">
+            <ul className="divide-y divide-border-subtle rounded-md border border-border-subtle">
               {shortcuts.map((s) => (
                 <li key={s.href}>
                   <Link href={s.href} className="group flex items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-surface-hover">

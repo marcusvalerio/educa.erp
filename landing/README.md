@@ -63,22 +63,39 @@ Assim o app, a autenticação e o banco não são tocados.
 - **Rotas de detalhe** aparecem como `/:id`, porque o app usa identificadores internos, não o código do registro.
 - **Destaques (`focus`)** usam coordenadas da captura original em pixels: `[x, y, largura, altura]`.
 
-## Cenas e movimento (v2)
+## Cenas e movimento (v3)
 
-A direção está em `docs/landing/DIRECAO.md`, na seção "Versão 2". Cada cena tem um estado final completo no HTML. O JavaScript apenas anima até esse estado.
+A direção está em `docs/landing/DIRECAO.md`, na seção "Versão 3". Cada cena tem um estado final completo no HTML. O JavaScript apenas anima até esse estado.
 
 | Cena | Desktop (≥ 1100 px) | Tablet e celular | Sem JS / movimento reduzido |
 |---|---|---|---|
-| Abertura | Sequência orquestrada em uma timeline:<br>1. sinais soltos;<br>2. o pedido;<br>3. marcadores nos botões;<br>4. linhas até cada área;<br>5. título;<br>6. convergência em Gestão;<br>7. sinais percorrendo as linhas. | Tablet: pedido e áreas em grade.<br>Celular: espinha vertical. | Composição final estática |
-| Cenário | Os registros saem dos silos e se alinham num fio (scrub) | Mesma cena, deslocamentos menores | Lista alinhada |
-| Siga um pedido | Cena fixa em seis tempos:<br>- a câmera aproxima a região da tela;<br>- o cursor clica no botão real (etapas na tela);<br>- o cartão mostra o endpoint real (etapas na API). | Lista; cada tela aproxima a sua região ao passar | Lista com destaques |
-| Módulos | A tela endireita ao entrar; a troca de aba é por máscara; inclinação leve sob o ponteiro | A tela endireita ao entrar (a partir de 700 px) | Estático |
-| Conexões | Mapa fixo; os quatro capítulos acendem as suas cadeias; sinais nas ligações | Mapa em camadas verticais no celular | Todas as ligações acesas |
-| Chamada | Os silos se juntam e a resposta aparece | Idem, em grade 3 × 2 | Barra unida |
+| Abertura | Timeline única, uma vez por sessão:<br>vazio → portas → molduras → códigos → varredura do pedido → marcadores → sinal por ligação e revelação de cada área → convergência em Gestão → câmera recua → título.<br><br>Depois: respiração, inclinação sob o ponteiro e foco por área. | Tablet: declaração e depois a grade.<br>Celular: declaração, pedido e espinha que desce com a rolagem. | Composição final estática |
+| Cenário | Registros saem dos silos e se alinham num fio (scrub) | Idem, deslocamentos menores | Lista alinhada |
+| Plataforma | Números como escala (pontos que acendem e valor que conta); ambientes em leque | Números em 2 × 2 | Pontos e valores finais |
+| Siga um pedido | Cena fixa: origem "00 Pedido" e seis tempos com câmera, legenda "Em foco", cursor (na tela) ou endpoint (na API) | Lista com raia fixa; cada tela aproxima a sua região | Lista com destaques e legendas |
+| Módulos | Tela 8/12, fixa ao ler; endireita ao entrar; troca de aba por máscara; numeral em parallax | Tela endireita (≥ 700 px) | Estático |
+| Conexões | Capítulos acendem as cadeias; sinal origem → destino com resposta no destino | Mapa em camadas verticais | Todas as ligações acesas |
+| Chamada | Seis áreas convergem para a marca EDUCA (SVG) | Versão vertical | Convergência desenhada |
 
 Regras:
 
-- Só se animam `transform` e `opacity`. Blur aparece só em entradas curtas da abertura.
+- Só se animam `transform`, `opacity` e `clip-path` (em revelações curtas). Não há blur na abertura.
 - A câmera usa zoom com contratranslação calculado no build, a partir das coordenadas da captura (`focus`, `cursor`).
+- Os traços com `non-scaling-stroke` são medidos em pixels de tela (`dashLen` em `motion.js`).
 - Com `prefers-reduced-motion` ou sem GSAP, `motion.js` não roda e a página mostra o estado final.
+- A abertura completa roda uma vez por sessão (`sessionStorage`, chave `educa-intro`). Para rever, abra uma aba nova.
 - Não há CTA de cadastro. O único acesso é "Entrar no EDUCA", que leva a `/login` do app.
+
+## Verificação
+
+Os roteiros de QA ficam fora do repositório. Para repetir a verificação:
+
+1. Gere o site: `npm run landing:build`.
+2. Sirva o site: `cd landing/site && python3 -m http.server 4310`.
+3. Rode as verificações com Playwright (Chromium já instalado):
+   - `scrollWidth` em 1440, 1280, 1024, 820 e 390;
+   - console limpo;
+   - axe (`node_modules/axe-core`) com movimento reduzido e no estado final;
+   - links e âncoras;
+   - página com JavaScript desativado.
+4. Rode `npm run lint`, `npx tsc --noEmit` e `npm test`.

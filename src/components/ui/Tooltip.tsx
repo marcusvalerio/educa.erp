@@ -26,7 +26,7 @@ export function Tooltip({ content, children, side = "top", align = "center", dis
           align={align}
           sideOffset={6}
           className={cn(
-            "z-[70] max-w-xs rounded-sm bg-foreground px-2 py-1 text-xs text-background shadow-popover animate-fade-in",
+            "z-[70] max-w-xs rounded-sm bg-foreground px-2 py-1 text-xs font-medium text-background shadow-popover animate-fade-in",
             className
           )}
         >

@@ -75,20 +75,20 @@ export function EmptyState({
       role={kind === "error" ? "alert" : undefined}
       className={cn(
         "flex flex-col items-center justify-center gap-2 text-center",
-        compact ? "px-4 py-8" : "px-6 py-14",
+        compact ? "px-4 py-8" : "px-6 py-16",
         className
       )}
     >
       <span
         className={cn(
-          "flex h-9 w-9 items-center justify-center rounded-md border",
-          kind === "error" ? "border-danger/30 bg-danger-soft text-danger-fg" : "border-border bg-surface-muted text-subtle-foreground"
+          "mb-1 flex h-10 w-10 items-center justify-center rounded-lg border shadow-xs",
+          kind === "error" ? "border-danger/30 bg-danger-soft text-danger-fg" : "border-border bg-surface text-subtle-foreground"
         )}
       >
         <Icon size={17} strokeWidth={1.75} aria-hidden />
       </span>
       <div className="max-w-sm">
-        <p className="text-sm font-medium text-foreground">{title}</p>
+        <p className="text-sm font-semibold tracking-title text-foreground">{title}</p>
         {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       </div>
       {(action || onRetry) && (
@@ -112,7 +112,7 @@ export function Skeleton({ className }: { className?: string }) {
 
 export function SkeletonRows({ rows = 6, columns = 5 }: { rows?: number; columns?: number }) {
   return (
-    <div role="status" aria-label="Carregando" className="divide-y divide-border">
+    <div role="status" aria-label="Carregando" className="divide-y divide-border-subtle">
       {Array.from({ length: rows }, (_, r) => (
         <div key={r} className="flex h-10 items-center gap-4 px-3">
           {Array.from({ length: columns }, (_, c) => (

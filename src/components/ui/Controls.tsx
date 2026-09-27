@@ -49,7 +49,7 @@ export function Select({ value, onValueChange, options, placeholder = "Selecione
         <S.Content
           position="popper"
           sideOffset={4}
-          className="z-[60] max-h-[min(360px,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-border bg-surface shadow-popover animate-pop-in"
+          className="z-[60] max-h-[min(360px,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-border bg-surface-raised shadow-popover animate-pop-in"
         >
           <S.Viewport className="p-1">
             {options.map((option) => (
@@ -83,7 +83,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, ComponentPropsWithoutRef<t
       ref={ref}
       checked={checked}
       className={cn(
-        "flex h-4 w-4 shrink-0 items-center justify-center rounded-xs border border-border-strong bg-surface",
+        "flex h-4 w-4 shrink-0 items-center justify-center rounded-xs border border-border-strong bg-surface shadow-xs transition-colors",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
         "data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
@@ -155,7 +155,7 @@ export function Segmented<T extends string>({
   size?: "xs" | "sm";
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-md border border-border bg-surface-muted p-0.5">
+    <div role="radiogroup" aria-label={label} className="inline-flex rounded-md border border-border-subtle bg-muted/70 p-0.5">
       {options.map((option) => {
         const active = option.value === value;
         return (
@@ -168,7 +168,7 @@ export function Segmented<T extends string>({
             className={cn(
               "inline-flex items-center gap-1.5 rounded-sm font-medium transition-colors",
               size === "xs" ? "h-6 px-2 text-2xs" : "h-7 px-2.5 text-xs",
-              active ? "bg-surface text-foreground shadow-[0_0_0_1px_var(--color-border)]" : "text-muted-foreground hover:text-foreground"
+              active ? "bg-surface text-foreground shadow-xs ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
             )}
           >
             {option.icon}

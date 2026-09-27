@@ -33,6 +33,28 @@ export function useBreadcrumbTailValue(): Crumb[] {
   return useContext(BreadcrumbTailCtx)?.tail ?? [];
 }
 
+// Onde estou: o módulo (seção de navegação) da página atual, publicado pelo
+// shell a partir da mesma trilha. O PageHeader o usa como sobrelinha
+// ("COMERCIAL" acima de "Pedidos de venda") sem cada página repetir isso.
+const ShellSectionCtx = createContext<Crumb | null>(null);
+export const ShellSectionProvider = ShellSectionCtx.Provider;
+
+export function useShellSection(): Crumb | null {
+  return useContext(ShellSectionCtx);
+}
+
+export function AutoEyebrow({ className }: { className?: string }) {
+  const section = useShellSection();
+  if (!section) return null;
+  return section.href ? (
+    <Link href={section.href} className={cn("hover:text-foreground", className)}>
+      {section.label}
+    </Link>
+  ) : (
+    <span className={className}>{section.label}</span>
+  );
+}
+
 export function Breadcrumbs({ items, className, tone = "default" }: { items: Crumb[]; className?: string; tone?: "default" | "platform" }) {
   return (
     <nav aria-label="Trilha de navegação" className={cn("min-w-0", className)}>

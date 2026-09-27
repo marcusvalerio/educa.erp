@@ -30,14 +30,14 @@ export function Drawer({ open, onClose, title, subtitle, meta, children, footer,
         <D.Overlay className="fixed inset-0 z-50 bg-overlay animate-fade-in" />
         <D.Content
           className={cn(
-            "fixed inset-y-0 z-50 flex w-full flex-col border-border bg-surface shadow-dialog outline-none",
-            side === "right" ? "right-0 border-l animate-slide-in-right" : "left-0 border-r animate-slide-in-left",
+            "fixed inset-y-0 z-50 flex w-full flex-col border-border bg-surface-raised shadow-dialog outline-none sm:inset-y-2 sm:rounded-xl sm:border",
+            side === "right" ? "right-0 border-l animate-slide-in-right sm:right-2" : "left-0 border-r animate-slide-in-left sm:left-2",
             SIZES[size]
           )}
         >
-          <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
+          <header className="flex items-start justify-between gap-3 border-b border-border-subtle px-5 py-4">
             <div className="min-w-0">
-              <D.Title className="truncate text-md font-semibold text-foreground">{title}</D.Title>
+              <D.Title className="truncate text-md font-semibold tracking-title text-foreground">{title}</D.Title>
               {subtitle ? (
                 <D.Description className="mt-0.5 text-sm text-muted-foreground">{subtitle}</D.Description>
               ) : (
@@ -52,7 +52,7 @@ export function Drawer({ open, onClose, title, subtitle, meta, children, footer,
             </D.Close>
           </header>
           <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
-          {footer && <footer className="flex flex-wrap items-center justify-end gap-2 border-t border-border px-5 py-3">{footer}</footer>}
+          {footer && <footer className="flex flex-wrap items-center justify-end gap-2 border-t border-border-subtle bg-surface-muted px-5 py-3 sm:rounded-b-xl">{footer}</footer>}
         </D.Content>
       </D.Portal>
     </D.Root>

@@ -21,7 +21,7 @@ export const PopoverContent = forwardRef<HTMLDivElement, ComponentPropsWithoutRe
         sideOffset={sideOffset}
         collisionPadding={8}
         className={cn(
-          "z-[60] rounded-lg border border-border bg-surface p-3 text-sm text-foreground shadow-popover outline-none animate-pop-in",
+          "z-[60] rounded-lg border border-border bg-surface-raised p-3 text-sm text-foreground shadow-popover outline-none animate-pop-in",
           className
         )}
         {...props}

@@ -28,9 +28,23 @@ type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
   tone?: Tone;
   dot?: boolean;
   icon?: ReactNode;
+  /**
+   * soft  — chip com fundo (padrão; chama atenção)
+   * quiet — só ponto + texto, sem caixa: para estados de rotina em listas,
+   *         onde uma coluna inteira de chips vira ruído.
+   */
+  variant?: "soft" | "quiet";
 };
 
-export function Badge({ tone = "neutral", dot = false, icon, className, children, ...props }: BadgeProps) {
+export function Badge({ tone = "neutral", dot = false, icon, variant = "soft", className, children, ...props }: BadgeProps) {
+  if (variant === "quiet") {
+    return (
+      <span className={cn("inline-flex max-w-full items-center gap-1.5 text-xs whitespace-nowrap text-foreground", className)} {...props}>
+        <span aria-hidden className={cn("h-1.5 w-1.5 shrink-0 rounded-full", DOTS[tone])} />
+        <span className="truncate">{children}</span>
+      </span>
+    );
+  }
   return (
     <span
       className={cn(

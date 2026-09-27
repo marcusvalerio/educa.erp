@@ -21,7 +21,7 @@ export function Pagination({ page, pageSize, total, onPageChange, onPageSizeChan
   const fmt = (n: number) => n.toLocaleString("pt-BR");
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-3 py-2 text-xs text-muted-foreground">
+    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border-subtle px-4 py-2 text-xs text-muted-foreground">
       <div className="flex items-center gap-3">
         <span className="tabular-nums" aria-live="polite">
           {total === 0 ? "Nenhum registro" : `${fmt(from)}–${fmt(to)} de ${fmt(total)}`}

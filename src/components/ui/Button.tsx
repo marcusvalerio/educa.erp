@@ -28,8 +28,13 @@ const SIZES: Record<ButtonSize, string> = {
 };
 
 export function buttonClasses(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string) {
+  // Sem tailwind-merge: se o chamador esconde o botão por padrão
+  // ("hidden md:inline-flex"), a base não impõe "inline-flex" — senão os
+  // dois competem pela ordem do CSS e o botão aparece no mobile.
+  const hiddenByDefault = /(^|\s)hidden(\s|$)/.test(className ?? "");
   return cn(
-    "inline-flex shrink-0 items-center rounded-md font-medium whitespace-nowrap select-none",
+    !hiddenByDefault && "inline-flex",
+    "shrink-0 items-center rounded-md font-medium whitespace-nowrap select-none",
     "transition-[background-color,color,border-color,opacity,box-shadow,transform] duration-150 active:translate-y-px",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
     "disabled:pointer-events-none disabled:opacity-45 aria-disabled:pointer-events-none aria-disabled:opacity-45",

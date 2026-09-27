@@ -82,7 +82,12 @@ export function EntityDrawer({
             </>
           ) : (
             <>
-              {dirty && <span className="mr-auto text-xs text-subtle-foreground">Alterações não salvas</span>}
+              {dirty && (
+                <span className="mr-auto inline-flex items-center gap-1.5 text-xs text-muted-foreground" role="status">
+                  <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-accent" />
+                  Alterações não salvas
+                </span>
+              )}
               <Button variant="secondary" onClick={requestClose} disabled={saving}>
                 Cancelar
               </Button>
@@ -107,7 +112,7 @@ export function EntityDrawer({
             </Alert>
           )}
           <EntityForm sections={sections} values={values} errors={errors} mode={mode} onChange={onChange} />
-          {mode === "view" && extras && <div className="flex flex-col gap-6 border-t border-border pt-5">{extras}</div>}
+          {mode === "view" && extras && <div className="flex flex-col gap-6 border-t border-border-subtle pt-6">{extras}</div>}
         </form>
       </Drawer>
       <ConfirmDialog

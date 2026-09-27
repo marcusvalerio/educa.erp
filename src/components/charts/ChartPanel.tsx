@@ -89,7 +89,7 @@ export function ChartPanel({
           <div className="max-h-80 overflow-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-2xs tracking-wide text-muted-foreground uppercase">
+                <tr className="text-left text-xs font-medium text-muted-foreground">
                   {table.columns.map((col) => (
                     <th key={col.label} scope="col" className={cn("border-b border-border py-1.5 pr-3 font-medium", col.align === "right" && "text-right")}>
                       {col.label}

@@ -81,7 +81,7 @@ export default function AdminOverviewPage() {
               <p className="text-sm">Estrutura de acesso completa — {issues.length} verificação(ões) sem pendências.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-border-subtle">
               {open.map((issue) => (
                 <li key={issue.label}>
                   <Link href={issue.href} className="group flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover">
@@ -111,20 +111,22 @@ export default function AdminOverviewPage() {
 
       <section className="flex flex-col gap-2">
         <SectionTitle title="Áreas da administração" />
-        <ul className="grid gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
-          {sections.map((item) => {
-            const Icon = ADMIN_ICONS[item.href];
-            return (
-              <li key={item.href} className="bg-surface">
-                <Link href={item.href} className="group flex h-full items-center gap-3 p-4 hover:bg-surface-hover">
-                  {Icon && <Icon size={16} className="shrink-0 text-subtle-foreground" aria-hidden />}
-                  <span className="flex-1 text-sm font-medium">{item.label}</span>
-                  <ArrowRight size={14} className="text-subtle-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="overflow-hidden rounded-lg border border-border bg-surface">
+          <ul className="-mr-px -mb-px grid *:border-r *:border-b *:border-border-subtle sm:grid-cols-2 lg:grid-cols-4">
+            {sections.map((item) => {
+              const Icon = ADMIN_ICONS[item.href];
+              return (
+                <li key={item.href} className="bg-surface">
+                  <Link href={item.href} className="group flex h-full items-center gap-3 p-4 hover:bg-surface-hover">
+                    {Icon && <Icon size={16} className="shrink-0 text-subtle-foreground" aria-hidden />}
+                    <span className="flex-1 text-sm font-medium">{item.label}</span>
+                    <ArrowRight size={14} className="text-subtle-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </section>
     </div>
   );

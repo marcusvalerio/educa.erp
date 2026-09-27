@@ -5,7 +5,7 @@ import { DayPicker, type DateRange as DayRange } from "react-day-picker";
 import { ptBR } from "react-day-picker/locale";
 import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { fieldBase } from "./Input";
+import { fieldSurface, fieldWidth } from "./Input";
 import { Popover, PopoverContent, PopoverTrigger } from "./Popover";
 import { Button } from "./Button";
 
@@ -81,7 +81,7 @@ export function DatePicker({ value, onChange, placeholder = "dd/mm/aaaa", disabl
           disabled={disabled}
           data-invalid={invalid || undefined}
           aria-describedby={aria["aria-describedby"]}
-          className={cn(fieldBase, "flex h-8 items-center gap-2 px-2.5 text-left tabular-nums data-[invalid]:border-danger", className)}
+          className={cn(fieldSurface, fieldWidth(className), "flex h-8 items-center gap-2 px-2.5 text-left tabular-nums data-[invalid]:border-danger", className)}
         >
           <CalendarDays size={14} className="shrink-0 text-subtle-foreground" />
           <span className={cn("flex-1 truncate", !value && "text-subtle-foreground")}>{value ? formatBr(value) : placeholder}</span>
@@ -136,7 +136,7 @@ export function DateRangePicker({ value, onChange, presets = [], className, id }
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button id={id} type="button" className={cn(fieldBase, "flex h-8 w-auto items-center gap-2 px-2.5 text-left tabular-nums", className)}>
+        <button id={id} type="button" className={cn(fieldSurface, "flex h-8 w-auto items-center gap-2 px-2.5 text-left tabular-nums", className)}>
           <CalendarDays size={14} className="shrink-0 text-subtle-foreground" />
           <span className="truncate">{label}</span>
         </button>

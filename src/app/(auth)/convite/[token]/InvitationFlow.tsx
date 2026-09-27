@@ -141,7 +141,7 @@ function InvitationSummary({ preview }: { preview: Preview }) {
     ["Válido até", preview.expires_at ? formatDateTime(preview.expires_at) : "—"],
   ];
   return (
-    <dl className="divide-y divide-border rounded-md border border-border bg-surface text-sm">
+    <dl className="divide-y divide-border-subtle rounded-lg border border-border bg-surface text-sm">
       {rows.map(([label, value]) => (
         <div key={label} className="flex items-baseline justify-between gap-4 px-3 py-2">
           <dt className="text-xs text-muted-foreground">{label}</dt>

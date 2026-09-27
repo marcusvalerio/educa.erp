@@ -81,7 +81,7 @@ export default function PipelinePage() {
       />
 
       {error ? (
-        <EmptyState kind="error" title="Não foi possível carregar o pipeline" description={error} onRetry={() => setReloadToken((n) => n + 1)} />
+        <EmptyState framed kind="error" title="Não foi possível carregar o pipeline" description={error} onRetry={() => setReloadToken((n) => n + 1)} />
       ) : loading ? (
         <div className="flex gap-3 overflow-hidden">
           {Array.from({ length: 4 }, (_, i) => (
@@ -89,9 +89,9 @@ export default function PipelinePage() {
           ))}
         </div>
       ) : !selectedPipeline ? (
-        <EmptyState title="Nenhum pipeline cadastrado" description="Cadastre um pipeline e seus estágios para acompanhar o funil de oportunidades." />
+        <EmptyState framed title="Nenhum pipeline cadastrado" description="Cadastre um pipeline e seus estágios para acompanhar o funil de oportunidades." />
       ) : stages.length === 0 ? (
-        <EmptyState title="Este pipeline ainda não tem estágios" />
+        <EmptyState framed title="Este pipeline ainda não tem estágios" />
       ) : (
         <div className="flex gap-3 overflow-x-auto pb-2" role="list" aria-label={`Estágios de ${selectedPipeline.name}`}>
           {stages.map((stage, stageIndex) => {

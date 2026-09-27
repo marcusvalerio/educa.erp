@@ -53,7 +53,7 @@ type TooltipBase = { active?: boolean; payload?: ReadonlyArray<TooltipEntry>; la
 function ChartTooltip({ active, payload, label, format, labels }: TooltipBase & { format: Formatter; labels?: Record<string, string> }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="min-w-36 rounded-md border border-border bg-surface px-3 py-2 text-xs shadow-popover">
+    <div className="min-w-36 rounded-md border border-border bg-surface-raised px-3 py-2 text-xs shadow-popover">
       <p className="mb-1 font-medium text-muted-foreground">{String(label ?? "")}</p>
       <ul className="flex flex-col gap-1">
         {payload.map((entry) => (

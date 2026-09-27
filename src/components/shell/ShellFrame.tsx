@@ -86,7 +86,7 @@ function ShellSkeleton() {
 
 export function NoAccess({ title = "Sem acesso a este recurso", description, backHref }: { title?: string; description?: ReactNode; backHref?: string }) {
   return (
-    <div className="rounded-md border border-border bg-surface">
+    <div className="rounded-lg border border-border bg-surface">
       <EmptyState
         kind="no-permission"
         title={title}
@@ -174,7 +174,7 @@ function ShellInner({ environment, children }: { environment: Environment; child
   if (status === "error") {
     return (
       <FullPageState>
-        <div className="w-full max-w-md rounded-md border border-border bg-surface">
+        <div className="w-full max-w-md rounded-lg border border-border bg-surface">
           <EmptyState kind="error" title="Não foi possível carregar sua sessão" description={error} onRetry={reload} action={<LogoutButton />} />
         </div>
       </FullPageState>

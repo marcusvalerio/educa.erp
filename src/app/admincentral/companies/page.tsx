@@ -115,11 +115,11 @@ function CompanyGovernance({ company, onChanged }: { company: PlatformCompany; o
   return (
     <div className="flex flex-col gap-5">
       <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-        <div><dt className="text-2xs font-medium tracking-wide text-subtle-foreground uppercase">Plano</dt><dd className="code">{company.plan_code ?? "—"}</dd></div>
-        <div><dt className="text-2xs font-medium tracking-wide text-subtle-foreground uppercase">Contratada em</dt><dd className="tabular-nums">{formatDate(company.contracted_at)}</dd></div>
-        <div><dt className="text-2xs font-medium tracking-wide text-subtle-foreground uppercase">Suspensa em</dt><dd className="tabular-nums">{formatDate(company.suspended_at)}</dd></div>
-        <div><dt className="text-2xs font-medium tracking-wide text-subtle-foreground uppercase">Cancelada em</dt><dd className="tabular-nums">{formatDate(company.cancelled_at)}</dd></div>
-        {company.notes && <div className="col-span-2"><dt className="text-2xs font-medium tracking-wide text-subtle-foreground uppercase">Observações</dt><dd>{company.notes}</dd></div>}
+        <div><dt className="text-xs text-muted-foreground">Plano</dt><dd className="code">{company.plan_code ?? "—"}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Contratada em</dt><dd className="tabular-nums">{formatDate(company.contracted_at)}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Suspensa em</dt><dd className="tabular-nums">{formatDate(company.suspended_at)}</dd></div>
+        <div><dt className="text-xs text-muted-foreground">Cancelada em</dt><dd className="tabular-nums">{formatDate(company.cancelled_at)}</dd></div>
+        {company.notes && <div className="col-span-2"><dt className="text-xs text-muted-foreground">Observações</dt><dd>{company.notes}</dd></div>}
       </dl>
 
       <CompanyAdminSection companyId={company.company_id} />
@@ -155,7 +155,7 @@ function CompanyGovernance({ company, onChanged }: { company: PlatformCompany; o
         ) : modules.loading ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : (
-          <ul className="divide-y divide-border rounded-md border border-border">
+          <ul className="divide-y divide-border-subtle rounded-lg border border-border">
             {(modules.data ?? []).map((mod) => {
               const contracted = mod.is_core || mod.contracted === true;
               return (

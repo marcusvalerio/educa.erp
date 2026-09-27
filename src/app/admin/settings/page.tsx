@@ -114,7 +114,7 @@ export default function AdminSettingsPage() {
             <div className="relative overflow-x-auto">
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
-                  <tr className="border-b border-border bg-surface-muted text-left text-2xs font-medium tracking-wide text-muted-foreground uppercase">
+                  <tr className="border-b border-border bg-surface-muted text-left text-xs font-medium text-muted-foreground">
                     <th scope="col" className="h-8 px-4">Aplica-se a</th>
                     <th scope="col" className="h-8 px-4">Foco</th>
                     <th scope="col" className="h-8 px-4 text-right">Prioridade</th>
@@ -157,26 +157,28 @@ export default function AdminSettingsPage() {
 
       <section className="flex flex-col gap-2">
         <SectionTitle title="Outras configurações" />
-        <ul className="grid gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-2">
-          {[
-            { href: "/configuracoes/parametros", label: "Parâmetros gerais", description: "Numeração, padrões fiscais e operacionais da empresa.", permission: "settings.view" },
-            { href: "/configuracoes/empresa", label: "Dados da empresa", description: "Razão social, documento, contato e endereço.", permission: "companies.read" },
-            { href: "/admin/modules", label: "Módulos", description: "Habilitar ou desabilitar módulos contratados.", permission: "company_modules.view" },
-            { href: "/admin/audit", label: "Auditoria", description: "Histórico das alterações administrativas.", permission: "audit_logs.read" },
-          ]
-            .filter((l) => can(l.permission))
-            .map((link) => (
-              <li key={link.href} className="bg-surface">
-                <Link href={link.href} className="group flex items-center justify-between gap-3 p-4 hover:bg-surface-hover">
-                  <span>
-                    <span className="block text-sm font-medium">{link.label}</span>
-                    <span className="block text-xs text-muted-foreground">{link.description}</span>
-                  </span>
-                  <ArrowRight size={14} className="shrink-0 text-subtle-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
-                </Link>
-              </li>
-            ))}
-        </ul>
+        <div className="overflow-hidden rounded-lg border border-border bg-surface">
+          <ul className="-mr-px -mb-px grid *:border-r *:border-b *:border-border-subtle sm:grid-cols-2">
+            {[
+              { href: "/configuracoes/parametros", label: "Parâmetros gerais", description: "Numeração, padrões fiscais e operacionais da empresa.", permission: "settings.view" },
+              { href: "/configuracoes/empresa", label: "Dados da empresa", description: "Razão social, documento, contato e endereço.", permission: "companies.read" },
+              { href: "/admin/modules", label: "Módulos", description: "Habilitar ou desabilitar módulos contratados.", permission: "company_modules.view" },
+              { href: "/admin/audit", label: "Auditoria", description: "Histórico das alterações administrativas.", permission: "audit_logs.read" },
+            ]
+              .filter((l) => can(l.permission))
+              .map((link) => (
+                <li key={link.href} className="bg-surface">
+                  <Link href={link.href} className="group flex items-center justify-between gap-3 p-4 hover:bg-surface-hover">
+                    <span>
+                      <span className="block text-sm font-medium">{link.label}</span>
+                      <span className="block text-xs text-muted-foreground">{link.description}</span>
+                    </span>
+                    <ArrowRight size={14} className="shrink-0 text-subtle-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
+                  </Link>
+                </li>
+              ))}
+          </ul>
+        </div>
       </section>
 
       <Dialog

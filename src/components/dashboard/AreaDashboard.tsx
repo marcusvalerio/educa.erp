@@ -437,22 +437,24 @@ function ActionLinks({ sections }: { sections: string[] }) {
   return (
     <Panel>
       <PanelHeader title="Onde agir" description="Listas e rotinas desta área que você pode operar." />
-      <div className="grid gap-px bg-border-subtle sm:grid-cols-2 xl:grid-cols-4">
-        {groups.map(({ section, items }) => (
-          <div key={section.id} className="bg-surface p-3">
-            <p className="mb-1 px-1 text-2xs font-semibold tracking-label text-subtle-foreground uppercase">{section.label}</p>
-            <ul>
-              {items.map((item) => (
-                <li key={item.href}>
-                  <Link href={item.href} className="group flex items-center justify-between gap-2 rounded-sm px-1 py-1.5 text-sm hover:bg-surface-hover">
-                    <span className="truncate">{item.label}</span>
-                    <ArrowRight size={13} className="shrink-0 text-subtle-foreground opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+      <div className="overflow-hidden">
+        <div className="-mr-px -mb-px grid *:border-r *:border-b *:border-border-subtle sm:grid-cols-2 xl:grid-cols-4">
+          {groups.map(({ section, items }) => (
+            <div key={section.id} className="bg-surface p-3">
+              <p className="mb-1 px-1 text-2xs font-semibold tracking-label text-subtle-foreground uppercase">{section.label}</p>
+              <ul>
+                {items.map((item) => (
+                  <li key={item.href}>
+                    <Link href={item.href} className="group flex items-center justify-between gap-2 rounded-sm px-1 py-1.5 text-sm hover:bg-surface-hover">
+                      <span className="truncate">{item.label}</span>
+                      <ArrowRight size={13} className="shrink-0 text-subtle-foreground opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
     </Panel>
   );

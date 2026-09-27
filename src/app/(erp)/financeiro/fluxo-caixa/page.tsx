@@ -63,7 +63,7 @@ export default function FluxoCaixaPage() {
       <PageHeader title="Fluxo de caixa" description="Saldo das contas financeiras e projeção pelos vencimentos dos títulos em aberto." />
 
       {error ? (
-        <EmptyState kind="error" title="Não foi possível carregar o fluxo de caixa" description={error} onRetry={() => { summary.reload(); projection.reload(); }} />
+        <EmptyState framed kind="error" title="Não foi possível carregar o fluxo de caixa" description={error} onRetry={() => { summary.reload(); projection.reload(); }} />
       ) : (
         <>
           <StatStrip columns={4}>

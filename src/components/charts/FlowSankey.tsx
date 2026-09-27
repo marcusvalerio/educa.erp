@@ -76,7 +76,7 @@ export function FlowSankey({ flow, height = 260 }: { flow: Flow; height?: number
               if (!active || !payload?.length) return null;
               const item = payload[0];
               return (
-                <div className="rounded-md border border-border bg-surface px-3 py-2 text-xs shadow-popover">
+                <div className="rounded-md border border-border bg-surface-raised px-3 py-2 text-xs shadow-popover">
                   <span className="text-muted-foreground">{String(item.name ?? "")}</span>{" "}
                   <span className="font-semibold text-foreground tabular-nums">{Number(item.value).toLocaleString("pt-BR")}</span>
                 </div>

@@ -57,7 +57,7 @@ export function usePeriod() {
 export function PeriodPicker() {
   const { key, setKey, range, previous } = usePeriod();
   return (
-    <div className="flex flex-col items-start gap-1 sm:items-end">
+    <div className="flex max-w-full min-w-0 flex-col items-start gap-1 sm:items-end">
       <Segmented
         label="Período"
         value={key}
@@ -113,7 +113,7 @@ export function DashboardHeader({ title, description, actions, hero = false }: {
           )}
         </ul>
       </div>
-      <div className="flex shrink-0 flex-wrap items-end gap-2">{actions ?? <PeriodPicker />}</div>
+      <div className="flex max-w-full min-w-0 flex-wrap items-end gap-2 lg:shrink-0">{actions ?? <PeriodPicker />}</div>
     </header>
   );
 }

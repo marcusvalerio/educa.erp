@@ -45,7 +45,7 @@ export default function PlatformOverviewPage() {
       </Alert>
 
       {overview.error ? (
-        <EmptyState kind="error" title="Visão geral indisponível" description={overview.error} onRetry={overview.reload} />
+        <EmptyState framed kind="error" title="Visão geral indisponível" description={overview.error} onRetry={overview.reload} />
       ) : (
         <StatStrip columns={6}>
           <Stat label="Empresas" value={o ? formatInteger(o.companies.total) : "—"} loading={overview.loading} href="/admincentral/companies" />
@@ -98,20 +98,22 @@ export default function PlatformOverviewPage() {
         <SectionTitle title="Governança" />
         <Panel>
           <PanelHeader title="Áreas da Administração Central" />
-          <ul className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
-            {links.map((item) => {
-              const Icon = PLATFORM_ICONS[item.href];
-              return (
-                <li key={item.href} className="bg-surface">
-                  <Link href={item.href} className="group flex items-center gap-3 p-4 hover:bg-surface-hover">
-                    {Icon && <Icon size={16} className="shrink-0 text-subtle-foreground" aria-hidden />}
-                    <span className="flex-1 text-sm font-medium">{item.label}</span>
-                    <ArrowRight size={14} className="text-subtle-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="overflow-hidden">
+            <ul className="-mr-px -mb-px grid *:border-r *:border-b *:border-border-subtle sm:grid-cols-2 lg:grid-cols-3">
+              {links.map((item) => {
+                const Icon = PLATFORM_ICONS[item.href];
+                return (
+                  <li key={item.href} className="bg-surface">
+                    <Link href={item.href} className="group flex items-center gap-3 p-4 hover:bg-surface-hover">
+                      {Icon && <Icon size={16} className="shrink-0 text-subtle-foreground" aria-hidden />}
+                      <span className="flex-1 text-sm font-medium">{item.label}</span>
+                      <ArrowRight size={14} className="text-subtle-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </Panel>
       </section>
     </div>

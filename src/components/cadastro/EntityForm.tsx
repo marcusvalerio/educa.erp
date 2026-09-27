@@ -70,10 +70,10 @@ function FieldControl({
 export function EntityForm({ sections, values, errors, mode, onChange }: EntityFormProps) {
   const readOnlyAll = mode === "view";
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-7">
       {sections.map((section) => (
         <FormSection key={section.title} title={section.title}>
-          <div className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-4">
+          <div className="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-4">
             {section.fields.map((field) => {
               const readOnly = readOnlyAll || (mode === "edit" && !!field.disabledOnEdit);
               const options = field.optionsSource ? resolveOptionsSource(field.optionsSource) : undefined;

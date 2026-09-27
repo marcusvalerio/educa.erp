@@ -5,12 +5,23 @@ import { cn } from "@/lib/cn";
 // foco com borda no token ring e halo suave de 4px. `invalid` pinta a borda de perigo e expõe
 // aria-invalid para leitores de tela.
 
-export const fieldBase =
-  "w-full rounded-md border border-border-strong bg-surface text-sm text-foreground shadow-xs placeholder:text-subtle-foreground " +
+// fieldSurface: aparência do campo, sem largura. fieldBase = largura total.
+// Controles que aceitam largura do chamador (Select, Combobox, datas) usam
+// fieldSurface + fieldWidth(className): sem tailwind-merge, "w-full" e
+// "w-40" juntos dependeriam da ordem do CSS.
+export const fieldSurface =
+  "rounded-md border border-border-strong bg-surface text-sm text-foreground shadow-xs placeholder:text-subtle-foreground " +
   "transition-[border-color,box-shadow] duration-150 " +
   "hover:border-subtle-foreground/50 focus:border-ring focus:outline-none focus:ring-4 focus:ring-ring/15 " +
   "disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-muted-foreground " +
   "read-only:bg-surface-muted aria-[invalid=true]:border-danger aria-[invalid=true]:focus:ring-danger/20";
+
+export const fieldBase = `w-full ${fieldSurface}`;
+
+/** "w-full" só quando o chamador não definiu largura própria. */
+export function fieldWidth(className?: string): string {
+  return /(^|\s)(w-|flex-1|basis-)/.test(className ?? "") ? "" : "w-full";
+}
 
 type InputProps = InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean };
 

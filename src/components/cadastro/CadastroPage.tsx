@@ -223,8 +223,9 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
   const searchValue = searchDraft ?? state.q;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <PageHeader
+        className="pb-1"
         title={config.title}
         description={config.description}
         actions={
@@ -237,7 +238,7 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
       />
 
       <Panel className="overflow-hidden">
-        <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle px-4 py-2.5">
           <form
             role="search"
             className="relative min-w-0 flex-1 sm:max-w-xs"
@@ -269,6 +270,7 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
                 aria-label={filter.label}
                 value={state.filters[filter.key] ?? ""}
                 onValueChange={(value) => update({ filters: { [filter.key]: value } })}
+                placeholder={filter.label}
                 options={[{ value: "", label: `${filter.label}: todos` }, ...filter.options.map((o) => ({ value: o, label: o }))]}
                 className="w-40"
               />
@@ -285,7 +287,7 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
         </div>
 
         {selectedItems.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 border-b border-border bg-accent-soft/60 px-3 py-1.5 text-sm" role="region" aria-label="Ações em lote">
+          <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-accent-soft/60 px-4 py-2 text-sm animate-fade-in" role="region" aria-label="Ações em lote">
             <span className="font-medium tabular-nums">{selectedItems.length} selecionado(s)</span>
             <Button variant="secondary" size="xs" onClick={() => exportRows(selectedItems, "selecao")}>
               <Download size={13} /> Exportar seleção
@@ -398,7 +400,7 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
                   <RelatedList key={group.title} title={group.title} items={group.items} />
                 ))}
                 <section>
-                  <h3 className="mb-2 text-2xs font-medium tracking-wide text-subtle-foreground uppercase">Histórico</h3>
+                  <h3 className="mb-2 text-2xs font-medium tracking-label text-subtle-foreground uppercase">Histórico</h3>
                   <RecordHistory entityId={drawer.editingId} />
                 </section>
               </>

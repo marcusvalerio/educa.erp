@@ -59,6 +59,7 @@ export function EmptyState({
   action,
   onRetry,
   compact = false,
+  framed = false,
   className,
 }: {
   kind?: EmptyKind;
@@ -67,6 +68,8 @@ export function EmptyState({
   action?: ReactNode;
   onRetry?: () => void;
   compact?: boolean;
+  /** Estado de página (fora de um painel): área tracejada = "espaço a preencher". */
+  framed?: boolean;
   className?: string;
 }) {
   const Icon = EMPTY_ICONS[kind];
@@ -76,6 +79,7 @@ export function EmptyState({
       className={cn(
         "flex flex-col items-center justify-center gap-2 text-center",
         compact ? "px-4 py-8" : "px-6 py-16",
+        framed && "rounded-lg border border-dashed border-border-strong bg-surface/60",
         className
       )}
     >

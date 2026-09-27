@@ -115,9 +115,11 @@ export function StatStrip({ children, className, columns = 4, lead = false }: { 
         5: "sm:grid-cols-3 lg:grid-cols-5",
         6: "sm:grid-cols-3 lg:grid-cols-6",
       }[columns];
+  // Divisória por célula (não gap sobre fundo): quando a última linha não
+  // fecha, a sobra fica em branco, não uma célula cinza.
   return (
-    <div className={cn("grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border-subtle", cols, className)}>
-      {children}
+    <div className={cn("overflow-hidden rounded-lg border border-border bg-surface", className)}>
+      <div className={cn("-mr-px -mb-px grid grid-cols-2 *:border-r *:border-b *:border-border-subtle", cols)}>{children}</div>
     </div>
   );
 }

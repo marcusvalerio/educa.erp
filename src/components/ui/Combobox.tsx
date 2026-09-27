@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { fieldBase } from "./Input";
+import { fieldSurface, fieldWidth } from "./Input";
 import { Popover, PopoverContent, PopoverTrigger } from "./Popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "./Command";
 import type { SelectOption } from "./Controls";
@@ -54,7 +54,7 @@ export function Combobox({
           aria-invalid={invalid || undefined}
           aria-describedby={aria["aria-describedby"]}
           disabled={disabled}
-          className={cn(fieldBase, "flex h-8 items-center justify-between gap-2 px-2.5 text-left", className)}
+          className={cn(fieldSurface, fieldWidth(className), "flex h-8 items-center justify-between gap-2 px-2.5 text-left", className)}
         >
           <span className={cn("truncate", !selected && "text-subtle-foreground")}>{selected?.label ?? placeholder}</span>
           <span className="flex items-center gap-1">

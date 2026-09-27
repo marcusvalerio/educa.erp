@@ -1,5 +1,7 @@
 # E2E de homologação contra o Preview publicado (Vercel → Next.js → Neon Auth →
-# Neon PostgreSQL, branch "homolog"). Disparo manual com a URL do Preview.
+# Neon PostgreSQL, branch "homolog"). Disparo: manual (só depois que este arquivo
+# estiver na branch padrão; o GitHub só oferece "Run workflow" para workflows que
+# estão nela) ou por push nesta branch alterando poc/neon-full/homolog/RUN_E2E.
 # Segredos (Settings → Secrets → Actions, ambiente "homolog"):
 #   HOMOLOG_NEON_AUTH_BASE_URL, E2E_OWNER_EMAIL/PASSWORD, E2E_ADMIN_A_EMAIL/PASSWORD,
 #   E2E_READER_A_EMAIL/PASSWORD, E2E_ADMIN_B_EMAIL/PASSWORD
@@ -7,6 +9,9 @@
 # e o script envia o cabeçalho x-vercel-protection-bypass (ver README).
 name: homolog-e2e
 on:
+  push:
+    branches: [poc/supabase-to-neon]
+    paths: ["poc/neon-full/homolog/RUN_E2E"]
   workflow_dispatch:
     inputs:
       preview_url:
@@ -24,11 +29,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm i --no-save playwright@1 && npx playwright install --with-deps chromium
+      # Playwright numa pasta própria (npm i na raiz instalaria o projeto inteiro).
+      - run: mkdir -p "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw" && npm init -y > /dev/null && npm i playwright@1 && npx playwright install --with-deps chromium
       - name: E2E homologação
         # VERCEL_BYPASS_TOKEN é opcional (Preview protegido)
         env:
-          APP: ${{ inputs.preview_url }}
+          APP: ${{ inputs.preview_url || 'https://educaerp-git-poc-supabase-to-neon-meji-projects.vercel.app' }}
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/pw/node_modules/playwright/index.mjs
           NEON_AUTH_BASE_URL: ${{ secrets.HOMOLOG_NEON_AUTH_BASE_URL }}
           E2E_OWNER_EMAIL: ${{ secrets.E2E_OWNER_EMAIL }}
           E2E_OWNER_PASSWORD: ${{ secrets.E2E_OWNER_PASSWORD }}

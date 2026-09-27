@@ -20,8 +20,8 @@ Referências: `docs/PRE_CUTOVER_CHECKLIST.md` (estado verificado de cada pré-co
 | Recurso | Identificador |
 |---|---|
 | Supabase de produção (origem) | `bshvfsxapwwfntowdxyr` (sa-east-1, PG 17.6) |
-| Neon de produção (destino) | projeto `educa-erp-prod` `old-butterfly-53570465` (aws-sa-east-1, PG 17.11), branch `main` `br-lively-darkness-b683lnw7`, endpoint `ep-rapid-hall-b6m1arxn`, banco **`educa`** (ICU en-US) |
-| Neon Auth de produção | projeto `educa-auth-prod` `young-mode-67474663`, branch `main`, `https://ep-long-leaf-b86ezbh8.neonauth.c-14.us-east-1.aws.neon.tech/neondb/auth` (Owner já existe e já está vinculado) |
+| Neon de produção (destino) | projeto `educa-erp-prod` `old-butterfly-53570465` (aws-sa-east-1, PG 17.11, **plano free_v3**), branch `main` `br-lively-darkness-b683lnw7`, endpoint `ep-rapid-hall-b6m1arxn` (pooler `ep-rapid-hall-b6m1arxn-pooler.c-2.sa-east-1.aws.neon.tech`), banco **`educa`** (ICU en-US) |
+| Neon Auth de produção | projeto `educa-auth-prod` `young-mode-67474663`, branch `main`, `https://ep-long-leaf-b86ezbh8.neonauth.c-14.us-east-1.aws.neon.tech/neondb/auth` (us-east-1; Owner `33e3fb0b…` já existe; o vínculo está em `auth_identity_links` do Supabase e chega ao Neon na cópia) |
 | Papel da app | `educa_app` (LOGIN NOINHERIT, só SET em anon/authenticated/service_role) |
 | Ensaio de dados | branch `rehearsal-2-educa` `br-autumn-sunset-b6j8aw5a` |
 | Homologação | branch `homolog` `br-icy-cell-b62lgh06` + Neon Auth em `authdb` |
@@ -34,7 +34,7 @@ Referências: `docs/PRE_CUTOVER_CHECKLIST.md` (estado verificado de cada pré-co
 | B — Dados | ensaio 173/173 tabelas + 43 sequences iguais; script testado | **PASS** no ensaio por MCP; `copy-data.sh` testado localmente, **NÃO EXECUTADO** contra Supabase→Neon (sem rede nem senha do Supabase) |
 | C — Segurança | sondas sobre os dados migrados | **PASS** 56/56 |
 | D — App | E2E local 210/210, `npm test` 719/719, 2 builds | **PASS** |
-| E — Homologação | `homolog-e2e` verde contra o Preview | **BLOQUEADO**: o Preview da branch existe, mas está atrás da Vercel Authentication e sem as variáveis de homologação (`evidence/homolog-probe.md`) |
+| E — Homologação | `homolog-e2e` verde contra o Preview | **BLOQUEADO**: o Preview da branch existe, mas está atrás da Vercel Authentication e sem as variáveis de homologação (`evidence/homolog-probe.md`, run 36293119479). Contas de teste já são automáticas (`homolog/bootstrap-homolog.mjs`) |
 
 ## Passos
 
@@ -44,16 +44,30 @@ Referências: `docs/PRE_CUTOVER_CHECKLIST.md` (estado verificado de cada pré-co
    de novo as impressões digitais (categorias de `evidence/prod-schema-fingerprint.md`
    + `md5(prosrc)`) Supabase × Neon `main`. Divergência nova = parar.
 2. **Confirmar os portões A–E** (tabela acima) e o horário da janela com o dono.
-3. 🔒 **Neon Auth de produção** (Console, `educa-auth-prod`): `email_password.enabled`
-   = **true** (hoje false: sem isso ninguém entra), `allow_sign_up` = **false** (hoje
-   true), `allow_localhost` = false, trusted origins só com o domínio de produção,
-   sem OAuth compartilhado. Remetente próprio de e-mail recomendado (hoje é o
-   compartilhado do Neon).
-4. 🔒 **Senha do `educa_app`** em `main` (Console → Roles → Reset). A string
-   **pooled** (`…-pooler…/educa?sslmode=require`) vai só para a variável de
-   Produção da Vercel. Nunca para o Git, chat ou log.
-5. 🔒 **Região das funções da Vercel** = `gru1` (São Paulo), a mesma do banco. **Hoje
-   está em `iad1` (Washington)**, conforme a sonda de 2026-09-27. Settings → Functions.
+3. 🔒 **Neon Auth de produção** (Console → projeto `educa-auth-prod` → branch `main`
+   → Auth → Settings): **Email & password** ligado (hoje desligado: sem isso ninguém
+   entra), **Allow sign-ups** desligado (hoje ligado), **Allow localhost**
+   desligado (já está), *Trusted domains* só `https://educaerp.vercel.app` (já
+   está), sem OAuth (já está). Remetente próprio de e-mail é recomendado (hoje é o
+   compartilhado do Neon). Conta de serviço de produção:
+   `node scripts/neon-service-account.mjs --email svc-educa@educaerp.com --out ./.neon-service-prod.env`
+   na máquina do dono → SQL (só hash) no SQL Editor de `educa-auth-prod`, banco
+   `neondb` → senha direto na variável de Produção.
+4. 🔒 **Senha do `educa_app`** em `main` (Console → educa-erp-prod → branch `main` →
+   Roles → `educa_app` → Reset password). Montar
+   `postgresql://educa_app:<senha>@ep-rapid-hall-b6m1arxn-pooler.c-2.sa-east-1.aws.neon.tech/educa?sslmode=require`
+   e colar **só** na variável `DATABASE_URL` de Produção da Vercel. Nunca no Git,
+   chat ou log.
+5. 🔒 **Código na `main` (PR `poc/supabase-to-neon` → `main`)**, antes da janela e
+   com aprovação. O código funciona nos dois modos (build Supabase e postgres
+   testados). Com as variáveis de produção ainda em `AUTH_PROVIDER=supabase`, o
+   deploy de produção continua no Supabase. O `vercel.json` do PR põe as funções em
+   **`gru1`** (São Paulo, a mesma região do banco; hoje estão em `iad1`,
+   Washington). Depois do deploy: a sonda (`homolog-probe`, ou um GET em
+   `/api/session/context`) tem que mostrar `→ gru1`, e o Owner tem que entrar como
+   hoje (modo Supabase). Se algo quebrar, *Instant Rollback* para o deployment
+   anterior. Alternativa sem merge: Vercel → Settings → Functions → Region =
+   `gru1` (painel; o `vercel.json` tem precedência quando estiver na `main`).
 6. 🔒 **Backup do Supabase:** `pg_dump -Fc` de produção guardado fora do Git (com a
    senha do banco, pelo dono). Anotar o horário para PITR.
 7. **Backup do Neon:** branch `pre-cutover` a partir de `main` (esquema vazio de
@@ -108,8 +122,13 @@ Referências: `docs/PRE_CUTOVER_CHECKLIST.md` (estado verificado de cada pré-co
 24. **Critérios de rollback** (qualquer um): 5xx > 2% por 15 min; qualquer indício de
     dado de outra empresa visível; perda/alteração de dado; login do Owner impossível
     por > 30 min sem causa conhecida.
-25. **Retenção:** `history_retention_seconds` do projeto está em 6 h (21.600 s). Subir
-    para ≥ 7 dias (plano pago) antes de descongelar ou logo depois.
+25. **Retenção:** `history_retention_seconds` está em 6 h (21.600 s), o **máximo do
+    plano free_v3**. O MCP recusou 7 dias ("exceeds allowed maximum… 21600"), e
+    snapshot agendado "não está habilitado para este projeto". Para ≥ 7 dias: 👤
+    Console → Billing → plano pago → Settings → *Instant restore / History
+    retention* = 7 dias. Sem o upgrade, a volta no tempo fica em 6 h. A defesa é o
+    Supabase só leitura por 14 dias + a branch `pre-cutover` + uma branch manual por
+    dia nos primeiros dias (limite do plano: 10 branches; hoje há 5).
 26. **D+1 a D+14:** conferir contagens diárias por tabela. Comparar com o volume
     esperado.
 27. 🔒 **D+14, decisão do dono:** encerrar o Supabase (exportar, pausar; apagar só com

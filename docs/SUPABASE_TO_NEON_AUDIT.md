@@ -408,6 +408,26 @@ depende de aprovação (runbook passo 28).
 - **E2E contra o Preview: NÃO EXECUTADO.** Depende de itens que só o dono faz
   (Vercel, Console, senhas). A lista objetiva está em `docs/PRE_CUTOVER_CHECKLIST.md`.
 
+## 19. Rodada 3 — destravar homologação e preparar o cutover (2026-09-27)
+
+Uma tentativa objetiva por limitação; o resultado de cada uma está abaixo.
+
+| Item | Resultado |
+|---|---|
+| Vercel | **sem acesso**: não há conector, e a rede recusa `vercel.com`/`api.vercel.com`/`*.vercel.app` (403). Configuração manual exata em `poc/neon-full/homolog/README.md`, incluindo o uso do `VERCEL_BYPASS_TOKEN` sem exposição |
+| Região | **resolvido no código**: `vercel.json` `regions: ["gru1"]` (commit `2dde3ce`; build, tsc e lint ok). Vale para a produção quando o código chegar à `main` (runbook passo 5); produção hoje segue em `iad1` |
+| Neon Auth homologação | OAuth off e trusted origin só o Preview (rodada 2). `allow_sign_up`/`allow_localhost` continuam **ligados**: o `update_auth_config` do MCP só aceita `name`. Recuperação **provada** no Neon Auth real pela sonda: 200 com redirect no Preview, 403 com redirect externo |
+| `educa_app` | papel gerenciado pelo Neon, sem senha em `main` e em `homolog`. Mecanismo oficial: Console → Roles → Reset password, com a string pooled só na variável da Vercel. Hosts pooled no runbook/README. Nada a executar sem a senha |
+| Retenção | 7 dias **recusado pelo plano** (free_v3: máximo 21.600 s); snapshot agendado "não habilitado". Mitigação e opção de upgrade no runbook passo 25 |
+| Owner homologação | 1 identidade no Neon Auth, vínculo só na branch `homolog`, 1 OWNER ativo, nenhum duplicado, e-mail/senha ligado |
+| Contas do E2E | **automatizadas**: `homolog/bootstrap-homolog.mjs` (fluxo oficial de convite, senhas só em memória); o workflow precisa só da conta de serviço e do bypass. Local: E2E 210/210 e bootstrap + 33/33 duas vezes seguidas (idempotente). Achado de teste: o dublê não cria linha `credential` para usuário sem senha e o Neon real cria; o bootstrap cria as contas já com senha, o que funciona nos dois |
+| Sonda | conferência do Neon Auth de homologação sem escrita (recuperação, redirect externo, localhost, cadastro). Run 36293119479: Preview ainda atrás da Vercel Authentication |
+| E2E contra o Preview | **NÃO EXECUTADO**: Preview protegido e sem variáveis |
+| Produção (só leitura) | Neon `main`: 172 tabelas, 328 policies, `educa_app` correto, 23 MB. Supabase 28 MB (cabe nos 512 MB do free). Neon Auth de produção: e-mail/senha **off**, sign-up **on** (Console no dia) |
+
+Checklist final com BLOQUEIA / NÃO BLOQUEIA / AÇÃO HUMANA em
+`docs/PRE_CUTOVER_CHECKLIST.md`.
+
 ---
 
 DATABASE: **PASS**
@@ -418,7 +438,7 @@ CRUD: **PASS**
 SECURITY: **PASS**
 E2E: **PASS** (210/210)
 DADOS (ensaio): **PASS** (173/173)
-HOMOLOGAÇÃO: **BLOQUEADO** (Preview protegido e sem variáveis; ver §18)
+HOMOLOGAÇÃO: **BLOQUEADO** (Preview protegido e sem variáveis; ver §18 e §19)
 CUTOVER: **NÃO EXECUTADO** (aguarda portões A–E + aprovação)
 
 POC: **PASS**

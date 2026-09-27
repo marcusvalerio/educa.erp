@@ -178,6 +178,11 @@ export function parseLogic(expr: string, mode: "or" | "and"): Filter {
 
 // ------------------------------------------------------------ builder
 
+/** Chaves com valor undefined somem, como no JSON.stringify do supabase-js. */
+function definedOnly(values: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(values).filter(([, v]) => v !== undefined));
+}
+
 type Action = { kind: "select" } | { kind: "insert"; rows: Record<string, unknown>[]; onConflict?: string; upsert?: boolean } | { kind: "update"; values: Record<string, unknown> } | { kind: "delete" };
 
 export class QueryBuilder<T = unknown> implements PromiseLike<PgResponse<T>> {
@@ -215,16 +220,19 @@ export class QueryBuilder<T = unknown> implements PromiseLike<PgResponse<T>> {
     if (opts.head) this.head = true;
     return this;
   }
+  // Como no supabase-js: um objeto vai como JSON (chaves undefined somem, a
+  // coluna fica com o default/valor atual); um array vai com ?columns= da
+  // união das chaves (chave ausente numa linha = NULL, igual ao PostgREST).
   insert(values: Record<string, unknown> | Record<string, unknown>[]): this {
-    this.action = { kind: "insert", rows: Array.isArray(values) ? values : [values] };
+    this.action = { kind: "insert", rows: Array.isArray(values) ? values : [definedOnly(values)] };
     return this;
   }
   upsert(values: Record<string, unknown> | Record<string, unknown>[], opts: { onConflict?: string } = {}): this {
-    this.action = { kind: "insert", rows: Array.isArray(values) ? values : [values], onConflict: opts.onConflict, upsert: true };
+    this.action = { kind: "insert", rows: Array.isArray(values) ? values : [definedOnly(values)], onConflict: opts.onConflict, upsert: true };
     return this;
   }
   update(values: Record<string, unknown>): this {
-    this.action = { kind: "update", values };
+    this.action = { kind: "update", values: definedOnly(values) };
     return this;
   }
   delete(): this {

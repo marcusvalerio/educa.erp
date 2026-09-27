@@ -174,6 +174,22 @@ describe("mutações → SQL", () => {
     const empty = await new QueryBuilder("products", cat, fakeRunner().run).update({});
     assert.equal(empty.error?.code, "PGRST102");
   });
+
+  test("chave com valor undefined some (JSON.stringify do supabase-js): update não zera a coluna, insert usa o default", async () => {
+    const u = await new QueryBuilder("products", cat, fakeRunner().run).update({ name: undefined, status: "active" }).eq("id", "p1").toSql();
+    assert.match(u.sql, /set "status" = s\."status" from/);
+    assert.ok(!u.sql.includes('"name"'));
+    assert.deepEqual(u.params[0], JSON.stringify({ status: "active" }));
+    const onlyUndefined = await new QueryBuilder("products", cat, fakeRunner().run).update({ name: undefined });
+    assert.equal(onlyUndefined.error?.code, "PGRST102");
+    const i = await new QueryBuilder("products", cat, fakeRunner().run).insert({ code: "A", name: undefined }).toSql();
+    assert.match(i.sql, /insert into public\."products" \("code"\) select "code"/);
+    const up = await new QueryBuilder("products", cat, fakeRunner().run).upsert({ id: "1", name: undefined, code: "A" }).toSql();
+    assert.match(up.sql, /on conflict \("id"\) do update set "code" = excluded\."code"$/);
+    // array: ?columns= com a união das chaves (chave ausente numa linha = NULL), como no supabase-js
+    const arr = await new QueryBuilder("products", cat, fakeRunner().run).insert([{ code: "A", name: undefined }, { code: "B" }]).toSql();
+    assert.match(arr.sql, /\("code", "name"\)/);
+  });
 });
 
 describe("resposta no formato do supabase-js", () => {

@@ -15,21 +15,37 @@
   só carregam SIGNIFICADO (estado, alerta, semântica, dado). O botão
   primário é preto no claro e claro no escuro — nunca laranja.
 
+  Camadas (claro → escuro no tema claro):
+    chrome      moldura: navegação lateral e fundo em volta da folha
+    background  a folha do workspace, onde a página acontece
+    surface     painéis, tabelas e formulários sobre a folha
+  Bordas: border (contorno de superfície), border-subtle (divisória
+  interna), border-strong (controles). Sombra só em controle (xs) e
+  overlay (popover/diálogo).
+
   Componentes consomem SOMENTE os tokens semânticos abaixo (via classes
   Tailwind geradas pelo @theme). Nenhum hexadecimal fora deste arquivo.
 
-  Contraste (WCAG AA, verificado): todo token *-fg e os textos
-  foreground/muted-foreground/subtle-foreground passam 4.5:1 sobre
-  surface/background/surface-muted nos dois temas. As cores "cheias"
-  (warning/danger/critical) são para preenchimento e indicadores; texto
-  sobre elas usa *-contrast. O anel de foco (ring) passa 3:1.
+  Contraste (WCAG AA, medido por script a cada mudança de paleta — ver
+  docs/UI.md §1): todo token *-fg e os textos foreground/muted-foreground/
+  subtle-foreground passam 4.5:1 sobre chrome/background/surface/
+  surface-muted e sobre o próprio *-soft, nos dois temas. As cores
+  "cheias" (warning/danger/critical) são para preenchimento e
+  indicadores; texto sobre elas usa *-contrast. O anel de foco (ring)
+  passa 3:1.
 */
 
 @theme inline {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: var(--font-instrument-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-instrument-serif), ui-serif, Georgia, serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", Menlo, monospace;
 
-  /* Escala tipográfica: 11 · 12 · 13 · 14 · 16 · 20 · 24 · 30 */
+  /*
+    Escala tipográfica (px/line-height). Interface densa em 13–14; títulos
+    de página em 22; números de destaque em 28–36; momento editorial
+    (saudação do Início, login) em 44 com a serifada.
+      2xs 11 · xs 12 · sm 13 · base 14 · md 16 · lg 18 · xl 22 · 2xl 28 · 3xl 36 · 4xl 44
+  */
   --text-2xs: 11px;
   --text-2xs--line-height: 16px;
   --text-xs: 12px;
@@ -40,28 +56,47 @@
   --text-base--line-height: 20px;
   --text-md: 16px;
   --text-md--line-height: 24px;
-  --text-lg: 20px;
-  --text-lg--line-height: 28px;
-  --text-xl: 24px;
-  --text-xl--line-height: 32px;
-  --text-2xl: 30px;
-  --text-2xl--line-height: 36px;
+  --text-lg: 18px;
+  --text-lg--line-height: 26px;
+  --text-xl: 22px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 28px;
+  --text-2xl--line-height: 34px;
+  --text-3xl: 36px;
+  --text-3xl--line-height: 40px;
+  --text-4xl: 44px;
+  --text-4xl--line-height: 48px;
 
-  /* Geometria: 4px campos/badges · 6px botões/cards · 8px overlays */
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 8px;
-  --radius-2xl: 8px;
-  --radius-3xl: 8px;
+  /* Espaçamento de letras: títulos apertados, rótulos abertos */
+  --tracking-display: -0.025em;
+  --tracking-title: -0.015em;
+  --tracking-label: 0.04em;
 
+  /*
+    Geometria — uma linguagem só:
+      xs 3  indicadores finos, marcas de foco internas
+      sm 5  badges, chips, itens de menu
+      md 7  controles (botão, campo, select, abas segmentadas)
+      lg 10 superfícies (painel, tabela, card)
+      xl 12 overlays (diálogo, popover grande) e a folha do workspace
+  */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 7px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 20px;
+
+  --color-chrome: var(--chrome);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
   --color-surface-muted: var(--surface-muted);
   --color-surface-hover: var(--surface-hover);
+  --color-surface-raised: var(--surface-raised);
   --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
   --color-border-strong: var(--border-strong);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -71,6 +106,7 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
   --color-ring: var(--ring);
   --color-overlay: var(--overlay);
 
@@ -116,14 +152,26 @@
   --color-platform-accent: var(--platform-accent);
   --color-platform-accent-fg: var(--platform-accent-fg);
 
-  /* Elevação apenas em overlays; cards normais usam borda */
+  /*
+    Elevação com parcimônia: xs só no relevo de controles (botão
+    secundário, campo, item ativo da navegação); popover/diálogo nos
+    overlays. Superfícies normais usam borda, nunca sombra.
+  */
+  --shadow-xs: var(--elevation-xs);
   --shadow-popover: var(--elevation-popover);
   --shadow-dialog: var(--elevation-dialog);
 
+  /* Movimento: curto, sem exagero. Tudo cai para ~0 com reduced-motion. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+
   --animate-fade-in: fade-in 0.16s ease-out;
-  --animate-pop-in: pop-in 0.14s cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-slide-in-right: slide-in-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-slide-in-left: slide-in-left 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-pop-in: pop-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-rise-in: rise-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-in-right: slide-in-right 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-in-left: slide-in-left 0.24s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-skeleton: skeleton-pulse 1.4s ease-in-out infinite;
 }
 
@@ -132,57 +180,63 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  --background: #f3f4f5;
+  /* Camadas: chrome (moldura) < background (folha do workspace) < surface (painéis) */
+  --chrome: #eceeef;
+  --background: #f5f6f6;
   --foreground: #100c08;
   --surface: #ffffff;
-  --surface-muted: #f6f7f7;
-  --surface-hover: #eef0f1;
+  --surface-muted: #f8f9f9;
+  --surface-hover: #f1f3f3;
+  --surface-raised: #ffffff;
   --border: #dbe0e1;
+  --border-subtle: #e8ebec;
   --border-strong: #c4cbcd;
-  --muted: #eceef0;
+  --muted: #eef0f1;
   --muted-foreground: #55595c;
-  --subtle-foreground: #6b7073;
+  --subtle-foreground: #62666a;
 
   --primary: #100c08;
   --primary-hover: #2b2621;
-  --primary-foreground: #f3f4f5;
+  --primary-foreground: #f7f7f6;
   --accent: #ff9408;
-  --accent-soft: #fff1de;
+  --accent-soft: #fff3e3;
+  --accent-fg: #8a4b00;
   --ring: #c96f00;
-  --overlay: rgb(16 12 8 / 0.42);
+  --overlay: rgb(16 12 8 / 0.36);
 
   --success: #3c7a4f;
-  --success-soft: #e6f1ea;
+  --success-soft: #e8f2eb;
   --success-fg: #2b6440;
   --warning: #ff9408;
-  --warning-soft: #fff1de;
+  --warning-soft: #fff3e3;
   --warning-fg: #8a4b00;
   --warning-contrast: #100c08;
   --danger: #ca3f16;
-  --danger-soft: #fbeae4;
+  --danger-soft: #fcece6;
   --danger-fg: #a8330f;
   --danger-contrast: #ffffff;
   --critical: #95122c;
-  --critical-soft: #f6e3e7;
+  --critical-soft: #f7e5e9;
   --critical-fg: #95122c;
   --info: #4a6572;
-  --info-soft: #e8eef1;
+  --info-soft: #eaf0f2;
   --info-fg: #3c5561;
 
   /* Gráficos: neutros por padrão; cor só quando carrega significado */
-  --chart-1: #3a3632;
-  --chart-2: #9aa2a5;
+  --chart-1: #2a2622;
+  --chart-2: #a3aaad;
   --chart-3: #ff9408;
   --chart-4: #ca3f16;
   --chart-5: #95122c;
-  --chart-grid: #e6eaeb;
+  --chart-grid: #e8ebec;
 
-  --sidebar: #fafafa;
+  /* A navegação vive no chrome: sem fundo próprio; item ativo em relevo */
+  --sidebar: #eceeef;
   --sidebar-foreground: #100c08;
   --sidebar-muted: #55595c;
-  --sidebar-hover: #eef0f1;
-  --sidebar-active: #e6e9ea;
-  --sidebar-border: #dbe0e1;
+  --sidebar-hover: rgb(16 12 8 / 0.045);
+  --sidebar-active: #ffffff;
+  --sidebar-border: #dde1e2;
 
   --platform: #100c08;
   --platform-foreground: #f3f4f5;
@@ -193,8 +247,9 @@
   --platform-accent: #95122c;
   --platform-accent-fg: #e0798d;
 
-  --elevation-popover: 0 4px 16px -4px rgb(16 12 8 / 0.14), 0 1px 3px rgb(16 12 8 / 0.08);
-  --elevation-dialog: 0 24px 48px -12px rgb(16 12 8 / 0.28), 0 4px 12px -4px rgb(16 12 8 / 0.12);
+  --elevation-xs: 0 1px 0 rgb(16 12 8 / 0.04), 0 1px 2px -1px rgb(16 12 8 / 0.08);
+  --elevation-popover: 0 10px 28px -8px rgb(16 12 8 / 0.16), 0 2px 6px -2px rgb(16 12 8 / 0.08), 0 0 0 1px rgb(16 12 8 / 0.04);
+  --elevation-dialog: 0 28px 60px -16px rgb(16 12 8 / 0.3), 0 6px 16px -6px rgb(16 12 8 / 0.12);
 }
 
 /*
@@ -203,18 +258,22 @@
   Smoky Black (nunca cinza-azulado), texto Chef's Hat, semânticas
   reequilibradas para fundo escuro e ação primária clara.
   Aplicado pela media query (opção "Sistema", sem JS) e por
-  [data-theme="dark"] (escolha explícita, sempre vence).
+  [data-theme="dark"] (escolha explícita, sempre vence). Os dois blocos
+  têm os mesmos valores.
 */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --background: #0c0a08;
+    --chrome: #090705;
+    --background: #0e0b09;
     --foreground: #f3f4f5;
     --surface: #15120f;
-    --surface-muted: #1b1814;
-    --surface-hover: #221e1a;
-    --border: #2c2824;
+    --surface-muted: #19160f;
+    --surface-hover: #201c18;
+    --surface-raised: #1c1814;
+    --border: #2b2723;
+    --border-subtle: #221e1a;
     --border-strong: #3d3833;
     --muted: #211d19;
     --muted-foreground: #a9adaf;
@@ -225,6 +284,7 @@
     --primary-foreground: #100c08;
     --accent: #ff9408;
     --accent-soft: #2e1e0b;
+    --accent-fg: #ffb14d;
     --ring: #ff9408;
     --overlay: rgb(0 0 0 / 0.6);
 
@@ -253,20 +313,21 @@
     --chart-5: #c2324f;
     --chart-grid: #26221e;
 
-    --sidebar: #100c08;
+    --sidebar: #090705;
     --sidebar-foreground: #f3f4f5;
     --sidebar-muted: #a9adaf;
-    --sidebar-hover: #1b1814;
-    --sidebar-active: #25201c;
-    --sidebar-border: #26221e;
+    --sidebar-hover: rgb(243 244 245 / 0.05);
+    --sidebar-active: #1c1814;
+    --sidebar-border: #1f1b18;
 
     --platform: #080604;
     --platform-hover: #16120f;
     --platform-active: #221d19;
     --platform-border: #221e1a;
 
-    --elevation-popover: 0 8px 24px -6px rgb(0 0 0 / 0.6), 0 1px 3px rgb(0 0 0 / 0.5);
-    --elevation-dialog: 0 24px 56px -12px rgb(0 0 0 / 0.75), 0 4px 12px -4px rgb(0 0 0 / 0.5);
+    --elevation-xs: 0 1px 0 rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.03);
+    --elevation-popover: 0 12px 32px -8px rgb(0 0 0 / 0.7), 0 2px 6px -2px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.04);
+    --elevation-dialog: 0 28px 64px -12px rgb(0 0 0 / 0.8), 0 6px 16px -6px rgb(0 0 0 / 0.55);
   }
 }
 
@@ -274,12 +335,15 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --background: #0c0a08;
+  --chrome: #090705;
+  --background: #0e0b09;
   --foreground: #f3f4f5;
   --surface: #15120f;
-  --surface-muted: #1b1814;
-  --surface-hover: #221e1a;
-  --border: #2c2824;
+  --surface-muted: #19160f;
+  --surface-hover: #201c18;
+  --surface-raised: #1c1814;
+  --border: #2b2723;
+  --border-subtle: #221e1a;
   --border-strong: #3d3833;
   --muted: #211d19;
   --muted-foreground: #a9adaf;
@@ -290,6 +354,7 @@
   --primary-foreground: #100c08;
   --accent: #ff9408;
   --accent-soft: #2e1e0b;
+  --accent-fg: #ffb14d;
   --ring: #ff9408;
   --overlay: rgb(0 0 0 / 0.6);
 
@@ -318,20 +383,21 @@
   --chart-5: #c2324f;
   --chart-grid: #26221e;
 
-  --sidebar: #100c08;
+  --sidebar: #090705;
   --sidebar-foreground: #f3f4f5;
   --sidebar-muted: #a9adaf;
-  --sidebar-hover: #1b1814;
-  --sidebar-active: #25201c;
-  --sidebar-border: #26221e;
+  --sidebar-hover: rgb(243 244 245 / 0.05);
+  --sidebar-active: #1c1814;
+  --sidebar-border: #1f1b18;
 
   --platform: #080604;
   --platform-hover: #16120f;
   --platform-active: #221d19;
   --platform-border: #221e1a;
 
-  --elevation-popover: 0 8px 24px -6px rgb(0 0 0 / 0.6), 0 1px 3px rgb(0 0 0 / 0.5);
-  --elevation-dialog: 0 24px 56px -12px rgb(0 0 0 / 0.75), 0 4px 12px -4px rgb(0 0 0 / 0.5);
+  --elevation-xs: 0 1px 0 rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.03);
+  --elevation-popover: 0 12px 32px -8px rgb(0 0 0 / 0.7), 0 2px 6px -2px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.04);
+  --elevation-dialog: 0 28px 64px -12px rgb(0 0 0 / 0.8), 0 6px 16px -6px rgb(0 0 0 / 0.55);
 }
 
 /* ----------------------------------------------------------------- BASE */
@@ -351,7 +417,7 @@
     font-family: var(--font-sans);
     font-size: var(--text-base);
     line-height: var(--text-base--line-height);
-    font-feature-settings: "cv11", "ss01";
+    font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -377,7 +443,7 @@
 .tabular-nums,
 .num {
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum", "cv11", "ss01";
+  font-feature-settings: "tnum";
 }
 
 .code {
@@ -405,6 +471,11 @@
 @keyframes pop-in {
   from { opacity: 0; transform: translateY(-2px) scale(0.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slide-in-right {

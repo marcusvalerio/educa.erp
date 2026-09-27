@@ -7,15 +7,25 @@ import { THEME_STORAGE_KEY } from "@/lib/theme";
 import "./globals.css";
 
 // Tipografia servida pelo próprio app (sem CDN; funciona offline após o
-// build). Inter para interface e dados (com dígitos tabulares via
-// .tabular-nums/.num), JetBrains Mono para códigos. Licenças OFL em
-// src/app/fonts/.
-const inter = localFont({
+// build). Instrument Sans para interface e dados (dígitos tabulares via
+// .tabular-nums/.num), Instrument Serif só nos momentos editoriais
+// (saudação do Início, login) e JetBrains Mono para códigos. Licenças OFL
+// em src/app/fonts/.
+const sans = localFont({
   src: [
-    { path: "./fonts/inter-latin-wght-normal.woff2", weight: "100 900", style: "normal" },
-    { path: "./fonts/inter-latin-ext-wght-normal.woff2", weight: "100 900", style: "normal" },
+    { path: "./fonts/instrument-sans-latin-wght-normal.woff2", weight: "400 700", style: "normal" },
+    { path: "./fonts/instrument-sans-latin-ext-wght-normal.woff2", weight: "400 700", style: "normal" },
   ],
-  variable: "--font-inter",
+  variable: "--font-instrument-sans",
+  display: "swap",
+});
+
+const serif = localFont({
+  src: [
+    { path: "./fonts/instrument-serif-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/instrument-serif-latin-400-italic.woff2", weight: "400", style: "italic" },
+  ],
+  variable: "--font-instrument-serif",
   display: "swap",
 });
 
@@ -34,8 +44,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f3f4f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c0a08" },
+    { media: "(prefers-color-scheme: light)", color: "#eceeef" },
+    { media: "(prefers-color-scheme: dark)", color: "#090705" },
   ],
 };
 
@@ -46,7 +56,7 @@ const NO_FLASH_THEME_SCRIPT = `(function(){try{var v=window.localStorage.getItem
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${jetbrains.variable} h-full`} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${sans.variable} ${serif.variable} ${jetbrains.variable} h-full`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
       </head>

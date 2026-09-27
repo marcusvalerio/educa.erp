@@ -274,7 +274,7 @@ function buildDocument(manual) {
     <dt>Edição</dt><dd>${brDate(meta.date)} · conteúdo ${meta.hash}</dd>
     <dt>Figuras</dt><dd>${prepared.figures} capturas da aplicação real</dd>
   </dl>
-  <div class="notice"><strong>Dados fictícios.</strong> ${find("Dados das telas")} ${find("Atenção")}</div>
+  <div class="notice">${notes.filter((n) => /Dados das telas|Atenção/.test(n)).join("<br>")}</div>
 </section>
 <nav class="toc"><h2 class="toc-title">Sumário</h2><ol>${tocHtml}</ol></nav>
 <main>${html}</main>

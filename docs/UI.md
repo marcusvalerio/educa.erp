@@ -8,36 +8,73 @@ o que a API devolve. Não existe dado fabricado em nenhuma tela.
 
 ## 1. Identidade e tokens (`src/app/globals.css`)
 
-Paleta com papéis fixos:
+`globals.css` é a **única fonte de verdade** visual: nenhum hexadecimal fora
+dele (exceções: `themeColor` do viewport e `icon.svg`, que não aceitam
+variáveis). Componentes consomem só tokens semânticos via classes do Tailwind.
+
+### Paleta oficial (preservada) e papéis
 
 | Papel | Cor | Uso |
 | --- | --- | --- |
-| Estrutura | Smoky Black `#100C08` | texto, botão primário, sidebar escura, base do modo escuro |
-| Estrutura | Chef's Hat `#F3F4F5` | fundo do modo claro |
-| Estrutura | Drifting Cloud `#DBE0E1` | bordas e divisões |
-| Semântica | Merin's Fire `#FF9408` | acento/destaque, atenção (warning) |
+| Estrutura | Smoky Black `#100C08` | texto, botão primário, base do escuro, moldura da Central |
+| Estrutura | Chef's Hat `#F3F4F5` | base dos fundos claros |
+| Estrutura | Drifting Cloud `#DBE0E1` | bordas |
+| Semântica | Merin's Fire `#FF9408` | acento: barra do item ativo, foco, atenção |
 | Semântica | Sauce Piquante `#CA3F16` | problema (danger) |
-| Semântica | Bacchic Burgundy `#95122C` | crítico e o acento da Administração Central |
+| Semântica | Bacchic Burgundy `#95122C` | crítico e identidade da Administração Central |
 
-- Componentes usam **apenas tokens** (`bg-surface`, `text-muted-foreground`,
-  `border-border`, `bg-danger-soft`...). O único hex fora do CSS é o
-  `themeColor` do `viewport` e o `icon.svg`, que não aceitam variáveis.
-- Botão primário é Smoky Black (no escuro, Chef's Hat) — **nunca laranja**.
-- Claro/Escuro/Sistema: `:root` + `@media (prefers-color-scheme: dark)`
-  (guardado por `:not([data-theme="light"])`) + `[data-theme]` explícito.
-  O escuro tem identidade própria (preto quente, não inversão). Os
-  seletores `[data-theme]` também valem em elementos internos (prévia de
-  tema em Configurações › Aparência).
-- Contraste AA verificado para texto (`muted` 7,07:1; `subtle` ≥ 4,5:1).
-- Densidade: grade de 4px; raios 4/6/8; sombra só em popover, menu,
-  drawer e diálogo.
+Botão primário é Smoky Black (no escuro, Chef's Hat) — **nunca laranja**.
+Laranja é o único ponto de cor da navegação (barra do item ativo).
+
+### Camadas
+
+| Token | Claro | Escuro | Onde |
+| --- | --- | --- | --- |
+| `chrome` | `#ECEEEF` | `#090705` | moldura: navegação lateral e fundo em volta da folha |
+| `background` | `#F5F6F6` | `#0E0B09` | a **folha** do workspace, onde a página acontece |
+| `surface` | `#FFFFFF` | `#15120F` | painéis, tabelas, formulários |
+| `surface-raised` | `#FFFFFF` | `#1C1814` | overlays (diálogo, drawer, menu, popover, toast) |
+| `border` / `border-subtle` / `border-strong` | | | contorno de superfície / divisória interna / controles |
 
 ### Tipografia
 
-Inter e JetBrains Mono **locais** (`src/app/fonts`, `next/font/local`,
-licenças OFL junto), sem CDN. Escala 11/12/13/14/16/20/24/30; tabela 13px,
-texto 14px; pesos 400/500/600. Números em valores, KPIs, tabelas e códigos
-usam `tabular-nums`; códigos usam a classe `.code` (mono).
+Arquivos locais em `src/app/fonts` (`next/font/local`, licenças OFL), sem CDN.
+
+- **Instrument Sans** — interface e dados. Escolhida por especime comparativo
+  (Instrument Sans, Schibsted, Onest, Geist, Familjen, Public Sans, Inter)
+  num contexto de ERP real: compacta, com caráter, e com **dígitos tabulares
+  (`tnum`) justos** — Schibsted espaça demais os números; Hanken e IBM Plex
+  (build disponível) não têm `tnum`.
+- **Instrument Serif** — só momentos editoriais: saudação do Início e login
+  (`font-display`). Nunca em tabela, formulário ou número de KPI.
+- **JetBrains Mono** — códigos (`.code`).
+
+Escala (px): `2xs 11 · xs 12 · sm 13 · base 14 · md 16 · lg 18 · xl 22 ·
+2xl 28 · 3xl 36 · 4xl 44`. Tracking: `tracking-display` (−0.025em),
+`tracking-title` (−0.015em), `tracking-label` (+0.04em, rótulos em caixa alta).
+Números sempre `tabular-nums`.
+
+**Regra de caixa alta:** só marcadores de seção (sobrelinha do PageHeader,
+grupos da navegação, títulos de bloco no detalhe). Cabeçalhos de tabela e
+rótulos de campo são sentence case (`text-xs`, `text-muted-foreground`).
+
+### Geometria, elevação e movimento
+
+- Raios por função: `xs 3` indicadores · `sm 5` badges/itens de menu ·
+  `md 7` controles · `lg 10` superfícies · `xl 12` overlays e a folha.
+- Sombra com parcimônia: `shadow-xs` só em controles (botão, campo, item
+  ativo da navegação); `shadow-popover`/`shadow-dialog` só em overlays.
+  Superfícies usam borda.
+- Movimento: 150ms `ease-standard` por padrão; entradas `pop-in`,
+  `rise-in`, `slide-in-*`; tudo cai para ~0 com `prefers-reduced-motion`.
+
+### Contraste (medido, não estimado)
+
+`node scripts/check-contrast.mjs` mede 118 pares WCAG dos tokens (claro e
+escuro): texto ≥ 4.5:1 sobre chrome/background/surface/surface-muted/
+surface-hover e sobre o próprio `*-soft`; anel de foco ≥ 3:1. Rodar a cada
+mudança de paleta (sai com erro abaixo do mínimo). Na criação desta versão
+achou `subtle-foreground` a 4.31:1 sobre o chrome — corrigido para `#62666A`.
 
 ## 2. Ambientes e shells
 
@@ -45,55 +82,66 @@ Grupos de rota: `(auth)` (login, sem shell), `(erp)`, `admin` e
 `admincentral`, cada um com `ShellFrame` próprio
 (`src/components/shell/ShellFrame.tsx`).
 
+**Composição:** a navegação vive no *chrome*; a página numa **folha**
+(`#folha`) arredondada com rolagem própria no desktop e cabeçalho fixo e
+translúcido no topo dela. No mobile a folha ocupa a tela e a navegação vira
+gaveta.
+
 | Ambiente | Rota | Quem | Visual |
 | --- | --- | --- | --- |
-| ERP | `/` e módulos | usuários da empresa | sidebar clara, topbar com unidade/busca/tema/usuário |
-| Administração da Empresa | `/admin` | Company Admin, só a própria empresa | faixa de contexto "alterações aqui afetam somente esta empresa", link "Voltar ao ERP" |
-| Administração Central | `/admincentral` | Platform Owner/Admin | base Smoky Black, filete Bacchic Burgundy, selo "Plataforma EDUCA" |
+| ERP | `/` e módulos | usuários da empresa | chrome claro/escuro, folha no tema |
+| Administração da Empresa | `/admin` | Company Admin, só a própria empresa | faixa laranja "alterações aqui afetam somente esta empresa" no topo da folha |
+| Administração Central | `/admincentral` | Platform Owner/Admin | moldura Smoky Black nos dois temas, filete bordô e selo "Plataforma EDUCA" |
 
-- **Contexto da sessão**: `GET /api/session/context` (`fn_user_context` +
-  `fn_dashboard_context` + `current_platform_role`), no
-  `SessionProvider`. Topbar mostra o usuário real (nome, iniciais, cargo,
-  setor, papéis) — nenhum usuário de exemplo.
-- **Empresa** aparece só como contexto (sem seletor). **Unidade**: rótulo
-  quando há uma; seletor apenas entre as unidades liberadas ao usuário —
-  a escolha nunca amplia acesso.
-- **Navegação por permissão** (`src/lib/nav.ts`,
-  `src/lib/navigation/access.ts`): cada item declara a permissão exata da
-  API; seções sem item permitido somem; a rota é protegida pela mesma
-  regra ("Sem acesso a este recurso"). Item ativo é calculado **por
-  segmento** (`/admin` não fica ativo em `/admincentral`).
-- Busca/atalhos: `Ctrl/⌘ + K` (só destinos permitidos).
-- Mobile: sidebar vira drawer; filtros viram painel; tabelas viram cartões.
+- **Onde estou:** trilha no cabeçalho (Início › Módulo › Recurso ›
+  Registro) + **sobrelinha automática** do módulo no PageHeader
+  (`ShellSectionProvider`/`AutoEyebrow` em `Breadcrumbs.tsx`) — nenhuma
+  página precisa repetir isso.
+- **Sidebar:** identidade (empresa em primeiro plano, marca como
+  assinatura), **busca global no topo** (Ctrl/⌘ K, só destinos
+  permitidos), grupos Visão geral/Operação/Gestão/Cadastros/Sistema, item
+  ativo em pastilha com relevo e barra Merin's Fire; recolhível (56px).
+- **Cabeçalho:** trilha, unidade (só quando há unidade), pendências de
+  aprovação, tema e conta. Sem unidade vinculada, o Início informa — o
+  cabeçalho não repete.
+- **Contexto da sessão**: `GET /api/session/context`, no `SessionProvider`.
+  Empresa só como contexto; unidade só entre as liberadas; navegação por
+  permissão (`src/lib/nav.ts`, `src/lib/navigation/access.ts`).
 
 ## 3. Componentes (`src/components/ui`)
 
 Button, Input/Textarea, FormField/FormSection, Select, Checkbox, Switch,
-Segmented, Combobox (cmdk), DatePicker/DateRangePicker (react-day-picker),
-Badge/StatusBadge, Tooltip, Popover, Dialog/ConfirmDialog, Drawer,
-DropdownMenu/ContextMenu, Tabs/Accordion, Command, Toast, Alert,
-EmptyState (vazio, sem resultado, sem permissão, erro com nova tentativa),
-Skeleton, Progress, Kbd, PageHeader/SectionTitle, Panel, Stat/StatStrip,
-Timeline. Radix via o pacote `radix-ui`.
+Segmented, Combobox (cmdk), DatePicker/DateRangePicker, Badge/StatusBadge,
+Tooltip, Popover, Dialog/ConfirmDialog, Drawer, DropdownMenu/ContextMenu,
+Tabs/Accordion, Command, Toast, Alert, EmptyState, Skeleton, Progress, Kbd,
+PageHeader/SectionTitle, Panel, Stat/StatStrip, Timeline. Radix via `radix-ui`.
 
-**StatusBadge** usa o registro tipado `src/lib/status.ts` (código do banco
-→ rótulo + tom + ícone por entidade); nunca procura palavras no texto.
+| Componente | Regras |
+| --- | --- |
+| Button | `primary` (uma por área), `secondary`, `ghost`, `danger` (destrutiva confirmada), `link`; tamanhos `xs 28 · sm 32 · md 36`; relevo xs e 1px de toque |
+| Campos | `fieldSurface` (aparência) + `fieldWidth(className)`: largura do chamador sem conflito (o projeto não usa tailwind-merge); halo de foco de 4px |
+| Badge | `soft` (chip) chama atenção; `quiet` (ponto + texto) para rotina |
+| StatusBadge | registro tipado `src/lib/status.ts`; rotina discreta, chip só para alerta/problema/crítico; `emphasis="chip"` no cabeçalho de detalhe |
+| PageHeader | sobrelinha automática → título 22px → descrição (medida de leitura) → ações à direita |
+| Stat/StatStrip | valor 22px; `lead` = métrica dominante (36px, ocupa duas colunas); divisória por célula, sem bloco cinza na sobra |
+| EmptyState | vazio, sem resultado, sem acesso, erro com nova tentativa; `framed` (tracejado) para estado de página fora de painel |
+| Drawer | flutua a 8px das bordas no desktop, tela cheia no mobile; rodapé em faixa |
+| Dialog | raio 12, superfície elevada, rodapé em faixa |
 
 ## 4. Listas, formulários e detalhes
 
-- `ResourceListPage` + `DataTable`: busca, filtros e visões de trabalho
-  na URL (drill-down chega filtrado), ordenação, seleção e ações em lote,
-  colunas configuráveis, densidade 32/40px, cabeçalho fixo, exportação
-  CSV, estados de carregando/vazio/sem resultado/erro. Quando a API pagina
-  (`meta` na resposta, rotas de cadastro e auditoria) a paginação é no
-  servidor; caso contrário, local.
-- Cadastros (`CadastroPage` + `EntityDrawer`): validação por campo, resumo
-  de erros, alterações não salvas com confirmação de descarte, ações
-  conforme permissão.
-- Detalhe (`DetailLayout`): cabeçalho com código/status/ações, resumo,
-  informações, itens, relações, financeiro, histórico de auditoria. Pedido
-  de venda (`/comercial/pedidos-venda/[id]`) com ações que dependem do
-  status e da permissão; a transição continua sendo validada pelo banco.
+- `ResourceListPage`/`CadastroPage` + `DataTable`: visões salvas, busca,
+  filtros (com o nome do filtro), ordenação, seleção e ações em lote,
+  colunas configuráveis, densidade 36/44px, cabeçalho fixo em sentence
+  case, ícone de ordenação só no hover ou na coluna ativa, ações da linha
+  a 40% até hover/foco, exportação CSV, estados completos. No mobile a
+  tabela vira lista de cartões.
+- Formulários (`EntityDrawer` + `EntityForm`): seções declarativas, grade
+  de 4 colunas (1 no mobile), erro junto ao campo e resumo no topo,
+  indicador de alterações não salvas e confirmação de descarte.
+- Detalhe (`DetailLayout`): workspace do registro — cabeçalho (voltar,
+  código, título, status em chip, ações), faixa de resumo, informações,
+  andamento, itens, relações (expedições, financeiro) e histórico.
 
 ## 5. Painéis
 
@@ -153,6 +201,24 @@ de empresas.**
     mobile (`/admin/branches`).
 - Acessibilidade: foco visível, navegação por teclado (Radix), link "pular
   para o conteúdo", rótulos em controles, `aria-sort`, `prefers-reduced-motion`.
+
+## 7.1 Redesign 2.0 — processo e QA
+
+Processo: o mesmo do CÓRTEX.OS (repositório `fade.os`) — fundação única em
+`globals.css`, contraste medido por script antes de adotar a paleta,
+hierarquia editorial (uma métrica dominante, não uma grade de pesos
+iguais), propagação por camadas (fundação → componentes → shell → telas) e
+QA visual com capturas em claro/escuro, desktop/tablet/mobile a cada
+rodada. Direção estética pela skill `frontend-design`
+(`claude-plugins-official`): fugir da estética genérica — tipografia com
+caráter, ponto de vista claro, contenção executada com precisão.
+
+QA visual real (pilha local: app + PostgreSQL com o esquema de produção +
+dublê do Neon Auth, contas criadas pelo fluxo oficial de convite, dados de
+QA só no banco local): rodadas de captura por tela e varredura de todas as
+rotas em desktop 1440 e mobile 390 procurando erro de console, erro de
+página e rolagem horizontal. Correções que saíram das rodadas estão nos
+commits `design(...)` da branch `claude/educa-redesign`.
 
 ## 8. Limites registrados (não alterados nesta fase)
 

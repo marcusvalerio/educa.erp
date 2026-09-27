@@ -209,6 +209,8 @@
 
     function live() {
       gsap.set(frags.map(media), { clearProps: "clipPath" });
+      // A opacidade volta para o CSS, que faz o foco (as outras áreas recuam).
+      gsap.set(frags, { clearProps: "opacity" });
       gsap.set(sigs, { opacity: 0 });
       sigs.forEach((c) => {
         c.setAttribute("cx", "0");

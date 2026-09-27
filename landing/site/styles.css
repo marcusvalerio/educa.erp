@@ -3193,18 +3193,18 @@ html:not(.js) .viewer-tabs button[aria-selected="true"]::after {
   pointer-events: none;
 }
 /* foco: ao passar sobre uma área, a cadeia dela acende e o resto recua */
+.hero.is-live .hs-link,
+.hero.is-live .hs-frag {
+  transition: opacity 0.35s var(--ease);
+}
 .hs-box[data-focus] .hs-link {
   opacity: 0.22;
-  transition: opacity 0.35s;
 }
 .hs-box[data-focus] .hs-link.is-hot {
   opacity: 1;
 }
 .hs-link.is-hot .hs-path {
   stroke: var(--stage-fire);
-}
-.hs-box[data-focus] .hs-frag {
-  transition: opacity 0.35s, filter 0.35s;
 }
 .hs-box[data-focus] .hs-frag:not(.is-hot):not(.hs-order) {
   opacity: 0.45;
@@ -3429,6 +3429,26 @@ html:not(.js) .viewer-tabs button[aria-selected="true"]::after {
 }
 .conn a:hover .lk-line {
   background-color: var(--fire-deep);
+}
+
+/* ---- módulos: a tela é a protagonista (maior e fixa enquanto se lê o lado) */
+@media (min-width: 1100px) {
+  .m-main {
+    align-items: stretch;
+  }
+  .m-screens {
+    position: sticky;
+    top: calc(var(--top) + 28px);
+    align-self: start;
+  }
+}
+@media (min-width: 1280px) {
+  .m-main {
+    grid-template-columns: minmax(0, 8fr) minmax(0, 4fr);
+  }
+  .m-flip .m-main {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  }
 }
 
 /* ---- siga um pedido: origem e legenda em foco */

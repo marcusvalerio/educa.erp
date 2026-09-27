@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Landing: site gerado (cópias de landing/src e GSAP minificado).
+    "landing/site/**",
   ]),
 ]);
 

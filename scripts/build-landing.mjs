@@ -187,101 +187,277 @@ function header() {
     ["#acesso", "Acesso"],
     ["#conexoes", "Conexões"],
   ];
-  return `<header class="topbar" data-stage>
+  return `<header class="topbar">
   <div class="wrap topbar-in">
     <a class="brand" href="#inicio" aria-label="EDUCA.ERP, início da página">${mark(24)}<span>EDUCA<span class="brand-dim">.ERP</span></span></a>
-    <nav aria-label="Seções" class="topnav">${links.map(([h, l]) => `<a href="${h}">${l}</a>`).join("")}</nav>
-    <a class="btn btn-ghost btn-sm" href="${esc(C.META.appUrl)}">Entrar</a>
+    <nav aria-label="Seções" class="topnav">${links.map(([h, l]) => `<a href="${h}" data-spy="${h.slice(1)}">${l}</a>`).join("")}<span class="topnav-ink" aria-hidden="true"></span></nav>
+    <a class="btn btn-enter btn-sm" href="${esc(C.META.appUrl)}" aria-label="Entrar no EDUCA"><span class="be-long">Entrar no EDUCA</span><span class="be-short">Entrar</span><span aria-hidden="true">→</span></a>
   </div>
 </header>`;
 }
 
+// ---------------------------------------------------------------------------
+// Abertura: cena de produto. Tudo em unidades de um quadro de 1320 × 530;
+// posições viram porcentagens, então a cena escala inteira com a largura.
+
+const HS = { W: 1320, H: 515 };
+const HS_LAYOUT = {
+  order: { x: 0, y: 105, w: 660 },
+  sats: [
+    { x: 780, y: 22, w: 200 },
+    { x: 780, y: 204, w: 300 },
+    { x: 780, y: 314, w: 300 },
+    { x: 780, y: 398, w: 300 },
+  ],
+  gestao: { x: 1150, y: 190, w: 190 },
+};
+
+function hsBox(s, box) {
+  const im = images.get(imgKey(s));
+  const h = (box.w * im.h) / im.w;
+  return { ...box, h, im };
+}
+const pct = (v, t) => `${((v / t) * 100).toFixed(3)}%`;
+const f1 = (v) => v.toFixed(1);
+
 function hero() {
   const H = C.HERO;
-  const [l1, l2, l3] = H.title;
+  const L = HS_LAYOUT;
+  const order = hsBox(H.order, L.order);
+  const sats = H.satellites.map((s, i) => ({ s, b: hsBox(s, L.sats[i]) }));
+  const g = hsBox(H.gestao, L.gestao);
+
+  const posStyle = (b) => `left:${pct(b.x, HS.W)};top:${pct(b.y, HS.H)};width:${pct(b.w, HS.W)}`;
+  const tag = (n, area, code, kind) =>
+    `<p class="hs-tag">${n ? `<b>${n}</b>` : ""}<span>${esc(area)}</span><code>${esc(code)}</code>${kind === "api" ? `<i class="hs-apichip">API</i>` : ""}</p>`;
+  const frag = (s, b, eager) =>
+    `<a class="hs-img" href="${b.im.file}" data-zoom data-w="${b.im.w}" data-h="${b.im.h}" data-caption="${esc(s.alt)}" aria-label="Ampliar tela: ${esc(s.alt)}">${picture(s, { eager, sizes: `(min-width: 1100px) ${Math.round((b.w / HS.W) * 92)}vw, 100vw` })}</a>`;
+
+  // Marcadores sobre o pedido: coordenadas da captura → % da imagem recortada.
+  const [ox, oy, ow, oh] = H.order.crop;
+  const hots = sats
+    .map(
+      ({ s }) =>
+        `<span class="hs-hot hs-hot-${s.kind}" style="left:${pct(s.hotspot[0] - ox, ow)};top:${pct(s.hotspot[1] - oy, oh)}" title="${esc(s.hotspotLabel)}">${s.n}</span>`,
+    )
+    .join("");
+
+  // Linhas: saída na borda direita do pedido → borda esquerda de cada área;
+  // depois cada área → Gestão.
+  const portY = [120, 245, 342, 380];
+  const outPaths = sats.map(({ s, b }, i) => {
+    const y0 = portY[i];
+    const x0 = order.x + order.w;
+    const y1 = b.y + b.h / 2;
+    const x1 = b.x;
+    return { id: `hs-o${i}`, kind: s.kind, d: `M${f1(x0)} ${f1(y0)} C${f1(x0 + 60)} ${f1(y0)}, ${f1(x1 - 60)} ${f1(y1)}, ${f1(x1)} ${f1(y1)}` };
+  });
+  const gy = [216, 236, 256, 276];
+  const inPaths = sats.map(({ b }, i) => {
+    const x0 = b.x + b.w;
+    const y0 = b.y + b.h / 2;
+    const x1 = g.x;
+    const y1 = gy[i];
+    return { id: `hs-g${i}`, kind: "tela", d: `M${f1(x0)} ${f1(y0)} C${f1(x0 + 36)} ${f1(y0)}, ${f1(x1 - 44)} ${f1(y1)}, ${f1(x1)} ${f1(y1)}` };
+  });
+  const paths = [...outPaths, ...inPaths];
+  const svg = `<svg class="hs-lines" viewBox="0 0 ${HS.W} ${HS.H}" aria-hidden="true" focusable="false">
+    <defs>${paths.map((p) => `<mask id="${p.id}-m" maskUnits="userSpaceOnUse" x="0" y="0" width="${HS.W}" height="${HS.H}"><path class="hs-draw" d="${p.d}"/></mask>`).join("")}</defs>
+    ${paths
+      .map(
+        (p, i) => `<g class="hs-link hs-${p.kind}" data-link="${i}">
+      <path id="${p.id}" class="hs-path" d="${p.d}" mask="url(#${p.id}-m)"/>
+      <circle class="hs-sig" r="3.2"><animateMotion dur="${(2.6 + (i % 4) * 0.35).toFixed(2)}s" repeatCount="indefinite" begin="indefinite" rotate="auto"><mpath href="#${p.id}"/></animateMotion></circle>
+    </g>`,
+      )
+      .join("")}
+  </svg>`;
+
+  // Sinais soltos do começo da sequência (decorativos: repetem códigos das telas).
+  const targets = [order, order, ...sats.map((x) => x.b), sats[3].b, g];
+  const signals = H.signals
+    .map((txt, i) => {
+      const sx = [120, 380, 640, 900, 1130, 250, 760, 1040][i];
+      const sy = [60, 150, 40, 110, 70, 320, 430, 370][i];
+      const t = targets[Math.min(i, targets.length - 1)];
+      return `<span class="hs-signal" style="left:${pct(sx, HS.W)};top:${pct(sy, HS.H)}" data-tx="${((t.x / HS.W) * 100).toFixed(2)}" data-ty="${(((t.y - 18) / HS.H) * 100).toFixed(2)}" data-sx="${((sx / HS.W) * 100).toFixed(2)}" data-sy="${((sy / HS.H) * 100).toFixed(2)}">${esc(txt)}</span>`;
+    })
+    .join("");
+
+  const [l1, l2] = H.title;
   return `<section class="hero stage" id="inicio" aria-labelledby="hero-title">
-  <div class="wrap hero-grid">
-    <div class="hero-copy">
-      <p class="eyebrow"><span class="eyebrow-bar" aria-hidden="true"></span>${esc(H.eyebrow)}</p>
-      <h1 id="hero-title" class="display"><span class="ln">${esc(l1)}</span> <span class="ln">${esc(l2)}</span> <span class="ln ln-last"><em>${esc(l3)}</em><span class="fire-bar" aria-hidden="true"></span></span></h1>
-      <p class="lead">${esc(H.lead)}</p>
-      <div class="actions">
-        <a class="btn btn-fire" href="${esc(H.primary.href)}">${esc(H.primary.label)}<span aria-hidden="true">↓</span></a>
-        <a class="btn btn-ghost" href="${esc(H.secondary.href)}">${esc(H.secondary.label)}<span aria-hidden="true">→</span></a>
+  <div class="hero-bg" aria-hidden="true">${Array.from({ length: 13 }, (_, i) => `<i class="gl" style="--i:${i}"></i>`).join("")}<span class="hero-glow"></span></div>
+  <div class="wrap">
+    <div class="hero-head">
+      <div class="hero-title-col">
+        <p class="eyebrow" data-intro><span class="eyebrow-bar" aria-hidden="true"></span>${esc(H.eyebrow)}</p>
+        <h1 id="hero-title" class="display"><span class="ln"><span>${esc(l1)}</span></span><span class="ln ln-last"><span><em>${esc(l2)}</em><i class="fire-bar" aria-hidden="true"></i></span></span></h1>
+      </div>
+      <div class="hero-side">
+        <p class="lead" data-intro>${esc(H.lead)}</p>
+        <div class="actions" data-intro>
+          <a class="btn btn-fire" href="${esc(H.primary.href)}">${esc(H.primary.label)}<span aria-hidden="true">↓</span></a>
+          <a class="btn btn-ghost" href="${esc(H.secondary.href)}">${esc(H.secondary.label)}<span aria-hidden="true">→</span></a>
+        </div>
       </div>
     </div>
-    <div class="hero-visual" aria-label="O EDUCA em uso: um pedido, o título que ele gerou e as pendências da gestão">
-      <div class="hv-main">${shot(H.screens.main, { caption: false, eager: true, sizes: "(min-width: 1100px) 56vw, 100vw" })}</div>
-      <div class="hv-finance">${shot(H.screens.finance, { caption: false, eager: true, sizes: "(min-width: 1100px) 30vw, 70vw", route: "Financeiro · títulos do pedido" })}</div>
-      <div class="hv-attention">${shot(H.screens.attention, { caption: false, eager: true, sizes: "(min-width: 1100px) 30vw, 80vw", route: "Início · Precisa de atenção" })}</div>
+    <div class="hs" role="group" aria-label="Um pedido aprovado e o que ele gera em cada área, nas telas reais do EDUCA">
+      <div class="hs-box">
+        ${svg}
+        <figure class="hs-frag hs-order" style="${posStyle(order)}" data-depth="0.5">
+          ${tag(null, H.order.area, H.order.code, "tela")}
+          <div class="hs-media">${frag(H.order, order, true)}${hots}</div>
+          <figcaption class="hs-cap">${esc(H.order.text)}</figcaption>
+        </figure>
+        ${sats
+          .map(
+            ({ s, b }, i) => `<figure class="hs-frag hs-sat hs-${s.kind}" style="${posStyle(b)}" data-sat="${i}" data-depth="${(0.9 + i * 0.15).toFixed(2)}">
+          ${tag(s.n, s.area, s.code, s.kind)}
+          <div class="hs-media">${frag(s, b, true)}</div>
+          <figcaption class="hs-cap">${esc(s.text)}</figcaption>
+        </figure>`,
+          )
+          .join("")}
+        <figure class="hs-frag hs-gestao" style="${posStyle(g)}" data-depth="1.4">
+          ${tag(null, H.gestao.area, H.gestao.code, "tela")}
+          <div class="hs-media">${frag(H.gestao, g, true)}</div>
+          <figcaption class="hs-cap">${esc(H.gestao.text)}</figcaption>
+        </figure>
+        <div class="hs-signals" aria-hidden="true">${signals}</div>
+      </div>
+      <p class="hs-legend" data-intro><span class="lg-solid" aria-hidden="true"></span>Ação na tela <span class="lg-dash" aria-hidden="true"></span>Pela API, sem botão na tela <span class="hs-legend-note">Telas reais do EDUCA, com dados fictícios. Toque numa tela para ampliar.</span></p>
     </div>
-  </div>
-  <div class="wrap">
-    <ol class="trail" aria-label="O mesmo pedido em três áreas">
-      ${H.trail
-        .map(
-          (t, i) => `<li style="--i:${i}"><span class="trail-area">${esc(t.area)}</span><code>${esc(t.code)}</code><span class="trail-text">${esc(t.text)}</span></li>`,
-        )
-        .join("")}
-    </ol>
   </div>
 </section>`;
 }
 
 function legend() {
-  return `<section class="legend-band" aria-labelledby="legenda-title">
-  <div class="wrap legend-in">
-    <p id="legenda-title" class="legend-title">Como ler esta página</p>
-    <p class="legend-text">Tudo o que aparece aqui foi conferido no produto. Cada capacidade leva um selo que diz como ela está disponível hoje.</p>
+  return `<div class="legend" aria-labelledby="legenda-title">
+    <p id="legenda-title" class="legend-title">Como ler os selos</p>
     <ul class="legend-list">
       ${Object.entries(C.STATES)
         .map(([k, v]) => `<li>${chip(k)}<span>${esc(v.hint)}</span></li>`)
         .join("")}
     </ul>
-  </div>
-</section>`;
+  </div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Siga um pedido. A mesma etapa é desenhada duas vezes: na lista (leitura,
+// celular e sem JS) e no palco da cena fixa (desktop com movimento).
+// A "câmera" aproxima a região da tela que a etapa explica: escala S e
+// contratranslação calculadas aqui, das coordenadas da captura.
+
+const VIEW_RATIO = 1.5; // proporção da janela do palco
+
+function camParams(s, viewRatio) {
+  const im = images.get(imgKey(s));
+  const [ox, oy] = s._crop ?? [0, 0];
+  const rImg = im.w / im.h;
+  const k = viewRatio ? viewRatio / rImg : 1; // converte y da imagem para y da janela
+  const toView = ([x, y, w, h]) => [(x - ox) / im.w, ((y - oy) / im.h) * k, w / im.w, (h / im.h) * k];
+  const f = s.focus ? toView(s.focus) : null;
+  let S = 1;
+  let tx = 0;
+  let ty = 0;
+  if (f) {
+    S = Math.max(1, Math.min(viewRatio ? 1.6 : 1.5, 0.8 / f[2], 0.8 / Math.max(f[3], 0.001)));
+    const cx = f[0] + f[2] / 2;
+    const cy = f[1] + f[3] / 2;
+    // A imagem ocupa [0,1] na horizontal e [0,k] na vertical (em unidades da
+    // janela). A câmera escala em torno do centro; o deslocamento fica entre
+    // os limites que mantêm a janela coberta pela imagem.
+    const clampT = (want, lo, hi) => (lo > hi ? want : Math.max(lo, Math.min(hi, want)));
+    const tX = clampT(-S * (cx - 0.5), 0.5 - S * 0.5, S * 0.5 - 0.5);
+    const tY = clampT(-S * (cy - 0.5), 0.5 - S * (k - 0.5), S * 0.5 - 0.5);
+    tx = tX * 100;
+    ty = tY * 100;
+  }
+  const cur = s.cursor ? [(s.cursor[0] - ox) / im.w, ((s.cursor[1] - oy) / im.h) * k] : null;
+  return { im, f, S, tx, ty, cur };
+}
+
+const CURSOR_SVG = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 3l14 8-6.2 1.6L10 19z" fill="#100c08" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+
+function cam(s, { viewRatio = null, alt, sizes, inert = false } = {}) {
+  const p = camParams(s, viewRatio);
+  const pc = (v) => `${(v * 100).toFixed(2)}%`;
+  const focus = p.f
+    ? `<span class="cam-focus" style="left:${pc(p.f[0])};top:${pc(p.f[1])};width:${pc(p.f[2])};height:${pc(p.f[3])}"></span>`
+    : "";
+  const cursor = p.cur
+    ? `<span class="cam-cursor" style="left:${pc(p.cur[0])};top:${pc(p.cur[1])}" aria-hidden="true"><span class="cam-ripple"></span>${CURSOR_SVG}${s.action ? `<em>${esc(s.action)}</em>` : ""}</span>`
+    : "";
+  return `<div class="cam" data-s="${p.S.toFixed(3)}" data-tx="${p.tx.toFixed(2)}" data-ty="${p.ty.toFixed(2)}">${picture(s, { alt: inert ? "" : alt ?? s.alt, sizes })}${focus}${cursor}</div>`;
+}
+
+function apiCard(s) {
+  if (!s.api) return "";
+  return `<div class="api-card">
+    <p class="api-head">${chip("api")}<span>No núcleo da plataforma, sem botão na tela</span></p>
+    <ul>${s.api.map((r) => { const [m, ...rest] = r.split(" "); return `<li><code><b>${esc(m)}</b> ${esc(rest.join(" "))}</code></li>`; }).join("")}</ul>
+    <p class="api-foot">Na tela: ${esc(s.detail)}</p>
+  </div>`;
+}
+
+function resultTag(s) {
+  return s.result ? `<p class="result-tag"><span aria-hidden="true">✓</span>${esc(s.result)}</p>` : "";
 }
 
 function journey() {
   const J = C.JOURNEY;
   const steps = J.steps;
+  const lane = `<ol class="lane" aria-hidden="true">
+      ${steps.map((s, i) => `<li data-lane="${i}"${i === 0 ? ' class="is-active"' : ""}><span class="lane-n">${pad(i + 1)}</span><span class="lane-name">${esc(s.area)}</span><span class="lane-status">${esc(s.status)}</span></li>`).join("")}
+      <li class="lane-track"><span class="lane-fire"></span><span class="lane-token"><i></i></span></li>
+    </ol>`;
+  const route = (s) => `<div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">${esc(s.route)}</span></div>`;
   return `<section class="journey paper" id="siga-um-pedido" aria-labelledby="journey-title">
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head journey-head">
       <p class="kicker"><span>${esc(J.kicker)}</span></p>
+      <p class="thesis">${esc(J.thesis)}</p>
       <h2 id="journey-title" class="display-2">${esc(J.title)}</h2>
       <p class="section-lead">${esc(J.lead)}</p>
     </div>
-    <ol class="lane" aria-hidden="true">
-      ${steps.map((s, i) => `<li data-lane="${i}"${i === 0 ? ' class="is-active"' : ""}><span class="lane-n">${pad(i + 1)}</span><span class="lane-name">${esc(s.area)}</span></li>`).join("")}
-      <li class="lane-fire" style="--p:0"></li>
-    </ol>
-    <div class="journey-grid">
-      <ol class="steps">
-        ${steps
-          .map(
-            (s, i) => `<li class="step${i === 0 ? " is-active" : ""}" data-step="${i}">
-          <div class="step-head"><span class="step-n">${pad(i + 1)}</span><span class="step-area">${esc(s.area)}</span>${chip(s.state)}</div>
-          <h3 class="step-title">${esc(s.title)}</h3>
-          <p class="step-text">${esc(s.text)}</p>
-          <dl class="step-meta">
-            <div><dt>Na prática</dt><dd>${esc(s.detail)}</dd></div>
-            <div><dt>Permissão</dt><dd><code>${esc(s.perm)}</code></dd></div>
-          </dl>
-          <div class="step-shot">${shot(s, { caption: false, sizes: "100vw" })}</div>
-        </li>`,
-          )
-          .join("")}
-      </ol>
-      <div class="journey-stage" aria-hidden="true">
-        <div class="stage-stack">
+  </div>
+  <div class="jc">
+    <div class="wrap jc-in">
+      ${lane}
+      <div class="jc-grid">
+        <ol class="steps">
           ${steps
             .map(
-              (s, i) => `<div class="stage-item${i === 0 ? " is-active" : ""}" data-stage-item="${i}">${shot(s, { caption: false, alt: "", inert: true, sizes: "(min-width: 1100px) 58vw, 100vw" })}</div>`,
+              (s, i) => `<li class="step${i === 0 ? " is-active" : ""}" data-step="${i}">
+            <div class="step-copy">
+              <div class="step-head"><span class="step-n">${pad(i + 1)}</span><span class="step-area">${esc(s.area)}</span>${chip(s.state)}</div>
+              <h3 class="step-title">${esc(s.title)}</h3>
+              <p class="step-text">${esc(s.text)}</p>
+              <dl class="step-meta">
+                <div><dt>Na prática</dt><dd>${esc(s.detail)}</dd></div>
+                <div><dt>Permissão</dt><dd><code>${esc(s.perm)}</code></dd></div>
+              </dl>
+            </div>
+            <figure class="step-shot shot">
+              ${route(s)}
+              <div class="shot-frame cam-frame" style="aspect-ratio:${images.get(imgKey(s)).w}/${images.get(imgKey(s)).h}">${cam(s, { sizes: "(min-width: 1100px) 55vw, 100vw" })}</div>
+              ${resultTag(s)}${apiCard(s)}
+            </figure>
+          </li>`,
             )
             .join("")}
+        </ol>
+        <div class="jc-stage" aria-hidden="true">
+          <div class="jc-frame shot">
+            <div class="shot-bar"><span class="shot-mark"><i></i><i></i><i></i></span>${steps.map((s, i) => `<span class="shot-route" data-route="${i}">${esc(s.route)}</span>`).join("")}</div>
+            <div class="jc-view" style="aspect-ratio:${VIEW_RATIO}">
+              ${steps.map((s, i) => `<div class="jc-layer" data-layer="${i}">${cam(s, { viewRatio: VIEW_RATIO, inert: true, sizes: "(min-width: 1100px) 58vw, 100vw" })}</div>`).join("")}
+            </div>
+          </div>
+          ${steps.map((s, i) => `<div class="jc-over" data-over="${i}">${resultTag(s)}${apiCard(s)}</div>`).join("")}
         </div>
       </div>
+      <p class="jc-note">${esc(J.note)}</p>
     </div>
   </div>
 </section>`;
@@ -305,6 +481,7 @@ function viewer(id, screens, { label }) {
           `<button role="tab" type="button" id="${id}-tab-${i}" aria-controls="${id}-panel-${i}" aria-selected="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${esc(s.label)}</button>`,
       )
       .join("")}
+    <span class="tab-ink" aria-hidden="true"></span>
   </div>
   <div class="viewer-panels">
     ${screens
@@ -318,36 +495,35 @@ function viewer(id, screens, { label }) {
 }
 
 function moduleSection(m, index) {
-  return `<article class="module" id="mod-${m.id}" aria-labelledby="mod-${m.id}-title">
-  <div class="module-top">
-    <div class="module-intro">
-      <p class="module-index"><span>${pad(index + 1)}</span>${esc(m.name)}</p>
-      <h3 id="mod-${m.id}-title" class="display-3">${esc(m.tagline)}</h3>
-      <div class="ps">
-        <div class="ps-row ps-problem"><p class="q">O problema</p><p>${esc(m.problem)}</p></div>
-        <div class="ps-row ps-solution"><p class="q">No EDUCA</p><p>${esc(m.serves)}</p></div>
-      </div>
-      <p class="who"><span>Para quem</span>${esc(m.who)}</p>
-      <ul class="state-sum" aria-label="Capacidades por estado">${stateCounts(m.does)}</ul>
-    </div>
-    <div class="module-screens">${viewer(`v-${m.id}`, m.screens, { label: `Telas do módulo ${m.name}` })}</div>
+  const side = index % 2 ? "m-flip" : "";
+  return `<article class="module ${side}" id="mod-${m.id}" aria-labelledby="mod-${m.id}-title">
+  <header class="m-head">
+    <p class="m-index"><span>${pad(index + 1)}</span>${esc(m.name)}</p>
+    <h3 id="mod-${m.id}-title" class="display-3">${esc(m.tagline)}</h3>
+    <div class="m-state"><span class="m-label">Estado atual</span>${stateBar(m.does)}<ul class="state-sum" aria-label="Capacidades por estado">${stateCounts(m.does)}</ul></div>
+  </header>
+  <div class="m-ps">
+    <div class="m-problem"><p class="m-label">O problema</p><p>${esc(m.problem)}</p></div>
+    <div class="m-solution"><p class="m-label">Como o EDUCA funciona</p><p>${esc(m.serves)}</p><p class="who">Para ${esc(m.who.charAt(0).toLowerCase() + m.who.slice(1))}</p></div>
   </div>
-  <div class="module-body">
-    <div class="mb-col">
-      <h4 id="mod-${m.id}-does" class="q-title"><span>1</span>O que você faz</h4>
-      <ul class="does">${m.does.map(([t, st]) => `<li class="does-${st}"><span>${esc(t)}</span>${chip(st)}</li>`).join("")}</ul>
-    </div>
-    <div class="mb-col">
-      <h4 id="mod-${m.id}-flow" class="q-title"><span>2</span>Como funciona</h4>
-      <ol class="flow">${m.flow.map((f, i) => `<li style="--i:${i}"><span>${esc(f)}</span></li>`).join("")}</ol>
-    </div>
-    <div class="mb-col">
-      <div class="mb-part">
-        <h4 id="mod-${m.id}-ctl" class="q-title"><span>3</span>O que você controla</h4>
+  <div class="m-rail">
+    <p class="m-label">O processo no sistema</p>
+    <ol>${m.flow.map((f, i) => `<li style="--i:${i}"><span>${esc(f)}</span></li>`).join("")}</ol>
+    <span class="m-run" aria-hidden="true"><i></i></span>
+  </div>
+  <div class="m-main">
+    <div class="m-screens">${viewer(`v-${m.id}`, m.screens, { label: `Telas do módulo ${m.name}` })}</div>
+    <div class="m-aside">
+      <div class="m-part">
+        <h4 class="m-label">O que você faz</h4>
+        <ul class="does">${m.does.map(([t, st]) => `<li class="does-${st}"><span>${esc(t)}</span>${chip(st)}</li>`).join("")}</ul>
+      </div>
+      <div class="m-part">
+        <h4 class="m-label">O que o sistema controla</h4>
         <ul class="controls">${m.controls.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>
       </div>
-      <div class="mb-part">
-        <h4 id="mod-${m.id}-links" class="q-title"><span>4</span>Como se conecta</h4>
+      <div class="m-part">
+        <h4 class="m-label">Como se conecta</h4>
         <ul class="links">${m.links
           .map(([to, what]) => {
             const target = to === "cadastros" ? "#base" : `#mod-${to}`;
@@ -370,10 +546,11 @@ function scenario() {
       ${S.body.map((b) => `<p class="section-lead">${esc(b)}</p>`).join("")}
     </div>
     <figure class="ledger">
+      <span class="ledger-thread" aria-hidden="true"></span>
       <ol>
         ${S.records.map((r, i) => `<li style="--i:${i}"><span class="lg-area">${esc(r.area)}</span><span class="lg-record">${esc(r.record)}</span><code class="lg-code">${esc(r.code)}</code></li>`).join("")}
       </ol>
-      <figcaption>Um registro típico de cada área, com os códigos que aparecem nas telas do EDUCA (dados fictícios).</figcaption>
+      <figcaption>Um registro típico de cada área, com os códigos que aparecem nas telas do EDUCA (dados fictícios). No EDUCA, todos ficam na mesma base.</figcaption>
     </figure>
   </div>
 </section>`;
@@ -396,18 +573,142 @@ function platform() {
     <ol class="envs">
       ${P.environments
         .map(
-          (e, i) => `<li class="env">
+          (e, i) => `<li class="env" data-env="${i}">
         <div class="env-copy">
           <p class="env-n">${pad(i + 1)}</p>
           <h3 class="env-name">${esc(e.name)}</h3>
           <p class="env-who">${esc(e.who)}</p>
           <p class="env-what">${esc(e.what)}</p>
         </div>
-        ${shot(e, { caption: false, sizes: "(min-width: 1100px) 30vw, 100vw" })}
+        <div class="env-shot">${shot(e, { caption: false, sizes: "(min-width: 1100px) 30vw, 100vw" })}</div>
       </li>`,
         )
         .join("")}
     </ol>
+  </div>
+</section>`;
+}
+
+// Mapa de conexões: dois desenhos das mesmas ligações (1000×520 e 360×640).
+function netSvg({ W, H, key, px, py, fs, nodeH, minW, charW, id }) {
+  const N = C.NETWORK;
+  const byId = Object.fromEntries(N.nodes.map((n) => [n.id, { ...n, X: n[px], Y: n[py] }]));
+  const halfW = (n) => Math.max(minW, n.label.length * charW + 30) / 2;
+  const hh = nodeH / 2;
+  const border = (n, tx, ty, gap) => {
+    const dx = tx - n.X;
+    const dy = ty - n.Y;
+    const k = Math.min(halfW(n) / Math.abs(dx || 1e-6), hh / Math.abs(dy || 1e-6));
+    const len = Math.hypot(dx, dy) || 1;
+    return [n.X + dx * k + (dx / len) * gap, n.Y + dy * k + (dy / len) * gap];
+  };
+  const edges = N.edges.map(([a, b, label, kind, e5], i) => {
+    const p = byId[a];
+    const q = byId[b];
+    const dx = q.X - p.X;
+    const dy = q.Y - p.Y;
+    const len = Math.hypot(dx, dy) || 1;
+    const bend = (e5 ?? (key === "m" ? (i % 2 ? 0.14 : -0.14) : 0.1)) * len;
+    const cx = (p.X + q.X) / 2 - (dy / len) * bend;
+    const cy = (p.Y + q.Y) / 2 + (dx / len) * bend;
+    const [sx, sy] = border(p, cx, cy, 4);
+    const [ex, ey] = border(q, cx, cy, 6);
+    return { a, b, label, kind, i, d: `M${f1(sx)} ${f1(sy)} Q${f1(cx)} ${f1(cy)} ${f1(ex)} ${f1(ey)}` };
+  });
+  return {
+    edges,
+    svg: `<svg class="net-svg net-${key}" viewBox="0 0 ${W} ${H}" role="group" aria-labelledby="${id}-title">
+    <title id="${id}-title">Mapa das ligações entre as áreas do EDUCA</title>
+    <defs><marker id="${id}-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#a9a29a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+    <g class="net-edges">
+      ${edges
+        .map(
+          (e) => `<g class="edge edge-${e.kind}" data-edge="${e.i}" data-a="${e.a}" data-b="${e.b}">
+        <path id="${id}-e${e.i}" class="edge-line" d="${e.d}" marker-end="url(#${id}-arrow)"/>
+        <circle class="edge-sig" r="${key === "m" ? 2.6 : 3.4}"><animateMotion dur="${(e.kind === "api" ? 3.6 : 2.4) + (e.i % 3) * 0.3}s" repeatCount="indefinite" begin="indefinite"><mpath href="#${id}-e${e.i}"/></animateMotion></circle>
+      </g>`,
+        )
+        .join("")}
+    </g>
+    <g class="net-nodes">
+      ${N.nodes
+        .map((n0) => {
+          const n = byId[n0.id];
+          const w = halfW(n) * 2;
+          return `<g class="node" data-node="${n.id}" transform="translate(${n.X} ${n.Y})" tabindex="0" role="button" aria-label="${esc(n.label)}: destacar ligações">
+          <rect x="${f1(-w / 2)}" y="${-hh}" width="${f1(w)}" height="${nodeH}" rx="9"/>
+          <rect class="node-bar" x="${f1(-w / 2 + 11)}" y="-2.5" width="9" height="5" rx="1.5"/>
+          <text x="${f1(-w / 2 + 27)}" y="${(fs * 0.34).toFixed(1)}" style="font-size:${fs}px">${esc(n.label)}</text>
+        </g>`;
+        })
+        .join("")}
+    </g>
+  </svg>`,
+  };
+}
+
+function network() {
+  const N = C.NETWORK;
+  const byId = Object.fromEntries(N.nodes.map((n) => [n.id, n]));
+  const desk = netSvg({ W: 1000, H: 520, key: "d", px: "x", py: "y", fs: 15, nodeH: 38, minW: 92, charW: 9.4, id: "netd" });
+  const mob = netSvg({ W: 360, H: 640, key: "m", px: "mx", py: "my", fs: 12, nodeH: 30, minW: 70, charW: 6.6, id: "netm" });
+  const edges = desk.edges;
+  const tela = edges.filter((e) => e.kind === "tela").length;
+  return `<section class="network stage" id="conexoes" aria-labelledby="net-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="kicker"><span>${esc(N.kicker)}</span></p>
+      <h2 id="net-title" class="display-2">${esc(N.title)}</h2>
+      <p class="section-lead">Cada ligação abaixo foi conferida no código. Linha contínua: acontece por uma ação na tela. Tracejada: existe no núcleo (API e regras no banco), ainda sem botão na interface.</p>
+    </div>
+  </div>
+  <div class="net-scene">
+    <div class="wrap net-grid">
+      <div class="net-canvas">${desk.svg}${mob.svg}
+        <p class="net-sum"><b>${edges.length}</b> ligações · <b>${tela}</b> na tela · <b>${edges.length - tela}</b> pela API</p>
+      </div>
+      <ol class="chapters">
+        ${N.chapters
+          .map(
+            (c, ci) => `<li class="chapter${ci === 0 ? " is-active" : ""}" data-chapter="${ci}" data-edges="${c.edges.join(",")}">
+          <p class="ch-n">${pad(ci + 1)} <span>/ ${pad(N.chapters.length)}</span></p>
+          <h3 class="ch-title">${esc(c.title)}</h3>
+          <p class="ch-text">${esc(c.text)}</p>
+          <ul class="net-list">${c.edges
+            .map((ei) => {
+              const e = edges[ei];
+              return `<li data-a="${e.a}" data-b="${e.b}"><span class="nl-path"><b>${esc(byId[e.a].label)}</b><span aria-hidden="true">→</span><b>${esc(byId[e.b].label)}</b></span><span class="nl-what">${esc(e.label)}</span>${chip(e.kind)}</li>`;
+            })
+            .join("")}</ul>
+        </li>`,
+          )
+          .join("")}
+      </ol>
+    </div>
+  </div>
+</section>`;
+}
+
+function closing(sizes, { preview = false } = {}) {
+  const K = C.CLOSING;
+  return `<section class="closing stage" id="comecar" aria-labelledby="closing-title">
+  <div class="wrap closing-in">
+    <h2 id="closing-title" class="display-2 closing-q">${esc(K.title)}</h2>
+    <div class="silos" aria-hidden="true">${K.silos.map((s, i) => `<span class="silo" style="--i:${i}">${esc(s)}</span>`).join("")}<i class="silo-fire"></i></div>
+    <p class="closing-a"><span class="closing-mark">${mark(40, "mark mark-xl")}</span>${esc(K.answer)}</p>
+    <p class="section-lead">${esc(K.body)}</p>
+    <div class="actions">
+      ${K.actions
+        .map((a) => {
+          const size = sizes[a.href];
+          if (preview && a.href.endsWith(".pdf"))
+            // A prévia não publica os PDFs (tamanho): indica onde eles estão.
+            return `<span class="btn btn-ghost is-static">${esc(a.label)}<small class="btn-meta">${size} · docs/manual/pdf</small></span>`;
+          return `<a class="btn ${a.primary ? "btn-fire btn-lg" : "btn-ghost"}" href="${esc(a.href)}"${a.href.endsWith(".pdf") ? " download" : ""}>${esc(a.label)}${size ? `<small class="btn-meta">${size}</small>` : ""}<span aria-hidden="true">${a.href.endsWith(".pdf") ? "↓" : "→"}</span></a>`;
+        })
+        .join("")}
+    </div>
+    <p class="closing-note">O acesso ao EDUCA é por convite do administrador da sua empresa.</p>
   </div>
 </section>`;
 }
@@ -532,31 +833,6 @@ function central() {
 </section>`;
 }
 
-function closing(sizes, { preview = false } = {}) {
-  const K = C.CLOSING;
-  return `<section class="closing stage" id="comecar" aria-labelledby="closing-title">
-  <div class="wrap closing-in">
-    <p class="closing-mark" aria-hidden="true">${mark(56, "mark mark-xl")}</p>
-    <h2 id="closing-title" class="display-2">${esc(K.title)}</h2>
-    <p class="section-lead">${esc(K.body)}</p>
-    <div class="actions">
-      ${K.actions
-        .map((a) => {
-          const size = sizes[a.href];
-          if (preview && a.href.endsWith(".pdf"))
-            // A prévia não publica os PDFs (tamanho): indica onde eles estão.
-            return `<span class="btn btn-ghost is-static">${esc(a.label)}<small class="btn-meta">${size} · docs/manual/pdf</small></span>`;
-          return `<a class="btn ${a.primary ? "btn-fire" : "btn-ghost"}" href="${esc(a.href)}"${a.href.endsWith(".pdf") ? " download" : ""}>${esc(a.label)}${size ? `<small class="btn-meta">${size}</small>` : ""}<span aria-hidden="true">${a.href.endsWith(".pdf") ? "↓" : "→"}</span></a>`;
-        })
-        .join("")}
-    </div>
-    <ol class="coda" aria-label="O caminho de uma venda no EDUCA">
-      ${C.JOURNEY.steps.map((st, i) => `<li style="--i:${i}"><span>${pad(i + 1)}</span>${esc(st.area)}</li>`).join("")}
-    </ol>
-  </div>
-</section>`;
-}
-
 function areas(list) {
   return `<section class="areas paper" id="areas" aria-labelledby="areas-title">
   <div class="wrap">
@@ -565,94 +841,9 @@ function areas(list) {
       <h2 id="areas-title" class="display-2">O que cada área faz, e com quem ela fala.</h2>
       <p class="section-lead">Para cada área: o problema que ela resolve, o que dá para fazer hoje, como o trabalho anda, que informação ela guarda e para onde essa informação vai.</p>
     </div>
+    ${legend()}
     ${areaIndex()}
     ${list.map((m) => moduleSection(m, C.MODULES.indexOf(m))).join("\n")}
-  </div>
-</section>`;
-}
-
-// Mapa de conexões: SVG desenhado a partir de NETWORK (coordenadas em 1000×520).
-function network() {
-  const N = C.NETWORK;
-  const byId = Object.fromEntries(N.nodes.map((n) => [n.id, n]));
-  const W = 1000;
-  const H = 520;
-  const halfW = (n) => Math.max(92, n.label.length * 9.4 + 34) / 2;
-  // Ponto na borda do nó (retângulo) na direção de (tx, ty), com folga para a seta.
-  const border = (n, tx, ty, gap) => {
-    const dx = tx - n.x;
-    const dy = ty - n.y;
-    const k = Math.min(halfW(n) / Math.abs(dx || 1e-6), 19 / Math.abs(dy || 1e-6));
-    const len = Math.hypot(dx, dy) || 1;
-    return [n.x + dx * k + (dx / len) * gap, n.y + dy * k + (dy / len) * gap];
-  };
-  const edges = N.edges.map(([a, b, label, kind, e5], i) => {
-    const p0 = byId[a];
-    const q0 = byId[b];
-    const p = p0;
-    const q = q0;
-    const mx = (p.x + q.x) / 2;
-    const my = (p.y + q.y) / 2;
-    const dx = q.x - p.x;
-    const dy = q.y - p.y;
-    const len = Math.hypot(dx, dy) || 1;
-    const bend = (e5 ?? 0.1) * len;
-    const cx = mx - (dy / len) * bend;
-    const cy = my + (dx / len) * bend;
-    const [sx, sy] = border(p0, cx, cy, 4);
-    const [ex, ey] = border(q0, cx, cy, 6);
-    const f = (v) => v.toFixed(1);
-    const d = `M${f(sx)} ${f(sy)} Q${f(cx)} ${f(cy)} ${f(ex)} ${f(ey)}`;
-    return { a, b, label, kind, d, i };
-  });
-  const svg = `<svg class="net-svg" viewBox="0 0 ${W} ${H}" role="group" aria-labelledby="net-svg-title">
-    <title id="net-svg-title">Mapa das ligações entre as áreas do EDUCA</title>
-    <defs>
-      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#a9a29a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    </defs>
-    <g class="net-edges">
-      ${edges
-        .map(
-          (e) => `<g class="edge edge-${e.kind}" data-a="${e.a}" data-b="${e.b}">
-        <path class="edge-line" d="${e.d}" marker-end="url(#arrow)"/>
-        <path class="edge-pulse" d="${e.d}" pathLength="100" style="--d:${(e.i * 0.37).toFixed(2)}s"/>
-      </g>`,
-        )
-        .join("")}
-    </g>
-    <g class="net-nodes">
-      ${N.nodes
-        .map((n) => {
-          const w = Math.max(92, n.label.length * 9.4 + 34);
-          return `<g class="node" data-node="${n.id}" transform="translate(${n.x} ${n.y})" tabindex="0" role="button" aria-label="${esc(n.label)}: destacar ligações">
-          <rect x="${-w / 2}" y="-19" width="${w}" height="38" rx="9"/>
-          <rect class="node-bar" x="${-w / 2 + 12}" y="-2.5" width="10" height="5" rx="1.5"/>
-          <text x="${-w / 2 + 30}" y="5">${esc(n.label)}</text>
-        </g>`;
-        })
-        .join("")}
-    </g>
-  </svg>`;
-  return `<section class="network stage" id="conexoes" aria-labelledby="net-title">
-  <div class="wrap">
-    <div class="section-head">
-      <p class="kicker kicker-stage"><span>${esc(N.kicker)}</span></p>
-      <h2 id="net-title" class="display-2">${esc(N.title)}</h2>
-      <p class="section-lead">Linha contínua: a ligação acontece por uma ação na tela. Linha tracejada: a ligação existe no núcleo da plataforma (API e regras no banco), ainda sem botão na interface. Toque em uma área para ver só as ligações dela.</p>
-    </div>
-    <div class="net-grid">
-      <div><div class="net-canvas">${svg}</div><p class="net-hint">Arraste o mapa para o lado para ver todas as áreas. A lista abaixo traz as mesmas ligações.</p></div>
-      <div class="net-side">
-      <p class="net-sum"><b>${edges.length}</b> ligações conferidas · <b>${edges.filter((e) => e.kind === "tela").length}</b> na tela · <b>${edges.filter((e) => e.kind === "api").length}</b> no núcleo, pela API</p>
-      <ul class="net-list" aria-label="Ligações entre áreas">
-        ${edges
-          .map(
-            (e) => `<li data-a="${e.a}" data-b="${e.b}"><span class="nl-path"><b>${esc(byId[e.a].label)}</b><span aria-hidden="true">→</span><b>${esc(byId[e.b].label)}</b></span><span class="nl-what">${esc(e.label)}</span>${chip(e.kind)}</li>`,
-          )
-          .join("")}
-      </ul>
-      </div>
-    </div>
   </div>
 </section>`;
 }
@@ -677,8 +868,15 @@ const FONT_FACES = `
 @font-face{font-family:"JetBrains Mono";src:url(fonts/jetbrains-mono-latin-wght-normal.woff2) format("woff2");font-weight:400 700;font-style:normal;font-display:swap}
 `;
 
+// Antes da abertura: marca o documento para a sequência de entrada (evita o
+// quadro final piscar antes da animação). Sem GSAP em 3 s, a página aparece.
+const INTRO_GUARD = `<script>(function(){var d=document.documentElement;d.classList.add("js");if(!window.matchMedia||!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("intro");setTimeout(function(){d.classList.remove("intro")},3000)}})();</script>`;
+
+const SCRIPTS = ["vendor/gsap.min.js", "vendor/ScrollTrigger.min.js", "main.js", "motion.js"];
+
 function body(sections) {
-  return `<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  return `${INTRO_GUARD}
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
 ${header()}
 <main id="conteudo">
 ${sections.join("\n")}
@@ -691,7 +889,7 @@ ${footer()}
 }
 
 function sectionsList(sizes, opts) {
-  return [hero(), legend(), scenario(), platform(), journey(), areas(C.MODULES), base(), access(), central(), network(), closing(sizes, opts)];
+  return [hero(), scenario(), platform(), journey(), areas(C.MODULES), base(), access(), central(), network(), closing(sizes, opts)];
 }
 
 async function main() {
@@ -726,14 +924,18 @@ async function main() {
   }
 
   const css = await readFile(path.join(SRC, "styles.css"), "utf8");
-  const js = await readFile(path.join(SRC, "main.js"), "utf8");
   await writeFile(path.join(OUT, "styles.css"), FONT_FACES + css);
-  await writeFile(path.join(OUT, "main.js"), js);
+  for (const f of ["main.js", "motion.js"]) await copyFile(path.join(SRC, f), path.join(OUT, f));
+  // GSAP (licença padrão sem custo, gsap.com/standard-license): copiado do
+  // node_modules para o site não depender de CDN.
+  await mkdir(path.join(OUT, "vendor"), { recursive: true });
+  for (const f of ["gsap.min.js", "ScrollTrigger.min.js"])
+    await copyFile(path.join(ROOT, "node_modules/gsap/dist", f), path.join(OUT, "vendor", f));
 
   const html = body(sectionsList(sizes));
   const head = `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>${esc(C.META.title)} · Uma venda não termina na venda</title>
+<title>${esc(C.META.title)} · Uma operação inteira, conectada</title>
 <meta name="description" content="${esc(C.META.description)}">
 <meta name="color-scheme" content="light dark">
 <meta property="og:title" content="${esc(C.META.title)}">
@@ -744,7 +946,7 @@ async function main() {
 <link rel="stylesheet" href="styles.css">`;
   await writeFile(
     path.join(OUT, "index.html"),
-    `<!doctype html>\n<html lang="pt-BR">\n<head>\n${head}\n</head>\n<body>\n${html}\n<script src="main.js" defer></script>\n</body>\n</html>\n`,
+    `<!doctype html>\n<html lang="pt-BR">\n<head>\n${head}\n</head>\n<body>\n${html}\n${SCRIPTS.map((f) => `<script src="${f}" defer></script>`).join("\n")}\n</body>\n</html>\n`,
   );
 
   if (previewAt) {
@@ -757,7 +959,9 @@ async function main() {
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400..700&display=swap">
 <style>${css}</style>
 ${previewHtml}
-<script>${js}</script>
+${SCRIPTS.slice(0, 2).map((f) => `<script src="${f}"></script>`).join("\n")}
+<script>${await readFile(path.join(SRC, "main.js"), "utf8")}</script>
+<script>${await readFile(path.join(SRC, "motion.js"), "utf8")}</script>
 `;
     await writeFile(previewAt, preview);
   }

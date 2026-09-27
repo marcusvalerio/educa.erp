@@ -29,23 +29,87 @@ export const META = {
 
 export const HERO = {
   eyebrow: "EDUCA.ERP · gestão integrada",
-  title: ["Uma venda não", "termina na", "venda."],
+  title: ["Uma operação inteira,", "conectada."],
   lead:
-    "No EDUCA, o pedido aprovado reserva estoque, gera o título a receber, entra no fluxo da logística e aparece nos painéis de gestão. Cada área trabalha a mesma operação, do seu ponto de vista.",
-  primary: { label: "Ver como funciona", href: "#siga-um-pedido" },
+    "Um pedido aprovado no Comercial vira reserva no Estoque, título no Financeiro, documento no Fiscal e fluxo na Logística. Tudo na mesma base, e tudo aparece para a Gestão.",
+  primary: { label: "Ver a operação acontecer", href: "#siga-um-pedido" },
   secondary: { label: "Entrar no EDUCA", href: META.appUrl },
-  // Trilha da abertura: registros reais das capturas (dados fictícios).
-  trail: [
-    { code: "PV-001013", text: "Pedido aprovado", area: "Comercial" },
-    { code: "CR-0002", text: "Título a receber gerado · R$ 36.011,62", area: "Financeiro" },
-    { code: "5 pedidos", text: "Aguardando aprovação no Início", area: "Gestão" },
-  ],
-  // Composição da abertura: recortes das telas reais (crop = [x, y, largura, altura] em px da captura).
-  screens: {
-    main: { img: "comercial/17-pedido-receber-gerado", crop: [0, 80, 1176, 520], route: "/comercial/pedidos-venda/:id", alt: "Pedido de venda PV-001013, aprovado, com total de R$ 36.011,62 e as ações Reservar estoque, Gerar conta a receber e Cancelar pedido" },
-    finance: { img: "comercial/17-pedido-receber-gerado", crop: [596, 812, 552, 150], route: "/comercial/pedidos-venda/:id", alt: "Bloco Financeiro do pedido: título CR-0002, vencimento 27/09/2026, R$ 36.011,62, em aberto" },
-    attention: { img: "inicio/01-inicio", crop: [20, 455, 680, 405], route: "/", alt: "Precisa de atenção: 7 não conformidades graves, 14 contas a receber vencidas, 9 contas a pagar vencidas e 5 pedidos aguardando aprovação" },
+  // Cena da abertura. Coordenadas em px da captura original.
+  // O pedido real é o centro; cada marcador fica sobre o botão ou campo
+  // que gera trabalho em outra área e leva à tela real daquela área.
+  order: {
+    img: "comercial/17-pedido-receber-gerado",
+    crop: [0, 80, 1176, 520],
+    route: "/comercial/pedidos-venda/:id",
+    area: "Comercial",
+    code: "PV-001013",
+    text: "Pedido aprovado · R$ 36.011,62",
+    alt: "Pedido de venda PV-001013, aprovado, total de R$ 36.011,62, com os botões Reservar estoque, Gerar conta a receber e Cancelar pedido",
   },
+  satellites: [
+    {
+      id: "estoque",
+      n: 1,
+      area: "Estoque",
+      kind: "tela",
+      hotspot: [806, 149],
+      hotspotLabel: "Reservar estoque",
+      img: "comercial/14-pedido-reservar-dialogo",
+      crop: [528, 312, 382, 290],
+      code: "FIL03 rua 05",
+      text: "Reserva no local escolhido",
+      alt: "Janela Reservar estoque com a lista de locais de estoque",
+    },
+    {
+      id: "financeiro",
+      n: 2,
+      area: "Financeiro",
+      kind: "tela",
+      hotspot: [993, 149],
+      hotspotLabel: "Gerar conta a receber",
+      img: "comercial/17-pedido-receber-gerado",
+      crop: [596, 812, 552, 150],
+      code: "CR-0002",
+      text: "Título a receber em aberto",
+      alt: "Título CR-0002, vencimento 27/09/2026, R$ 36.011,62, em aberto",
+    },
+    {
+      id: "fiscal",
+      n: 3,
+      area: "Fiscal",
+      kind: "api",
+      hotspot: [40, 553],
+      hotspotLabel: "Documento fiscal",
+      img: "comercial/21-faturamento",
+      crop: [290, 218, 1110, 205],
+      code: "DF-0004",
+      text: "Criado e calculado pela API; consulta no Faturamento",
+      alt: "Faturamento com os documentos DF-0004 e DF-0003, status Calculada",
+    },
+    {
+      id: "logistica",
+      n: 4,
+      area: "Logística",
+      kind: "api",
+      hotspot: [963, 481],
+      hotspotLabel: "Andamento da expedição",
+      img: "inicio/04-fluxo-do-erp",
+      crop: [30, 70, 1115, 400],
+      code: "7 em preparação",
+      text: "Separação e expedição pela API; fluxo no Início",
+      alt: "Fluxo do ERP: 12 pedidos do período, 7 em preparação, 3 em aprovação, 1 expedido",
+    },
+  ],
+  gestao: {
+    img: "inicio/01-inicio",
+    crop: [20, 455, 680, 405],
+    area: "Gestão",
+    code: "5 aguardando aprovação",
+    text: "Tudo vira pendência no Início",
+    alt: "Precisa de atenção: 7 não conformidades graves, 14 contas a receber vencidas, 9 contas a pagar vencidas e 5 pedidos aguardando aprovação",
+  },
+  // Sinais soltos no começo da sequência: valores reais das mesmas telas.
+  signals: ["PV-001013", "R$ 36.011,62", "FIL03 rua 05", "CR-0002", "DF-0004", "12 pedidos no período", "7 em preparação", "5 aguardando aprovação"],
 };
 
 export const SCENARIO = {
@@ -91,15 +155,19 @@ export const PLATFORM = {
 export const JOURNEY = {
   kicker: "Como funciona",
   title: "Siga um pedido.",
+  thesis: "Uma venda não termina na venda.",
+  note: "As telas são do ambiente de demonstração e mostram pedidos diferentes em cada etapa.",
   lead: "Uma venda atravessa seis áreas. Role para acompanhar o que cada uma recebe e onde isso aparece no EDUCA.",
   steps: [
     {
       area: "Venda",
+      status: "Aprovado",
       title: "O pedido é aprovado",
       text: "O pedido sai do rascunho, vai para aprovação e é aprovado por quem tem a permissão. Cada ação pede confirmação e fica no histórico.",
       state: "tela",
       detail: "Enviar para aprovação → Aprovar",
       perm: "sales_orders.approve",
+      cursor: [886, 479],
       img: "comercial/12-pedido-aprovar-confirmar",
       focus: [496, 372, 446, 150],
       route: "/comercial/pedidos-venda/:id",
@@ -107,11 +175,14 @@ export const JOURNEY = {
     },
     {
       area: "Estoque",
+      status: "Reservado",
       title: "O estoque fica reservado",
       text: "Com o pedido aprovado, Reservar estoque separa as quantidades no local escolhido. Itens sem saldo ficam com reserva pendente.",
       state: "tela",
       detail: "Reservar estoque → local de estoque",
       perm: "sales_orders.reserve",
+      cursor: [717, 491],
+      action: "Local de estoque",
       img: "comercial/14-pedido-reservar-dialogo",
       focus: [528, 312, 382, 560],
       route: "/comercial/pedidos-venda/:id",
@@ -119,11 +190,13 @@ export const JOURNEY = {
     },
     {
       area: "Financeiro",
+      status: "Título a receber",
       title: "Nasce o título a receber",
       text: "Gerar conta a receber cria o título a partir do valor e das condições do pedido. Ele aparece no próprio pedido e em Contas a receber.",
       state: "tela",
       detail: "CR-0002 · R$ 36.011,62 · Em aberto",
       perm: "accounts_receivable.approve",
+      result: "Título criado no pedido",
       img: "comercial/17-pedido-receber-gerado",
       crop: [0, 80, 1176, 900],
       focus: [596, 812, 552, 150],
@@ -132,11 +205,13 @@ export const JOURNEY = {
     },
     {
       area: "Fiscal",
+      status: "Documento fiscal",
       title: "O documento fiscal parte do pedido",
       text: "O núcleo cria o documento fiscal a partir do pedido e calcula os impostos pelas regras tributárias. Na tela, Faturamento e Fiscal listam os documentos.",
       state: "api",
       detail: "Documento do pedido e cálculo de impostos pela API; consulta na tela",
       perm: "fiscal_documents.view",
+      api: ["POST /api/sales-orders/:id/generate-fiscal-document", "POST /api/fiscal-documents/:id/calculate"],
       img: "comercial/21-faturamento",
       focus: [290, 340, 1130, 80],
       route: "/comercial/faturamento",
@@ -144,11 +219,13 @@ export const JOURNEY = {
     },
     {
       area: "Logística",
+      status: "Em preparação",
       title: "Separação, expedição e entrega",
       text: "Listas de separação, embalagem, expedição, transporte e eventos de entrega rodam no núcleo. O Início mostra o fluxo do pedido à entrega com os números do período.",
       state: "api",
       detail: "Pedidos → Em preparação → Expedidos → Entregues",
       perm: "shipments.view",
+      api: ["POST /api/sales-orders/:id/pick-lists", "POST /api/shipments/:id/ship", "POST /api/shipments/:id/deliver"],
       img: "inicio/04-fluxo-do-erp",
       route: "/",
       focus: [30, 70, 1115, 400],
@@ -156,11 +233,13 @@ export const JOURNEY = {
     },
     {
       area: "Gestão",
+      status: "Na pendência",
       title: "Tudo vira pendência e indicador",
       text: "Pedidos aguardando aprovação, títulos vencidos e contas a pagar vencidas aparecem em Precisa de atenção, com valor e atalho para a lista filtrada.",
       state: "tela",
       detail: "Precisa de atenção · O que mudou · Seu foco",
       perm: "reports.view",
+      result: "Pendência com valor e atalho",
       img: "inicio/01-inicio",
       crop: [20, 455, 680, 405],
       focus: [34, 738, 652, 52],
@@ -494,18 +573,41 @@ export const CENTRAL = {
 export const NETWORK = {
   kicker: "A operação integrada",
   title: "Um registro em uma área vira trabalho na outra.",
-  // Coordenadas em um quadro de 1000 × 520: origem à esquerda, gestão à direita.
+  // Coordenadas em um quadro de 1000 × 520 (desktop) e 360 × 640 (celular, em camadas).
   nodes: [
-    { id: "crm", label: "CRM", x: 110, y: 70 },
-    { id: "projetos", label: "Projetos", x: 110, y: 260 },
-    { id: "qualidade", label: "Qualidade", x: 110, y: 450 },
-    { id: "comercial", label: "Comercial", x: 380, y: 150 },
-    { id: "suprimentos", label: "Suprimentos", x: 380, y: 380 },
-    { id: "fiscal", label: "Fiscal", x: 650, y: 60 },
-    { id: "estoque", label: "Estoque e Logística", x: 650, y: 260 },
-    { id: "financeiro", label: "Financeiro", x: 650, y: 460 },
-    { id: "painel", label: "Painéis", x: 895, y: 150 },
-    { id: "ativos", label: "Ativos", x: 895, y: 430 },
+    { id: "crm", label: "CRM", x: 110, y: 70, mx: 95, my: 46 },
+    { id: "projetos", label: "Projetos", x: 110, y: 260, mx: 265, my: 46 },
+    { id: "qualidade", label: "Qualidade", x: 110, y: 450, mx: 265, my: 156 },
+    { id: "comercial", label: "Comercial", x: 380, y: 150, mx: 95, my: 156 },
+    { id: "suprimentos", label: "Suprimentos", x: 380, y: 380, mx: 265, my: 360 },
+    { id: "fiscal", label: "Fiscal", x: 650, y: 60, mx: 180, my: 262 },
+    { id: "estoque", label: "Estoque e Logística", x: 650, y: 260, mx: 95, my: 360 },
+    { id: "financeiro", label: "Financeiro", x: 650, y: 460, mx: 95, my: 470 },
+    { id: "painel", label: "Painéis", x: 895, y: 150, mx: 180, my: 590 },
+    { id: "ativos", label: "Ativos", x: 895, y: 430, mx: 265, my: 470 },
+  ],
+  // Capítulos da cena: cada um acende uma cadeia real de ligações (índices em edges).
+  chapters: [
+    {
+      title: "A venda",
+      text: "O pedido leva a venda ao estoque, ao financeiro e aos painéis por ações na tela. A oportunidade vira orçamento ou pedido, e o pedido vira documento fiscal, pela API.",
+      edges: [0, 1, 2, 3, 10],
+    },
+    {
+      title: "A compra",
+      text: "O recebimento da compra dá entrada no estoque e gera a conta a pagar e o documento de entrada. Hoje isso acontece pela API; na tela, Suprimentos é consulta.",
+      edges: [4, 5, 6],
+    },
+    {
+      title: "Serviço e manutenção",
+      text: "A ordem de serviço pede inspeção à Qualidade, o projeto gera orçamento no Comercial, e a manutenção consome peças do estoque. Ligações do núcleo, pela API.",
+      edges: [7, 8, 9],
+    },
+    {
+      title: "A gestão",
+      text: "Pedidos, títulos vencidos e o fluxo do pedido à entrega chegam aos painéis, na tela, com atalho para a lista de onde o número veio.",
+      edges: [10, 11, 12],
+    },
   ],
   edges: [
     ["crm", "comercial", "oportunidade → orçamento ou pedido", "api"],
@@ -525,8 +627,10 @@ export const NETWORK = {
 };
 
 export const CLOSING = {
-  title: "Conheça o EDUCA pela operação da sua empresa.",
+  title: "Sua operação não deveria funcionar em silos.",
+  answer: "EDUCA conecta a operação.",
   body: "Os manuais mostram cada tela, passo a passo, com as mesmas capturas desta página.",
+  silos: ["Comercial", "Estoque", "Financeiro", "Fiscal", "Logística", "Gestão"],
   actions: [
     { label: "Entrar no EDUCA", href: META.appUrl, primary: true },
     { label: "Manual do Usuário", href: META.manualUser },

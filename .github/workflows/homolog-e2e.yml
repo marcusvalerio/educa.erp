@@ -2,11 +2,16 @@
 # Neon PostgreSQL, branch "homolog"). Disparo: manual (só depois que este arquivo
 # estiver na branch padrão; o GitHub só oferece "Run workflow" para workflows que
 # estão nela) ou por push nesta branch alterando poc/neon-full/homolog/RUN_E2E.
-# Segredos (Settings → Secrets → Actions, ambiente "homolog"):
-#   HOMOLOG_NEON_AUTH_BASE_URL, E2E_OWNER_EMAIL/PASSWORD, E2E_ADMIN_A_EMAIL/PASSWORD,
-#   E2E_READER_A_EMAIL/PASSWORD, E2E_ADMIN_B_EMAIL/PASSWORD
-# Se o Preview tiver "Deployment Protection", defina também VERCEL_BYPASS_TOKEN
-# e o script envia o cabeçalho x-vercel-protection-bypass (ver README).
+#
+# bootstrap-homolog.mjs prepara as contas de teste sozinho (Owner existente +
+# admin A, leitura A, admin B pelo fluxo oficial de convite), com senhas
+# aleatórias só em memória, e roda o e2e-homolog.mjs (33 verificações).
+# Segredos (Settings → Environments → "homolog"):
+#   NEON_AUTH_SERVICE_EMAIL, NEON_AUTH_SERVICE_PASSWORD  (conta de serviço do
+#     Neon Auth de HOMOLOGAÇÃO — os mesmos valores das variáveis do Preview)
+#   VERCEL_BYPASS_TOKEN  (só se o Preview tiver Deployment Protection; o script
+#     envia o cabeçalho x-vercel-protection-bypass e nunca o imprime)
+# A base URL do Neon Auth de homologação não é segredo (fica abaixo).
 name: homolog-e2e
 on:
   push:
@@ -31,22 +36,17 @@ jobs:
           node-version: 22
       # Playwright numa pasta própria (npm i na raiz instalaria o projeto inteiro).
       - run: mkdir -p "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw" && npm init -y > /dev/null && npm i playwright@1 && npx playwright install --with-deps chromium
-      - name: E2E homologação
-        # VERCEL_BYPASS_TOKEN é opcional (Preview protegido)
+      - name: E2E homologação (bootstrap das contas + 33 verificações)
         env:
           APP: ${{ inputs.preview_url || 'https://educaerp-git-poc-supabase-to-neon-meji-projects.vercel.app' }}
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/pw/node_modules/playwright/index.mjs
-          NEON_AUTH_BASE_URL: ${{ secrets.HOMOLOG_NEON_AUTH_BASE_URL }}
-          E2E_OWNER_EMAIL: ${{ secrets.E2E_OWNER_EMAIL }}
-          E2E_OWNER_PASSWORD: ${{ secrets.E2E_OWNER_PASSWORD }}
-          E2E_ADMIN_A_EMAIL: ${{ secrets.E2E_ADMIN_A_EMAIL }}
-          E2E_ADMIN_A_PASSWORD: ${{ secrets.E2E_ADMIN_A_PASSWORD }}
-          E2E_READER_A_EMAIL: ${{ secrets.E2E_READER_A_EMAIL }}
-          E2E_READER_A_PASSWORD: ${{ secrets.E2E_READER_A_PASSWORD }}
-          E2E_ADMIN_B_EMAIL: ${{ secrets.E2E_ADMIN_B_EMAIL }}
-          E2E_ADMIN_B_PASSWORD: ${{ secrets.E2E_ADMIN_B_PASSWORD }}
+          NEON_AUTH_BASE_URL: https://ep-royal-flower-b6tz0xde.neonauth.c-2.sa-east-1.aws.neon.tech/authdb/auth
+          NEON_AUTH_SERVICE_EMAIL: ${{ secrets.NEON_AUTH_SERVICE_EMAIL }}
+          NEON_AUTH_SERVICE_PASSWORD: ${{ secrets.NEON_AUTH_SERVICE_PASSWORD }}
           VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
-        run: node poc/neon-full/homolog/e2e-homolog.mjs | tee homolog-e2e.log
+        run: |
+          set -o pipefail
+          node poc/neon-full/homolog/bootstrap-homolog.mjs --run-e2e 2>&1 | tee homolog-e2e.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:

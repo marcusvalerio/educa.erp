@@ -74,9 +74,11 @@ Nada disto passa pelo chat. Contas de teste **não** são mais criadas à mão: 
 1. **Neon Console → educa-erp-prod → branch `homolog` → Auth → Settings:**
    *Allow sign-ups* off, *Allow localhost* off.
 2. **Neon Console → educa-erp-prod → branch `homolog` → Roles → `educa_app` →
-   Reset password.** Montar a string **pooled**
-   `postgresql://educa_app:<senha>@ep-royal-flower-b6tz0xde-pooler.c-2.sa-east-1.aws.neon.tech/educa?sslmode=require`
-   e colar **só** na variável `DATABASE_URL` do Preview (passo 4).
+   Reset password.** Depois, botão **Connect**: branch `homolog`, Database
+   **`educa`**, Role **`educa_app`**, **Connection pooling ligado**. Conferir o host
+   `ep-royal-flower-b6tz0xde-pooler.c-2.sa-east-1.aws.neon.tech` e o banco `/educa`, e
+   colar a string **só** na variável `DATABASE_URL` do Preview (passo 4), tipo
+   *Sensitive*.
 3. **Conta de serviço**, na sua máquina:
    `node scripts/neon-service-account.mjs --email svc-educa@educaerp.com --out ./.neon-service-homolog.env`.
    Colar o SQL impresso (só o hash) no SQL Editor: branch **`homolog`**, banco

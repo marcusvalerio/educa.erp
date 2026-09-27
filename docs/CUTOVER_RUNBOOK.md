@@ -53,11 +53,21 @@ Referências: `docs/PRE_CUTOVER_CHECKLIST.md` (estado verificado de cada pré-co
    `node scripts/neon-service-account.mjs --email svc-educa@educaerp.com --out ./.neon-service-prod.env`
    na máquina do dono → SQL (só hash) no SQL Editor de `educa-auth-prod`, banco
    `neondb` → senha direto na variável de Produção.
-4. 🔒 **Senha do `educa_app`** em `main` (Console → educa-erp-prod → branch `main` →
-   Roles → `educa_app` → Reset password). Montar
-   `postgresql://educa_app:<senha>@ep-rapid-hall-b6m1arxn-pooler.c-2.sa-east-1.aws.neon.tech/educa?sslmode=require`
-   e colar **só** na variável `DATABASE_URL` de Produção da Vercel. Nunca no Git,
-   chat ou log.
+4. 🔒 **Senha do `educa_app`** em `main`, pelo dono, sem passar por chat, arquivo ou
+   log:
+   1. Neon Console → projeto **educa-erp-prod** → **Branches → main → Roles**
+      → `educa_app` → **Reset password** (a senha aparece uma vez).
+   2. Botão **Connect** do projeto: Branch `main`, Compute primário, Database
+      **`educa`**, Role **`educa_app`**, **Connection pooling ligado**. A string
+      mostrada já é a certa (host `ep-rapid-hall-b6m1arxn-pooler.c-2.sa-east-1.aws.neon.tech`,
+      `/educa`, `sslmode=require`). Conferir que o host tem `-pooler` e o banco é
+      `educa` (não `neondb`).
+   3. Vercel → educa.erp → Settings → Environment Variables → **Add** →
+      `DATABASE_URL`, ambiente **só Production**, tipo *Sensitive*. Colar e salvar.
+      Não usar em Preview/Development.
+   4. Não criar outro papel nem usar `neondb_owner` na aplicação: o `educa_app` é o
+      único papel que respeita RLS pela troca de papel por transação.
+   Se a senha vazar: repetir o Reset (invalida a anterior) e atualizar a variável.
 5. 🔒 **Código na `main` (PR `poc/supabase-to-neon` → `main`)**, antes da janela e
    com aprovação. O código funciona nos dois modos (build Supabase e postgres
    testados). Com as variáveis de produção ainda em `AUTH_PROVIDER=supabase`, o
@@ -68,8 +78,11 @@ Referências: `docs/PRE_CUTOVER_CHECKLIST.md` (estado verificado de cada pré-co
    hoje (modo Supabase). Se algo quebrar, *Instant Rollback* para o deployment
    anterior. Alternativa sem merge: Vercel → Settings → Functions → Region =
    `gru1` (painel; o `vercel.json` tem precedência quando estiver na `main`).
-6. 🔒 **Backup do Supabase:** `pg_dump -Fc` de produção guardado fora do Git (com a
-   senha do banco, pelo dono). Anotar o horário para PITR.
+6. **Backup do Supabase (recomendado, não bloqueia):** o plano do Supabase é
+   **free** (sem PITR). O Supabase não é alterado no cutover (só fica só leitura) e
+   continua sendo a cópia de volta. Há também a branch Neon `rehearsal-2-educa`
+   (cópia fiel de 2026-09-27, 173/173 tabelas). Mesmo assim: `pg_dump -Fc` de
+   produção guardado fora do Git, feito pelo dono (precisa da senha do banco).
 7. **Backup do Neon:** branch `pre-cutover` a partir de `main` (esquema vazio de
    dados, ponto de volta do destino).
 8. **Aviso aos usuários** (hoje só o Owner acessa) com janela e duração estimada
@@ -95,13 +108,30 @@ Referências: `docs/PRE_CUTOVER_CHECKLIST.md` (estado verificado de cada pré-co
 15. **Sondas de segurança** numa branch filha de `main` (a bateria de
     `evidence/rehearsal-data.md` §Segurança). Esperado 56/56. Apagar a branch depois,
     com aprovação.
-16. 🔒 **Variáveis de Produção na Vercel:** `AUTH_PROVIDER=neon`,
-    `DATA_BACKEND=postgres`, `DATABASE_URL` (passo 4), `DATABASE_POOL_MAX=5`,
-    `NEON_AUTH_BASE_URL` (Neon Auth de produção), `NEON_AUTH_SERVICE_EMAIL/PASSWORD`,
-    `APP_URL`. **Remover** `SUPABASE_JWT_SECRET`, se existir. As demais `SUPABASE_*`
-    ficam durante a janela de volta (não são lidas no modo postgres) e saem no passo 27.
-17. 🔒 **Deploy de produção** (redeploy com as variáveis novas). Anotar o deployment
-    anterior (é ele que o rollback promove).
+16. 🔒 **Variáveis de Produção na Vercel** (lista exata, levantada do código):
+
+    | Variável | Valor | Lida por |
+    |---|---|---|
+    | `AUTH_PROVIDER` | `neon` | `next.config.ts` → `NEXT_PUBLIC_AUTH_PROVIDER` **no build** |
+    | `DATA_BACKEND` | `postgres` | `src/lib/database/backend.ts` |
+    | `DATABASE_URL` | passo 4 (sensitive) | `src/lib/database/pg/client.ts` |
+    | `DATABASE_POOL_MAX` | `5` (opcional; o padrão já é 5) | idem |
+    | `NEON_AUTH_BASE_URL` | `https://ep-long-leaf-b86ezbh8.neonauth.c-14.us-east-1.aws.neon.tech/neondb/auth` | `src/lib/auth/neon/server.ts` |
+    | `NEON_AUTH_SERVICE_EMAIL` | `svc-educa@educaerp.com` | idem |
+    | `NEON_AUTH_SERVICE_PASSWORD` | passo 3 (sensitive) | idem |
+    | `APP_URL` | `https://educaerp.vercel.app` | idem + convites (`onboarding-handlers.ts`) |
+
+    Todas só em **Production**. As `SUPABASE_*`/`NEXT_PUBLIC_SUPABASE_*` ficam como
+    estão durante a janela de volta: no modo neon/postgres não são lidas (o
+    `proxy.ts` só as usa no modo supabase), e saem no passo 27.
+    `SUPABASE_JWT_SECRET` só é lido pelo caminho `mint` (modo supabase de dados):
+    **remover** de Production, porque a ponte JWT não faz parte da arquitetura final.
+17. 🔒 **Deploy de produção com build novo.** `AUTH_PROVIDER` entra no bundle **no
+    build** (`NEXT_PUBLIC_AUTH_PROVIDER`), então trocar a variável sem novo build não
+    muda o modo. Vercel → Deployments → último deployment de Production (commit da
+    `main`) → **Redeploy**, **sem** "Use existing Build Cache". Anotar o deployment
+    anterior (é ele que o rollback promove). Conferir com a sonda: `POST
+    /api/auth/sign-in` de outra origem → **403** (modo neon) e função em **gru1**.
 18. **Smoke do Owner:** "Esqueci minha senha" no app → link do Neon Auth → nova senha
     (isso também confirma o e-mail. Hoje o Owner está `emailVerified=false`, e o app
     recusa login sem e-mail confirmado) → login → `/admincentral`; contexto OWNER.
@@ -144,7 +174,8 @@ Referências: `docs/PRE_CUTOVER_CHECKLIST.md` (estado verificado de cada pré-co
 Objetivo: voltar ao Supabase **sem apagar nada** (Supabase, Neon e backups ficam).
 
 1. 🔒 **Vercel → Deployments → deployment anterior (passo 17) → Promote/Instant
-   Rollback.** Ele volta com as variáveis antigas (`AUTH_PROVIDER=supabase`, sem
+   Rollback.** Funciona mesmo com `AUTH_PROVIDER` embutido no build: o deployment
+   anterior foi construído em modo supabase e volta com o próprio bundle. Ele volta com as variáveis antigas (`AUTH_PROVIDER=supabase`, sem
    `DATA_BACKEND`). Alternativa: voltar as duas variáveis e fazer redeploy.
 2. 🔒 **Supabase de volta à escrita:**
    `alter role authenticator reset default_transaction_read_only;`

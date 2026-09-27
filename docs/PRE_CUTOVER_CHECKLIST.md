@@ -1,8 +1,8 @@
-# Checklist pré-cutover — estado verificado em 2026-09-27 (rodada 3)
+# Checklist pré-cutover — estado verificado em 2026-09-27 (rodada 4)
 
 Cada linha foi conferida nesta data. Neon e Supabase pelo MCP, só leitura em
 produção. Vercel e Neon Auth pela sonda no runner do GitHub
-(`poc/neon-full/evidence/homolog-probe.md`, run 36293119479). Nada aqui executa a
+(`poc/neon-full/evidence/homolog-probe.md`, runs 36293119479 e 36293523306). Nada aqui executa a
 virada. **Veredito: NÃO pronto**, porque o portão E (homologação real) não passou
 (ver §BLOQUEIA CUTOVER).
 
@@ -45,8 +45,9 @@ Legenda: ✅ pronto · ❌ falta · ⚠️ pronto com ressalva · 👤 depende d
 | Item | Estado | |
 |---|---|---|
 | Produção | `AUTH_PROVIDER=supabase`, funções em `iad1`, API 401 correta | ✅ inalterada |
-| Região `gru1` | `vercel.json` com `regions: ["gru1"]` no código 🤖 (build, tsc e lint ok). Vale para a produção quando o PR chegar à `main` (runbook passo 5) | ⚠️ aplicado no código, não em produção |
-| Variáveis de Produção | lista no runbook passo 16 | ❌ 👤 |
+| Região `gru1` | `vercel.json` com `regions: ["gru1"]` no código 🤖. Build, tsc e lint ok de novo no commit final. Vale para a produção quando o código chegar à `main` (runbook passo 5); o merge é *fast-forward* (a `main` = `6cd762c` é ancestral; 19 commits; sem conflito) | ⚠️ no código, não em produção |
+| Modo de auth no build | `AUTH_PROVIDER` vira `NEXT_PUBLIC_AUTH_PROVIDER` **no build**: a virada exige deploy com build novo (runbook passo 17); o *Instant Rollback* volta com o bundle antigo (modo supabase) | ✅ documentado |
+| Variáveis de Produção | lista exata levantada do código no runbook passo 16 (8 variáveis; 2 sensitive) | ❌ 👤 |
 | Build nos dois modos / testes | Supabase e postgres; `npm test` 719/719; E2E local 210/210 (de novo hoje) | ✅ |
 
 ## Homologação (portão E)
@@ -68,7 +69,8 @@ Legenda: ✅ pronto · ❌ falta · ⚠️ pronto com ressalva · 👤 depende d
 
 | Item | Estado | |
 |---|---|---|
-| Supabase de produção | intacto, só leitura nesta sessão | ✅ |
+| Supabase de produção | intacto: 84 migrations (última `20260926032523`), 1 usuário no Auth, última mudança no Auth em 2026-09-26 22:43 UTC, sem modo só leitura. Nesta preparação só houve SELECT | ✅ |
+| Backup do Supabase | plano **free** (sem PITR). O Supabase não é alterado no cutover (só fica só leitura) e há a cópia fiel na branch `rehearsal-2-educa` | ⚠️ `pg_dump` recomendado (👤, precisa da senha do banco) |
 | Caminho de volta | *Instant Rollback* do deployment anterior + `alter role authenticator reset default_transaction_read_only` | ✅ documentado |
 | Dados gravados no Neon após a virada | reaplicação manual (T0) | ⚠️ por decisão de segurança |
 
@@ -76,70 +78,78 @@ Legenda: ✅ pronto · ❌ falta · ⚠️ pronto com ressalva · 👤 depende d
 
 ## BLOQUEIA CUTOVER
 
-Só o que impede a virada de funcionar ou de ser verificada.
+Só impeditivos técnicos reais: sem cada um, a virada não funciona ou não pode ser
+verificada.
 
-1. **Portão E: E2E 33/33 contra o Preview real.** Depende de AÇÃO HUMANA 1–5.
-2. **Neon Auth de produção:** `email_password.enabled` = true e `allow_sign_up` =
-   false. Sem o primeiro, ninguém entra; sem o segundo, qualquer pessoa cria conta
-   (o app recusa login sem vínculo, mas a conta existe no Auth).
-3. **Conta de serviço de produção com senha.** Sem ela não há convites nem
-   administração de identidades.
-4. **Senha do `educa_app` em `main`** → `DATABASE_URL` de Produção.
-5. **Variáveis de Produção** (runbook passo 16).
-6. **Código na `main`** (PR `poc/supabase-to-neon` → `main`, runbook passo 5). O
-   modo Neon só existe neste código.
-7. **Cópia real Supabase→Neon** na janela (runbook passo 12): `copy-data.sh` com a
-   senha do banco do Supabase, ou o mesmo caminho do ensaio (leitura pelo MCP do
-   Supabase, gravação pelo MCP do Neon, 173/173 conferidas por md5), que não precisa
-   de senha e que eu executo com a aprovação na hora.
+1. **Homologação real 33/33 contra o Preview** (portão E): **BLOQUEADA**. Preview
+   atrás da Vercel Authentication e sem variáveis; `allow_sign_up`/`allow_localhost`
+   de homologação ligados. Depende de AÇÃO HUMANA 1–5.
+2. **Neon Auth de produção:** `email_password.enabled` = true (hoje false; sem isso
+   ninguém entra) e `allow_sign_up` = false (hoje true; cadastro público aberto).
+3. **Conta de serviço de produção com senha** (convites e administração de
+   identidades).
+4. **`DATABASE_URL` de Produção** com o `educa_app` de `main` (runbook passo 4).
+5. **Variáveis de Produção** (runbook passo 16) e **deploy com build novo** (passo 17).
+6. **Código na `main`**: o modo neon/postgres e o `vercel.json` só existem nesta
+   branch. Merge *fast-forward*, sem conflito, **só com a sua aprovação**.
+7. **Cópia dos dados na janela** (passo 12): `copy-data.sh` com a senha do Supabase,
+   ou o caminho do ensaio pelas ferramentas MCP (sem senha), com aprovação na hora.
 
-## NÃO BLOQUEIA CUTOVER (recomendado)
+## RECOMENDADO (não impede a virada)
 
-- Retenção de 7 dias (exige plano pago). Sem ela: 6 h de PITR + Supabase só
-  leitura 14 dias + branch `pre-cutover` + branches manuais diárias.
-- Região `gru1` em produção: já está no `vercel.json` e passa a valer com o PR. Se
-  o PR atrasar, trocar no painel. `iad1` funciona, só fica mais lento.
-- Neon Auth de produção em us-east-1: aceitável com o cache de sessão; mover para
-  sa-east-1 exigiria recriar o Owner e o vínculo.
-- Remetente próprio de e-mail no Neon Auth.
-- Compute maior que 0,25 CU / sem escala a zero (plano pago), se a latência de
-  partida a frio incomodar.
+- `pg_dump` do Supabase antes da janela. O Supabase não é alterado e a branch
+  `rehearsal-2-educa` é uma cópia fiel, mas é a única cópia fora dos dois provedores.
+- Retenção de 7 dias no Neon (plano pago; hoje 6 h, o máximo do free).
+- Branch `pre-cutover` de `main` imediatamente antes da cópia (eu crio na janela).
+- Remetente próprio de e-mail no Neon Auth de produção.
+- Neon Auth de produção em sa-east-1 (hoje us-east-1; +latência só fora do cache de
+  sessão). Mudar exige recriar Owner e vínculo; não vale o risco agora.
+- Compute acima de 0,25 CU / sem escala a zero, se a partida a frio incomodar.
 - Débitos pré-existentes (`docs/DEBITOS_PRE_EXISTENTES.md`), fora do cutover.
-- Limpeza de branches de ensaio (runbook passo 28, com aprovação).
+- Limpeza de branches de ensaio (runbook passo 28), só com aprovação.
 
-## AÇÃO HUMANA (o que esta sessão comprovadamente não consegue)
+## AÇÃO HUMANA (só o que esta sessão comprovadamente não consegue)
 
-Motivo comum: esta sessão não tem conector da Vercel, a rede recusa `vercel.com` e
-`*.neon.tech` (403 no proxy), o MCP do Neon não altera `allow_sign_up`,
-`allow_localhost` nem `email_password` (o `update_auth_config` só muda o nome), e
-senha nenhuma pode passar pelo chat.
+Motivo, verificado de novo nesta rodada (uma tentativa cada):
+- `api.vercel.com`, `*.vercel.app` e `*.neon.tech`: `connect_rejected` no proxy.
+- Nenhum conector da Vercel instalado.
+- Nenhuma credencial no ambiente.
+- O MCP do Neon não altera `allow_sign_up`, `allow_localhost` nem `email_password`
+  (o `update_auth_config` só aceita `name`).
+- Senhas não passam pelo chat.
 
-**Homologação** (passo a passo em `poc/neon-full/homolog/README.md`):
+**Homologação** (passo a passo com cliques em `poc/neon-full/homolog/README.md`):
 
 1. Neon Console → educa-erp-prod → branch `homolog` → Auth → Settings: *Allow
-   sign-ups* off, *Allow localhost* off.
-2. Neon Console → branch `homolog` → Roles → `educa_app` → Reset password → string
-   pooled só na `DATABASE_URL` do Preview.
-3. Máquina local: `scripts/neon-service-account.mjs` → SQL (hash) no `authdb` da
-   branch `homolog` → senha na variável do Preview e no segredo do GitHub.
-4. Vercel: variáveis do Preview (branch `poc/supabase-to-neon`) + *Protection
-   Bypass for Automation* + Redeploy.
-5. GitHub → Environments → `homolog`: `NEON_AUTH_SERVICE_EMAIL`,
-   `NEON_AUTH_SERVICE_PASSWORD`, `VERCEL_BYPASS_TOKEN`. Depois me avisar, e eu
-   disparo e analiso o E2E.
+   sign-ups* **off**, *Allow localhost* **off**.
+2. Neon Console → branch `homolog` → Roles → `educa_app` → Reset password → Connect
+   (branch `homolog`, banco `educa`, role `educa_app`, pooling on) → string só na
+   `DATABASE_URL` do Preview.
+3. Na sua máquina: `node scripts/neon-service-account.mjs --email svc-educa@educaerp.com --out ./.neon-service-homolog.env`
+   → SQL impresso (só hash) no SQL Editor, branch `homolog`, banco `authdb`.
+4. Vercel → Environment Variables → **Preview**, branch `poc/supabase-to-neon`:
+   variáveis do README; Deployment Protection → **Protection Bypass for
+   Automation**; **Redeploy** do último deployment da branch.
+5. GitHub → Settings → Environments → **`homolog`** → secrets
+   `NEON_AUTH_SERVICE_EMAIL`, `NEON_AUTH_SERVICE_PASSWORD`, `VERCEL_BYPASS_TOKEN`.
+   Depois me avisar.
 
-**Cutover** (runbook):
+**Produção** (antes da janela; runbook passos 3–5):
 
-6. Neon Console, `educa-auth-prod`: e-mail/senha on, sign-ups off; conta de serviço
-   de produção (script → SQL → Vercel).
-7. Senha do `educa_app` em `main` → `DATABASE_URL` de Produção.
-8. Aprovar o PR `poc/supabase-to-neon` → `main` (eu abro quando pedir).
-9. Variáveis de Produção na Vercel + redeploy (na janela).
-10. `pg_dump -Fc` de backup do Supabase (precisa da senha do banco, na máquina do
-    dono). A cópia em si pode ir pelo caminho do MCP, sem senha (BLOQUEIA 7).
-11. Opcional: upgrade do plano Neon (retenção de 7 dias).
+6. Neon Console → `educa-auth-prod` → Auth → Settings: *Email & password* **on**,
+   *Allow sign-ups* **off**. Conta de serviço de produção pelo mesmo script (SQL no
+   banco `neondb` de `educa-auth-prod`) → senha em `NEON_AUTH_SERVICE_PASSWORD` de
+   Production.
+7. `educa_app` de `main`: Reset password → Connect (branch `main`, banco `educa`,
+   pooling on) → `DATABASE_URL` de Production (runbook passo 4).
+8. Aprovar o merge `poc/supabase-to-neon` → `main` (runbook passo 5).
+9. Na janela: variáveis de Production + Redeploy sem cache (passos 16–17).
+10. Recomendado: `pg_dump` do Supabase; upgrade do plano Neon (retenção).
 
-**Eu faço** (sem segredo): disparar e analisar o E2E de homologação e corrigir o
-que for da migração; abrir o PR quando pedido; sonda antes e depois do deploy;
-branch `pre-cutover`; hashes antes e depois da cópia; as 56 sondas de segurança
-numa branch filha de `main`.
+**Eu faço, sem segredo:**
+- disparar o E2E real assim que os itens 1–5 estiverem prontos, e corrigir o que
+  for da migração até 33/33;
+- abrir o PR para a `main` quando pedido (sem merge);
+- sonda antes e depois de cada deploy;
+- branch `pre-cutover`, hashes T0 e cópia pelo caminho do ensaio (com aprovação);
+- as 56 sondas de segurança numa branch filha de `main`.

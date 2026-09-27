@@ -1,0 +1,47 @@
+# E2E de homologação contra o Preview publicado (Vercel → Next.js → Neon Auth →
+# Neon PostgreSQL, branch "homolog"). Disparo manual com a URL do Preview.
+# Segredos (Settings → Secrets → Actions, ambiente "homolog"):
+#   HOMOLOG_NEON_AUTH_BASE_URL, E2E_OWNER_EMAIL/PASSWORD, E2E_ADMIN_A_EMAIL/PASSWORD,
+#   E2E_READER_A_EMAIL/PASSWORD, E2E_ADMIN_B_EMAIL/PASSWORD
+# Se o Preview tiver "Deployment Protection", defina também VERCEL_BYPASS_TOKEN
+# e o script envia o cabeçalho x-vercel-protection-bypass (ver README).
+name: homolog-e2e
+on:
+  workflow_dispatch:
+    inputs:
+      preview_url:
+        description: "URL do Preview (https://…vercel.app)"
+        required: true
+permissions:
+  contents: read
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    environment: homolog
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm i --no-save playwright@1 && npx playwright install --with-deps chromium
+      - name: E2E homologação
+        # VERCEL_BYPASS_TOKEN é opcional (Preview protegido)
+        env:
+          APP: ${{ inputs.preview_url }}
+          NEON_AUTH_BASE_URL: ${{ secrets.HOMOLOG_NEON_AUTH_BASE_URL }}
+          E2E_OWNER_EMAIL: ${{ secrets.E2E_OWNER_EMAIL }}
+          E2E_OWNER_PASSWORD: ${{ secrets.E2E_OWNER_PASSWORD }}
+          E2E_ADMIN_A_EMAIL: ${{ secrets.E2E_ADMIN_A_EMAIL }}
+          E2E_ADMIN_A_PASSWORD: ${{ secrets.E2E_ADMIN_A_PASSWORD }}
+          E2E_READER_A_EMAIL: ${{ secrets.E2E_READER_A_EMAIL }}
+          E2E_READER_A_PASSWORD: ${{ secrets.E2E_READER_A_PASSWORD }}
+          E2E_ADMIN_B_EMAIL: ${{ secrets.E2E_ADMIN_B_EMAIL }}
+          E2E_ADMIN_B_PASSWORD: ${{ secrets.E2E_ADMIN_B_PASSWORD }}
+          VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
+        run: node poc/neon-full/homolog/e2e-homolog.mjs | tee homolog-e2e.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: homolog-e2e-log
+          path: homolog-e2e.log

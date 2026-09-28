@@ -80,9 +80,10 @@
     const port = (link, end) => ports.find((p) => p.dataset.port === `${link}-${end}`);
     hots.forEach((h, i) => h.style.setProperty("--k", i));
 
-    const tl = gsap.timeline({ delay: 0.2, onComplete: live });
-    // A sequência completa leva ~5 s; um pouco mais rápida no tempo real.
-    tl.timeScale(1.15);
+    const tl = gsap.timeline({ delay: 0.1, onComplete: live });
+    // Sequência compacta: o título e o texto entram em ~2,5 s (LCP), e a
+    // sequência inteira fecha em ~3,5 s.
+    tl.timeScale(1.3);
     const scene = wide(1100);
 
     // Vazio: só a grade das colunas, subindo devagar.
@@ -104,11 +105,11 @@
       gsap.set(ports, { scale: 0, opacity: 0 });
 
       // Sinais: as portas de cada ligação acendem, como pontos de um mapa.
-      tl.to(ports, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(3)", stagger: { each: 0.035, from: "start" } }, 0.35);
+      tl.to(ports, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(3)", stagger: { each: 0.025, from: "start" } }, 0.15);
 
       // Estrutura: as molduras das áreas aparecem, ainda vazias, com o nome.
-      tl.fromTo(frags.map(ghost), { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.6, ease: "power2.out", stagger: 0.06 }, 0.55);
-      tl.fromTo(qa(".hs-tag", hero), { opacity: 0, x: -8 }, { opacity: 1, x: 0, duration: 0.45, ease: "power2.out", stagger: 0.06 }, 0.7);
+      tl.fromTo(frags.map(ghost), { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.5, ease: "power2.out", stagger: 0.05 }, 0.3);
+      tl.fromTo(qa(".hs-tag", hero), { opacity: 0, x: -8 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out", stagger: 0.05 }, 0.4);
 
       // Dados: os códigos reais surgem soltos, perto de onde vão parar.
       const bw = box.clientWidth;
@@ -117,8 +118,8 @@
         x: ((Number(s.dataset.tx) - Number(s.dataset.sx)) / 100) * bw,
         y: ((Number(s.dataset.ty) - Number(s.dataset.sy)) / 100) * bh,
       }));
-      tl.fromTo(signals, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out", stagger: 0.06 }, 0.95);
-      tl.to(signals, { y: (i) => (i % 2 ? -5 : 5), duration: 1.2, ease: "sine.inOut" }, 1.35);
+      tl.fromTo(signals, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out", stagger: 0.04 }, 0.5);
+      tl.to(signals, { y: (i) => (i % 2 ? -5 : 5), duration: 0.8, ease: "sine.inOut" }, 0.85);
       const dockTo = (k, at, f) => {
         tl.to(signals[k], { x: dock[k].x, y: dock[k].y, opacity: 0, scale: 0.92, duration: 0.5, ease: "power3.inOut" }, at);
         tl.to(tagCode(f), { opacity: 1, duration: 0.3, ease: "power1.out" }, at + 0.35);
@@ -127,55 +128,56 @@
       // Pedido: a tela real é "desenhada" de cima para baixo pela varredura.
       const scan = q(".hs-scan", order);
       const oh = media(order).offsetHeight;
-      tl.set(media(order), { opacity: 1, clipPath: "inset(0% 0% 100% 0% round 8px)" }, 1.25);
-      tl.to(media(order), { clipPath: "inset(0% 0% 0% 0% round 8px)", duration: 0.95, ease: "power2.inOut" }, 1.25);
-      tl.fromTo(scan, { y: 0, opacity: 1 }, { y: oh, opacity: 1, duration: 0.95, ease: "power2.inOut" }, 1.25);
-      tl.to(scan, { opacity: 0, duration: 0.25, ease: "power1.in" }, 2.2);
-      tl.to(ghost(order), { opacity: 0, duration: 0.4 }, 1.9);
-      dockTo(0, 1.55, order);
-      tl.to(signals[1], { x: dock[1].x, y: dock[1].y, opacity: 0, duration: 0.5, ease: "power3.inOut" }, 1.65);
+      tl.set(media(order), { opacity: 1, clipPath: "inset(0% 0% 100% 0% round 8px)" }, 0.7);
+      tl.to(media(order), { clipPath: "inset(0% 0% 0% 0% round 8px)", duration: 0.75, ease: "power2.inOut" }, 0.7);
+      tl.fromTo(scan, { y: 0, opacity: 1 }, { y: oh, opacity: 1, duration: 0.75, ease: "power2.inOut" }, 0.7);
+      tl.to(scan, { opacity: 0, duration: 0.2, ease: "power1.in" }, 1.45);
+      tl.to(ghost(order), { opacity: 0, duration: 0.3 }, 1.3);
+      dockTo(0, 1.0, order);
+      tl.to(signals[1], { x: dock[1].x, y: dock[1].y, opacity: 0, duration: 0.45, ease: "power3.inOut" }, 1.1);
 
       // Marcadores: os botões e campos que geram trabalho em outra área.
-      tl.to(hots, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(2.4)", stagger: 0.1 }, 2.05);
+      tl.to(hots, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(2.4)", stagger: 0.08 }, 1.3);
 
       // Ligações: o sinal sai do pedido, percorre a linha e só então a área acende.
       sats.forEach((sat, i) => {
-        const t = 2.45 + i * 0.34;
+        const t = 1.5 + i * 0.24;
         tl.fromTo(hots[i], { scale: 1.4 }, { scale: 1, duration: 0.4, ease: "power2.out" }, t - 0.1);
         tl.fromTo(port(i, 0), { scale: 2.2 }, { scale: 1, duration: 0.4, ease: "power2.out" }, t);
-        tl.to(draws[i], { strokeDashoffset: 0, duration: 0.5, ease: "power1.inOut" }, t);
-        tl.add(travel(sigs[i], paths[i], { duration: 0.5 }), t);
-        tl.set(sigs[i], { opacity: 0 }, t + 0.52);
-        tl.fromTo(port(i, 1), { scale: 2.2 }, { scale: 1, duration: 0.4, ease: "power2.out" }, t + 0.5);
-        tl.set(media(sat), { opacity: 1 }, t + 0.5);
-        tl.fromTo(media(sat), { clipPath: "inset(0% 100% 0% 0% round 8px)" }, { clipPath: "inset(0% 0% 0% 0% round 8px)", duration: 0.55, ease: "expo.out" }, t + 0.5);
-        tl.to(ghost(sat), { opacity: 0, duration: 0.3 }, t + 0.7);
-        dockTo(2 + i, t + 0.3, sat);
+        tl.to(draws[i], { strokeDashoffset: 0, duration: 0.4, ease: "power1.inOut" }, t);
+        tl.add(travel(sigs[i], paths[i], { duration: 0.4 }), t);
+        tl.set(sigs[i], { opacity: 0 }, t + 0.42);
+        tl.fromTo(port(i, 1), { scale: 2.2 }, { scale: 1, duration: 0.4, ease: "power2.out" }, t + 0.4);
+        tl.set(media(sat), { opacity: 1 }, t + 0.4);
+        tl.fromTo(media(sat), { clipPath: "inset(0% 100% 0% 0% round 8px)" }, { clipPath: "inset(0% 0% 0% 0% round 8px)", duration: 0.5, ease: "expo.out" }, t + 0.4);
+        tl.to(ghost(sat), { opacity: 0, duration: 0.3 }, t + 0.55);
+        dockTo(2 + i, t + 0.2, sat);
         const chip = q(".hs-apichip", sat);
-        if (chip) tl.to(chip, { opacity: 1, duration: 0.3 }, t + 0.7);
+        if (chip) tl.to(chip, { opacity: 1, duration: 0.3 }, t + 0.55);
       });
-      tl.to(signals[6], { x: dock[6].x, y: dock[6].y, opacity: 0, duration: 0.45, ease: "power3.inOut" }, 3.7);
+      tl.to(signals[6], { x: dock[6].x, y: dock[6].y, opacity: 0, duration: 0.4, ease: "power3.inOut" }, 2.4);
 
       // Convergência: as quatro áreas mandam sinal para a Gestão ao mesmo tempo.
-      const cv = 3.95;
+      const cv = 2.55;
       draws.slice(4).forEach((d, k) => {
-        tl.to(d, { strokeDashoffset: 0, duration: 0.55, ease: "power1.inOut" }, cv + k * 0.05);
-        tl.add(travel(sigs[4 + k], paths[4 + k], { duration: 0.55 }), cv + k * 0.05);
-        tl.set(sigs[4 + k], { opacity: 0 }, cv + 0.62 + k * 0.05);
+        tl.to(d, { strokeDashoffset: 0, duration: 0.45, ease: "power1.inOut" }, cv + k * 0.05);
+        tl.add(travel(sigs[4 + k], paths[4 + k], { duration: 0.45 }), cv + k * 0.05);
+        tl.set(sigs[4 + k], { opacity: 0 }, cv + 0.5 + k * 0.05);
       });
-      tl.set(media(gest), { opacity: 1 }, cv + 0.55);
-      tl.fromTo(media(gest), { clipPath: "inset(0% 0% 100% 0% round 8px)", scale: 0.96 }, { clipPath: "inset(0% 0% 0% 0% round 8px)", scale: 1, duration: 0.7, ease: "expo.out" }, cv + 0.55);
-      tl.to(ghost(gest), { opacity: 0, duration: 0.3 }, cv + 0.8);
-      dockTo(7, cv + 0.3, gest);
+      tl.set(media(gest), { opacity: 1 }, cv + 0.45);
+      tl.fromTo(media(gest), { clipPath: "inset(0% 0% 100% 0% round 8px)", scale: 0.96 }, { clipPath: "inset(0% 0% 0% 0% round 8px)", scale: 1, duration: 0.6, ease: "expo.out" }, cv + 0.45);
+      tl.to(ghost(gest), { opacity: 0, duration: 0.3 }, cv + 0.65);
+      dockTo(7, cv + 0.2, gest);
 
       // Sistema completo: a câmera recua e a declaração de marca entra.
-      const cam = cv + 0.45;
-      tl.to(hs, { y: 0, scale: 1, duration: 1.3, ease: "power3.inOut" }, cam);
-      tl.set(q(".hero-head", hero), { opacity: 1 }, cam + 0.2);
-      tl.fromTo(q(".eyebrow", hero), { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, cam + 0.3);
-      tl.fromTo(titleLines, { yPercent: 112, opacity: 1 }, { yPercent: 0, opacity: 1, duration: 1.1, ease: "expo.out", stagger: 0.12 }, cam + 0.4);
-      tl.fromTo(q(".fire-bar", hero), { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: "power3.inOut" }, cam + 1.15);
-      tl.fromTo(side, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.7, ease: "power2.out", stagger: 0.09 }, cam + 0.6);
+      // A câmera começa a recuar enquanto os sinais convergem; o título entra no recuo.
+      const cam = cv + 0.1;
+      tl.to(hs, { y: 0, scale: 1, duration: 1.1, ease: "power3.inOut" }, cam);
+      tl.set(q(".hero-head", hero), { opacity: 1 }, cam + 0.1);
+      tl.fromTo(q(".eyebrow", hero), { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, cam + 0.15);
+      tl.fromTo(titleLines, { yPercent: 112, opacity: 1 }, { yPercent: 0, opacity: 1, duration: 1.0, ease: "expo.out", stagger: 0.1 }, cam + 0.2);
+      tl.fromTo(q(".fire-bar", hero), { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power3.inOut" }, cam + 0.85);
+      tl.fromTo(side, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", stagger: 0.08 }, cam + 0.3);
     } else if (wide(700)) {
       // Tablet: pedido e áreas em grade, revelados em ordem de causa.
       tl.fromTo(q(".eyebrow", hero), { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.2);

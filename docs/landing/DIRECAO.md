@@ -113,7 +113,7 @@ A v3 parte da v2 aprovada. Conteúdo, inventário, estados (na tela, na API, em 
 
 | Cena | v3 |
 |---|---|
-| Abertura (≥ 1100 px) | Timeline única de ~5 s (timeScale 1,15; o título começa em ~4,3 s):<br>1. a grade das colunas sobe;<br>2. as portas das ligações acendem;<br>3. as molduras das áreas aparecem vazias, com o nome;<br>4. os códigos reais surgem soltos;<br>5. a varredura desenha o pedido de cima para baixo;<br>6. os marcadores aparecem nos botões;<br>7. para cada área: o sinal sai do marcador e percorre a ligação, a área é revelada da esquerda e o código "encaixa" na etiqueta;<br>8. as quatro áreas mandam sinal para a Gestão;<br>9. a câmera (que começou 3% mais próxima e centrada) recua;<br>10. entram o título e o texto.<br><br>Depois, as áreas respiram (oscilação lenta e desencontrada), a cena inclina com o ponteiro e passar sobre uma área acende a cadeia dela enquanto o resto recua. Roda uma vez por sessão. |
+| Abertura (≥ 1100 px) | Timeline única de ~3,2 s (timeScale 1,3; o título entra em ~2,2 s, durante o recuo da câmera):<br>1. a grade das colunas sobe;<br>2. as portas das ligações acendem;<br>3. as molduras das áreas aparecem vazias, com o nome;<br>4. os códigos reais surgem soltos;<br>5. a varredura desenha o pedido de cima para baixo;<br>6. os marcadores aparecem nos botões;<br>7. para cada área: o sinal sai do marcador e percorre a ligação, a área é revelada da esquerda e o código "encaixa" na etiqueta;<br>8. as quatro áreas mandam sinal para a Gestão;<br>9. a câmera (que começou 3% mais próxima e centrada) recua;<br>10. entram o título e o texto.<br><br>Depois, as áreas respiram (oscilação lenta e desencontrada), a cena inclina com o ponteiro e passar sobre uma área acende a cadeia dela enquanto o resto recua. Roda uma vez por sessão. |
 | Abertura (tablet) | Declaração primeiro; pedido e áreas em grade, revelados em ordem de causa. |
 | Abertura (celular) | Composição vertical: declaração, pedido e depois a espinha. A linha desce com a rolagem e cada área é revelada quando a linha chega até ela. |
 | Plataforma | Os números viram escala: 13, 15, 19 e 352 pontos, em ordem crescente. Os pontos se acendem em sequência e o valor conta. |
@@ -163,8 +163,8 @@ Medido em Chromium headless sem GPU, servidor local (`scratchpad/land/fps3.mjs`,
 | Métrica | v2 | v3 |
 |---|---|---|
 | DOMContentLoaded (1440 / 390) | 430 / 406 ms | 494 / 468 ms |
-| LCP 1ª visita (1440 / 390) | 1,46 / 1,31 s | 4,84 / 1,28 s |
-| LCP nas visitas seguintes da sessão (1440) | 1,46 s | 0,51 s |
+| LCP 1ª visita (1440 / 390) | 1,46 / 1,31 s | 2,67 / 1,05 s |
+| LCP nas visitas seguintes da sessão (1440) | 1,46 s | 0,49 s |
 | CLS | 0 | 0 |
 | Transferido (1440) | HTML 190 KB · CSS 62 KB · JS 139 KB · imagens 145 KB · fontes 111 KB | HTML 207 KB · CSS 71 KB · JS 152 KB · imagens 118 KB · fontes 111 KB |
 | FPS abertura (1440 / 390) | 54 / 60 | 51 / 60 |
@@ -181,7 +181,7 @@ Decisões:
 - O `backdrop-filter` ficou só na legenda "em foco".
 - Os sinais do mapa são GSAP (param fora da tela). Os da abertura e do final são SMIL (pausados fora da tela).
 - Traços com `non-scaling-stroke` são medidos em pixels de tela (`dashLen`), para que as linhas cheguem ao destino em qualquer largura.
-- O LCP da primeira visita no desktop é a sequência de abertura, de propósito: o título e o texto entram por último. Mesmo assim:
+- O LCP da primeira visita no desktop é a sequência de abertura, de propósito: o título e o texto entram por último. A sequência foi comprimida (de ~5 s para ~3,2 s) e a câmera passou a recuar enquanto os sinais convergem, com o título entrando no recuo: o LCP caiu de 4,8 s para 2,7 s. Além disso:
   - navegação e "Entrar no EDUCA" aparecem em ~0,5 s;
   - rolar ou usar o teclado acelera a sequência 5×;
   - nas visitas seguintes da sessão a página abre pronta (LCP ~0,5 s);
@@ -209,7 +209,7 @@ As imagens lado a lado (mesmos enquadramentos, v2 à esquerda) estão em `docs/l
 | Conexões | Sinais SMIL em todas as ligações acesas. | Origem → sinal → resposta do destino, por ligação; param fora da tela. |
 | Final | Barra de silos que se une. | Convergência das seis áreas na marca EDUCA. |
 | Microinterações | Hover de cor. | Luz e pressão nos botões, pressão nas abas, aproximação leve nas telas ampliáveis. |
-| Desempenho | LCP 1,5 s (desktop). | LCP 4,8 s na 1ª visita do desktop (sequência intencional); 0,5 s nas seguintes; celular igual; FPS igual. |
+| Desempenho | LCP 1,5 s (desktop). | LCP 2,7 s na 1ª visita do desktop (sequência intencional); 0,5 s nas seguintes; celular 1,1 s; FPS igual. |
 
 ## Áudio
 

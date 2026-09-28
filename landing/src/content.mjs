@@ -8,7 +8,7 @@
 //   evolucao — parcial ou com falha conhecida; nunca apresentado como pronto
 //
 // Telas: `img` é o caminho em docs/manual/assets (sem extensão); o build copia
-// só as usadas para landing/img/.
+// só as usadas para public/landing/img/.
 
 export const STATES = {
   tela: { label: "Na tela", hint: "Ação disponível na interface" },
@@ -21,9 +21,11 @@ export const META = {
   title: "EDUCA.ERP",
   description:
     "O EDUCA conecta vendas, compras, estoque, finanças, fiscal, qualidade, projetos e manutenção em uma operação só. Conheça o produto pelas telas reais.",
-  // LANDING_APP_URL (só no build): aponta "Entrar no EDUCA" para outro app,
-  // ex.: o Preview de homologação. Sem ela, vai para a produção.
-  appUrl: process.env.LANDING_APP_URL || "https://educaerp.vercel.app/login",
+  // A landing é servida pelo próprio app (mesmo domínio): o login é relativo
+  // e funciona igual em produção, no Preview e localmente.
+  appUrl: "/login",
+  // Endereço canônico da landing (SEO): a raiz do domínio de produção.
+  siteUrl: "https://educaerp.vercel.app/",
   manualUser: "manuais/EDUCA-Manual-do-Usuario.pdf",
   manualAdmin: "manuais/EDUCA-Manual-de-Administracao.pdf",
   edition: "Telas da versão redesenhada, capturadas em 27/09/2026 com dados fictícios",

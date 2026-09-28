@@ -1,17 +1,19 @@
 #!/usr/bin/env node
-// Gera a landing do EDUCA (site estático em landing/site/) a partir de
-// landing/src/content.mjs.
+// Gera a landing do EDUCA (site estático em public/landing/) a partir de
+// landing/src/content.mjs. O próprio app Next a serve em "/" (rewrite no
+// next.config.ts); os arquivos ficam em /landing/… (fora do proxy).
 //
-//   npm run landing:build              # gera landing/site/
+//   npm run landing:build              # gera public/landing/
 //   node scripts/build-landing.mjs --preview <arquivo.html>
 //                                      # também gera uma versão de página única
 //                                      # (CSS e JS embutidos, fontes do Google Fonts)
 //
 // O build:
-//   1. recorta e redimensiona só as capturas usadas (docs/manual/assets → site/img);
-//   2. copia as fontes do app (src/app/fonts → site/fonts) e os PDFs dos manuais
-//      (docs/manual/pdf → site/manuais, fora do Git);
-//   3. escreve site/index.html com o conteúdo, site/styles.css e site/main.js.
+//   1. recorta e redimensiona só as capturas usadas (docs/manual/assets → img/);
+//   2. copia as fontes do app (src/app/fonts → fonts/) e os PDFs dos manuais
+//      (docs/manual/pdf → manuais/, fora do Git — no deploy, quem copia é
+//      scripts/copy-landing-manuals.mjs);
+//   3. escreve index.html com o conteúdo, styles.css e main.js.
 
 import { mkdir, copyFile, readFile, writeFile, rm, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -23,7 +25,11 @@ import * as C from "../landing/src/content.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = path.join(ROOT, "landing/src");
-const OUT = path.join(ROOT, "landing/site");
+const OUT = path.join(ROOT, "public/landing");
+// Onde o site é servido. O index.html aparece em "/" (rewrite), então os
+// endereços dos arquivos precisam ser absolutos; CSS e JS continuam
+// relativos entre si (url(fonts/…) no styles.css resolve em /landing/).
+const BASE = "/landing/";
 const ASSETS = path.join(ROOT, "docs/manual/assets");
 
 const args = process.argv.slice(2);
@@ -1255,6 +1261,24 @@ const FONT_FACES = `
 @font-face{font-family:"JetBrains Mono";src:url(fonts/jetbrains-mono-latin-wght-normal.woff2) format("woff2");font-weight:400 700;font-style:normal;font-display:swap}
 `;
 
+// Arquivos do site no index.html servido em "/": img/…, fonts/…, vendor/…,
+// manuais/…, styles.css, main.js e motion.js ganham o prefixo BASE. Âncoras
+// (#…), /login e data: não mudam. A prévia (--preview) continua relativa.
+const SITE_FILE = /^(?:(?:img|fonts|vendor|manuais)\/|(?:styles\.css|main\.js|motion\.js)$)/;
+function atBase(html) {
+  return html.replace(/(\s(src|href|srcset|imagesrcset)=")([^"]*)"/g, (_, pre, attr, value) => {
+    const fix = (url) => (SITE_FILE.test(url) ? BASE + url : url);
+    const out = attr.endsWith("srcset") ? value.split(", ").map((c) => c.replace(/^\S+/, fix)).join(", ") : fix(value);
+    return `${pre}${out}"`;
+  });
+}
+
+// Links do Supabase Auth que caem no Site URL ("/") trazem a sessão no
+// fragmento (#access_token=…, #error_code=…). Antes da landing, "/" levava a
+// /login, que trata o fragmento (src/lib/onboarding/auth-hash.ts); o
+// encaminhamento mantém esse caminho. Âncoras da página não casam.
+const AUTH_HASH_FORWARD = `<script>(function(){var h=location.hash;if(/^#(?:.*&)?(?:access_token|error|error_code|error_description)=/.test(h))location.replace("/login"+h)})();</script>`;
+
 // Antes da abertura: marca o documento para a sequência de entrada (evita o
 // quadro final piscar antes da animação). Sem GSAP em 3 s, a página aparece.
 const INTRO_GUARD = `<script>(function(){var d=document.documentElement;d.classList.add("js");if(!window.matchMedia||!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("intro");setTimeout(function(){d.classList.remove("intro")},3000)}})();</script>`;
@@ -1336,12 +1360,15 @@ async function main() {
 
   const html = body(sectionsList(sizes));
   const head = `<meta charset="utf-8">
+${AUTH_HASH_FORWARD}
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(C.META.title)} · Uma operação inteira, conectada</title>
 <meta name="description" content="${esc(C.META.description)}">
+<link rel="canonical" href="${esc(C.META.siteUrl)}">
 <meta name="color-scheme" content="light dark">
 <meta property="og:title" content="${esc(C.META.title)}">
 <meta property="og:description" content="${esc(C.META.description)}">
+<meta property="og:url" content="${esc(C.META.siteUrl)}">
 <link rel="icon" href="data:image/svg+xml,${encodeURIComponent(mark(24).replace('class="mark"', 'xmlns="http://www.w3.org/2000/svg"').replace(/class="mark-bar"/g, 'fill="#f5f6f6"').replace('class="mark-fire"', 'fill="#ff9408"').replace('fill="currentColor"', 'fill="#100c08"'))}">
 ${heroPreload()}
 <link rel="preload" href="fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
@@ -1349,7 +1376,7 @@ ${heroPreload()}
 <link rel="stylesheet" href="styles.css">`;
   await writeFile(
     path.join(OUT, "index.html"),
-    `<!doctype html>\n<html lang="pt-BR">\n<head>\n${head}\n</head>\n<body>\n${html}\n${SCRIPTS.map((f) => `<script src="${f}" defer></script>`).join("\n")}\n</body>\n</html>\n`,
+    atBase(`<!doctype html>\n<html lang="pt-BR">\n<head>\n${head}\n</head>\n<body>\n${html}\n${SCRIPTS.map((f) => `<script src="${f}" defer></script>`).join("\n")}\n</body>\n</html>\n`),
   );
 
   if (previewAt) {
@@ -1370,7 +1397,7 @@ ${SCRIPTS.slice(0, 2).map((f) => `<script src="${f}"></script>`).join("\n")}
   }
 
   const total = [...images.values()].length;
-  console.log(`landing/site gerado: ${screens.length} referências de tela, ${total} imagens.`);
+  console.log(`public/landing gerado: ${screens.length} referências de tela, ${total} imagens.`);
 }
 
 main().catch((e) => {

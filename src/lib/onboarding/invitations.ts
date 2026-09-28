@@ -143,9 +143,26 @@ export type InviteByEmail = (
   options: { redirectTo: string; data?: Record<string, unknown> }
 ) => Promise<{ data: { user: { id: string } | null } | null; error: { status?: number; code?: string; message?: string } | null }>;
 
+// authUserId também no ramo "não entregue": com o Neon Auth, uma conta que
+// já existe e já tem senha não recebe e-mail, mas o provisionamento garantiu
+// (ou reaproveitou) o login-sombra e o vínculo — quem chama precisa dele.
 export type Delivery =
   | { delivered: true; authUserId: string | null }
-  | { delivered: false; reason: "existing_account" | "email_unavailable" };
+  | { delivered: false; reason: "existing_account" | "email_unavailable"; authUserId?: string | null };
+
+/**
+ * Login (auth.users.id) de quem está sendo convidado para a plataforma.
+ * `found` é o login achado pelo e-mail ANTES do convite; `delivery`, o
+ * resultado do convite de identidade. Conta nova → login do convite (e-mail
+ * enviado). Conta existente → login devolvido pelo provisionamento, ou o
+ * achado antes (Supabase). null = não dá para concluir (a rota responde 503).
+ */
+export function resolveInvitedLogin(found: string | null, delivery: Delivery): { authUserId: string; emailSent: boolean } | null {
+  if (delivery.delivered) return delivery.authUserId ? { authUserId: delivery.authUserId, emailSent: true } : null;
+  if (delivery.reason !== "existing_account") return null;
+  const authUserId = delivery.authUserId ?? found;
+  return authUserId ? { authUserId, emailSent: false } : null;
+}
 
 function isExistingAccount(error: { status?: number; code?: string; message?: string }): boolean {
   return error.code === "email_exists" || error.code === "user_already_exists" || /already (been )?registered|already exists/i.test(error.message ?? "");

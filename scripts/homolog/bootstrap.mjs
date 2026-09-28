@@ -57,12 +57,7 @@ if (ownerCtx?.platform?.role !== "OWNER") {
   if (!wasVerified) await neonA.setEmailVerified(legacy.id, true);
   try {
     const legacyCookie = await neonA.impersonate(legacy.id);
-    const invite = () => app("/api/platform/members/invite", { body: { name: O.name, email: O.email, platformRole: "OWNER" }, cookie: legacyCookie });
-    // BUG registrado (AUTH_PROVIDER=neon): no 1º convite de uma conta que já
-    // existe no Neon, inviteWithNeon descarta o authUserId e a rota responde
-    // 503; o login-sombra já ficou criado, então a 2ª tentativa passa.
-    let inv = await invite();
-    if (inv.status === 503) inv = await invite();
+    const inv = await app("/api/platform/members/invite", { body: { name: O.name, email: O.email, platformRole: "OWNER" }, cookie: legacyCookie });
     await app("/api/auth/logout", { body: {}, cookie: legacyCookie });
     if (inv.status !== 201) throw new Error(`convite do Owner novo → ${short(inv)}`);
   } finally {

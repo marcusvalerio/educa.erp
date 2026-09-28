@@ -105,31 +105,36 @@ export default function LoginPage() {
   return (
     <AuthFrame
       aside={
-        <aside className="relative hidden overflow-hidden border-l border-platform-border bg-platform text-platform-foreground lg:flex lg:flex-col lg:justify-end lg:p-12">
+        <aside className="relative m-2 hidden overflow-hidden rounded-xl bg-platform text-platform-foreground lg:flex lg:flex-col lg:justify-between lg:p-12">
+          {/* Textura de livro-razão: pautas finas, quase invisíveis. */}
+          <div aria-hidden className="auth-ledger absolute inset-0 opacity-60" />
           <div aria-hidden className="absolute inset-x-0 top-0 h-0.5 bg-accent" />
-          <div className="max-w-md">
-            <p className="text-2xs font-medium tracking-wide text-platform-muted uppercase">Gestão empresarial integrada</p>
-            <p className="mt-3 text-2xl leading-tight font-semibold tracking-tight">Operação, finanças, fiscal e governança em um só lugar.</p>
-            <ul className="mt-8 grid grid-cols-2 gap-x-6 gap-y-3 text-sm text-platform-muted">
-              <li className="border-t border-platform-border pt-3">Comercial e CRM</li>
-              <li className="border-t border-platform-border pt-3">Suprimentos</li>
-              <li className="border-t border-platform-border pt-3">Estoque e Logística</li>
-              <li className="border-t border-platform-border pt-3">Produção</li>
-              <li className="border-t border-platform-border pt-3">Financeiro e Fiscal</li>
-              <li className="border-t border-platform-border pt-3">Controladoria</li>
-            </ul>
+          <p className="relative text-2xs font-semibold tracking-label text-platform-muted uppercase">Gestão empresarial integrada</p>
+          <div className="relative max-w-lg">
+            <p className="font-display text-4xl text-balance">
+              Operação, finanças, fiscal e governança <span className="text-platform-muted italic">em um só lugar.</span>
+            </p>
+            <ol className="mt-10 grid grid-cols-2 gap-x-8 text-sm">
+              {["Comercial e CRM", "Suprimentos", "Estoque e Logística", "Produção", "Financeiro e Fiscal", "Controladoria"].map((label, index) => (
+                <li key={label} className="flex items-baseline gap-3 border-t border-platform-border py-3 text-platform-muted">
+                  <span className="code text-2xs text-platform-muted/70">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="text-platform-foreground/90">{label}</span>
+                </li>
+              ))}
+            </ol>
           </div>
         </aside>
       }
     >
-      <h1 className="text-xl font-semibold tracking-tight">Acesse sua conta</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Use o e-mail e a senha do seu acesso ao EDUCA.</p>
-      <div className="mt-6">
+      <p className="mb-2 text-2xs font-semibold tracking-label text-subtle-foreground uppercase">Acesso</p>
+      <h1 className="text-2xl font-semibold tracking-title">Acesse sua conta</h1>
+      <p className="mt-1.5 text-sm text-muted-foreground">Use o e-mail e a senha do seu acesso ao EDUCA.</p>
+      <div className="mt-8">
         <Suspense fallback={null}>
           <LoginForm />
         </Suspense>
       </div>
-      <p className="mt-6 text-xs text-subtle-foreground">O acesso é concedido pelo administrador da sua organização, por convite.</p>
+      <p className="mt-8 border-t border-border-subtle pt-4 text-xs text-subtle-foreground">O acesso é concedido pelo administrador da sua organização, por convite.</p>
     </AuthFrame>
   );
 }

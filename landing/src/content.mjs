@@ -1,0 +1,746 @@
+// Conteúdo da landing do EDUCA. Fonte de verdade da página: tudo o que está
+// aqui foi conferido em docs/landing/INVENTARIO.md (código, manuais e telas).
+//
+// Estados (selo ao lado de cada capacidade):
+//   tela     — ação executável na interface, executada durante o manual
+//   consulta — lista, visões, detalhe e exportação na interface
+//   api      — existe no núcleo (rota de API + regra no banco), sem botão na tela
+//   evolucao — parcial ou com falha conhecida; nunca apresentado como pronto
+//
+// Telas: `img` é o caminho em docs/manual/assets (sem extensão); o build copia
+// só as usadas para landing/img/.
+
+export const STATES = {
+  tela: { label: "Na tela", hint: "Ação disponível na interface" },
+  consulta: { label: "Consulta", hint: "Lista, filtros e detalhe na interface" },
+  api: { label: "Na API", hint: "No núcleo da plataforma, sem botão na tela" },
+  evolucao: { label: "Em evolução", hint: "Parcial ou com limitação conhecida" },
+};
+
+export const META = {
+  title: "EDUCA.ERP",
+  description:
+    "O EDUCA conecta vendas, compras, estoque, finanças, fiscal, qualidade, projetos e manutenção em uma operação só. Conheça o produto pelas telas reais.",
+  // LANDING_APP_URL (só no build): aponta "Entrar no EDUCA" para outro app,
+  // ex.: o Preview de homologação. Sem ela, vai para a produção.
+  appUrl: process.env.LANDING_APP_URL || "https://educaerp.vercel.app/login",
+  manualUser: "manuais/EDUCA-Manual-do-Usuario.pdf",
+  manualAdmin: "manuais/EDUCA-Manual-de-Administracao.pdf",
+  edition: "Telas da versão redesenhada, capturadas em 27/09/2026 com dados fictícios",
+};
+
+// A página como um filme em atos. Um fio contínuo (a mesma operação)
+// atravessa todos eles.
+export const ACTS = [
+  { n: "01", name: "Ligação" },
+  { n: "02", name: "Silos" },
+  { n: "03", name: "Um pedido atravessa a empresa" },
+  { n: "04", name: "As áreas" },
+  { n: "05", name: "Uma base, três níveis" },
+  { n: "06", name: "O sistema" },
+  { n: "07", name: "Convergência" },
+];
+
+export const HERO = {
+  eyebrow: "EDUCA.ERP · gestão integrada",
+  title: ["Uma operação inteira,", "conectada."],
+  lead:
+    "Um pedido aprovado no Comercial vira reserva no Estoque, título no Financeiro, documento no Fiscal e fluxo na Logística. Tudo na mesma base, e tudo aparece para a Gestão.",
+  primary: { label: "Ver a operação acontecer", href: "#siga-um-pedido" },
+  secondary: { label: "Entrar no EDUCA", href: META.appUrl },
+  // Cena da abertura. Coordenadas em px da captura original.
+  // O pedido real é o centro; cada marcador fica sobre o botão ou campo
+  // que gera trabalho em outra área e leva à tela real daquela área.
+  order: {
+    img: "comercial/17-pedido-receber-gerado",
+    crop: [0, 80, 1176, 520],
+    route: "/comercial/pedidos-venda/:id",
+    area: "Comercial",
+    code: "PV-001013",
+    text: "Pedido aprovado · R$ 36.011,62",
+    alt: "Pedido de venda PV-001013, aprovado, total de R$ 36.011,62, com os botões Reservar estoque, Gerar conta a receber e Cancelar pedido",
+  },
+  satellites: [
+    {
+      id: "estoque",
+      n: 1,
+      area: "Estoque",
+      kind: "tela",
+      hotspot: [806, 149],
+      hotspotLabel: "Reservar estoque",
+      img: "comercial/14-pedido-reservar-dialogo",
+      crop: [528, 312, 382, 290],
+      code: "FIL03 rua 05",
+      text: "Reserva no local escolhido",
+      alt: "Janela Reservar estoque com a lista de locais de estoque",
+    },
+    {
+      id: "financeiro",
+      n: 2,
+      area: "Financeiro",
+      kind: "tela",
+      hotspot: [993, 149],
+      hotspotLabel: "Gerar conta a receber",
+      img: "comercial/17-pedido-receber-gerado",
+      crop: [596, 812, 552, 150],
+      code: "CR-0002",
+      text: "Título a receber em aberto",
+      alt: "Título CR-0002, vencimento 27/09/2026, R$ 36.011,62, em aberto",
+    },
+    {
+      id: "fiscal",
+      n: 3,
+      area: "Fiscal",
+      kind: "api",
+      hotspot: [40, 553],
+      hotspotLabel: "Documento fiscal",
+      img: "comercial/21-faturamento",
+      crop: [290, 218, 1110, 205],
+      code: "DF-0004",
+      text: "Criado e calculado pela API; consulta no Faturamento",
+      alt: "Faturamento com os documentos DF-0004 e DF-0003, status Calculada",
+    },
+    {
+      id: "logistica",
+      n: 4,
+      area: "Logística",
+      kind: "api",
+      hotspot: [963, 481],
+      hotspotLabel: "Andamento da expedição",
+      img: "inicio/04-fluxo-do-erp",
+      crop: [30, 70, 1115, 400],
+      code: "7 em preparação",
+      text: "Separação e expedição pela API; fluxo no Início",
+      alt: "Fluxo do ERP: 12 pedidos do período, 7 em preparação, 3 em aprovação, 1 expedido",
+    },
+  ],
+  gestao: {
+    img: "inicio/01-inicio",
+    crop: [20, 455, 680, 405],
+    area: "Gestão",
+    code: "5 aguardando aprovação",
+    text: "Tudo vira pendência no Início",
+    alt: "Precisa de atenção: 7 não conformidades graves, 14 contas a receber vencidas, 9 contas a pagar vencidas e 5 pedidos aguardando aprovação",
+  },
+  // Sinais soltos no começo da sequência: valores reais das mesmas telas.
+  signals: ["PV-001013", "R$ 36.011,62", "FIL03 rua 05", "CR-0002", "DF-0004", "12 pedidos no período", "7 em preparação", "5 aguardando aprovação"],
+  // V4 (desktop): o pedido inteiro como objeto, e as partes dele que geram
+  // trabalho em outra área, recortadas da mesma captura (px da captura 17,
+  // 1176 × 1134). `to`: a área que aquela parte alimenta.
+  stage: { img: "comercial/17-pedido-receber-gerado", crop: [0, 80, 1176, 900], alt: "Pedido de venda PV-001013, aprovado, total de R$ 36.011,62, com as ações Reservar estoque e Gerar conta a receber, o andamento da reserva e da expedição e o título a receber CR-0002" },
+  parts: [
+    { id: "cabecalho", img: "comercial/17-pedido-receber-gerado", crop: [20, 88, 1136, 106], label: "PV-001013 · Aprovado" },
+    { id: "totais", img: "comercial/17-pedido-receber-gerado", crop: [33, 211, 1110, 120], label: "Total R$ 36.011,62" },
+    { id: "docfiscal", img: "comercial/17-pedido-receber-gerado", crop: [34, 530, 262, 60], label: "Documento fiscal", to: "fiscal" },
+    { id: "andamento", img: "comercial/17-pedido-receber-gerado", crop: [785, 347, 358, 311], label: "Reserva e expedição", to: "logistica" },
+    { id: "financeiro", img: "comercial/17-pedido-receber-gerado", crop: [597, 820, 546, 145], label: "CR-0002 · em aberto", to: "financeiro" },
+  ],
+  // Botões reais do cabeçalho (px da captura 17).
+  buttons: { estoque: [658, 155, 149, 32], financeiro: [815, 155, 177, 32] },
+};
+
+export const SCENARIO = {
+  kicker: "O cenário",
+  title: "Cada área cuida de um pedaço da mesma operação.",
+  // Ato 02 (curto): a frase que a cena mostra.
+  short: "Quando cada área registra o seu pedaço em um lugar diferente, a empresa perde o fio.",
+  body: [
+    "O vendedor fecha o pedido. O estoque precisa separar. O financeiro precisa cobrar. O fiscal precisa documentar. A gestão precisa enxergar tudo isso junto.",
+    "Quando cada área registra o seu pedaço em um lugar diferente, a empresa perde o fio: o mesmo cliente é digitado três vezes, o estoque não sabe o que foi vendido e o financeiro descobre a venda no fim do mês.",
+  ],
+  // Registro típico de cada área, com códigos reais das telas (dados fictícios).
+  records: [
+    { area: "Comercial", record: "Pedido de venda", code: "PV-001013" },
+    { area: "CRM", record: "Oportunidade", code: "OPP-0004" },
+    { area: "Suprimentos", record: "Pedido de compra", code: "PC-00002" },
+    { area: "Estoque", record: "Local de estoque", code: "FIL03 rua 05" },
+    { area: "Financeiro", record: "Título a receber", code: "CR-0002" },
+    { area: "Fiscal", record: "CFOP", code: "5102" },
+    { area: "Qualidade", record: "Checklist de inspeção", code: "REC-01" },
+    { area: "Ativos", record: "Ordem de manutenção", code: "OM-0003" },
+    { area: "Cadastros", record: "Cliente", code: "CLI-0005" },
+    { area: "Administração", record: "Papel de acesso", code: "Comprador" },
+  ],
+};
+
+export const PLATFORM = {
+  kicker: "O EDUCA",
+  title: "Uma base só, três ambientes.",
+  body: "Todas as áreas gravam na mesma base. O que muda é quem vê o quê: cada pessoa entra com papéis que definem os módulos e as ações disponíveis para ela.",
+  numbers: [
+    { value: 15, label: "áreas no menu do ERP", note: "de Comercial a Controladoria" },
+    { value: 13, label: "painéis de gestão", note: "um por área, com pendências e tendências" },
+    { value: 19, label: "módulos contratáveis", note: "habilitados por empresa" },
+    { value: 352, label: "permissões no papel Administrador", note: "cada ação tem a sua" },
+  ],
+  environments: [
+    { name: "ERP", who: "Toda a empresa", what: "A operação: vendas, compras, estoque, finanças, fiscal, qualidade, projetos, manutenção e gestão.", img: "inicio/06-painel-executivo", route: "/gestao/dashboard", alt: "Painel executivo do EDUCA" },
+    { name: "Administração da Empresa", who: "Administrador da empresa", what: "Usuários, convites, papéis, setores, cargos, unidades, módulos e auditoria da própria empresa.", img: "admin/01-visao-geral", route: "/admin", alt: "Visão geral da Administração da Empresa" },
+    { name: "Administração Central", who: "Owner e Admin da plataforma", what: "Empresas clientes, ciclo de vida e módulos contratados. Não enxerga dados operacionais das empresas.", img: "central/01-visao-geral", route: "/admincentral", alt: "Visão geral da Administração Central" },
+  ],
+};
+
+// "Siga um pedido": só etapas conferidas; o estado diz como cada uma acontece hoje.
+export const JOURNEY = {
+  kicker: "Como funciona",
+  title: "Siga um pedido.",
+  thesis: "Uma venda não termina na venda.",
+  origin: "Pedido",
+  note: "As telas são do ambiente de demonstração e mostram pedidos diferentes em cada etapa.",
+  lead: "Uma venda atravessa seis áreas. Role para acompanhar o que cada uma recebe e onde isso aparece no EDUCA.",
+  steps: [
+    {
+      area: "Venda",
+      status: "Aprovado",
+      title: "O pedido é aprovado",
+      text: "O pedido sai do rascunho, vai para aprovação e é aprovado por quem tem a permissão. Cada ação pede confirmação e fica no histórico.",
+      state: "tela",
+      detail: "Enviar para aprovação → Aprovar",
+      perm: "sales_orders.approve",
+      callout: "Aprovar libera o pedido para reserva de estoque.",
+      cursor: [886, 479],
+      img: "comercial/12-pedido-aprovar-confirmar",
+      focus: [496, 372, 446, 150],
+      route: "/comercial/pedidos-venda/:id",
+      alt: "Confirmação para aprovar um pedido de venda",
+    },
+    {
+      area: "Estoque",
+      status: "Reservado",
+      title: "O estoque fica reservado",
+      text: "Com o pedido aprovado, Reservar estoque separa as quantidades no local escolhido. Itens sem saldo ficam com reserva pendente.",
+      state: "tela",
+      detail: "Reservar estoque → local de estoque",
+      perm: "sales_orders.reserve",
+      callout: "Local de estoque: packing, armazenagem, quarentena, expedição",
+      cursor: [717, 491],
+      action: "Local de estoque",
+      img: "comercial/14-pedido-reservar-dialogo",
+      focus: [528, 312, 382, 560],
+      route: "/comercial/pedidos-venda/:id",
+      alt: "Janela Reservar estoque com a lista de locais",
+    },
+    {
+      area: "Financeiro",
+      status: "Título a receber",
+      title: "Nasce o título a receber",
+      text: "Gerar conta a receber cria o título a partir do valor e das condições do pedido. Ele aparece no próprio pedido e em Contas a receber.",
+      state: "tela",
+      detail: "CR-0002 · R$ 36.011,62 · Em aberto",
+      perm: "accounts_receivable.approve",
+      callout: "CR-0002 · vence 27/09/2026 · R$ 36.011,62 · em aberto",
+      result: "Título criado no pedido",
+      img: "comercial/17-pedido-receber-gerado",
+      crop: [0, 80, 1176, 900],
+      focus: [596, 812, 552, 150],
+      route: "/comercial/pedidos-venda/:id",
+      alt: "Pedido com o título CR-0002 no bloco Financeiro",
+    },
+    {
+      area: "Fiscal",
+      status: "Documento fiscal",
+      title: "O documento fiscal parte do pedido",
+      text: "O núcleo cria o documento fiscal a partir do pedido e calcula os impostos pelas regras tributárias. Na tela, Faturamento e Fiscal listam os documentos.",
+      state: "api",
+      detail: "Documento do pedido e cálculo de impostos pela API; consulta na tela",
+      perm: "fiscal_documents.view",
+      callout: "DF-0004 e DF-0003 · NF-e · status Calculada",
+      api: ["POST /api/sales-orders/:id/generate-fiscal-document", "POST /api/fiscal-documents/:id/calculate"],
+      img: "comercial/21-faturamento",
+      focus: [290, 340, 1130, 80],
+      route: "/comercial/faturamento",
+      alt: "Faturamento com documentos fiscais das vendas",
+    },
+    {
+      area: "Logística",
+      status: "Em preparação",
+      title: "Separação, expedição e entrega",
+      text: "Listas de separação, embalagem, expedição, transporte e eventos de entrega rodam no núcleo. O Início mostra o fluxo do pedido à entrega com os números do período.",
+      state: "api",
+      detail: "Pedidos → Em preparação → Expedidos → Entregues",
+      perm: "shipments.view",
+      callout: "12 pedidos no período · 7 em preparação · 1 expedido",
+      api: ["POST /api/sales-orders/:id/pick-lists", "POST /api/shipments/:id/ship", "POST /api/shipments/:id/deliver"],
+      img: "inicio/04-fluxo-do-erp",
+      route: "/",
+      focus: [30, 70, 1115, 400],
+      alt: "Fluxo do ERP no Início: pedidos do período em aprovação, preparação e expedição",
+    },
+    {
+      area: "Gestão",
+      status: "Na pendência",
+      title: "Tudo vira pendência e indicador",
+      text: "Pedidos aguardando aprovação, títulos vencidos e contas a pagar vencidas aparecem em Precisa de atenção, com valor e atalho para a lista filtrada.",
+      state: "tela",
+      detail: "Precisa de atenção · O que mudou · Seu foco",
+      perm: "reports.view",
+      callout: "5 pedidos aguardando aprovação · R$ 148.746,42",
+      result: "Pendência com valor e atalho",
+      img: "inicio/01-inicio",
+      crop: [20, 455, 680, 405],
+      focus: [34, 738, 652, 52],
+      route: "/",
+      alt: "Bloco Precisa de atenção no Início com pendências e valores",
+    },
+  ],
+};
+
+// Módulos. `does`: [texto, estado]. `flow`: etapas reais. `controls`: registros.
+// `links`: [id do módulo, o que passa].
+export const MODULES = [
+  {
+    id: "comercial",
+    problem: "Pedido aprovado por mensagem, estoque que ninguém reservou e cobrança que só aparece no fim do mês.",
+    name: "Comercial",
+    tagline: "Do orçamento ao faturamento das vendas.",
+    serves: "Vendas e atendimento comercial. Acompanha propostas, faz o pedido andar da aprovação à reserva e liga a venda ao financeiro.",
+    who: "Vendedores, gestores comerciais e quem aprova pedidos.",
+    does: [
+      ["Acompanhar pedidos por visões: entrega atrasada, aguardando aprovação, em andamento", "tela"],
+      ["Enviar para aprovação, aprovar e cancelar pedidos", "tela"],
+      ["Reservar e liberar estoque do pedido", "tela"],
+      ["Gerar a conta a receber a partir do pedido", "tela"],
+      ["Consultar orçamentos e o faturamento", "consulta"],
+      ["Gerar documento fiscal, separação e expedição do pedido", "api"],
+      ["Criar e editar pedidos pela tela", "evolucao"],
+    ],
+    flow: ["Rascunho", "Aguardando aprovação", "Aprovado", "Reservado", "Em separação", "Expedido", "Concluído"],
+    controls: ["Pedidos de venda (PV)", "Itens, total, frete e desconto", "Reserva e expedição por pedido", "Orçamentos (ORC)", "Documentos de faturamento"],
+    links: [["estoque", "reserva de estoque"], ["financeiro", "título a receber"], ["fiscal", "documento fiscal do pedido"], ["painel", "pedidos no fluxo e nas pendências"]],
+    screens: [
+      { img: "comercial/04-pedidos-lista", route: "/comercial/pedidos-venda", label: "Pedidos", caption: "Lista de pedidos com visões, busca, status e exportação." },
+      { img: "comercial/13-pedido-aprovado", route: "/comercial/pedidos-venda/:id", label: "Detalhe", caption: "Pedido aprovado: total, itens, reservado, expedido e as ações do momento." },
+      { img: "comercial/15-pedido-reservado", route: "/comercial/pedidos-venda/:id", label: "Reservado", caption: "Depois de reservar, o pedido oferece Liberar reserva e Gerar conta a receber." },
+      { img: "comercial/03-orcamentos-detalhe", route: "/comercial/orcamentos", label: "Orçamentos", caption: "Orçamento com cliente, validade, total e histórico." },
+      { img: "comercial/01-workspace", route: "/comercial", label: "Visão", caption: "Página do módulo: valor em pedidos, ticket médio e pedidos pendentes." },
+    ],
+  },
+  {
+    id: "crm",
+    problem: "Oportunidades na planilha de cada vendedor: ninguém sabe o que está perto de fechar nem o que ficou sem retorno.",
+    name: "CRM",
+    tagline: "Leads, funil e atividades comerciais.",
+    serves: "Organiza o que acontece antes do pedido: quem são os contatos, em que estágio está cada oportunidade e o que precisa ser feito.",
+    who: "Vendedores e gestores comerciais.",
+    does: [
+      ["Mover oportunidades entre os estágios do funil", "tela"],
+      ["Consultar leads por visão: novos e qualificados", "consulta"],
+      ["Consultar oportunidades e atividades, com atrasadas e pendentes", "consulta"],
+      ["Converter oportunidade em orçamento ou pedido", "api"],
+      ["Converter lead em oportunidade", "evolucao"],
+    ],
+    flow: ["Prospecção", "Qualificação", "Proposta", "Negociação"],
+    controls: ["Leads (LEAD)", "Oportunidades (OPP) com valor e chance", "Estágios e funis", "Atividades: ligações, reuniões, retornos"],
+    links: [["comercial", "oportunidade vira orçamento ou pedido"], ["cadastros", "cliente da oportunidade"], ["painel", "funil no painel comercial"]],
+    screens: [
+      { img: "crm/05-pipeline-mover", route: "/crm/pipeline", label: "Pipeline", caption: "Cada cartão avança ou volta um estágio pelas setas; o valor total do estágio atualiza." },
+      { img: "crm/07-oportunidades-detalhe", route: "/crm/oportunidades", label: "Oportunidade", caption: "Oportunidade com cliente, valor estimado, probabilidade e previsão." },
+      { img: "crm/02-leads-lista", route: "/crm/leads", label: "Leads", caption: "Leads com empresa, qualificação e status." },
+      { img: "crm/08-atividades-lista", route: "/crm/atividades", label: "Atividades", caption: "Atividades pendentes e atrasadas por prazo." },
+    ],
+  },
+  {
+    id: "suprimentos",
+    problem: "Compra pedida no corredor, cotação no e-mail e mercadoria que chega sem ninguém saber de qual pedido ela é.",
+    name: "Suprimentos",
+    tagline: "Da necessidade de compra à mercadoria recebida.",
+    serves: "Dá rastro à compra: quem pediu, quais fornecedores cotaram, o que foi pedido e o que chegou.",
+    who: "Compradores, almoxarifado e quem aprova compras.",
+    does: [
+      ["Consultar solicitações, cotações, pedidos de compra e agendamentos", "consulta"],
+      ["Acompanhar o fluxo Compra ao recebimento no Início e nos painéis", "tela"],
+      ["Aprovar solicitações e pedidos de compra", "api"],
+      ["Confirmar o recebimento e dar entrada no estoque", "api"],
+      ["Gerar conta a pagar e documento fiscal a partir do recebimento", "api"],
+    ],
+    flow: ["Solicitação", "Cotação", "Pedido de compra", "Recebimento", "Entrada no estoque"],
+    controls: ["Solicitações de compra", "Cotações com fornecedores", "Pedidos de compra (PC)", "Agendamentos e recebimentos"],
+    links: [["estoque", "entrada da mercadoria"], ["financeiro", "conta a pagar do recebimento"], ["fiscal", "documento fiscal de entrada"], ["cadastros", "fornecedores"]],
+    screens: [
+      { img: "suprimentos/03-pedidos-compra", route: "/suprimentos/pedidos-compra", label: "Pedidos", caption: "Pedidos de compra com fornecedor, emissão, total e status." },
+      { img: "suprimentos/03b-pedidos-compra-detalhe", route: "/suprimentos/pedidos-compra", label: "Detalhe", caption: "Detalhe do pedido de compra." },
+      { img: "suprimentos/01-solicitacao-compra", route: "/suprimentos/solicitacao-compra", label: "Solicitações", caption: "Solicitações de compra por setor, prioridade e prazo." },
+      { img: "suprimentos/02-cotacoes", route: "/suprimentos/cotacoes", label: "Cotações", caption: "Cotações enviadas aos fornecedores." },
+      { img: "admin/55-usuario-com-papel-inicio", route: "/", label: "Fluxo", caption: "No Início de quem compra: pedidos aguardando fornecedor, recebidos e em conferência." },
+    ],
+  },
+  {
+    id: "estoque",
+    problem: "Saldo que não bate, item vendido que não estava lá e expedição que só descobre o pedido quando o cliente liga.",
+    name: "Estoque e Logística",
+    tagline: "Onde está cada item e para onde ele vai.",
+    serves: "Controla o saldo por local, as movimentações e o caminho da mercadoria até o cliente.",
+    who: "Almoxarifado, expedição e transporte.",
+    does: [
+      ["Consultar saldo com visões sem disponibilidade e com reserva", "consulta"],
+      ["Consultar movimentações, transferências, inventários e endereçamento", "consulta"],
+      ["Consultar separação, embalagem, expedição, transportes e devoluções", "consulta"],
+      ["Registrar entradas, saídas e transferências de estoque", "api"],
+      ["Separar, embalar, expedir, transportar e registrar a entrega", "api"],
+    ],
+    flow: ["Pedido reservado", "Separação", "Embalagem", "Expedição", "Transporte", "Entrega"],
+    controls: ["Saldo por produto e local", "Endereços: armazém, rua, módulo, nível, posição", "Movimentações e transferências", "Listas de separação e expedições", "Eventos de entrega"],
+    links: [["comercial", "reserva e expedição do pedido"], ["suprimentos", "recebimento de compras"], ["ativos", "peças usadas na manutenção"], ["painel", "fluxo pedido à entrega"]],
+    screens: [
+      { img: "inicio/04-fluxo-do-erp", route: "/", label: "Fluxo", caption: "Pedido à entrega: quantos pedidos do período estão em aprovação, em preparação e expedidos." },
+      { img: "comercial/14-pedido-reservar-dialogo", route: "/comercial/pedidos-venda/:id", label: "Reserva", caption: "A reserva do pedido escolhe o local de estoque: armazenagem, picking, expedição, quarentena." },
+      { img: "logistica/00-workspace", route: "/logistica", label: "Rotinas", caption: "Expedições, entregas, trânsito e falhas do período, e as doze rotinas do módulo." },
+      { img: "logistica/08-picking", route: "/logistica/picking", label: "Separação", caption: "Listas de separação geradas a partir dos pedidos confirmados. No ambiente das capturas, ainda sem registros." },
+    ],
+  },
+  {
+    id: "financeiro",
+    problem: "Título lançado à mão depois da venda e vencimentos que só aparecem quando já estão atrasados.",
+    name: "Financeiro",
+    tagline: "O que entra, o que sai e o que vem pela frente.",
+    serves: "Reúne os títulos a receber e a pagar, projeta o caixa e mostra o que está vencido.",
+    who: "Financeiro, contas a receber e a pagar, gestão.",
+    does: [
+      ["Consultar contas a receber com visões vencidos e em aberto", "consulta"],
+      ["Consultar contas a pagar e centros de custo", "consulta"],
+      ["Ver o saldo acumulado e a projeção semanal do caixa", "consulta"],
+      ["Receber no Financeiro o título criado por uma ação na tela do pedido de venda", "tela"],
+      ["Baixar parcelas, lançar títulos e conciliar", "api"],
+    ],
+    flow: ["Pedido aprovado", "Título a receber", "Em aberto", "Vencido ou recebido", "Fluxo de caixa"],
+    controls: ["Títulos a receber (CR) e a pagar", "Vencimento, valor e situação", "Saldo em contas e saldo projetado", "Centros de custo"],
+    links: [["comercial", "título do pedido de venda"], ["suprimentos", "conta a pagar do recebimento"], ["painel", "vencidos em Precisa de atenção"]],
+    screens: [
+      { img: "financeiro/90-receber-vencidos", route: "/financeiro/contas-receber", label: "Vencidos", caption: "Contas a receber na visão Vencidos." },
+      { img: "financeiro/03-fluxo-caixa", route: "/financeiro/fluxo-caixa", label: "Caixa", caption: "Saldo em contas, a receber, a pagar e saldo projetado por semana." },
+      { img: "financeiro/01b-contas-receber-detalhe", route: "/financeiro/contas-receber", label: "Título", caption: "Título com cliente, vencimento, valor e histórico." },
+      { img: "financeiro/00-workspace", route: "/financeiro", label: "Visão", caption: "Pendências do módulo e títulos recentes." },
+    ],
+  },
+  {
+    id: "fiscal",
+    problem: "NCM, CFOP e alíquotas em uma planilha à parte, desencontrados do que foi vendido e comprado.",
+    name: "Fiscal",
+    tagline: "Documentos, classificação e regras de imposto.",
+    serves: "Mantém as tabelas fiscais da empresa e os documentos emitidos a partir das vendas e das compras.",
+    who: "Fiscal, contabilidade e faturamento.",
+    does: [
+      ["Consultar documentos fiscais e NF-e", "consulta"],
+      ["Consultar NCM, CFOP e regras tributárias", "consulta"],
+      ["Criar documento, incluir itens e calcular impostos", "api"],
+      ["Gerar documento a partir do pedido de venda ou do recebimento", "api"],
+      ["Emitir e transmitir NF-e pela tela", "evolucao"],
+    ],
+    flow: ["Pedido ou recebimento", "Documento fiscal", "Itens com NCM e CFOP", "Cálculo pelas regras", "Documento calculado"],
+    controls: ["Documentos fiscais e NF-e", "NCM (ex.: 39232190)", "CFOP (ex.: 5102, 6102)", "Regras por UF de origem e destino e regime", "Estabelecimentos e naturezas de operação"],
+    links: [["comercial", "documento do pedido"], ["suprimentos", "documento de entrada"], ["financeiro", "valores faturados"]],
+    screens: [
+      { img: "fiscal/02-nfe", route: "/fiscal/nfe", label: "NF-e", caption: "Notas fiscais eletrônicas com número, cliente e status." },
+      { img: "fiscal/02b-nfe-detalhe", route: "/fiscal/nfe", label: "Documento", caption: "Documento fiscal com os dados principais e o histórico." },
+      { img: "fiscal/04-cfop", route: "/fiscal/cfop", label: "CFOP", caption: "Códigos CFOP com direção e escopo." },
+      { img: "fiscal/05-impostos", route: "/fiscal/impostos", label: "Regras", caption: "Regras tributárias por UF e regime." },
+    ],
+  },
+  {
+    id: "qualidade",
+    problem: "O desvio é resolvido na hora, mas não fica registrado; o mesmo problema volta no próximo lote.",
+    name: "Qualidade",
+    tagline: "Inspecionar, registrar o desvio e agir.",
+    serves: "Registra inspeções, abre não conformidades quando algo falha e acompanha as ações corretivas e preventivas até o fim.",
+    who: "Qualidade, recebimento e produção.",
+    does: [
+      ["Consultar não conformidades por gravidade e situação", "consulta"],
+      ["Consultar inspeções, ações e checklists", "consulta"],
+      ["Finalizar inspeção como aprovada ou rejeitada", "api"],
+      ["Abrir não conformidade a partir da inspeção e acompanhar ações", "api"],
+    ],
+    flow: ["Checklist", "Inspeção", "Resultado", "Não conformidade", "Ação corretiva ou preventiva"],
+    controls: ["Inspeções por tipo (recebimento, produção, expedição…)", "Não conformidades com gravidade", "Ações com prazo e responsável", "Checklists (ex.: REC-01)"],
+    links: [["cadastros", "produto e lote inspecionados"], ["projetos", "inspeção a partir da ordem de serviço"], ["painel", "NCs graves em Precisa de atenção"]],
+    screens: [
+      { img: "qualidade/01-nao-conformidades", route: "/qualidade/nao-conformidades", label: "NCs", caption: "Não conformidades com gravidade e situação." },
+      { img: "qualidade/01b-nao-conformidades-detalhe", route: "/qualidade/nao-conformidades", label: "Detalhe", caption: "Detalhe da não conformidade." },
+      { img: "qualidade/02-inspecoes", route: "/qualidade/inspecoes", label: "Inspeções", caption: "Inspeções de qualidade por tipo e resultado." },
+      { img: "qualidade/03-acoes", route: "/qualidade/acoes", label: "Ações", caption: "Ações corretivas e preventivas com prazo." },
+    ],
+  },
+  {
+    id: "projetos",
+    problem: "Horas sem apontamento e ordens de serviço sem histórico: o custo do projeto só aparece no fim.",
+    name: "Projetos e Serviços",
+    tagline: "Projetos, tarefas, horas e ordens de serviço.",
+    serves: "Acompanha projetos por cliente, as tarefas de cada um, as horas apontadas e as ordens de serviço em campo.",
+    who: "Gestores de projeto, técnicos e serviços.",
+    does: [
+      ["Consultar projetos com cliente e orçamento", "consulta"],
+      ["Consultar tarefas, apontamentos de horas e ordens de serviço", "consulta"],
+      ["Avançar ordens de serviço entre situações", "api"],
+      ["Gerar orçamento a partir do projeto ou da OS; inspeção a partir da OS", "api"],
+    ],
+    flow: ["Projeto", "Tarefas", "Apontamento de horas", "Ordem de serviço", "Inspeção"],
+    controls: ["Projetos com cliente e orçamento", "Tarefas com prioridade e horas estimadas", "Apontamentos por data e duração", "Ordens de serviço com agenda e prioridade"],
+    links: [["cadastros", "cliente do projeto"], ["qualidade", "inspeção da OS"], ["comercial", "orçamento do projeto"]],
+    screens: [
+      { img: "projetos/01-lista", route: "/projetos/lista", label: "Projetos", caption: "Projetos com cliente, orçamento e status." },
+      { img: "projetos/01b-lista-detalhe", route: "/projetos/lista", label: "Detalhe", caption: "Detalhe do projeto." },
+      { img: "projetos/03-apontamentos", route: "/projetos/apontamentos", label: "Horas", caption: "Apontamentos de horas por tarefa." },
+      { img: "projetos/04-ordens-servico", route: "/projetos/ordens-servico", label: "OS", caption: "Ordens de serviço com cliente e agenda." },
+    ],
+  },
+  {
+    id: "ativos",
+    problem: "Manutenção feita quando a máquina para, sem plano, sem histórico e sem saber quais peças foram usadas.",
+    name: "Ativos e Manutenção",
+    tagline: "Equipamentos, planos e ordens de manutenção.",
+    serves: "Registra máquinas, equipamentos e veículos, onde estão, quanto custaram e cada manutenção que receberam.",
+    who: "Manutenção, facilities e operação.",
+    does: [
+      ["Abrir a página de cada ativo com informações, OMs e histórico", "consulta"],
+      ["Consultar ordens de manutenção: atrasadas e aguardando peças", "consulta"],
+      ["Consultar planos preventivos, categorias e locais", "consulta"],
+      ["Avançar ordens de manutenção e registrar peças consumidas", "api"],
+    ],
+    flow: ["Ativo", "Plano preventivo", "Ordem de manutenção", "Em execução", "Histórico do ativo"],
+    controls: ["Ativos (AST) com fabricante, série e custo", "Ordens de manutenção (OM)", "Planos preventivos por periodicidade", "Categorias e locais de instalação"],
+    links: [["estoque", "peças consumidas"], ["painel", "painel de manutenção"]],
+    screens: [
+      { img: "ativos/90-ativo-pagina", route: "/ativos/lista/:id", label: "Ativo", caption: "Página do ativo: dados, ordens de manutenção e histórico." },
+      { img: "ativos/02-ordens-manutencao", route: "/ativos/ordens-manutencao", label: "OMs", caption: "Ordens de manutenção com ativo, prioridade e situação." },
+      { img: "ativos/02b-ordens-manutencao-detalhe", route: "/ativos/ordens-manutencao", label: "Detalhe", caption: "Detalhe da ordem de manutenção." },
+      { img: "ativos/03-planos-manutencao", route: "/ativos/planos-manutencao", label: "Planos", caption: "Planos de manutenção preventiva." },
+    ],
+  },
+  {
+    id: "painel",
+    problem: "Cada área tem o seu relatório, e a gestão monta o quadro geral no fim do mês, com números que já mudaram.",
+    name: "Início, Painéis e Controladoria",
+    tagline: "O que mudou, o que precisa de atenção e onde agir.",
+    serves: "Traduz o que as áreas registram em pendências, indicadores e fluxos, sempre com atalho para a lista de onde o número veio.",
+    who: "Todos, cada um vendo as áreas que o seu papel permite.",
+    does: [
+      ["Ver resumo, Precisa de atenção, O que mudou e Seu foco", "tela"],
+      ["Acompanhar três fluxos: pedido à entrega, compra ao recebimento e produção", "tela"],
+      ["Trocar o período e alternar entre gráfico e tabela", "tela"],
+      ["Abrir 13 painéis por área", "tela"],
+      ["Consultar a auditoria: quem fez o quê e quando", "consulta"],
+      ["Resumo dos painéis de Produção, Fiscal e Estoque", "evolucao"],
+    ],
+    flow: ["Registros das áreas", "Pendências", "Indicadores do período", "Fluxos", "Lista filtrada"],
+    controls: ["Período de análise", "Foco por setor, cargo ou papel", "Relatórios por área", "Trilha de auditoria"],
+    links: [["comercial", "pedidos"], ["financeiro", "títulos vencidos"], ["qualidade", "NCs graves"], ["suprimentos", "compras em andamento"]],
+    screens: [
+      { img: "inicio/01-inicio", route: "/", label: "Início", caption: "Início: resumo, pendências, o que mudou e o foco de cada pessoa." },
+      { img: "inicio/10-grafico-tabela", route: "/gestao/dashboard/financeiro", label: "Investigação", caption: "Investigação com gráfico ou tabela, por faixa de vencimento e por cliente." },
+      { img: "inicio/07-painel-comercial", route: "/gestao/dashboard/comercial", label: "Comercial", caption: "Painel comercial com valor em pedidos e pendências do período." },
+      { img: "controladoria/03-auditoria", route: "/gestao/auditoria", label: "Auditoria", caption: "Auditoria: data, usuário, entidade e ação." },
+    ],
+  },
+];
+
+// Ato 04: quatro protagonistas, cada um como uma cena com câmera sobre as
+// telas reais. `parts`: de quais módulos vem a ficha (índices em does e
+// controls; ausente = tudo). `beats`: a câmera, etapa por etapa. Textos das
+// próprias telas ou das capacidades já conferidas; `focus` e `cursor` em px
+// da captura original (1440 × 900).
+export const PROTAGONISTS = [
+  {
+    id: "comercial",
+    mood: "Venda começando.",
+    signature: "PV-001013",
+    parts: [{ module: "comercial" }],
+    beats: [
+      { label: "Pedido", state: "tela", img: "comercial/04-pedidos-lista", route: "/comercial/pedidos-venda", focus: [289, 212, 480, 50], text: "Cada venda tem um lugar: visões prontas para entrega atrasada, aguardando aprovação e em andamento, com cliente, total e status." },
+      { label: "Aprovação", state: "tela", img: "comercial/12-pedido-aprovar-confirmar", route: "/comercial/pedidos-venda/:id", focus: [496, 372, 446, 150], cursor: [886, 479], text: "O pedido vai para aprovação e é aprovado por quem tem a permissão. Cada ação pede confirmação e fica no histórico." },
+      { label: "Cliente", state: "tela", img: "comercial/13-pedido-aprovado", route: "/comercial/pedidos-venda/:id", focus: [289, 112, 1110, 230], text: "Aprovado, o pedido mostra cliente, total, itens, reservado e expedido, e só as ações que fazem sentido naquele momento." },
+      { label: "Financeiro", state: "tela", img: "comercial/16-pedido-gerar-receber-confirmar", route: "/comercial/pedidos-venda/:id", focus: [497, 366, 446, 168], cursor: [843, 496], text: "Gerar conta a receber cria o título a partir do valor e das condições de pagamento do pedido. A venda chega ao Financeiro." },
+    ],
+  },
+  {
+    id: "estoque",
+    mood: "O físico.",
+    signature: "FIL03 rua 05",
+    parts: [{ module: "estoque", does: [0, 1, 3], controls: [0, 1, 2], links: [0, 1, 2] }],
+    beats: [
+      { label: "Endereço", state: "consulta", img: "logistica/06-enderecamento", route: "/logistica/enderecamento", focus: [289, 96, 1110, 210], text: "Locais de armazenagem por armazém, corredor, prateleira e nível: cada item tem um endereço." },
+      { label: "Produto no local", state: "tela", img: "comercial/14-pedido-reservar-dialogo", route: "/comercial/pedidos-venda/:id", focus: [528, 312, 382, 560], cursor: [717, 491], text: "A reserva do pedido escolhe o local de estoque: packing, armazenagem, quarentena, expedição. Itens sem saldo ficam com reserva pendente." },
+      { label: "Estoque", state: "consulta", img: "logistica/02-estoque", route: "/logistica/estoque", focus: [289, 96, 580, 165], text: "O saldo é derivado do registro de movimentações, nunca alterado diretamente pela tela, com visões sem disponibilidade e com reserva.", note: "No ambiente das capturas, ainda sem registros." },
+      { label: "Movimentação", state: "api", img: "logistica/03-movimentacoes", route: "/logistica/movimentacoes", focus: [289, 96, 580, 165], text: "Movimentações ficam num registro imutável. Entradas, saídas e transferências são registradas pelo núcleo; a tela consulta.", note: "No ambiente das capturas, ainda sem registros." },
+      { label: "Separação", state: "consulta", img: "logistica/08-picking", route: "/logistica/picking", focus: [289, 96, 580, 165], text: "Listas de separação geradas a partir dos pedidos confirmados.", note: "No ambiente das capturas, ainda sem registros." },
+    ],
+  },
+  {
+    id: "financeiro",
+    mood: "O dinheiro.",
+    signature: "CR-0002",
+    parts: [{ module: "financeiro" }],
+    beats: [
+      { label: "Título", state: "consulta", img: "financeiro/01b-contas-receber-detalhe", route: "/financeiro/contas-receber", focus: [770, 14, 662, 330], text: "Cada título tem cliente, descrição, vencimento, valor, situação e histórico." },
+      { label: "Vencimento", state: "consulta", img: "financeiro/90-receber-vencidos", route: "/financeiro/contas-receber", focus: [640, 345, 650, 185], text: "A visão Vencidos mostra o que já passou da data, com cliente, valor e o alerta de vencido." },
+      { label: "Contas", state: "consulta", img: "financeiro/02-contas-pagar", route: "/financeiro/contas-pagar", focus: [690, 345, 600, 250], text: "Do outro lado, contas a pagar a fornecedores: pagas, vencidas e em aberto, lado a lado." },
+      { label: "Caixa", state: "consulta", img: "financeiro/03-fluxo-caixa", route: "/financeiro/fluxo-caixa", focus: [289, 212, 1110, 106], text: "Saldo em contas, a receber, a pagar e o saldo projetado depois de liquidar todos os títulos, semana a semana." },
+    ],
+  },
+  {
+    id: "fiscal",
+    mood: "A operação avançando.",
+    signature: "DF-0004",
+    parts: [{ module: "fiscal" }, { module: "estoque", does: [2, 4], controls: [3, 4], links: [3] }],
+    beats: [
+      { label: "Documento", state: "api", img: "comercial/21-faturamento", route: "/comercial/faturamento", focus: [289, 312, 1110, 106], text: "O documento fiscal nasce do pedido e os impostos são calculados pelas regras, no núcleo. O Faturamento lista os documentos.", api: ["POST /api/sales-orders/:id/generate-fiscal-document", "POST /api/fiscal-documents/:id/calculate"] },
+      { label: "Documento calculado", state: "consulta", img: "fiscal/02b-nfe-detalhe", route: "/fiscal/nfe", focus: [770, 14, 662, 470], text: "DF-0004: cliente, emissão, total e status Calculada, com o histórico de cada alteração." },
+      { label: "Expedição", state: "consulta", img: "logistica/10-expedicao", route: "/logistica/expedicao", focus: [289, 96, 560, 165], text: "Expedições de pedidos de venda, da liberação ao despacho, com as visões expedição atrasada e prontas para expedir.", note: "No ambiente das capturas, ainda sem registros.", api: ["POST /api/sales-orders/:id/pick-lists", "POST /api/shipments/:id/ship"] },
+      { label: "Transporte", state: "consulta", img: "logistica/11-transportes", route: "/logistica/transportes", focus: [289, 96, 700, 165], text: "As mesmas expedições sob a ótica do transporte: transportadora, despacho e entrega, em trânsito e entregues.", note: "No ambiente das capturas, ainda sem registros." },
+      { label: "Entrega", state: "api", img: "inicio/04-fluxo-do-erp", route: "/", focus: [30, 70, 1115, 400], text: "O Início mostra o fluxo do período, do pedido à entrega: 12 pedidos, 7 em preparação, 1 expedido. O evento de entrega é registrado pelo núcleo.", api: ["POST /api/shipments/:id/deliver"] },
+    ],
+  },
+];
+
+export const CADASTROS = {
+  kicker: "Base comum",
+  title: "Os cadastros que todas as áreas usam.",
+  body: "Cliente, fornecedor, transportadora, motorista e veículo são cadastrados uma vez e usados por vendas, compras, logística e fiscal. Cada cadastro tem código automático, validação de documento, listas relacionadas e histórico.",
+  items: [
+    ["Clientes, fornecedores, transportadoras, motoristas e veículos: criar, validar, editar, inativar e excluir", "tela"],
+    ["Ações em lote e exportação em CSV", "tela"],
+    ["Locais de estoque: consulta", "consulta"],
+    ["Produtos: a lista depende das permissões de catálogo, ainda ausentes", "evolucao"],
+  ],
+  screens: [
+    { img: "cadastros/02-clientes-lista", route: "/cadastros/clientes", label: "Clientes", caption: "Clientes com código, documento, cidade, telefone e limite de crédito." },
+    { img: "cadastros/03-clientes-novo-vazio", route: "/cadastros/clientes", label: "Novo", caption: "Novo cliente: dados principais, contato, endereço e condições comerciais." },
+    { img: "cadastros/25-fornecedores-detalhe", route: "/cadastros/fornecedores", label: "Fornecedor", caption: "Fornecedor aberto para consulta, com as listas relacionadas." },
+  ],
+};
+
+export const EVOLVING = {
+  kicker: "Em evolução",
+  title: "O que ainda está chegando à tela.",
+  body: "Estas áreas já têm estrutura no núcleo, mas ainda não estão completas na interface. Elas aparecem aqui como são hoje.",
+  items: [
+    { name: "Produção", now: "Ordens de produção e estruturas (BOM) em consulta.", missing: "Criar ordens de produção ainda não está disponível; o resumo do painel de produção não carrega." },
+    { name: "Workflow", now: "O sino mostra as aprovações que aguardam você. Workflows, versões e etapas são configurados pela API.", missing: "Iniciar um workflow e aprovar etapas pela tela ainda não funciona." },
+    { name: "Importação", now: "Importação em lote pela API, com mapeamento, validação e erros por linha. Todas as listas exportam CSV.", missing: "Não há tela de importação." },
+  ],
+};
+
+export const ACCESS = {
+  kicker: "Quem acessa o quê",
+  title: "Cada pessoa vê o que o seu papel permite.",
+  body: "O acesso é sempre por convite. O administrador cadastra a pessoa, envia o convite e atribui papéis. Um papel reúne permissões; o acesso de cada pessoa é a soma dos seus papéis.",
+  chain: [
+    { label: "Usuário", value: "Carla Mendes", note: "entra pelo convite" },
+    { label: "Papel", value: "Comprador", note: "criado pela empresa" },
+    { label: "Permissões", value: "23 de Compras", note: "marcadas na matriz" },
+    { label: "Módulos", value: "Suprimentos", note: "aparece no menu" },
+  ],
+  story: [
+    { img: "admin/43-convite-aceitar", route: "/convite", label: "1 · Convite", caption: "A pessoa convidada cria a senha e aceita o convite." },
+    { img: "admin/44-convite-aceito", route: "/", label: "2 · Sem papel", caption: "Sem papel, ela entra e vê apenas Início e Configurações." },
+    { img: "admin/52-papel-permissoes-marcadas", route: "/admin/roles", label: "3 · Papel", caption: "O papel Comprador recebe as 23 permissões do grupo Compras." },
+    { img: "admin/54-papel-atribuido", route: "/admin/users", label: "4 · Atribuição", caption: "O papel é atribuído no painel do usuário e vale na hora." },
+    { img: "admin/56-usuario-com-papel-modulo", route: "/suprimentos/pedidos-compra", label: "5 · Acesso", caption: "Agora ela vê Suprimentos e os pedidos de compra." },
+    { img: "admin/57-usuario-com-papel-sem-acesso", route: "/financeiro/contas-receber", label: "6 · Limite", caption: "Contas a receber continua bloqueado: o papel não inclui o Financeiro." },
+  ],
+  admin: [
+    ["Usuários com situação de acesso: conta ativa, convite pendente, sem login, desativado", "tela"],
+    ["Convite, reenvio e cancelamento de convite", "tela"],
+    ["Papéis com matriz de permissões por módulo e ação", "tela"],
+    ["Setores, cargos, unidades e foco dos painéis por público", "tela"],
+    ["Habilitar e desabilitar módulos contratados", "tela"],
+    ["Auditoria de acesso, estrutura e cadastros", "consulta"],
+  ],
+};
+
+export const CENTRAL = {
+  kicker: "Administração Central",
+  title: "A plataforma cuida das empresas. As empresas cuidam da operação.",
+  body: "A Administração Central cria empresas clientes, convida o primeiro administrador de cada uma, controla o ciclo de vida e os módulos contratados. Ela não acessa pedidos, estoque, financeiro ou cadastros das empresas, e não existe modo de entrar como empresa.",
+  points: [
+    ["Criar empresa com unidade inicial e convidar o administrador", "tela"],
+    ["Ciclo de vida: avaliação, ativa, suspensa, cancelada, com motivo registrado", "tela"],
+    ["Contratar e descontratar módulos por empresa", "tela"],
+    ["Membros da plataforma: Owner e Admin, com o último Owner protegido", "tela"],
+  ],
+  screens: [
+    { img: "central/02-empresas", route: "/admincentral/companies", label: "Empresas", caption: "Empresas identificadas por código, com ciclo de vida e módulos." },
+    { img: "central/06-empresa-criada", route: "/admincentral/companies", label: "Nova empresa", caption: "Empresa criada; próximo passo: convidar o administrador." },
+    { img: "central/18-politicas", route: "/admincentral/settings", label: "Políticas", caption: "Regras de governança garantidas pelo banco." },
+  ],
+};
+
+// Ato 05: a arquitetura do EDUCA em três níveis do mesmo sistema. Cada nível
+// reúne o ambiente, os números e o conteúdo de acesso/administração já
+// validados (PLATFORM, ACCESS, CENTRAL).
+export const LEVELS = {
+  title: "Uma base, três níveis.",
+  lead: "Todas as áreas gravam na mesma base. Em cima dela, cada pessoa vê o que o seu papel permite, e a plataforma cuida das empresas sem entrar na operação delas.",
+  levels: [
+    { id: "base", env: 0, name: "Base", claim: "A operação da empresa.", numbers: [15, 13] },
+    { id: "acesso", env: 1, name: "Acesso", claim: "Cada pessoa vê somente o que as suas permissões permitem.", numbers: [352] },
+    { id: "central", env: 2, name: "Central", claim: "A administração da plataforma controla empresas, ciclo de vida e módulos.", numbers: [19] },
+  ],
+};
+
+// Mapa final: arestas conferidas. kind: tela | api.
+export const NETWORK = {
+  kicker: "A operação integrada",
+  title: "Um registro em uma área vira trabalho na outra.",
+  // Coordenadas em um quadro de 1000 × 520 (desktop) e 360 × 640 (celular, em camadas).
+  nodes: [
+    { id: "crm", label: "CRM", x: 110, y: 70, mx: 95, my: 46 },
+    { id: "projetos", label: "Projetos", x: 110, y: 260, mx: 265, my: 46 },
+    { id: "qualidade", label: "Qualidade", x: 110, y: 450, mx: 265, my: 156 },
+    { id: "comercial", label: "Comercial", x: 380, y: 150, mx: 95, my: 156 },
+    { id: "suprimentos", label: "Suprimentos", x: 380, y: 380, mx: 265, my: 360 },
+    { id: "fiscal", label: "Fiscal", x: 650, y: 60, mx: 180, my: 262 },
+    { id: "estoque", label: "Estoque e Logística", x: 650, y: 260, mx: 95, my: 360 },
+    { id: "financeiro", label: "Financeiro", x: 650, y: 460, mx: 95, my: 470 },
+    { id: "painel", label: "Painéis", x: 895, y: 150, mx: 180, my: 590 },
+    { id: "ativos", label: "Ativos", x: 895, y: 430, mx: 265, my: 470 },
+  ],
+  // Capítulos da cena: cada um acende uma cadeia real de ligações (índices em edges).
+  chapters: [
+    {
+      title: "A venda",
+      text: "O pedido leva a venda ao estoque, ao financeiro e aos painéis por ações na tela. A oportunidade vira orçamento ou pedido, e o pedido vira documento fiscal, pela API.",
+      edges: [0, 1, 2, 3, 10],
+    },
+    {
+      title: "A compra",
+      text: "O recebimento da compra dá entrada no estoque e gera a conta a pagar e o documento de entrada. Hoje isso acontece pela API; na tela, Suprimentos é consulta.",
+      edges: [4, 5, 6],
+    },
+    {
+      title: "Serviço e manutenção",
+      text: "A ordem de serviço pede inspeção à Qualidade, o projeto gera orçamento no Comercial, e a manutenção consome peças do estoque. Ligações do núcleo, pela API.",
+      edges: [7, 8, 9],
+    },
+    {
+      title: "A gestão",
+      text: "Pedidos, títulos vencidos e o fluxo do pedido à entrega chegam aos painéis, na tela, com atalho para a lista de onde o número veio.",
+      edges: [10, 11, 12],
+    },
+  ],
+  edges: [
+    ["crm", "comercial", "oportunidade → orçamento ou pedido", "api"],
+    ["comercial", "estoque", "reserva de estoque", "tela"],
+    ["comercial", "financeiro", "título a receber", "tela"],
+    ["comercial", "fiscal", "documento fiscal do pedido", "api"],
+    ["suprimentos", "estoque", "entrada do recebimento", "api"],
+    ["suprimentos", "financeiro", "conta a pagar", "api"],
+    ["suprimentos", "fiscal", "documento de entrada", "api"],
+    ["projetos", "qualidade", "inspeção da OS", "api"],
+    ["projetos", "comercial", "orçamento do projeto", "api"],
+    ["ativos", "estoque", "peças da manutenção", "api"],
+    ["comercial", "painel", "pedidos e pendências", "tela"],
+    ["financeiro", "painel", "vencidos e caixa", "tela"],
+    ["estoque", "painel", "fluxo pedido à entrega", "tela"],
+  ],
+};
+
+export const CLOSING = {
+  title: "Sua operação não deveria funcionar em silos.",
+  answer: "EDUCA conecta a operação.",
+  body: "Os manuais mostram cada tela, passo a passo, com as mesmas capturas desta página.",
+  silos: ["Comercial", "Estoque", "Financeiro", "Fiscal", "Logística", "Gestão"],
+  actions: [
+    { label: "Entrar no EDUCA", href: META.appUrl, primary: true },
+    { label: "Manual do Usuário", href: META.manualUser },
+    { label: "Manual de Administração", href: META.manualAdmin },
+  ],
+};

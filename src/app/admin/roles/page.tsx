@@ -95,7 +95,7 @@ function RolesInner() {
       />
 
       {roles.error ? (
-        <EmptyState kind="error" title="Papéis indisponíveis" description={roles.error} onRetry={roles.reload} />
+        <EmptyState framed kind="error" title="Papéis indisponíveis" description={roles.error} onRetry={roles.reload} />
       ) : (
         <div className="grid gap-4 lg:grid-cols-[18rem_1fr]">
           <Panel className="self-start">
@@ -305,7 +305,7 @@ function RoleMatrix({
             const checked = group.codes.filter((c) => draft.has(c)).length;
             const state = checked === 0 ? false : checked === group.codes.length ? true : "indeterminate";
             return (
-              <section key={group.code} className="overflow-hidden rounded-md border border-border">
+              <section key={group.code} className="overflow-hidden rounded-lg border border-border">
                 <header className="flex items-center gap-2 border-b border-border bg-surface-muted px-3 py-2">
                   <Checkbox checked={state} disabled={!editable} onCheckedChange={() => toggleMany(group.codes, state !== true)} aria-label={`Todas as permissões de ${group.name}`} />
                   <h3 className="flex-1 text-sm font-semibold">{group.name}</h3>
@@ -315,9 +315,9 @@ function RoleMatrix({
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border">
-                        <th scope="col" className="h-8 px-3 text-left text-2xs font-medium tracking-wide text-muted-foreground uppercase">Recurso</th>
+                        <th scope="col" className="h-8 px-3 text-left text-xs font-medium text-muted-foreground">Recurso</th>
                         {group.actions.map((a) => (
-                          <th key={a.code} scope="col" className="h-8 w-20 px-2 text-center text-2xs font-medium tracking-wide text-muted-foreground uppercase">{a.name}</th>
+                          <th key={a.code} scope="col" className="h-8 w-20 px-2 text-center text-xs font-medium text-muted-foreground">{a.name}</th>
                         ))}
                       </tr>
                     </thead>

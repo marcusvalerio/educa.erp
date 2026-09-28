@@ -2,9 +2,14 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { AutoEyebrow } from "@/components/shell/Breadcrumbs";
 
-// Cabeçalho de página. O breadcrumb vive no Topbar (global); aqui ficam
-// título, contexto curto, metadados (status/badges) e ações da página.
+// Cabeçalho de página: onde estou (sobrelinha com o módulo, automática a
+// partir da navegação) → o que é esta tela (título) → para que serve
+// (descrição curta) → o que posso fazer (ações à direita). A trilha
+// completa continua no topo do shell.
+
+export const EYEBROW_CLASS = "text-2xs font-semibold tracking-label text-subtle-foreground uppercase";
 
 type PageHeaderProps = {
   title: ReactNode;
@@ -19,23 +24,23 @@ type PageHeaderProps = {
 
 export function PageHeader({ title, description, eyebrow, meta, actions, backHref, backLabel = "Voltar", className }: PageHeaderProps) {
   return (
-    <header className={cn("flex flex-col gap-3 pb-4 sm:flex-row sm:items-end sm:justify-between", className)}>
+    <header className={cn("flex flex-col gap-4 pb-6 sm:flex-row sm:items-end sm:justify-between", className)}>
       <div className="min-w-0">
         {backHref && (
           <Link
             href={backHref}
-            className="mb-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            className="mb-3 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft size={13} />
             {backLabel}
           </Link>
         )}
-        {eyebrow && <div className="mb-1 text-2xs font-medium tracking-wide text-subtle-foreground uppercase">{eyebrow}</div>}
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">{title}</h1>
+        <div className={cn("mb-1.5 empty:hidden", EYEBROW_CLASS)}>{eyebrow ?? <AutoEyebrow />}</div>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <h1 className="text-xl font-semibold tracking-title text-balance text-foreground">{title}</h1>
           {meta}
         </div>
-        {description && <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p>}
+        {description && <p className="mt-1.5 max-w-2xl text-sm text-pretty text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
     </header>
@@ -46,8 +51,8 @@ export function SectionTitle({ title, description, actions, className }: { title
   return (
     <div className={cn("flex items-end justify-between gap-3", className)}>
       <div>
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-        {description && <p className="mt-0.5 text-xs text-subtle-foreground">{description}</p>}
+        <h2 className="text-md font-semibold tracking-title text-foreground">{title}</h2>
+        {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-1">{actions}</div>}
     </div>

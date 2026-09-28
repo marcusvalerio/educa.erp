@@ -14,13 +14,24 @@ export function EducaMark({ className, size = 22 }: { className?: string; size?:
   );
 }
 
+// Identidade no topo da navegação: a empresa (contexto de trabalho) em
+// primeiro plano e a marca EDUCA.ERP como assinatura discreta.
 export function EducaWordmark({ className, context }: { className?: string; context?: string }) {
+  if (context) {
+    return (
+      <span className={cn("flex min-w-0 flex-col leading-none", className)}>
+        <span className="truncate text-sm font-semibold tracking-title">{context}</span>
+        <span className="mt-1 text-2xs font-medium tracking-label uppercase opacity-60">
+          EDUCA<span className="opacity-70">.ERP</span>
+        </span>
+      </span>
+    );
+  }
   return (
     <span className={cn("flex min-w-0 flex-col leading-none", className)}>
-      <span className="text-sm font-semibold tracking-tight">
+      <span className="text-sm font-semibold tracking-title">
         EDUCA<span className="text-subtle-foreground">.ERP</span>
       </span>
-      {context && <span className="mt-1 truncate text-2xs font-medium tracking-wide uppercase opacity-70">{context}</span>}
     </span>
   );
 }

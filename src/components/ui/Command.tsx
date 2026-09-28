@@ -48,7 +48,7 @@ export const CommandGroup = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<
       ref={ref}
       className={cn(
         "[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-2xs",
-        "[&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:tracking-wide [&_[cmdk-group-heading]]:text-subtle-foreground [&_[cmdk-group-heading]]:uppercase",
+        "[&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:tracking-label [&_[cmdk-group-heading]]:text-subtle-foreground [&_[cmdk-group-heading]]:uppercase",
         className
       )}
       {...props}

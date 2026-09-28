@@ -238,7 +238,7 @@ function RecentPanel({ def }: { def: RecentDef }) {
       ) : rows.length === 0 ? (
         <EmptyState compact title="Nenhum registro ainda" description="Os registros criados neste módulo aparecem aqui." />
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className="divide-y divide-border-subtle">
           {rows.map((row) => {
             const sub = def.sublabel?.(row);
             return (
@@ -317,19 +317,22 @@ export function ModuleWorkspace({ section: sectionId }: { section: string }) {
 
       <section aria-label={`Navegação de ${section.label}`} className="flex flex-col gap-2">
         <SectionTitle title="Rotinas" description="Listas e cadastros deste módulo disponíveis para o seu perfil." />
-        <ul className="grid gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {items.map((item) => (
-            <li key={item.href} className="bg-surface">
-              <Link href={item.href} className="group flex h-full items-center justify-between gap-3 px-4 py-3 hover:bg-surface-hover">
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium">{item.label}</span>
-                  {item.description && <span className="block truncate text-xs text-muted-foreground">{item.description}</span>}
-                </span>
-                <ArrowRight size={14} className="shrink-0 text-subtle-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {/* Divisórias por célula (e não gap sobre fundo): célula vazia na última linha fica em branco. */}
+        <div className="overflow-hidden rounded-lg border border-border bg-surface">
+          <ul className="-mr-px -mb-px grid *:border-r *:border-b *:border-border-subtle sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {items.map((item) => (
+              <li key={item.href} className="bg-surface">
+                <Link href={item.href} className="group flex h-full items-center justify-between gap-3 px-4 py-3 hover:bg-surface-hover">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium">{item.label}</span>
+                    {item.description && <span className="block truncate text-xs text-muted-foreground">{item.description}</span>}
+                  </span>
+                  <ArrowRight size={14} className="shrink-0 text-subtle-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
     </div>
   );

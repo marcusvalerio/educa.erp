@@ -97,7 +97,8 @@ export function safeNextPath(value: string | null | undefined): string {
 
 export function initials(name: string | null | undefined): string {
   if (!name) return "?";
-  const parts = name.trim().split(/\s+/).filter(Boolean);
+  // Só palavras que começam por letra: "Admin A (E2E)" → "AA", não "A(".
+  const parts = name.trim().split(/\s+/).filter((part) => /^\p{L}/u.test(part));
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();

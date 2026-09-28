@@ -29,13 +29,13 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
         <D.Content
           className={cn(
             "fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-32px)] w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 flex-col",
-            "rounded-lg border border-border bg-surface shadow-dialog outline-none animate-pop-in",
+            "rounded-xl border border-border bg-surface-raised shadow-dialog outline-none animate-pop-in",
             SIZES[size]
           )}
         >
-          <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
+          <div className="flex items-start justify-between gap-3 border-b border-border-subtle px-5 py-4">
             <div className="min-w-0">
-              <D.Title className="text-md font-semibold text-foreground">{title}</D.Title>
+              <D.Title className="text-md font-semibold tracking-title text-foreground">{title}</D.Title>
               {description ? (
                 <D.Description className="mt-1 text-sm text-muted-foreground">{description}</D.Description>
               ) : (
@@ -49,7 +49,7 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
             </D.Close>
           </div>
           {children && <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>}
-          {footer && <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border px-5 py-3">{footer}</div>}
+          {footer && <div className="flex flex-wrap items-center justify-end gap-2 rounded-b-xl border-t border-border-subtle bg-surface-muted px-5 py-3">{footer}</div>}
         </D.Content>
       </D.Portal>
     </D.Root>
@@ -84,8 +84,8 @@ export function ConfirmDialog({
     <AD.Root open={open} onOpenChange={(next) => !next && !loading && onCancel()}>
       <AD.Portal>
         <AD.Overlay className="fixed inset-0 z-50 bg-overlay animate-fade-in" />
-        <AD.Content className="fixed top-1/2 left-1/2 z-50 w-[calc(100vw-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-surface p-5 shadow-dialog outline-none animate-pop-in">
-          <AD.Title className="text-md font-semibold text-foreground">{title}</AD.Title>
+        <AD.Content className="fixed top-1/2 left-1/2 z-50 w-[calc(100vw-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-surface-raised p-5 shadow-dialog outline-none animate-pop-in">
+          <AD.Title className="text-md font-semibold tracking-title text-foreground">{title}</AD.Title>
           <AD.Description className="mt-2 text-sm text-muted-foreground">{description}</AD.Description>
           <div className="mt-5 flex flex-wrap justify-end gap-2">
             <AD.Cancel asChild>

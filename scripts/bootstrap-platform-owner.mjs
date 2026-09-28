@@ -148,6 +148,19 @@ export async function bootstrapOwner(admin, { email, name, appUrl, dryRun }, log
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  if ((process.env.DATA_BACKEND ?? "").trim().toLowerCase() === "postgres") {
+    // PostgreSQL direto (Neon): papel service_role na própria conexão, sem PostgREST.
+    args.appUrl ??= process.env.APP_URL ? new URL(process.env.APP_URL).origin : null;
+    const { createPgDataClient, closePool } = await import("../src/lib/database/pg/client.ts");
+    const admin = createPgDataClient({ role: "service_role" });
+    try {
+      const provision = (process.env.AUTH_PROVIDER ?? "").trim().toLowerCase() === "neon" ? await neonProvisioner(admin) : null;
+      await bootstrapOwner(admin, args, console.log, provision);
+    } finally {
+      await closePool();
+    }
+    return;
+  }
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) throw new Error("Defina SUPABASE_URL (ou NEXT_PUBLIC_SUPABASE_URL) e SUPABASE_SERVICE_ROLE_KEY no ambiente desta máquina.");

@@ -47,7 +47,7 @@ export default function AtivoDetailPage() {
         backLabel="Ativos"
         code={a.code}
         title={a.description}
-        status={<StatusBadge entity="assets" status={a.status} />}
+        status={<StatusBadge entity="assets" status={a.status} emphasis="chip" />}
         meta={
           <>
             {a.category_id && <span>{categories.get(a.category_id) ?? "Categoria não encontrada"}</span>}

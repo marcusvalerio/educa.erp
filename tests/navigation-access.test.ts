@@ -87,6 +87,8 @@ describe("safeNextPath / initials", () => {
     assert.equal(initials("Maria da Silva"), "MS");
     assert.equal(initials("João"), "JO");
     assert.equal(initials(""), "?");
+    assert.equal(initials("Admin A (E2E)"), "AA");
+    assert.equal(initials("(E2E)"), "?");
   });
 });
 

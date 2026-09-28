@@ -94,21 +94,21 @@ export function ProblemsPanel({ modules, title = "Precisa de atenção", descrip
           </div>
         </div>
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className="divide-y divide-border-subtle">
           {ranked.slice(0, limit).map((problem) => {
             const meta = SEVERITY[problem.severity];
             const Icon = meta.icon;
             return (
               <li key={problem.id}>
-                <Link href={problem.href} className="group relative flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-ring">
-                  <span aria-hidden className={cn("absolute top-2 bottom-2 left-0 w-0.5 rounded-full", meta.bar)} />
+                <Link href={problem.href} className="group relative flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-ring">
+                  <span aria-hidden className={cn("absolute top-3 bottom-3 left-0 w-0.5 rounded-full", meta.bar)} />
                   <Icon size={16} className={cn("shrink-0", meta.text)} aria-label={meta.label} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">{problem.label}</p>
                     <p className="truncate text-xs text-muted-foreground">{problem.hint}</p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="text-md font-semibold tabular-nums">{formatInteger(problem.count)}</p>
+                    <p className="text-lg font-semibold tracking-title tabular-nums">{formatInteger(problem.count)}</p>
                     {problem.amount !== undefined && problem.amount > 0 && <p className="text-2xs text-muted-foreground tabular-nums">{formatCurrencyBRL(problem.amount)}</p>}
                   </div>
                   <ArrowRight size={14} className="shrink-0 text-subtle-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
@@ -119,7 +119,7 @@ export function ProblemsPanel({ modules, title = "Precisa de atenção", descrip
         </ul>
       )}
       {!loading && ranked.length > 0 && (clear.length > 0 || failed.length > 0) && (
-        <p className="border-t border-border px-4 py-2 text-xs text-subtle-foreground">
+        <p className="border-t border-border-subtle bg-surface-muted/60 px-4 py-2.5 text-xs text-subtle-foreground">
           {clear.length > 0 && <>Sem pendências: {clear.map((c) => c.label.toLowerCase()).slice(0, 4).join(", ")}{clear.length > 4 ? ` e mais ${clear.length - 4}` : ""}.</>}
           {failed.length > 0 && <> {failed.length} verificação(ões) indisponível(is) no momento.</>}
         </p>

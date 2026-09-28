@@ -127,7 +127,7 @@ export function UserAccessPanel({ user, onChanged }: { user: AdminUser; onChange
         ) : (roles.data ?? []).length === 0 ? (
           <p className="text-sm text-muted-foreground">{roles.loading ? "Carregando…" : "Nenhum papel cadastrado."}</p>
         ) : (
-          <ul className="divide-y divide-border rounded-md border border-border">
+          <ul className="divide-y divide-border-subtle rounded-lg border border-border">
             {(roles.data ?? []).map((role) => {
               const has = user.role_ids.includes(role.id);
               const key = `role:${role.id}`;
@@ -167,7 +167,7 @@ export function UserAccessPanel({ user, onChanged }: { user: AdminUser; onChange
         ) : (branches.data ?? []).length === 0 ? (
           <p className="text-sm text-muted-foreground">{branches.loading ? "Carregando…" : "Nenhuma unidade cadastrada."}</p>
         ) : (
-          <ul className="divide-y divide-border rounded-md border border-border">
+          <ul className="divide-y divide-border-subtle rounded-lg border border-border">
             {(branches.data ?? []).map((branch) => {
               const access = branchAccess.get(branch.id);
               const key = `branch:${branch.id}`;

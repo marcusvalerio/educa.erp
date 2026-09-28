@@ -191,12 +191,12 @@ export function OrgCrudPage({ config }: { config: OrgCrudConfig }) {
             <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="border-b border-border bg-surface-muted">
-                  <th scope="col" className="h-8 w-32 px-4 text-left text-2xs font-medium tracking-wide text-muted-foreground uppercase">Código</th>
-                  <th scope="col" className="h-8 px-4 text-left text-2xs font-medium tracking-wide text-muted-foreground uppercase">Nome</th>
+                  <th scope="col" className="h-8 w-32 px-4 text-left text-xs font-medium text-muted-foreground">Código</th>
+                  <th scope="col" className="h-8 px-4 text-left text-xs font-medium text-muted-foreground">Nome</th>
                   {config.columns.map((c) => (
-                    <th key={c.header} scope="col" className={cn("h-8 px-4 text-2xs font-medium tracking-wide text-muted-foreground uppercase", c.align === "right" ? "text-right" : "text-left")}>{c.header}</th>
+                    <th key={c.header} scope="col" className={cn("h-8 px-4 text-xs font-medium text-muted-foreground", c.align === "right" ? "text-right" : "text-left")}>{c.header}</th>
                   ))}
-                  <th scope="col" className="h-8 w-28 px-4 text-left text-2xs font-medium tracking-wide text-muted-foreground uppercase">Status</th>
+                  <th scope="col" className="h-8 w-28 px-4 text-left text-xs font-medium text-muted-foreground">Status</th>
                   {canUpdate && <th scope="col" className="w-20"><span className="sr-only">Ações</span></th>}
                 </tr>
               </thead>

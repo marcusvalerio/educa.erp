@@ -48,7 +48,7 @@ export default function PlatformPermissionsPage() {
           <div className="relative overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
-                <tr className="border-b border-border bg-surface-muted text-2xs font-medium tracking-wide text-muted-foreground uppercase">
+                <tr className="border-b border-border bg-surface-muted text-xs font-medium text-muted-foreground">
                   <th scope="col" className="h-8 px-4 text-left">Permissão</th>
                   {ROLES.map((r) => (
                     <th key={r} scope="col" className="h-8 w-24 px-4 text-center">{ROLE_LABEL[r]}</th>

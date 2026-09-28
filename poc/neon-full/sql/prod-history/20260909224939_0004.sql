@@ -1,0 +1,10 @@
+alter table public.companies enable row level security;
+alter table public.suppliers enable row level security;
+alter table public.carriers enable row level security;
+alter table public.drivers enable row level security;
+alter table public.vehicles enable row level security;
+alter table public.warehouse_locations enable row level security;
+alter table public.products enable row level security;
+alter table public.customers enable row level security;
+alter table public.users enable row level security;
+alter table public.audit_logs enable row level security;

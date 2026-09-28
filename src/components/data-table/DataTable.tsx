@@ -66,7 +66,7 @@ export function DataTable<T>({
   caption,
   maxHeight = "calc(100dvh - 300px)",
 }: DataTableProps<T>) {
-  const rowH = density === "compact" ? "h-8" : "h-10";
+  const rowH = density === "compact" ? "h-9" : "h-11";
   const allIds = rows.map(rowId);
   const selectedCount = selected ? allIds.filter((id) => selected.has(id)).length : 0;
   const allChecked = rows.length > 0 && selectedCount === rows.length ? true : selectedCount > 0 ? "indeterminate" : false;
@@ -123,7 +123,7 @@ export function DataTable<T>({
           <thead>
             <tr>
               {selectable && (
-                <th scope="col" className="sticky top-0 z-10 w-9 border-b border-border bg-surface-muted pl-3">
+                <th scope="col" className="sticky top-0 z-10 w-10 border-b border-border bg-surface-muted pl-4">
                   <Checkbox checked={allChecked} onCheckedChange={toggleAll} aria-label="Selecionar todos desta página" />
                 </th>
               )}
@@ -137,7 +137,7 @@ export function DataTable<T>({
                     aria-sort={active ? (sort?.dir === "asc" ? "ascending" : "descending") : undefined}
                     style={col.width ? { width: col.width, minWidth: col.width } : undefined}
                     className={cn(
-                      "sticky top-0 z-10 h-8 border-b border-border bg-surface-muted px-3 text-left text-2xs font-medium tracking-wide whitespace-nowrap text-muted-foreground uppercase",
+                      "sticky top-0 z-10 h-9 border-b border-border bg-surface-muted px-3 text-left text-xs font-medium whitespace-nowrap text-muted-foreground",
                       col.align === "right" && "text-right",
                       col.align === "center" && "text-center"
                     )}
@@ -147,13 +147,13 @@ export function DataTable<T>({
                         type="button"
                         onClick={() => onSortChange?.(col.id)}
                         className={cn(
-                          "inline-flex items-center gap-1 uppercase hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
+                          "group/sort inline-flex items-center gap-1 transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
                           col.align === "right" && "flex-row-reverse",
                           active && "text-foreground"
                         )}
                       >
                         {col.header}
-                        {active ? sort?.dir === "asc" ? <ArrowUp size={12} /> : <ArrowDown size={12} /> : <ArrowUpDown size={12} className="opacity-40" />}
+                        {active ? sort?.dir === "asc" ? <ArrowUp size={12} /> : <ArrowDown size={12} /> : <ArrowUpDown size={12} className="opacity-0 transition-opacity group-hover/sort:opacity-60" />}
                       </button>
                     ) : (
                       col.header
@@ -162,7 +162,7 @@ export function DataTable<T>({
                 );
               })}
               {(rowActions || onRowOpen) && (
-                <th scope="col" className="sticky top-0 z-10 w-12 border-b border-border bg-surface-muted pr-2">
+                <th scope="col" className="sticky top-0 z-10 w-12 border-b border-border bg-surface-muted pr-3">
                   <span className="sr-only">Ações</span>
                 </th>
               )}
@@ -182,12 +182,12 @@ export function DataTable<T>({
                     onRowOpen(row);
                   } : undefined}
                   className={cn(
-                    "group transition-colors hover:bg-surface-hover data-[state=selected]:bg-accent-soft/60",
+                    "group transition-colors duration-100 hover:bg-surface-hover data-[state=selected]:bg-accent-soft/60",
                     onRowOpen && "cursor-pointer"
                   )}
                 >
                   {selectable && (
-                    <td className={cn("border-b border-border pl-3", rowH)}>
+                    <td className={cn("border-b border-border-subtle pl-4", rowH)}>
                       <Checkbox checked={isSelected} onCheckedChange={() => toggleOne(id)} aria-label="Selecionar linha" />
                     </td>
                   )}
@@ -197,7 +197,7 @@ export function DataTable<T>({
                       <td
                         key={col.id}
                         className={cn(
-                          "border-b border-border px-3 whitespace-nowrap text-foreground",
+                          "border-b border-border-subtle px-3 whitespace-nowrap text-foreground",
                           rowH,
                           col.align === "right" && "text-right tabular-nums",
                           col.align === "center" && "text-center",
@@ -216,8 +216,8 @@ export function DataTable<T>({
                     );
                   })}
                   {(rowActions || onRowOpen) && (
-                    <td className={cn("border-b border-border pr-2 text-right", rowH)}>
-                      <div className="flex items-center justify-end gap-0.5 opacity-70 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                    <td className={cn("border-b border-border-subtle pr-3 text-right", rowH)}>
+                      <div className="flex items-center justify-end gap-0.5 opacity-40 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
                         {rowActions?.(row)}
                       </div>
                     </td>
@@ -230,11 +230,11 @@ export function DataTable<T>({
       </div>
 
       {/* Mobile: cartões */}
-      <ul className="divide-y divide-border md:hidden">
+      <ul className="divide-y divide-border-subtle md:hidden">
         {rows.map((row) => {
           const id = rowId(row);
           return (
-            <li key={id} className="flex items-start gap-3 px-3 py-3">
+            <li key={id} className="flex items-start gap-3 px-4 py-3.5">
               {selectable && (
                 <Checkbox className="mt-0.5" checked={selected?.has(id) ?? false} onCheckedChange={() => toggleOne(id)} aria-label="Selecionar" />
               )}

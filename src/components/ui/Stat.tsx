@@ -25,6 +25,8 @@ type StatProps = {
   href?: string;
   loading?: boolean;
   className?: string;
+  /** Métrica dominante da faixa (uma por tela): número maior, leitura primeiro. */
+  lead?: boolean;
 };
 
 function deltaView(delta: Delta) {
@@ -49,21 +51,21 @@ const TONE_BAR: Partial<Record<Tone, string>> = {
   success: "before:bg-success",
 };
 
-export function Stat({ label, value, hint, delta, tone = "neutral", href, loading, className }: StatProps) {
+export function Stat({ label, value, hint, delta, tone = "neutral", href, loading, className, lead = false }: StatProps) {
   const d = delta ? deltaView(delta) : null;
   const body = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-xs text-muted-foreground">{label}</span>
+        <span className={cn("truncate text-muted-foreground", lead ? "text-sm font-medium" : "text-xs")}>{label}</span>
         {href && <ChevronRight size={14} className="shrink-0 text-subtle-foreground opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />}
       </div>
       {loading ? (
-        <span className="mt-2 block h-6 w-24 animate-skeleton rounded-sm bg-muted" />
+        <span className={cn("block animate-skeleton rounded-sm bg-muted", lead ? "mt-3 h-9 w-40" : "mt-2 h-7 w-24")} />
       ) : (
-        <div className="mt-1 text-lg font-semibold tracking-tight text-foreground tabular-nums">{value}</div>
+        <div className={cn("font-semibold text-foreground tabular-nums", lead ? "mt-2 text-3xl tracking-display" : "mt-1.5 text-xl tracking-title")}>{value}</div>
       )}
       {(d || hint) && !loading && (
-        <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs">
+        <div className={cn("flex flex-wrap items-center gap-x-1.5 text-xs", lead ? "mt-2" : "mt-1")}>
           {d && (
             <span className={cn("inline-flex items-center gap-0.5 font-medium tabular-nums", d.className)}>
               <d.icon size={13} aria-hidden />
@@ -76,8 +78,9 @@ export function Stat({ label, value, hint, delta, tone = "neutral", href, loadin
     </>
   );
   const classes = cn(
-    "group relative block min-w-0 bg-surface px-4 py-3",
-    tone !== "neutral" && "before:absolute before:top-3 before:bottom-3 before:left-0 before:w-0.5 before:rounded-full",
+    "group relative block min-w-0 bg-surface",
+    lead ? "px-5 py-4" : "px-4 py-4",
+    tone !== "neutral" && "before:absolute before:top-4 before:bottom-4 before:left-0 before:w-0.5 before:rounded-full",
     TONE_BAR[tone],
     href && "transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-ring",
     className
@@ -91,18 +94,32 @@ export function Stat({ label, value, hint, delta, tone = "neutral", href, loadin
   );
 }
 
-/** Faixa de métricas com divisórias (densa; não é uma grade de cards). */
-export function StatStrip({ children, className, columns = 4 }: { children: ReactNode; className?: string; columns?: 2 | 3 | 4 | 5 | 6 }) {
-  const cols = {
-    2: "sm:grid-cols-2",
-    3: "sm:grid-cols-3",
-    4: "sm:grid-cols-2 lg:grid-cols-4",
-    5: "sm:grid-cols-3 lg:grid-cols-5",
-    6: "sm:grid-cols-3 lg:grid-cols-6",
-  }[columns];
+/**
+ * Faixa de métricas com divisórias (densa; não é uma grade de cards).
+ * `lead`: a primeira métrica ocupa a largura de duas — a hierarquia da faixa
+ * fica explícita (use junto de <Stat lead />).
+ */
+export function StatStrip({ children, className, columns = 4, lead = false }: { children: ReactNode; className?: string; columns?: 2 | 3 | 4 | 5 | 6; lead?: boolean }) {
+  const cols = lead
+    ? {
+        2: "sm:grid-cols-2",
+        3: "sm:grid-cols-3",
+        4: "sm:grid-cols-3 lg:grid-cols-5 [&>*:first-child]:col-span-2 sm:[&>*:first-child]:col-span-3 lg:[&>*:first-child]:col-span-2",
+        5: "sm:grid-cols-3 lg:grid-cols-6 [&>*:first-child]:col-span-2 sm:[&>*:first-child]:col-span-3 lg:[&>*:first-child]:col-span-2",
+        6: "sm:grid-cols-3 lg:grid-cols-7 [&>*:first-child]:col-span-2 sm:[&>*:first-child]:col-span-3 lg:[&>*:first-child]:col-span-2",
+      }[columns]
+    : {
+        2: "sm:grid-cols-2",
+        3: "sm:grid-cols-3",
+        4: "sm:grid-cols-2 lg:grid-cols-4",
+        5: "sm:grid-cols-3 lg:grid-cols-5",
+        6: "sm:grid-cols-3 lg:grid-cols-6",
+      }[columns];
+  // Divisória por célula (não gap sobre fundo): quando a última linha não
+  // fecha, a sobra fica em branco, não uma célula cinza.
   return (
-    <div className={cn("grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border", cols, className)}>
-      {children}
+    <div className={cn("overflow-hidden rounded-lg border border-border bg-surface", className)}>
+      <div className={cn("-mr-px -mb-px grid grid-cols-2 *:border-r *:border-b *:border-border-subtle", cols)}>{children}</div>
     </div>
   );
 }

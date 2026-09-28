@@ -19,25 +19,27 @@ export default function RelatoriosPage() {
     <div className="flex flex-col gap-4">
       <PageHeader title="Relatórios" description="Painéis gerenciais por área, com período selecionável e comparação com o período anterior." />
       {items.length === 0 ? (
-        <EmptyState kind="no-permission" title="Nenhum relatório disponível" description="O seu perfil ainda não tem acesso a relatórios gerenciais." />
+        <EmptyState framed kind="no-permission" title="Nenhum relatório disponível" description="O seu perfil ainda não tem acesso a relatórios gerenciais." />
       ) : (
-        <ul className="grid gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-2 xl:grid-cols-3">
-          {items.map((item) => {
-            const id = (item.href.split("/")[3] ?? "executivo") as AreaId;
-            const area = AREAS[id];
-            return (
-              <li key={item.href} className="bg-surface">
-                <Link href={item.href} className="group flex h-full flex-col gap-1 p-4 hover:bg-surface-hover">
-                  <span className="flex items-center justify-between gap-2 text-sm font-medium">
-                    {area?.title ?? item.label}
-                    <ArrowRight size={14} className="text-subtle-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
-                  </span>
-                  {area && <span className="text-xs text-muted-foreground">{area.description}</span>}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="overflow-hidden rounded-lg border border-border bg-surface">
+          <ul className="-mr-px -mb-px grid *:border-r *:border-b *:border-border-subtle sm:grid-cols-2 xl:grid-cols-3">
+            {items.map((item) => {
+              const id = (item.href.split("/")[3] ?? "executivo") as AreaId;
+              const area = AREAS[id];
+              return (
+                <li key={item.href} className="bg-surface">
+                  <Link href={item.href} className="group flex h-full flex-col gap-1 p-4 hover:bg-surface-hover">
+                    <span className="flex items-center justify-between gap-2 text-sm font-medium">
+                      {area?.title ?? item.label}
+                      <ArrowRight size={14} className="text-subtle-foreground transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    </span>
+                    {area && <span className="text-xs text-muted-foreground">{area.description}</span>}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
     </div>
   );

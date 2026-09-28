@@ -54,14 +54,14 @@ export default function AdminModulesPage() {
       {res.loading ? (
         <Panel><SkeletonRows rows={6} /></Panel>
       ) : res.error ? (
-        <EmptyState kind="error" title="Módulos indisponíveis" description={res.error} onRetry={res.reload} />
+        <EmptyState framed kind="error" title="Módulos indisponíveis" description={res.error} onRetry={res.reload} />
       ) : modules.length === 0 ? (
-        <EmptyState title="Nenhum módulo no catálogo" />
+        <EmptyState framed title="Nenhum módulo no catálogo" />
       ) : (
         categories.map((category) => (
           <Panel key={category}>
             <PanelHeader title={category} />
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-border-subtle">
               {modules
                 .filter((m) => (m.category ?? "Outros") === category)
                 .map((mod) => {

@@ -35,20 +35,22 @@ export default function PlatformPoliciesPage() {
           <dd className="tabular-nums">{platform?.permissions.length ?? 0}</dd>
         </dl>
       </Panel>
-      <ul className="grid gap-px overflow-hidden rounded-md border border-border bg-border md:grid-cols-2">
-        {POLICIES.map((policy) => {
-          const Icon = policy.icon;
-          return (
-            <li key={policy.title} className="flex gap-3 bg-surface p-4">
-              <Icon size={18} className="mt-0.5 shrink-0 text-subtle-foreground" aria-hidden />
-              <div>
-                <h2 className="text-sm font-semibold">{policy.title}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{policy.text}</p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="overflow-hidden rounded-lg border border-border bg-surface">
+        <ul className="-mr-px -mb-px grid *:border-r *:border-b *:border-border-subtle md:grid-cols-2">
+          {POLICIES.map((policy) => {
+            const Icon = policy.icon;
+            return (
+              <li key={policy.title} className="flex gap-3 bg-surface p-4">
+                <Icon size={18} className="mt-0.5 shrink-0 text-subtle-foreground" aria-hidden />
+                <div>
+                  <h2 className="text-sm font-semibold">{policy.title}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{policy.text}</p>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </div>
   );
 }

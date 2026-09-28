@@ -152,6 +152,12 @@ export type ProvisionDeps = {
   sendFirstAccess: (email: string) => Promise<void>;
 };
 
+/** Resultado do provisionamento → entrega do convite, sem perder o login. */
+export function deliveryFromProvision(result: Delivery & { authUserId?: string | null }): Delivery {
+  const authUserId = result.authUserId ?? null;
+  return result.delivered ? { delivered: true, authUserId } : { delivered: false, reason: result.reason, authUserId };
+}
+
 export async function provisionIdentity(input: { email: string; name: string }, deps: ProvisionDeps): Promise<Delivery & { authUserId?: string | null }> {
   const email = input.email.trim().toLowerCase();
   const authUserId = await deps.ensureShadowLogin(email);

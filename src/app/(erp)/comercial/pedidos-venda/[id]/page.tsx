@@ -123,7 +123,7 @@ export default function PedidoVendaDetailPage() {
         backLabel="Pedidos de venda"
         code={o.code}
         title={customerName ?? `Pedido ${o.code}`}
-        status={<StatusBadge entity="sales_orders" status={o.status} />}
+        status={<StatusBadge entity="sales_orders" status={o.status} emphasis="chip" />}
         meta={
           <>
             <span className="tabular-nums">Emitido em {formatDate(o.order_date)}</span>

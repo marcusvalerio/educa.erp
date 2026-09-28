@@ -4,7 +4,7 @@ import { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from "react
 import { Avatar as Av, Checkbox as CB, Select as S, Separator as Sep, Switch as Sw } from "radix-ui";
 import { Check, ChevronDown, Minus } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { fieldBase } from "./Input";
+import { fieldSurface, fieldWidth } from "./Input";
 
 // ------------------------------------------------------------ Select
 // Select nativo-equivalente (Radix): teclado, typeahead, leitor de tela.
@@ -36,7 +36,7 @@ export function Select({ value, onValueChange, options, placeholder = "Selecione
         aria-invalid={invalid || undefined}
         aria-label={aria["aria-label"]}
         aria-describedby={aria["aria-describedby"]}
-        className={cn(fieldBase, "flex items-center justify-between gap-2 px-2.5 text-left", size === "sm" ? "h-7 text-xs" : "h-8", className)}
+        className={cn(fieldSurface, fieldWidth(className), "flex items-center justify-between gap-2 px-2.5 text-left", size === "sm" ? "h-7 text-xs" : "h-8", className)}
       >
         <span className="truncate data-[placeholder]:text-subtle-foreground">
           <S.Value placeholder={<span className="text-subtle-foreground">{placeholder}</span>} />
@@ -49,7 +49,7 @@ export function Select({ value, onValueChange, options, placeholder = "Selecione
         <S.Content
           position="popper"
           sideOffset={4}
-          className="z-[60] max-h-[min(360px,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-border bg-surface shadow-popover animate-pop-in"
+          className="z-[60] max-h-[min(360px,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-border bg-surface-raised shadow-popover animate-pop-in"
         >
           <S.Viewport className="p-1">
             {options.map((option) => (
@@ -83,7 +83,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, ComponentPropsWithoutRef<t
       ref={ref}
       checked={checked}
       className={cn(
-        "flex h-4 w-4 shrink-0 items-center justify-center rounded-xs border border-border-strong bg-surface",
+        "flex h-4 w-4 shrink-0 items-center justify-center rounded-xs border border-border-strong bg-surface shadow-xs transition-colors",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
         "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
         "data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
@@ -155,7 +155,7 @@ export function Segmented<T extends string>({
   size?: "xs" | "sm";
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-md border border-border bg-surface-muted p-0.5">
+    <div role="radiogroup" aria-label={label} className="inline-flex max-w-full overflow-x-auto rounded-md border border-border-subtle bg-muted/70 p-0.5 [scrollbar-width:none]">
       {options.map((option) => {
         const active = option.value === value;
         return (
@@ -166,9 +166,9 @@ export function Segmented<T extends string>({
             aria-checked={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-sm font-medium transition-colors",
+              "inline-flex shrink-0 items-center gap-1.5 rounded-sm font-medium whitespace-nowrap transition-colors",
               size === "xs" ? "h-6 px-2 text-2xs" : "h-7 px-2.5 text-xs",
-              active ? "bg-surface text-foreground shadow-[0_0_0_1px_var(--color-border)]" : "text-muted-foreground hover:text-foreground"
+              active ? "bg-surface text-foreground shadow-xs ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
             )}
           >
             {option.icon}

@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 // DropdownMenu e ContextMenu com a mesma pele (um único visual de menu).
 
 const contentClass =
-  "z-[60] min-w-44 overflow-hidden rounded-lg border border-border bg-surface p-1 text-sm text-foreground shadow-popover animate-pop-in";
+  "z-[60] min-w-44 overflow-hidden rounded-lg border border-border bg-surface-raised p-1 text-sm text-foreground shadow-popover animate-pop-in";
 const itemClass =
   "relative flex h-8 cursor-default items-center gap-2 rounded-sm px-2 outline-none select-none " +
   "data-[highlighted]:bg-surface-hover data-[disabled]:pointer-events-none data-[disabled]:opacity-45 [&_svg]:shrink-0 [&_svg]:text-subtle-foreground";
@@ -81,11 +81,11 @@ export const DropdownMenuRadioItem = forwardRef<HTMLDivElement, ComponentPropsWi
 );
 
 export function DropdownMenuLabel({ children, className }: { children: ReactNode; className?: string }) {
-  return <DM.Label className={cn("px-2 pt-1.5 pb-1 text-2xs font-medium tracking-wide text-subtle-foreground uppercase", className)}>{children}</DM.Label>;
+  return <DM.Label className={cn("px-2 pt-1.5 pb-1 text-2xs font-medium tracking-label text-subtle-foreground uppercase", className)}>{children}</DM.Label>;
 }
 
 export function DropdownMenuSeparator() {
-  return <DM.Separator className="-mx-1 my-1 h-px bg-border" />;
+  return <DM.Separator className="-mx-1 my-1 h-px bg-border-subtle" />;
 }
 
 // ------------------------------------------------------------ ContextMenu
@@ -109,5 +109,5 @@ export const ContextMenuItem = forwardRef<HTMLDivElement, ComponentPropsWithoutR
 );
 
 export function ContextMenuSeparator() {
-  return <CM.Separator className="-mx-1 my-1 h-px bg-border" />;
+  return <CM.Separator className="-mx-1 my-1 h-px bg-border-subtle" />;
 }

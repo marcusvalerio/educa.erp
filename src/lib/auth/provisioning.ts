@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { authProvider } from "./provider";
 import type { Delivery } from "@/lib/onboarding/invitations";
 import { adminCreateUser, adminFindUserByEmail, requestPasswordReset, type NeonAuthConfig } from "./neon/client";
-import { provisionIdentity, type ProvisionDeps } from "./neon/flows";
+import { deliveryFromProvision, provisionIdentity, type ProvisionDeps } from "./neon/flows";
 import { buildNeonPasswordLinkUrl, firstAccessNextFrom } from "./neon/links";
 import { neonConfig, withServiceSession } from "./neon/server";
 
@@ -88,7 +88,10 @@ export async function inviteWithNeon(input: { email: string; name: string; redir
   try {
     const config = neonConfig(new URL(input.redirectTo).origin);
     const result = await provisionIdentity(input, realDeps(config, input.redirectTo));
-    return result.delivered ? { delivered: true, authUserId: result.authUserId ?? null } : { delivered: false, reason: result.reason };
+    // Conta existente e confirmada também devolve o login: sem ele o 1º
+    // convite de plataforma dessa conta respondia 503 (só a 2ª tentativa,
+    // que já achava o login-sombra criado na 1ª, passava).
+    return deliveryFromProvision(result);
   } catch (error) {
     console.error("[auth] provisionamento Neon falhou:", error instanceof Error ? error.message : "erro");
     return { delivered: false, reason: "email_unavailable" };

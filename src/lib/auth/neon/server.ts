@@ -3,6 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { createRemoteJWKSet } from "jose";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { dataBackend } from "@/lib/database/backend";
 import { bridgeIdentity, mintDatabaseToken, verifyProviderToken, type BridgeResult } from "@/lib/auth/neon-bridge";
 import { resolveNeonSession, type NeonResolution } from "./flows";
 import {
@@ -92,7 +93,9 @@ export function bridgeFor(config: NeonAuthConfig) {
     bridgeIdentity(token, {
       verify: (t) => verifyProviderToken(t, { jwks: remoteJwks(config.baseUrl), issuer, audience: issuer }),
       resolveLink,
-      mint: (authUserId) => mintDatabaseToken({ authUserId, secret: databaseSecret(), ttlSeconds: DB_TOKEN_TTL_SECONDS }),
+      // DATA_BACKEND=postgres: não há PostgREST para receber token; o
+      // servidor fixa papel e claims na própria transação (src/lib/database/pg).
+      mint: async (authUserId) => (dataBackend() === "postgres" ? "" : mintDatabaseToken({ authUserId, secret: databaseSecret(), ttlSeconds: DB_TOKEN_TTL_SECONDS })),
     });
 }
 

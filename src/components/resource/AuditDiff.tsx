@@ -34,14 +34,14 @@ export function AuditDiff({ row }: { row: AuditRow }) {
           <dd className="code text-xs break-all">{row.entity_id ?? "—"}</dd>
         </div>
       </dl>
-      <h3 className="text-2xs font-medium tracking-wide text-subtle-foreground uppercase">Alterações</h3>
+      <h3 className="text-2xs font-medium tracking-label text-subtle-foreground uppercase">Alterações</h3>
       {changed.length === 0 ? (
         <p className="text-sm text-subtle-foreground">Sem diferença de campos registrada.</p>
       ) : (
-        <div className="overflow-x-auto rounded-md border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-surface-muted text-left text-2xs tracking-wide text-muted-foreground uppercase">
+              <tr className="bg-surface-muted text-left text-xs font-medium text-muted-foreground">
                 <th scope="col" className="px-3 py-2 font-medium">Campo</th>
                 <th scope="col" className="px-3 py-2 font-medium">Antes</th>
                 <th scope="col" className="px-3 py-2 font-medium">Depois</th>

@@ -15,7 +15,7 @@ export const TabsList = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<type
   return (
     <T.List
       ref={ref}
-      className={cn("flex h-9 items-end gap-4 overflow-x-auto border-b border-border [scrollbar-width:none]", className)}
+      className={cn("flex h-10 items-end gap-5 overflow-x-auto border-b border-border-subtle [scrollbar-width:none]", className)}
       {...props}
     />
   );
@@ -29,7 +29,7 @@ export const TabsTrigger = forwardRef<HTMLButtonElement, ComponentPropsWithoutRe
     <T.Trigger
       ref={ref}
       className={cn(
-        "relative -mb-px inline-flex h-9 shrink-0 items-center gap-1.5 border-b-2 border-transparent px-0.5 text-sm font-medium whitespace-nowrap text-muted-foreground",
+        "relative -mb-px inline-flex h-10 shrink-0 items-center gap-1.5 border-b-2 border-transparent px-0.5 text-sm font-medium whitespace-nowrap text-muted-foreground",
         "transition-colors duration-150 hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring",
         "data-[state=active]:border-foreground data-[state=active]:text-foreground",
         className
@@ -53,7 +53,7 @@ export const AccordionItem = forwardRef<HTMLDivElement, ComponentPropsWithoutRef
   { className, ...props },
   ref
 ) {
-  return <A.Item ref={ref} className={cn("border-b border-border last:border-b-0", className)} {...props} />;
+  return <A.Item ref={ref} className={cn("border-b border-border-subtle last:border-b-0", className)} {...props} />;
 });
 
 export const AccordionTrigger = forwardRef<HTMLButtonElement, ComponentPropsWithoutRef<typeof A.Trigger>>(

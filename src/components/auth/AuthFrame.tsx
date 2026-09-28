@@ -19,19 +19,19 @@ const TONE_ICON: Record<AuthTone, string> = {
 
 export function AuthFrame({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
-    <div className={cn("grid min-h-dvh", aside && "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]")}>
+    <div className={cn("grid min-h-dvh bg-background", aside && "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]")}>
       <div className="flex flex-col px-4 py-6 sm:px-10">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2.5 text-foreground">
             <EducaMark />
-            <span className="text-sm font-semibold tracking-tight">
+            <span className="text-sm font-semibold tracking-title">
               EDUCA<span className="text-subtle-foreground">.ERP</span>
             </span>
           </span>
           <ThemeToggle />
         </div>
         <main id="conteudo" className="flex flex-1 items-center justify-center py-10">
-          <div className="w-full max-w-sm">{children}</div>
+          <div className="w-full max-w-sm animate-rise-in">{children}</div>
         </main>
         <p className="text-2xs text-subtle-foreground">© EDUCA.ERP</p>
       </div>
@@ -44,9 +44,9 @@ export function AuthFrame({ children, aside }: { children: ReactNode; aside?: Re
 export function AuthHeading({ icon, tone = "default", title, description }: { icon?: ReactNode; tone?: AuthTone; title: string; description?: ReactNode }) {
   return (
     <div>
-      {icon && <span className={cn("mb-4 inline-flex h-10 w-10 items-center justify-center rounded-md border", TONE_ICON[tone])}>{icon}</span>}
-      <h1 className="text-xl font-semibold tracking-tight text-balance">{title}</h1>
-      {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+      {icon && <span className={cn("mb-5 inline-flex h-10 w-10 items-center justify-center rounded-lg border shadow-xs", TONE_ICON[tone])}>{icon}</span>}
+      <h1 className="text-2xl font-semibold tracking-title text-balance">{title}</h1>
+      {description && <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>}
     </div>
   );
 }

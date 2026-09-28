@@ -201,14 +201,14 @@ function ResourceListInner<T>({
     ));
 
   return (
-    <div className="flex flex-col gap-4">
-      <PageHeader title={title} description={description} actions={actions} />
+    <div className="flex flex-col gap-5">
+      <PageHeader title={title} description={description} actions={actions} className="pb-1" />
 
       {summary}
 
       <Panel className="overflow-hidden">
         {views.length > 0 && (
-          <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-3 pt-1" role="toolbar" aria-label="Visões">
+          <div className="flex items-center gap-4 overflow-x-auto border-b border-border-subtle px-4 [scrollbar-width:none]" role="toolbar" aria-label="Visões">
             <ViewTab active={!views.some((v) => state.filters[v.id])} onClick={() => update({ filters: Object.fromEntries(views.map((v) => [v.id, ""])) })}>
               Todos
             </ViewTab>
@@ -222,7 +222,7 @@ function ResourceListInner<T>({
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle px-4 py-2.5">
           <form
             role="search"
             className="relative min-w-0 flex-1 sm:max-w-xs"
@@ -312,7 +312,7 @@ function ResourceListInner<T>({
         </div>
 
         {selectedRows.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 border-b border-border bg-accent-soft/60 px-3 py-1.5 text-sm" role="region" aria-label="Ações em lote">
+          <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-accent-soft/60 px-4 py-2 text-sm animate-fade-in" role="region" aria-label="Ações em lote">
             <span className="font-medium tabular-nums">
               {selectedRows.length} {selectedRows.length === 1 ? "selecionado" : "selecionados"}
             </span>
@@ -452,7 +452,7 @@ function ViewTab({ active, onClick, children }: { active: boolean; onClick: () =
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "-mb-px h-9 shrink-0 border-b-2 px-2 text-sm whitespace-nowrap transition-colors",
+        "-mb-px h-10 shrink-0 border-b-2 px-0.5 text-sm whitespace-nowrap transition-colors",
         active ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
       )}
     >
@@ -472,8 +472,8 @@ export function RecordDetail<T>({ row, detail, columns, rowId }: { row: T; detai
     <div className="flex flex-col gap-6">
       {sections.map((section) => (
         <section key={section.title}>
-          <h3 className="mb-2 text-2xs font-medium tracking-wide text-subtle-foreground uppercase">{section.title}</h3>
-          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 rounded-md border border-border p-3 sm:grid-cols-2">
+          <h3 className="mb-2.5 text-2xs font-semibold tracking-label text-subtle-foreground uppercase">{section.title}</h3>
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-4 rounded-lg border border-border-subtle bg-surface-muted/60 p-4 sm:grid-cols-2">
             {section.fields.map((field) => (
               <div key={field.label} className={cn("min-w-0", field.span === 2 && "sm:col-span-2")}>
                 <dt className="text-xs text-muted-foreground">{field.label}</dt>
@@ -486,7 +486,7 @@ export function RecordDetail<T>({ row, detail, columns, rowId }: { row: T; detai
       {detail.render?.(row)}
       {detail.history !== false && (
         <section>
-          <h3 className="mb-2 text-2xs font-medium tracking-wide text-subtle-foreground uppercase">Histórico</h3>
+          <h3 className="mb-2.5 text-2xs font-semibold tracking-label text-subtle-foreground uppercase">Histórico</h3>
           <RecordHistory entityId={rowId(row)} />
         </section>
       )}
@@ -498,7 +498,7 @@ export function ResourceListPage<T>(props: ResourceListPageProps<T>) {
   return (
     <Suspense
       fallback={
-        <div className="rounded-md border border-border bg-surface">
+        <div className="rounded-lg border border-border bg-surface">
           <SkeletonRows />
         </div>
       }

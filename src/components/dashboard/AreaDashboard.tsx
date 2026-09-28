@@ -437,22 +437,24 @@ function ActionLinks({ sections }: { sections: string[] }) {
   return (
     <Panel>
       <PanelHeader title="Onde agir" description="Listas e rotinas desta área que você pode operar." />
-      <div className="grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-4">
-        {groups.map(({ section, items }) => (
-          <div key={section.id} className="bg-surface p-3">
-            <p className="mb-1 px-1 text-2xs font-medium tracking-wide text-subtle-foreground uppercase">{section.label}</p>
-            <ul>
-              {items.map((item) => (
-                <li key={item.href}>
-                  <Link href={item.href} className="group flex items-center justify-between gap-2 rounded-sm px-1 py-1.5 text-sm hover:bg-surface-hover">
-                    <span className="truncate">{item.label}</span>
-                    <ArrowRight size={13} className="shrink-0 text-subtle-foreground opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+      <div className="overflow-hidden">
+        <div className="-mr-px -mb-px grid *:border-r *:border-b *:border-border-subtle sm:grid-cols-2 xl:grid-cols-4">
+          {groups.map(({ section, items }) => (
+            <div key={section.id} className="bg-surface p-3">
+              <p className="mb-1 px-1 text-2xs font-semibold tracking-label text-subtle-foreground uppercase">{section.label}</p>
+              <ul>
+                {items.map((item) => (
+                  <li key={item.href}>
+                    <Link href={item.href} className="group flex items-center justify-between gap-2 rounded-sm px-1 py-1.5 text-sm hover:bg-surface-hover">
+                      <span className="truncate">{item.label}</span>
+                      <ArrowRight size={13} className="shrink-0 text-subtle-foreground opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </div>
     </Panel>
   );
@@ -467,13 +469,13 @@ export function AreaDashboard({ area }: { area: AreaId }) {
   const problemModules = def.problemModules;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <DashboardHeader title={def.title} description={def.description} />
 
       {reportOk && def.report && (
         <section aria-label="Resumo" className="flex flex-col gap-2">
           <SectionTitle title="Resumo" description={`Relatório ${def.report.label.toLowerCase()} no período selecionado.`} />
-          <SummaryStrip report={def.report} range={range} previous={previous} enabled keys={def.summaryKeys} />
+          <SummaryStrip report={def.report} range={range} previous={previous} enabled keys={def.summaryKeys} lead />
         </section>
       )}
 
@@ -509,16 +511,17 @@ export function OperationalCenter() {
   const execOk = can(REPORTS.executive.permission);
   const firstName = data?.tenant?.user.name?.split(" ")[0];
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       <DashboardHeader
-        title={firstName ? `Olá, ${firstName}` : "Centro operacional"}
+        hero
+        title={firstName ? `Olá, ${firstName}.` : "Centro operacional"}
         description="O que mudou, o que precisa de atenção e onde agir — com os dados que o seu perfil pode ver."
       />
 
       {execOk && (
         <section aria-label="Resumo" className="flex flex-col gap-2">
           <SectionTitle title="Resumo" description="Indicadores consolidados no período selecionado." actions={<Link href="/gestao/dashboard" className="text-xs font-medium text-muted-foreground hover:text-foreground">Painel executivo →</Link>} />
-          <SummaryStrip report={REPORTS.executive} range={range} previous={previous} enabled keys={["net_revenue", "gross_margin_pct", "cash_balance", "open_sales_orders"]} />
+          <SummaryStrip report={REPORTS.executive} range={range} previous={previous} enabled keys={["net_revenue", "gross_margin_pct", "cash_balance", "open_sales_orders"]} lead />
         </section>
       )}
 

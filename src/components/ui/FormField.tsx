@@ -77,11 +77,11 @@ export function FormSection({
   className?: string;
 }) {
   return (
-    <fieldset className={cn("flex flex-col gap-4 border-t border-border pt-4 first:border-t-0 first:pt-0", className)}>
+    <fieldset className={cn("flex flex-col gap-4 border-t border-border-subtle pt-5 first:border-t-0 first:pt-0", className)}>
       <legend className="sr-only">{title}</legend>
       <div aria-hidden>
-        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-        {description && <p className="mt-0.5 text-xs text-subtle-foreground">{description}</p>}
+        <h3 className="text-sm font-semibold tracking-title text-foreground">{title}</h3>
+        {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
       </div>
       {children}
     </fieldset>

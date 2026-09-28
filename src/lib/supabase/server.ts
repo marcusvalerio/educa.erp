@@ -5,7 +5,9 @@ import { createClient as createSupabaseJsClient, type SupabaseClient } from "@su
 import { cookies } from "next/headers";
 import { getSupabaseAnonKey, getSupabaseUrl } from "./env";
 import { authProvider } from "@/lib/auth/provider";
-import { currentNeonDatabaseToken } from "@/lib/auth/neon/request";
+import { currentNeonDatabaseToken, resolveCurrentNeonSession } from "@/lib/auth/neon/request";
+import { dataBackend } from "@/lib/database/backend";
+import { createPgDataClient } from "@/lib/database/pg/client";
 
 /**
  * Cliente Supabase server-side autenticado como o usuário da sessão,
@@ -20,6 +22,14 @@ import { currentNeonDatabaseToken } from "@/lib/auth/neon/request";
  * Em ambos, auth.uid() no banco é o mesmo UUID do login no EDUCA.
  */
 export async function createClient(): Promise<SupabaseClient> {
+  if (dataBackend() === "postgres") {
+    // PostgreSQL direto (Neon): mesmo usuário, mesmo auth.uid(), sem PostgREST.
+    // Só com Neon Auth — sem Supabase não há sessão do Supabase Auth para ler.
+    if (authProvider() !== "neon") throw new Error("DATA_BACKEND=postgres exige AUTH_PROVIDER=neon.");
+    const resolved = await resolveCurrentNeonSession();
+    const ctx = resolved.status === "ok" ? { role: "authenticated" as const, sub: resolved.identity.authUserId, email: resolved.identity.email } : { role: "anon" as const };
+    return createPgDataClient(ctx) as unknown as SupabaseClient;
+  }
   if (authProvider() === "neon") {
     const token = await currentNeonDatabaseToken();
     return createSupabaseJsClient(getSupabaseUrl(), getSupabaseAnonKey(), {

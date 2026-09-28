@@ -325,7 +325,7 @@ export function UserMenu({ variant = "default", adminHref, platformHref, erpHref
           )}
           {tenant && (
             <DropdownMenuItem asChild>
-              <Link href="/configuracoes/aparencia">
+              <Link href="/app/configuracoes/aparencia">
                 <Settings2 size={14} /> Preferências
               </Link>
             </DropdownMenuItem>

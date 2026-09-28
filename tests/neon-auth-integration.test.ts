@@ -322,7 +322,7 @@ describe("links de senha do Neon", () => {
   });
   test("destino depois do primeiro acesso é sempre interno", () => {
     assert.equal(firstAccessNextFrom("https://educa.exemplo.com.br/convite/abc"), "/convite/abc");
-    assert.equal(firstAccessNextFrom("https://educa.exemplo.com.br/redefinir-senha?primeiro-acesso=1&next=%2Fadmincentral"), "/admincentral");
+    assert.equal(firstAccessNextFrom("https://educa.exemplo.com.br/redefinir-senha?primeiro-acesso=1&next=%2Fapp%2Fadmincentral"), "/app/admincentral");
     assert.equal(firstAccessNextFrom("https://educa.exemplo.com.br/redefinir-senha?next=https%3A%2F%2Fevil.example"), "/");
     assert.equal(new URL(buildNeonPasswordLinkUrl("https://a.co", "a@b.co", { next: "//evil.example" })).searchParams.get("next"), "/");
   });

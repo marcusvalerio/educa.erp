@@ -1,15 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { isGuestOnlyPath, isPublicPath } from "@/lib/onboarding/access";
+import { APP_HOME } from "@/lib/navigation/app-routes";
 import { authProvider } from "@/lib/auth/provider";
 import { getSession as getNeonSession } from "@/lib/auth/neon/client";
 import { neonConfig, SESSION_COOKIE } from "@/lib/auth/neon/server";
 
 // Atualiza a sessão (Supabase Auth ou Neon Auth, conforme AUTH_PROVIDER —
 // src/lib/auth/provider.ts) a cada requisição e protege as
-// rotas de UI: sem sessão, redireciona para /login; com sessão, /login
-// redireciona para a home. Rotas de API não são redirecionadas aqui —
-// cada rota já rejeita (401/403) sem autenticação/permissão via
+// rotas de UI: sem sessão, redireciona para /login; com sessão, a landing
+// (/) e /login redirecionam para o ERP (/app). Rotas de API não são
+// redirecionadas aqui — cada rota já rejeita (401/403) sem autenticação/permissão via
 // src/lib/api/handlers.ts, com uma mensagem estruturada em vez de um
 // redirect HTML.
 //
@@ -24,8 +25,11 @@ import { neonConfig, SESSION_COOKIE } from "@/lib/auth/neon/server";
 // node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md.
 //
 // Rotas públicas e rotas só-visitante: src/lib/onboarding/access.ts
-// (convite, recuperação/redefinição de senha e retorno do Auth abrem sem
-// sessão; cada página valida sozinha o que precisa).
+// (landing, convite, recuperação/redefinição de senha e retorno do Auth
+// abrem sem sessão; cada página valida sozinha o que precisa). Os arquivos
+// da landing (/landing/…: CSS, JS, fontes, imagens, PDFs) ficam fora do
+// matcher — são estáticos e públicos. Endereços antigos do ERP já chegam
+// aqui como /app/… (redirecionamento 308 do next.config.ts, que roda antes).
 
 export async function proxy(request: NextRequest) {
   const neon = authProvider() === "neon";
@@ -45,7 +49,7 @@ export async function proxy(request: NextRequest) {
 
   if (signedIn && isGuestOnlyPath(pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = APP_HOME;
     url.search = "";
     return redirect(url);
   }
@@ -121,5 +125,5 @@ async function neonSession(request: NextRequest): Promise<ProxySession> {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api|landing/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };

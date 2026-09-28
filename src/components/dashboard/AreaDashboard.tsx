@@ -58,36 +58,36 @@ type AreaDef = {
 };
 
 const SO_OPEN_GROUPS = [
-  { label: "Aguardando aprovação", statuses: ["draft", "pending_approval"], tone: "warning" as const, href: "/comercial/pedidos-venda?view=aprovacao" },
-  { label: "Em reserva", statuses: ["approved", "reservation_pending", "reserved"], tone: "neutral" as const, href: "/comercial/pedidos-venda?view=em-andamento" },
-  { label: "Em separação", statuses: ["picking", "ready_to_ship"], tone: "info" as const, href: "/logistica/picking" },
-  { label: "Expedidos", statuses: ["partially_shipped", "shipped"], tone: "accent" as const, href: "/logistica/expedicao" },
-  { label: "Concluídos", statuses: ["completed"], tone: "success" as const, href: "/comercial/pedidos-venda?status=completed" },
-  { label: "Cancelados", statuses: ["cancelled"], tone: "danger" as const, href: "/comercial/pedidos-venda?status=cancelled" },
+  { label: "Aguardando aprovação", statuses: ["draft", "pending_approval"], tone: "warning" as const, href: "/app/comercial/pedidos-venda?view=aprovacao" },
+  { label: "Em reserva", statuses: ["approved", "reservation_pending", "reserved"], tone: "neutral" as const, href: "/app/comercial/pedidos-venda?view=em-andamento" },
+  { label: "Em separação", statuses: ["picking", "ready_to_ship"], tone: "info" as const, href: "/app/logistica/picking" },
+  { label: "Expedidos", statuses: ["partially_shipped", "shipped"], tone: "accent" as const, href: "/app/logistica/expedicao" },
+  { label: "Concluídos", statuses: ["completed"], tone: "success" as const, href: "/app/comercial/pedidos-venda?status=completed" },
+  { label: "Cancelados", statuses: ["cancelled"], tone: "danger" as const, href: "/app/comercial/pedidos-venda?status=cancelled" },
 ];
 
 const PO_GROUPS = [
-  { label: "Em aprovação", statuses: ["draft", "pending_approval"], tone: "warning" as const, href: "/suprimentos/pedidos-compra?view=aprovacao" },
-  { label: "Aprovados / enviados", statuses: ["approved", "sent"], tone: "neutral" as const, href: "/suprimentos/pedidos-compra" },
-  { label: "Recebimento parcial", statuses: ["partially_received"], tone: "info" as const, href: "/logistica/recebimento" },
+  { label: "Em aprovação", statuses: ["draft", "pending_approval"], tone: "warning" as const, href: "/app/suprimentos/pedidos-compra?view=aprovacao" },
+  { label: "Aprovados / enviados", statuses: ["approved", "sent"], tone: "neutral" as const, href: "/app/suprimentos/pedidos-compra" },
+  { label: "Recebimento parcial", statuses: ["partially_received"], tone: "info" as const, href: "/app/logistica/recebimento" },
   { label: "Recebidos / fechados", statuses: ["received", "closed"], tone: "success" as const },
   { label: "Cancelados", statuses: ["cancelled"], tone: "danger" as const },
 ];
 
 const SHIPMENT_GROUPS = [
-  { label: "Em preparação", statuses: ["draft", "ready", "picking", "packed"], tone: "neutral" as const, href: "/logistica/expedicao" },
-  { label: "Prontas para sair", statuses: ["ready_to_ship"], tone: "info" as const, href: "/logistica/expedicao" },
-  { label: "Em trânsito", statuses: ["shipped", "in_transit"], tone: "warning" as const, href: "/logistica/transportes?view=transito" },
-  { label: "Entregues", statuses: ["delivered", "completed"], tone: "success" as const, href: "/logistica/transportes?view=entregues" },
+  { label: "Em preparação", statuses: ["draft", "ready", "picking", "packed"], tone: "neutral" as const, href: "/app/logistica/expedicao" },
+  { label: "Prontas para sair", statuses: ["ready_to_ship"], tone: "info" as const, href: "/app/logistica/expedicao" },
+  { label: "Em trânsito", statuses: ["shipped", "in_transit"], tone: "warning" as const, href: "/app/logistica/transportes?view=transito" },
+  { label: "Entregues", statuses: ["delivered", "completed"], tone: "success" as const, href: "/app/logistica/transportes?view=entregues" },
   { label: "Canceladas", statuses: ["cancelled"], tone: "danger" as const },
 ];
 
 const PRODUCTION_GROUPS = [
-  { label: "Planejadas", statuses: ["draft", "planned"], tone: "neutral" as const, href: "/producao/ordens" },
-  { label: "Liberadas", statuses: ["released", "materials_reserved"], tone: "info" as const, href: "/producao/ordens" },
-  { label: "Em produção", statuses: ["in_progress"], tone: "accent" as const, href: "/producao/ordens?view=producao" },
-  { label: "Suspensas", statuses: ["on_hold"], tone: "warning" as const, href: "/producao/ordens?view=espera" },
-  { label: "Concluídas", statuses: ["completed"], tone: "success" as const, href: "/producao/ordens?status=completed" },
+  { label: "Planejadas", statuses: ["draft", "planned"], tone: "neutral" as const, href: "/app/producao/ordens" },
+  { label: "Liberadas", statuses: ["released", "materials_reserved"], tone: "info" as const, href: "/app/producao/ordens" },
+  { label: "Em produção", statuses: ["in_progress"], tone: "accent" as const, href: "/app/producao/ordens?view=producao" },
+  { label: "Suspensas", statuses: ["on_hold"], tone: "warning" as const, href: "/app/producao/ordens?view=espera" },
+  { label: "Concluídas", statuses: ["completed"], tone: "success" as const, href: "/app/producao/ordens?status=completed" },
   { label: "Canceladas", statuses: ["cancelled"], tone: "danger" as const },
 ];
 
@@ -106,7 +106,7 @@ export const AREAS: Record<AreaId, AreaDef> = {
     insights: (range) => (
       <>
         <MonthlyTrend report={REPORTS.executive} metricKey="net_revenue" title="Receita líquida por mês" />
-        <AgingBuckets title="Carteira a receber por vencimento" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/financeiro/contas-receber" />
+        <AgingBuckets title="Carteira a receber por vencimento" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/app/financeiro/contas-receber" />
         <StatusDistribution title="Pedidos de venda do período por situação" source="/api/sales-orders" permission="sales_orders.view" groups={SO_OPEN_GROUPS} dateKey="order_date" range={range} />
         <TopRanking title="Maiores clientes no período" description="Valor em pedidos não cancelados." source="/api/sales-orders" permission="sales_orders.view" groupKey="customer_id" valueKey="total_amount" lookupPath="/api/customers?pageSize=500" lookupField="nome" dateKey="order_date" range={range} excludeStatuses={["cancelled"]} />
       </>
@@ -166,7 +166,7 @@ export const AREAS: Record<AreaId, AreaDef> = {
           source="/api/material-requests"
           permission="stock.view"
           groups={[
-            { label: "Solicitadas", statuses: ["requested"], tone: "warning", href: "/logistica/almoxarifado?view=pendentes" },
+            { label: "Solicitadas", statuses: ["requested"], tone: "warning", href: "/app/logistica/almoxarifado?view=pendentes" },
             { label: "Entregues", statuses: ["delivered"], tone: "success" },
             { label: "Canceladas", statuses: ["cancelled"], tone: "danger" },
           ]}
@@ -220,8 +220,8 @@ export const AREAS: Record<AreaId, AreaDef> = {
       <>
         <MonthlyTrend report={REPORTS.finance} metricKey="received_in_period" title="Recebido por mês" />
         <MonthlyTrend report={REPORTS.finance} metricKey="paid_in_period" title="Pago por mês" />
-        <AgingBuckets title="A receber por vencimento" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/financeiro/contas-receber" />
-        <AgingBuckets title="A pagar por vencimento" source="/api/accounts-payable" permission="accounts_payable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={PAYABLE_OPEN} href="/financeiro/contas-pagar" />
+        <AgingBuckets title="A receber por vencimento" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/app/financeiro/contas-receber" />
+        <AgingBuckets title="A pagar por vencimento" source="/api/accounts-payable" permission="accounts_payable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={PAYABLE_OPEN} href="/app/financeiro/contas-pagar" />
         <TopRanking title="Maiores saldos a receber" description="Títulos em aberto, por cliente." source="/api/accounts-receivable" permission="accounts_receivable.view" groupKey="customer_id" valueKey="updated_amount" lookupPath="/api/customers?pageSize=500" lookupField="nome" excludeStatuses={["RECEIVED", "CANCELLED"]} />
       </>
     ),
@@ -244,10 +244,10 @@ export const AREAS: Record<AreaId, AreaDef> = {
           dateKey="issue_date"
           range={range}
           groups={[
-            { label: "Em preparação", statuses: ["DRAFT", "CALCULATED", "READY"], tone: "neutral", href: "/fiscal/notas-fiscais?view=pendentes" },
-            { label: "Em autorização", statuses: ["AUTHORIZING", "CONTINGENCY"], tone: "warning", href: "/fiscal/notas-fiscais?view=pendentes" },
-            { label: "Autorizados", statuses: ["AUTHORIZED"], tone: "success", href: "/fiscal/notas-fiscais?status=AUTHORIZED" },
-            { label: "Rejeitados / denegados", statuses: ["REJECTED", "DENIED"], tone: "danger", href: "/fiscal/notas-fiscais?view=rejeitadas" },
+            { label: "Em preparação", statuses: ["DRAFT", "CALCULATED", "READY"], tone: "neutral", href: "/app/fiscal/notas-fiscais?view=pendentes" },
+            { label: "Em autorização", statuses: ["AUTHORIZING", "CONTINGENCY"], tone: "warning", href: "/app/fiscal/notas-fiscais?view=pendentes" },
+            { label: "Autorizados", statuses: ["AUTHORIZED"], tone: "success", href: "/app/fiscal/notas-fiscais?status=AUTHORIZED" },
+            { label: "Rejeitados / denegados", statuses: ["REJECTED", "DENIED"], tone: "danger", href: "/app/fiscal/notas-fiscais?view=rejeitadas" },
             { label: "Cancelados", statuses: ["CANCELLED"], tone: "neutral" },
           ]}
         />
@@ -268,7 +268,7 @@ export const AREAS: Record<AreaId, AreaDef> = {
         <MonthlyTrend report={REPORTS.controlling} metricKey="managerial_result" title="Resultado gerencial por mês" />
         <MonthlyTrend report={REPORTS.controlling} metricKey="operating_expenses" title="Despesas operacionais por mês" />
         <MonthlyTrend report={REPORTS.controlling} metricKey="gross_profit" title="Lucro bruto por mês" />
-        <AgingBuckets title="Inadimplência por faixa" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/financeiro/contas-receber" />
+        <AgingBuckets title="Inadimplência por faixa" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/app/financeiro/contas-receber" />
       </>
     ),
   },
@@ -285,9 +285,9 @@ export const AREAS: Record<AreaId, AreaDef> = {
           source="/api/nonconformities"
           permission="nonconformities.view"
           groups={[
-            { label: "Abertas", statuses: ["OPEN"], tone: "danger", href: "/qualidade/nao-conformidades?view=criticas" },
-            { label: "Em análise", statuses: ["IN_ANALYSIS"], tone: "warning", href: "/qualidade/nao-conformidades?status=IN_ANALYSIS" },
-            { label: "Em tratamento", statuses: ["IN_TREATMENT"], tone: "info", href: "/qualidade/nao-conformidades?status=IN_TREATMENT" },
+            { label: "Abertas", statuses: ["OPEN"], tone: "danger", href: "/app/qualidade/nao-conformidades?view=criticas" },
+            { label: "Em análise", statuses: ["IN_ANALYSIS"], tone: "warning", href: "/app/qualidade/nao-conformidades?status=IN_ANALYSIS" },
+            { label: "Em tratamento", statuses: ["IN_TREATMENT"], tone: "info", href: "/app/qualidade/nao-conformidades?status=IN_TREATMENT" },
             { label: "Encerradas", statuses: ["CLOSED"], tone: "success" },
           ]}
         />
@@ -297,8 +297,8 @@ export const AREAS: Record<AreaId, AreaDef> = {
           permission="nonconformities.view"
           field="severity"
           groups={[
-            { label: "Crítica", statuses: ["CRITICAL"], tone: "critical", href: "/qualidade/nao-conformidades?severity=CRITICAL" },
-            { label: "Alta", statuses: ["HIGH"], tone: "danger", href: "/qualidade/nao-conformidades?severity=HIGH" },
+            { label: "Crítica", statuses: ["CRITICAL"], tone: "critical", href: "/app/qualidade/nao-conformidades?severity=CRITICAL" },
+            { label: "Alta", statuses: ["HIGH"], tone: "danger", href: "/app/qualidade/nao-conformidades?severity=HIGH" },
             { label: "Média", statuses: ["MEDIUM"], tone: "warning" },
             { label: "Baixa", statuses: ["LOW"], tone: "neutral" },
           ]}
@@ -308,7 +308,7 @@ export const AREAS: Record<AreaId, AreaDef> = {
           source="/api/quality-inspections"
           permission="quality_inspections.view"
           groups={[
-            { label: "Pendentes", statuses: ["PENDING", "IN_PROGRESS"], tone: "warning", href: "/qualidade/inspecoes" },
+            { label: "Pendentes", statuses: ["PENDING", "IN_PROGRESS"], tone: "warning", href: "/app/qualidade/inspecoes" },
             { label: "Aprovadas", statuses: ["APPROVED"], tone: "success" },
             { label: "Aprovadas parcialmente", statuses: ["PARTIALLY_APPROVED"], tone: "info" },
             { label: "Reprovadas", statuses: ["REJECTED"], tone: "danger" },
@@ -331,7 +331,7 @@ export const AREAS: Record<AreaId, AreaDef> = {
           source="/api/maintenance-orders"
           permission="maintenance_orders.view"
           groups={[
-            { label: "Abertas / planejadas", statuses: ["OPEN", "PLANNED"], tone: "neutral", href: "/ativos/ordens-manutencao" },
+            { label: "Abertas / planejadas", statuses: ["OPEN", "PLANNED"], tone: "neutral", href: "/app/ativos/ordens-manutencao" },
             { label: "Em execução", statuses: ["IN_PROGRESS"], tone: "info" },
             { label: "Aguardando peças", statuses: ["WAITING_PARTS"], tone: "warning" },
             { label: "Concluídas", statuses: ["COMPLETED"], tone: "success" },
@@ -354,8 +354,8 @@ export const AREAS: Record<AreaId, AreaDef> = {
           source="/api/assets"
           permission="assets.view"
           groups={[
-            { label: "Em operação", statuses: ["ACTIVE"], tone: "success", href: "/ativos/lista?status=ACTIVE" },
-            { label: "Em manutenção", statuses: ["UNDER_MAINTENANCE"], tone: "warning", href: "/ativos/lista?view=manutencao" },
+            { label: "Em operação", statuses: ["ACTIVE"], tone: "success", href: "/app/ativos/lista?status=ACTIVE" },
+            { label: "Em manutenção", statuses: ["UNDER_MAINTENANCE"], tone: "warning", href: "/app/ativos/lista?view=manutencao" },
             { label: "Inativos", statuses: ["INACTIVE"], tone: "neutral" },
             { label: "Baixados", statuses: ["DECOMMISSIONED"], tone: "danger" },
           ]}
@@ -411,10 +411,10 @@ function AccessOverview() {
         <EmptyState compact kind="error" title="Usuários indisponíveis" description={res.error} onRetry={res.reload} />
       ) : (
         <StatStrip columns={4} className="rounded-none border-0">
-          <Stat label="Usuários ativos" value={formatInteger(active.length)} hint={`${formatInteger(users.length)} cadastrados`} loading={res.loading} href="/admin/users" />
-          <Stat label="Sem login vinculado" value={formatInteger(users.filter((u) => !u.has_login).length)} tone={users.some((u) => !u.has_login) ? "warning" : "neutral"} loading={res.loading} href="/admin/users" />
-          <Stat label="Sem papel atribuído" value={linksVisible ? formatInteger(active.filter((u) => u.role_ids.length === 0).length) : "—"} hint={linksVisible ? undefined : "Requer permissão de papéis"} loading={res.loading} href="/admin/users" />
-          <Stat label="Sem unidade liberada" value={linksVisible ? formatInteger(active.filter((u) => u.branch_access.length === 0).length) : "—"} loading={res.loading} href="/admin/users" />
+          <Stat label="Usuários ativos" value={formatInteger(active.length)} hint={`${formatInteger(users.length)} cadastrados`} loading={res.loading} href="/app/admin/users" />
+          <Stat label="Sem login vinculado" value={formatInteger(users.filter((u) => !u.has_login).length)} tone={users.some((u) => !u.has_login) ? "warning" : "neutral"} loading={res.loading} href="/app/admin/users" />
+          <Stat label="Sem papel atribuído" value={linksVisible ? formatInteger(active.filter((u) => u.role_ids.length === 0).length) : "—"} hint={linksVisible ? undefined : "Requer permissão de papéis"} loading={res.loading} href="/app/admin/users" />
+          <Stat label="Sem unidade liberada" value={linksVisible ? formatInteger(active.filter((u) => u.branch_access.length === 0).length) : "—"} loading={res.loading} href="/app/admin/users" />
         </StatStrip>
       )}
     </Panel>
@@ -520,7 +520,7 @@ export function OperationalCenter() {
 
       {execOk && (
         <section aria-label="Resumo" className="flex flex-col gap-2">
-          <SectionTitle title="Resumo" description="Indicadores consolidados no período selecionado." actions={<Link href="/gestao/dashboard" className="text-xs font-medium text-muted-foreground hover:text-foreground">Painel executivo →</Link>} />
+          <SectionTitle title="Resumo" description="Indicadores consolidados no período selecionado." actions={<Link href="/app/gestao/dashboard" className="text-xs font-medium text-muted-foreground hover:text-foreground">Painel executivo →</Link>} />
           <SummaryStrip report={REPORTS.executive} range={range} previous={previous} enabled keys={["net_revenue", "gross_margin_pct", "cash_balance", "open_sales_orders"]} lead />
         </section>
       )}
@@ -541,7 +541,7 @@ export function OperationalCenter() {
         <SectionTitle title="Investigação" description="Tendências dos seus módulos. Painéis por área em Dashboards." />
         <div className="grid gap-4 lg:grid-cols-2">
           <MonthlyTrend report={REPORTS.executive} metricKey="net_revenue" title="Receita líquida por mês" />
-          <AgingBuckets title="A receber por vencimento" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/financeiro/contas-receber" />
+          <AgingBuckets title="A receber por vencimento" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/app/financeiro/contas-receber" />
         </div>
       </section>
     </div>

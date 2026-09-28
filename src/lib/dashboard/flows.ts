@@ -43,13 +43,13 @@ export function buildOrderToDeliveryFlow(orders: AnyRow[], shipments: AnyRow[], 
   const cancelled = count(["cancelled"]);
   const shippedDelivered = shipped.filter((o) => delivered.has(String(o.id))).length;
   const nodes: FlowNode[] = [
-    { name: "Pedidos do período", href: "/comercial/pedidos-venda" },
-    { name: "Em aprovação", tone: "warning", href: "/comercial/pedidos-venda?view=aprovacao" },
-    { name: "Em preparação", href: "/comercial/pedidos-venda?view=em-andamento" },
-    { name: "Expedidos", href: "/logistica/expedicao" },
-    { name: "Cancelados", tone: "danger", href: "/comercial/pedidos-venda?status=cancelled" },
-    { name: "Entregues", tone: "success", href: "/logistica/transportes?view=entregues" },
-    { name: "A caminho / sem baixa", href: "/logistica/transportes?view=transito" },
+    { name: "Pedidos do período", href: "/app/comercial/pedidos-venda" },
+    { name: "Em aprovação", tone: "warning", href: "/app/comercial/pedidos-venda?view=aprovacao" },
+    { name: "Em preparação", href: "/app/comercial/pedidos-venda?view=em-andamento" },
+    { name: "Expedidos", href: "/app/logistica/expedicao" },
+    { name: "Cancelados", tone: "danger", href: "/app/comercial/pedidos-venda?status=cancelled" },
+    { name: "Entregues", tone: "success", href: "/app/logistica/transportes?view=entregues" },
+    { name: "A caminho / sem baixa", href: "/app/logistica/transportes?view=transito" },
   ];
   return build(nodes, [
     [0, 1, approval.length],
@@ -72,13 +72,13 @@ export function buildProcureToReceiveFlow(orders: AnyRow[], receipts: AnyRow[], 
   const cancelled = count(["cancelled"]);
   const receivedConfirmed = received.filter((o) => confirmed.has(String(o.id))).length;
   const nodes: FlowNode[] = [
-    { name: "Pedidos de compra", href: "/suprimentos/pedidos-compra" },
-    { name: "Em aprovação", tone: "warning", href: "/suprimentos/pedidos-compra?view=aprovacao" },
-    { name: "Aguardando fornecedor", href: "/suprimentos/pedidos-compra?status=sent" },
-    { name: "Recebidos", href: "/logistica/recebimento" },
-    { name: "Cancelados", tone: "danger", href: "/suprimentos/pedidos-compra?status=cancelled" },
-    { name: "Entrada confirmada", tone: "success", href: "/logistica/recebimento?status=confirmed" },
-    { name: "Em conferência", tone: "warning", href: "/logistica/recebimento?view=conferencia" },
+    { name: "Pedidos de compra", href: "/app/suprimentos/pedidos-compra" },
+    { name: "Em aprovação", tone: "warning", href: "/app/suprimentos/pedidos-compra?view=aprovacao" },
+    { name: "Aguardando fornecedor", href: "/app/suprimentos/pedidos-compra?status=sent" },
+    { name: "Recebidos", href: "/app/logistica/recebimento" },
+    { name: "Cancelados", tone: "danger", href: "/app/suprimentos/pedidos-compra?status=cancelled" },
+    { name: "Entrada confirmada", tone: "success", href: "/app/logistica/recebimento?status=confirmed" },
+    { name: "Em conferência", tone: "warning", href: "/app/logistica/recebimento?view=conferencia" },
   ];
   return build(nodes, [
     [0, 1, approval.length],
@@ -100,11 +100,11 @@ export function buildProductionFlow(orders: AnyRow[], range: DateRange): Flow {
   const cancelled = count(["cancelled"]);
   const withScrap = done.filter((o) => Number(o.rejected_quantity) > 0).length;
   const nodes: FlowNode[] = [
-    { name: "Ordens de produção", href: "/producao/ordens" },
-    { name: "Planejadas", href: "/producao/ordens?status=planned" },
-    { name: "Em produção", href: "/producao/ordens?view=producao" },
-    { name: "Concluídas", href: "/producao/ordens?status=completed" },
-    { name: "Canceladas", tone: "danger", href: "/producao/ordens?status=cancelled" },
+    { name: "Ordens de produção", href: "/app/producao/ordens" },
+    { name: "Planejadas", href: "/app/producao/ordens?status=planned" },
+    { name: "Em produção", href: "/app/producao/ordens?view=producao" },
+    { name: "Concluídas", href: "/app/producao/ordens?status=completed" },
+    { name: "Canceladas", tone: "danger", href: "/app/producao/ordens?status=cancelled" },
     { name: "Sem refugo", tone: "success" },
     { name: "Com refugo", tone: "danger" },
   ];

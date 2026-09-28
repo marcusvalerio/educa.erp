@@ -10,6 +10,7 @@ import { cn } from "@/lib/cn";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { NAV_GROUP_LABELS, type NavGroupId, type NavSection } from "@/lib/nav";
 import { isPathActive } from "@/lib/navigation/access";
+import { APP_HOME } from "@/lib/navigation/app-routes";
 
 // Sidebar única para os três ambientes. O que muda é a pele (variant) e o
 // conteúdo (seções já filtradas por permissão pelo shell que a usa):
@@ -141,7 +142,7 @@ function NavContent({
           <ul className="flex flex-col gap-0.5">
             {groupSections.map((section) => {
               const Icon = section.icon;
-              const sectionActive = section.href === "/" ? pathname === "/" : isPathActive(pathname, section.href) || section.items.some((i) => isPathActive(pathname, i.href));
+              const sectionActive = section.href === APP_HOME ? pathname === APP_HOME : isPathActive(pathname, section.href) || section.items.some((i) => isPathActive(pathname, i.href));
               const hasChildren = section.items.length > 0;
               const open = !collapsed && hasChildren && (manual[section.id] ?? sectionActive);
 

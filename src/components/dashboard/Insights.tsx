@@ -278,10 +278,10 @@ export function CommercialFunnel({ range }: { range: DateRange }) {
   const q = (quotes.data ?? []).filter((r) => inRange(r.issued_at as string, range));
   const o = (orders.data ?? []).filter((r) => inRange(r.order_date as string, range));
   const stages = [
-    { id: "q", label: "Orçamentos emitidos", value: q.length, href: "/comercial/orcamentos" },
-    { id: "qa", label: "Orçamentos aprovados", value: q.filter((r) => String(r.status) === "approved").length, href: "/comercial/orcamentos?status=approved" },
-    { id: "o", label: "Pedidos no período", value: o.filter((r) => String(r.status) !== "cancelled").length, href: "/comercial/pedidos-venda" },
-    { id: "os", label: "Expedidos / concluídos", value: o.filter((r) => ["partially_shipped", "shipped", "completed"].includes(String(r.status))).length, href: "/logistica/expedicao" },
+    { id: "q", label: "Orçamentos emitidos", value: q.length, href: "/app/comercial/orcamentos" },
+    { id: "qa", label: "Orçamentos aprovados", value: q.filter((r) => String(r.status) === "approved").length, href: "/app/comercial/orcamentos?status=approved" },
+    { id: "o", label: "Pedidos no período", value: o.filter((r) => String(r.status) !== "cancelled").length, href: "/app/comercial/pedidos-venda" },
+    { id: "os", label: "Expedidos / concluídos", value: o.filter((r) => ["partially_shipped", "shipped", "completed"].includes(String(r.status))).length, href: "/app/logistica/expedicao" },
   ];
   return (
     <ChartPanel

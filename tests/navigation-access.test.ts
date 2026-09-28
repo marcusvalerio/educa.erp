@@ -13,18 +13,20 @@ const only = (...perms: string[]) => (p: string) => perms.includes(p);
 
 describe("isPathActive", () => {
   test("compara por segmento, não por prefixo de texto", () => {
-    assert.equal(isPathActive("/admincentral", "/admin"), false);
-    assert.equal(isPathActive("/admincentral/companies", "/admin"), false);
-    assert.equal(isPathActive("/admin/users", "/admin"), true);
-    assert.equal(isPathActive("/admin", "/admincentral"), false);
+    assert.equal(isPathActive("/app/admincentral", "/app/admin"), false);
+    assert.equal(isPathActive("/app/admincentral/companies", "/app/admin"), false);
+    assert.equal(isPathActive("/app/admin/users", "/app/admin"), true);
+    assert.equal(isPathActive("/app/admin", "/app/admincentral"), false);
   });
-  test("raiz só é ativa na raiz", () => {
-    assert.equal(isPathActive("/", "/"), true);
-    assert.equal(isPathActive("/comercial", "/"), false);
+  test("raiz do ERP (/app) só é ativa na raiz", () => {
+    assert.equal(isPathActive("/app", "/app"), true);
+    assert.equal(isPathActive("/app?periodo=30d", "/app"), true);
+    assert.equal(isPathActive("/app/comercial", "/app"), false);
+    assert.equal(isPathActive("/app/admin/users", "/app"), false);
   });
   test("modo exato e query string", () => {
-    assert.equal(isPathActive("/gestao/dashboard/comercial", "/gestao/dashboard", true), false);
-    assert.equal(isPathActive("/gestao/dashboard?periodo=30d", "/gestao/dashboard", true), true);
+    assert.equal(isPathActive("/app/gestao/dashboard/comercial", "/app/gestao/dashboard", true), false);
+    assert.equal(isPathActive("/app/gestao/dashboard?periodo=30d", "/app/gestao/dashboard", true), true);
   });
 });
 
@@ -45,32 +47,32 @@ describe("canAccess / visibleSections", () => {
   test("perfil sem permissões vê só o início e a aparência pessoal", () => {
     const sections = visibleSections(ERP_NAV, only());
     assert.deepEqual(sections.map((s) => s.id), ["inicio", "configuracoes"]);
-    assert.deepEqual(sections[1].items.map((i) => i.href), ["/configuracoes/aparencia"]);
+    assert.deepEqual(sections[1].items.map((i) => i.href), ["/app/configuracoes/aparencia"]);
   });
 });
 
 describe("routeRequirement / matchLeaf", () => {
   test("rota de item exige a permissão do item", () => {
-    assert.equal(routeRequirement(ERP_NAV, "/comercial/pedidos-venda"), "sales_orders.view");
+    assert.equal(routeRequirement(ERP_NAV, "/app/comercial/pedidos-venda"), "sales_orders.view");
   });
   test("detalhe herda a permissão da lista", () => {
-    assert.equal(routeRequirement(ERP_NAV, "/comercial/pedidos-venda/0b9b3c5e-0000-4000-8000-000000000000"), "sales_orders.view");
+    assert.equal(routeRequirement(ERP_NAV, "/app/comercial/pedidos-venda/0b9b3c5e-0000-4000-8000-000000000000"), "sales_orders.view");
   });
   test("item mais específico vence", () => {
-    const m = matchLeaf(ERP_NAV, "/gestao/dashboard/comercial");
-    assert.equal(m?.leaf?.href, "/gestao/dashboard/comercial");
+    const m = matchLeaf(ERP_NAV, "/app/gestao/dashboard/comercial");
+    assert.equal(m?.leaf?.href, "/app/gestao/dashboard/comercial");
   });
   test("landing do módulo exige qualquer permissão dos itens", () => {
-    const req = routeRequirement(ERP_NAV, "/financeiro");
+    const req = routeRequirement(ERP_NAV, "/app/financeiro");
     assert.ok(Array.isArray(req) && req.length > 0);
   });
   test("/admin e /admincentral não se misturam", () => {
-    assert.equal(matchLeaf(ADMIN_NAV, "/admincentral/companies"), null);
-    assert.equal(matchLeaf(PLATFORM_NAV, "/admin/users"), null);
-    assert.equal(routeRequirement(ADMIN_NAV, "/admin/users/cadastro"), "users.read");
+    assert.equal(matchLeaf(ADMIN_NAV, "/app/admincentral/companies"), null);
+    assert.equal(matchLeaf(PLATFORM_NAV, "/app/admin/users"), null);
+    assert.equal(routeRequirement(ADMIN_NAV, "/app/admin/users/cadastro"), "users.read");
   });
   test("breadcrumb segue seção e item", () => {
-    const crumbs = breadcrumbFor(ERP_NAV, "/comercial/pedidos-venda", "Início", "/");
+    const crumbs = breadcrumbFor(ERP_NAV, "/app/comercial/pedidos-venda", "Início", "/app");
     assert.deepEqual(crumbs.map((c) => c.label), ["Início", "Comercial", "Pedidos de venda"]);
   });
 });
@@ -81,7 +83,7 @@ describe("safeNextPath / initials", () => {
     assert.equal(safeNextPath("//evil.example"), "/");
     assert.equal(safeNextPath("/\\evil"), "/");
     assert.equal(safeNextPath(null), "/");
-    assert.equal(safeNextPath("/financeiro?x=1"), "/financeiro?x=1");
+    assert.equal(safeNextPath("/app/financeiro?x=1"), "/app/financeiro?x=1");
   });
   test("iniciais do nome real", () => {
     assert.equal(initials("Maria da Silva"), "MS");
@@ -99,10 +101,10 @@ describe("mapa de navegação", () => {
     assert.equal(new Set(hrefs).size, hrefs.length);
   });
   test("cada ambiente fica no seu prefixo", () => {
-    for (const item of ADMIN_NAV.flatMap((s) => s.items)) assert.ok(isPathActive(item.href, "/admin"), item.href);
-    for (const item of PLATFORM_NAV.flatMap((s) => s.items)) assert.ok(isPathActive(item.href, "/admincentral"), item.href);
+    for (const item of ADMIN_NAV.flatMap((s) => s.items)) assert.ok(isPathActive(item.href, "/app/admin"), item.href);
+    for (const item of PLATFORM_NAV.flatMap((s) => s.items)) assert.ok(isPathActive(item.href, "/app/admincentral"), item.href);
     for (const item of ERP_NAV.flatMap((s) => s.items)) {
-      assert.ok(!isPathActive(item.href, "/admin") && !isPathActive(item.href, "/admincentral"), item.href);
+      assert.ok(!isPathActive(item.href, "/app/admin") && !isPathActive(item.href, "/app/admincentral"), item.href);
     }
   });
   test("toda rota do menu tem página", () => {
@@ -110,7 +112,8 @@ describe("mapa de navegação", () => {
     for (const section of all) {
       for (const href of [section.href, ...section.items.map((i) => i.href)]) {
         const clean = href.split("?")[0];
-        const candidates = [path.join(root, "(erp)", clean, "page.tsx"), path.join(root, clean, "page.tsx")];
+        const inErp = clean.replace(/^\/app(?=\/|$)/, "");
+        const candidates = [path.join(root, "app", "(erp)", inErp, "page.tsx"), path.join(root, clean, "page.tsx")];
         assert.ok(candidates.some((c) => existsSync(c)), `sem página para ${href}`);
       }
     }

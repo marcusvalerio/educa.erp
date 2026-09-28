@@ -140,7 +140,10 @@ describe("drill-down aponta para telas existentes", () => {
   const root = path.join(process.cwd(), "src", "app");
   const exists = (href: string) => {
     const clean = href.split("?")[0];
-    return [path.join(root, "(erp)", clean, "page.tsx"), path.join(root, clean, "page.tsx")].some((c) => existsSync(c));
+    // O ERP mora em /app (src/app/app/(erp)); drill-down fora de /app não vale.
+    if (!clean.startsWith("/app/")) return false;
+    const inErp = clean.slice("/app".length);
+    return [path.join(root, "app", "(erp)", inErp, "page.tsx"), path.join(root, clean, "page.tsx")].some((c) => existsSync(c));
   };
   test("problemas e métricas", () => {
     for (const p of PROBLEMS) assert.ok(exists(p.href), p.href);

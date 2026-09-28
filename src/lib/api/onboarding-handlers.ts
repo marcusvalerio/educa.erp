@@ -252,7 +252,7 @@ export async function invitePlatformMember(request: NextRequest) {
       if (!adminAccessConfigured()) {
         throw new ApiError("SERVICE_UNAVAILABLE", "O envio de convites não está configurado neste ambiente.", 503);
       }
-      const redirectTo = buildFirstAccessUrl(appOrigin(request), "/admincentral");
+      const redirectTo = buildFirstAccessUrl(appOrigin(request), "/app/admincentral");
       const delivery = await sendAuthInvite(body.email, redirectTo, body.name);
       // Conta nova (e-mail enviado) ou existente (login devolvido pelo
       // provisionamento/achado antes) seguem; qualquer outra falha recusa.

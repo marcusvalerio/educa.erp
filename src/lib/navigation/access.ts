@@ -1,15 +1,21 @@
 import type { NavLeaf, NavSection } from "@/lib/nav";
+import { APP_HOME } from "@/lib/navigation/app-routes";
 
 // Regras puras de navegação (testadas em tests/navigation-access.test.ts).
 
+// O ERP mora sob /app (src/lib/navigation/app-routes.ts): para comparar
+// rotas, /app é a raiz — "/app/comercial" tem os mesmos segmentos que
+// "/comercial" tinha antes.
 function segments(path: string): string[] {
-  return path.split("?")[0].split("#")[0].split("/").filter(Boolean);
+  const parts = path.split("?")[0].split("#")[0].split("/").filter(Boolean);
+  return parts[0] === APP_HOME.slice(1) ? parts.slice(1) : parts;
 }
 
 /**
  * Um href está ativo quando TODOS os seus segmentos são prefixo dos
  * segmentos da rota atual. Comparação por segmento, nunca por string:
- * "/admin" NÃO fica ativo em "/admincentral", e "/" só é ativo em "/".
+ * "/app/admin" NÃO fica ativo em "/app/admincentral", e a raiz do ERP
+ * ("/app") só é ativa nela mesma.
  */
 export function isPathActive(pathname: string, href: string, exact = false): boolean {
   const current = segments(pathname);

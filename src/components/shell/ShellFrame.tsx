@@ -23,9 +23,9 @@ import { AccessStateCard } from "@/components/auth/AccessStateCard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 
 // Moldura comum dos três ambientes do EDUCA:
-//   erp      — operação da empresa (/)
-//   admin    — Administração da Empresa (/admin)
-//   platform — Administração Central da plataforma (/admincentral)
+//   erp      — operação da empresa (/app)
+//   admin    — Administração da Empresa (/app/admin)
+//   platform — Administração Central da plataforma (/app/admincentral)
 // São ambientes distintos (sidebar, cabeçalho, trilha e linguagem
 // próprios), não uma mesma sidebar com itens a mais.
 //
@@ -39,9 +39,9 @@ export type Environment = "erp" | "admin" | "platform";
 const COLLAPSE_KEY = "educa-sidebar-collapsed";
 
 const ENV = {
-  erp: { nav: ERP_NAV, rootLabel: "Início", rootHref: "/" },
-  admin: { nav: ADMIN_NAV, rootLabel: "Administração da Empresa", rootHref: "/admin" },
-  platform: { nav: PLATFORM_NAV, rootLabel: "Administração Central", rootHref: "/admincentral" },
+  erp: { nav: ERP_NAV, rootLabel: "Início", rootHref: "/app" },
+  admin: { nav: ADMIN_NAV, rootLabel: "Administração da Empresa", rootHref: "/app/admin" },
+  platform: { nav: PLATFORM_NAV, rootLabel: "Administração Central", rootHref: "/app/admincentral" },
 } as const;
 
 function initialCollapsed(): boolean {
@@ -148,14 +148,14 @@ function ShellInner({ environment, children }: { environment: Environment; child
 
   // Membro só da plataforma que cai no ERP vai para a Administração Central.
   useEffect(() => {
-    if (status === "ready" && environment === "erp" && !data?.tenant && data?.platform) router.replace("/admincentral");
+    if (status === "ready" && environment === "erp" && !data?.tenant && data?.platform) router.replace("/app/admincentral");
   }, [status, environment, data, router]);
 
   const sections: NavSection[] = useMemo(() => visibleSections(env.nav, permissionCheck), [env.nav, permissionCheck]);
 
-  const adminHref = data?.tenant && canAny(ADMIN_ENTRY_PERMISSIONS) ? "/admin" : null;
-  const platformHref = data?.platform ? "/admincentral" : null;
-  const erpHref = data?.tenant ? "/" : null;
+  const adminHref = data?.tenant && canAny(ADMIN_ENTRY_PERMISSIONS) ? "/app/admin" : null;
+  const platformHref = data?.platform ? "/app/admincentral" : null;
+  const erpHref = data?.tenant ? "/app" : null;
 
   function toggleCollapsed() {
     setCollapsed((prev) => {
@@ -193,7 +193,7 @@ function ShellInner({ environment, children }: { environment: Environment; child
           <NoAccess
             title="Acesso restrito à Administração da Empresa"
             description="A Administração da Empresa é exclusiva dos administradores de cada empresa. Membros da plataforma usam a Administração Central, sem acesso aos dados das empresas."
-            backHref="/admincentral"
+            backHref="/app/admincentral"
           />
         </div>
       </FullPageState>
@@ -240,14 +240,14 @@ function ShellInner({ environment, children }: { environment: Environment; child
 
   const sidebarHeader =
     environment === "platform" ? (
-      <Link href="/admincentral" className="flex min-w-0 items-center gap-2.5 text-platform-foreground" style={{ ["--mark-bar" as string]: "var(--color-platform)" }}>
+      <Link href="/app/admincentral" className="flex min-w-0 items-center gap-2.5 text-platform-foreground" style={{ ["--mark-bar" as string]: "var(--color-platform)" }}>
         <EducaMark className="text-platform-foreground" />
         <span className={cn("min-w-0", collapsed && "lg:hidden")}>
           <EducaWordmark context="Administração Central" />
         </span>
       </Link>
     ) : (
-      <Link href={environment === "admin" ? "/admin" : "/"} className="flex min-w-0 items-center gap-2.5 text-sidebar-foreground">
+      <Link href={environment === "admin" ? "/app/admin" : "/app"} className="flex min-w-0 items-center gap-2.5 text-sidebar-foreground">
         <EducaMark />
         <span className={cn("min-w-0", collapsed && "lg:hidden")}>
           <EducaWordmark context={environment === "admin" ? "Administração da Empresa" : tenant?.company.name} />
@@ -275,7 +275,7 @@ function ShellInner({ environment, children }: { environment: Environment; child
       ) : null
     ) : (
       <Link
-        href={erpHref ?? "/"}
+        href={erpHref ?? "/app"}
         className={cn(
           "flex h-8 items-center gap-2.5 rounded-md px-2.5 text-sm",
           platform ? "text-platform-muted hover:bg-platform-hover hover:text-platform-foreground" : "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground",
@@ -325,7 +325,7 @@ function ShellInner({ environment, children }: { environment: Environment; child
                 <span className="font-semibold">Administração da Empresa</span>
                 <span className="text-muted-foreground"> · {tenant?.company.name} · alterações aqui afetam somente esta empresa</span>
               </span>
-              <Link href="/" className="ml-auto shrink-0 font-medium underline-offset-4 hover:underline">
+              <Link href="/app" className="ml-auto shrink-0 font-medium underline-offset-4 hover:underline">
                 Voltar ao ERP
               </Link>
             </div>

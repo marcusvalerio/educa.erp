@@ -137,7 +137,7 @@ const meta = {
 
 export const produtoCadastroConfig: CadastroConfig<Produto> = {
   moduleLabel: "Cadastros",
-  moduleHref: "/cadastros",
+  moduleHref: "/app/cadastros",
   permissionModule: meta.produtos.permissionModule,
   pageLabel: meta.produtos.pageLabel,
   title: meta.produtos.title,
@@ -198,7 +198,7 @@ export const produtoCadastroConfig: CadastroConfig<Produto> = {
 
 export const clienteCadastroConfig: CadastroConfig<Cliente> = {
   moduleLabel: "Cadastros",
-  moduleHref: "/cadastros",
+  moduleHref: "/app/cadastros",
   permissionModule: meta.clientes.permissionModule,
   pageLabel: meta.clientes.pageLabel,
   title: meta.clientes.title,
@@ -243,7 +243,7 @@ export const clienteCadastroConfig: CadastroConfig<Cliente> = {
 
 export const fornecedorCadastroConfig: CadastroConfig<Fornecedor> = {
   moduleLabel: "Cadastros",
-  moduleHref: "/cadastros",
+  moduleHref: "/app/cadastros",
   permissionModule: meta.fornecedores.permissionModule,
   pageLabel: meta.fornecedores.pageLabel,
   title: meta.fornecedores.title,
@@ -295,7 +295,7 @@ export const fornecedorCadastroConfig: CadastroConfig<Fornecedor> = {
 
 export const transportadoraCadastroConfig: CadastroConfig<Transportadora> = {
   moduleLabel: "Cadastros",
-  moduleHref: "/cadastros",
+  moduleHref: "/app/cadastros",
   permissionModule: meta.transportadoras.permissionModule,
   pageLabel: meta.transportadoras.pageLabel,
   title: meta.transportadoras.title,
@@ -347,7 +347,7 @@ export const transportadoraCadastroConfig: CadastroConfig<Transportadora> = {
 
 export const motoristaCadastroConfig: CadastroConfig<Motorista> = {
   moduleLabel: "Cadastros",
-  moduleHref: "/cadastros",
+  moduleHref: "/app/cadastros",
   permissionModule: meta.motoristas.permissionModule,
   pageLabel: meta.motoristas.pageLabel,
   title: meta.motoristas.title,
@@ -393,7 +393,7 @@ export const motoristaCadastroConfig: CadastroConfig<Motorista> = {
 
 export const veiculoCadastroConfig: CadastroConfig<Veiculo> = {
   moduleLabel: "Cadastros",
-  moduleHref: "/cadastros",
+  moduleHref: "/app/cadastros",
   permissionModule: meta.veiculos.permissionModule,
   pageLabel: meta.veiculos.pageLabel,
   title: meta.veiculos.title,
@@ -441,7 +441,7 @@ export const veiculoCadastroConfig: CadastroConfig<Veiculo> = {
 
 export const usuarioCadastroConfig: CadastroConfig<Usuario> = {
   moduleLabel: "Cadastros",
-  moduleHref: "/cadastros",
+  moduleHref: "/app/cadastros",
   permissionModule: meta.usuarios.permissionModule,
   pageLabel: meta.usuarios.pageLabel,
   title: meta.usuarios.title,
@@ -468,7 +468,7 @@ export const usuarioCadastroConfig: CadastroConfig<Usuario> = {
 
 export const localEstoqueCadastroConfig: CadastroConfig<LocalEstoque> = {
   moduleLabel: "Cadastros",
-  moduleHref: "/cadastros",
+  moduleHref: "/app/cadastros",
   permissionModule: meta["locais-estoque"].permissionModule,
   pageLabel: meta["locais-estoque"].pageLabel,
   title: meta["locais-estoque"].title,

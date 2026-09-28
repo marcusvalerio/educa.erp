@@ -59,7 +59,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "sales_orders.view",
     source: "/api/sales-orders",
     compute: overdueAmount("expected_delivery_at", SO_OPEN, "total_amount"),
-    href: "/comercial/pedidos-venda?view=atrasados",
+    href: "/app/comercial/pedidos-venda?view=atrasados",
   },
   {
     id: "sales-approval",
@@ -73,7 +73,7 @@ export const PROBLEMS: ProblemDef[] = [
       const hits = rows.filter((row) => inSet(row, ["pending_approval"]));
       return { count: hits.length, amount: sum(hits, "total_amount") };
     },
-    href: "/comercial/pedidos-venda?view=aprovacao",
+    href: "/app/comercial/pedidos-venda?view=aprovacao",
   },
   {
     id: "quotes-expired",
@@ -84,7 +84,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "sales_quotes.view",
     source: "/api/sales-quotes",
     compute: overdue("valid_until", ["draft", "sent"]),
-    href: "/comercial/orcamentos?view=atrasados",
+    href: "/app/comercial/orcamentos?view=atrasados",
   },
   {
     id: "payables-overdue",
@@ -95,7 +95,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "accounts_payable.view",
     source: "/api/accounts-payable",
     compute: overdueAmount("due_date", ["OPEN", "PARTIALLY_PAID", "OVERDUE"], "updated_amount"),
-    href: "/financeiro/contas-pagar?view=atrasados",
+    href: "/app/financeiro/contas-pagar?view=atrasados",
   },
   {
     id: "receivables-overdue",
@@ -106,7 +106,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "accounts_receivable.view",
     source: "/api/accounts-receivable",
     compute: overdueAmount("due_date", ["OPEN", "PARTIALLY_RECEIVED", "OVERDUE"], "updated_amount"),
-    href: "/financeiro/contas-receber?view=atrasados",
+    href: "/app/financeiro/contas-receber?view=atrasados",
   },
   {
     id: "purchase-late",
@@ -117,7 +117,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "purchase_orders.view",
     source: "/api/purchase-orders",
     compute: overdueAmount("expected_delivery_at", ["approved", "sent", "partially_received"], "total_amount"),
-    href: "/suprimentos/pedidos-compra?view=atrasados",
+    href: "/app/suprimentos/pedidos-compra?view=atrasados",
   },
   {
     id: "purchase-requests-approval",
@@ -128,7 +128,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "purchase_requests.view",
     source: "/api/purchase-requests",
     compute: byStatus(["requested"]),
-    href: "/suprimentos/solicitacao-compra?view=aprovacao",
+    href: "/app/suprimentos/solicitacao-compra?view=aprovacao",
   },
   {
     id: "receipts-pending",
@@ -139,7 +139,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "purchase_receipts.view",
     source: "/api/purchase-receipts",
     compute: byStatus(["draft"]),
-    href: "/logistica/recebimento?view=conferencia",
+    href: "/app/logistica/recebimento?view=conferencia",
   },
   {
     id: "shipments-late",
@@ -150,7 +150,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "shipments.view",
     source: "/api/shipments",
     compute: overdue("expected_ship_date", ["draft", "ready", "picking", "packed", "ready_to_ship"]),
-    href: "/logistica/expedicao?view=atrasados",
+    href: "/app/logistica/expedicao?view=atrasados",
   },
   {
     id: "stock-unavailable",
@@ -161,7 +161,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "stock.view",
     source: "/api/stock-balances",
     compute: (rows) => ({ count: rows.filter((row) => Number(row.available) <= 0).length }),
-    href: "/logistica/estoque?view=sem-disponivel",
+    href: "/app/logistica/estoque?view=sem-disponivel",
   },
   {
     id: "material-requests",
@@ -172,7 +172,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "stock.view",
     source: "/api/material-requests",
     compute: byStatus(["requested"]),
-    href: "/logistica/almoxarifado?view=pendentes",
+    href: "/app/logistica/almoxarifado?view=pendentes",
   },
   {
     id: "production-late",
@@ -183,7 +183,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "production_orders.view",
     source: "/api/production-orders",
     compute: overdue("planned_date", ["planned", "released", "materials_reserved", "in_progress", "on_hold"]),
-    href: "/producao/ordens?view=atrasados",
+    href: "/app/producao/ordens?view=atrasados",
   },
   {
     id: "fiscal-rejected",
@@ -197,7 +197,7 @@ export const PROBLEMS: ProblemDef[] = [
       const hits = rows.filter((row) => inSet(row, ["REJECTED", "DENIED"]));
       return { count: hits.length, amount: sum(hits, "total_amount") };
     },
-    href: "/fiscal/notas-fiscais?view=rejeitadas",
+    href: "/app/fiscal/notas-fiscais?view=rejeitadas",
   },
   {
     id: "nonconformities-open",
@@ -210,7 +210,7 @@ export const PROBLEMS: ProblemDef[] = [
     compute: (rows) => ({
       count: rows.filter((row) => inSet(row, ["OPEN", "IN_ANALYSIS", "IN_TREATMENT"]) && ["HIGH", "CRITICAL"].includes(up(row.severity))).length,
     }),
-    href: "/qualidade/nao-conformidades?view=abertas",
+    href: "/app/qualidade/nao-conformidades?view=abertas",
   },
   {
     id: "maintenance-late",
@@ -221,7 +221,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "maintenance_orders.view",
     source: "/api/maintenance-orders",
     compute: overdue("scheduled_date", ["OPEN", "PLANNED", "WAITING_PARTS"]),
-    href: "/ativos/ordens-manutencao?view=atrasados",
+    href: "/app/ativos/ordens-manutencao?view=atrasados",
   },
   {
     id: "service-orders-late",
@@ -232,7 +232,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "service_orders.view",
     source: "/api/service-orders",
     compute: overdue("scheduled_date", ["OPEN", "SCHEDULED", "WAITING"]),
-    href: "/projetos/ordens-servico?view=atrasados",
+    href: "/app/projetos/ordens-servico?view=atrasados",
   },
   {
     id: "tasks-blocked",
@@ -243,7 +243,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "project_tasks.view",
     source: "/api/project-tasks",
     compute: byStatus(["BLOCKED"]),
-    href: "/projetos/tarefas?view=bloqueadas",
+    href: "/app/projetos/tarefas?view=bloqueadas",
   },
   {
     id: "activities-late",
@@ -254,7 +254,7 @@ export const PROBLEMS: ProblemDef[] = [
     permission: "activities.view",
     source: "/api/activities",
     compute: overdue("due_date", ["PENDING"]),
-    href: "/crm/atividades?view=atrasados",
+    href: "/app/crm/atividades?view=atrasados",
   },
 ];
 

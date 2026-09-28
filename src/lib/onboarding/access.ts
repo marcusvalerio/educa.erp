@@ -1,4 +1,5 @@
 import { safeNextPath } from "@/lib/navigation/access";
+import { APP_HOME, legacyAppPath } from "@/lib/navigation/app-routes";
 import type { AccessState, SessionContext } from "@/lib/session/types";
 
 // Regras de entrada (primeiro login e todo login seguinte). Puro: sem
@@ -28,8 +29,8 @@ function inArea(path: string, area: string): boolean {
 
 /**
  * Para onde ir depois de entrar.
- *   - membro só da plataforma → /admincentral (nunca o ERP de uma empresa);
- *   - usuário de empresa → o destino pedido (next) ou o ERP;
+ *   - membro só da plataforma → /app/admincentral (nunca o ERP de uma empresa);
+ *   - usuário de empresa → o destino pedido (next) ou o ERP (/app);
  *   - sem contexto utilizável → /acesso (tela explicativa).
  * `next` é sempre saneado (sem open redirect) e nunca leva alguém para um
  * ambiente que o próprio contexto já diz não ser dele.
@@ -41,25 +42,28 @@ export function postLoginDestination(ctx: Pick<SessionContext, "access" | "tenan
 
   if (wanted && inArea(wanted, "/convite")) return wanted;
   if (!hasTenant && !hasPlatform) return "/acesso";
-  if (wanted && wanted !== "/") {
-    if (inArea(wanted, "/admincentral")) return hasPlatform ? wanted : "/";
-    if (hasTenant) return wanted;
+  // Endereço antigo do ERP (link ou favorito de antes de /app) → o novo.
+  const target = wanted ? (legacyAppPath(wanted) ?? wanted) : null;
+  if (target && target !== "/" && target !== APP_HOME) {
+    if (inArea(target, "/app/admincentral")) return hasPlatform ? target : APP_HOME;
+    if (hasTenant) return target;
   }
-  return hasTenant ? "/" : "/admincentral";
+  return hasTenant ? APP_HOME : "/app/admincentral";
 }
 
 // ----------------------------------------------------------- rotas públicas
 // Rotas de UI que abrem sem sessão (o proxy não redireciona para /login).
 // Cada uma valida sozinha o que precisa: /convite consulta o token,
 // /redefinir-senha exige a sessão de recuperação, /auth/callback troca o
-// código do Supabase por sessão.
-export const PUBLIC_PATHS = ["/login", "/recuperar-senha", "/redefinir-senha", "/convite", "/auth/callback"] as const;
+// código do Supabase por sessão. "/" é a landing pública — só a raiz
+// exata, nunca o prefixo de tudo.
+export const PUBLIC_PATHS = ["/", "/login", "/recuperar-senha", "/redefinir-senha", "/convite", "/auth/callback"] as const;
 
-// Rotas só para quem NÃO está autenticado: com sessão, voltam ao início.
-export const GUEST_ONLY_PATHS = ["/login", "/recuperar-senha"] as const;
+// Rotas só para quem NÃO está autenticado: com sessão, vão para o ERP (/app).
+export const GUEST_ONLY_PATHS = ["/", "/login", "/recuperar-senha"] as const;
 
 function matches(pathname: string, list: readonly string[]): boolean {
-  return list.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  return list.some((path) => (path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(`${path}/`)));
 }
 
 export const isPublicPath = (pathname: string) => matches(pathname, PUBLIC_PATHS);

@@ -116,7 +116,7 @@ export function InvitationFlow({ token }: { token: string }) {
             const res = await fetch("/api/session/context", { cache: "no-store" });
             const body = await res.json().catch(() => null);
             if (res.ok && body?.success) primeSession(body.data as SessionContext);
-            router.replace(kind === "COMPANY_ADMIN" ? "/admin" : "/");
+            router.replace(kind === "COMPANY_ADMIN" ? "/app/admin" : "/app");
           }}
         />
       )}

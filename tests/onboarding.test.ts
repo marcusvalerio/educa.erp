@@ -49,30 +49,38 @@ describe("estado de acesso", () => {
 });
 
 describe("destino depois do login", () => {
-  test("usuário comum → ERP; next interno respeitado", () => {
-    assert.equal(postLoginDestination(ctx({ tenant })), "/");
-    assert.equal(postLoginDestination(ctx({ tenant }), "/comercial/pedidos"), "/comercial/pedidos");
-    assert.equal(postLoginDestination(ctx({ tenant }), "/admin/users"), "/admin/users");
+  test("usuário comum → ERP (/app); next interno respeitado", () => {
+    assert.equal(postLoginDestination(ctx({ tenant })), "/app");
+    assert.equal(postLoginDestination(ctx({ tenant }), "/"), "/app");
+    assert.equal(postLoginDestination(ctx({ tenant }), "/app/comercial/pedidos"), "/app/comercial/pedidos");
+    assert.equal(postLoginDestination(ctx({ tenant }), "/app/admin/users"), "/app/admin/users");
   });
-  test("membro só da plataforma → /admincentral, nunca o ERP", () => {
-    assert.equal(postLoginDestination(ctx({ access: "unlinked", platform })), "/admincentral");
-    assert.equal(postLoginDestination(ctx({ access: "unlinked", platform }), "/comercial"), "/admincentral");
-    assert.equal(postLoginDestination(ctx({ access: "unlinked", platform }), "/admincentral/companies"), "/admincentral/companies");
+  test("next com endereço antigo (antes de /app) leva ao endereço novo", () => {
+    assert.equal(postLoginDestination(ctx({ tenant }), "/comercial/pedidos?view=aprovacao"), "/app/comercial/pedidos?view=aprovacao");
+    assert.equal(postLoginDestination(ctx({ tenant }), "/admin/users"), "/app/admin/users");
+    assert.equal(postLoginDestination(ctx({ access: "unlinked", platform }), "/admincentral/companies"), "/app/admincentral/companies");
+    assert.equal(postLoginDestination(ctx({ tenant }), "/admincentral"), "/app");
   });
-  test("Company Admin não é levado para /admincentral por next", () => {
-    assert.equal(postLoginDestination(ctx({ tenant }), "/admincentral"), "/");
-    assert.equal(postLoginDestination(ctx({ tenant }), "/admincentral/platform-members"), "/");
+  test("membro só da plataforma → /app/admincentral, nunca o ERP", () => {
+    assert.equal(postLoginDestination(ctx({ access: "unlinked", platform })), "/app/admincentral");
+    assert.equal(postLoginDestination(ctx({ access: "unlinked", platform }), "/app/comercial"), "/app/admincentral");
+    assert.equal(postLoginDestination(ctx({ access: "unlinked", platform }), "/app"), "/app/admincentral");
+    assert.equal(postLoginDestination(ctx({ access: "unlinked", platform }), "/app/admincentral/companies"), "/app/admincentral/companies");
+  });
+  test("Company Admin não é levado para /app/admincentral por next", () => {
+    assert.equal(postLoginDestination(ctx({ tenant }), "/app/admincentral"), "/app");
+    assert.equal(postLoginDestination(ctx({ tenant }), "/app/admincentral/platform-members"), "/app");
   });
   test("sem contexto (sem vínculo, inativo, sem empresa) → /acesso", () => {
     assert.equal(postLoginDestination(ctx({ access: "unlinked" })), "/acesso");
-    assert.equal(postLoginDestination(ctx({ access: "inactive" }), "/comercial"), "/acesso");
+    assert.equal(postLoginDestination(ctx({ access: "inactive" }), "/app/comercial"), "/acesso");
     assert.equal(postLoginDestination(ctx({ access: "no_company" })), "/acesso");
     // inativo com tenant residual continua sem acesso
     assert.equal(postLoginDestination(ctx({ access: "inactive", tenant })), "/acesso");
   });
   test("next externo nunca vira redirect (open redirect)", () => {
     for (const evil of ["//evil.example", "https://evil.example", "/\\evil.example", "javascript:alert(1)"]) {
-      assert.equal(postLoginDestination(ctx({ tenant }), evil), "/");
+      assert.equal(postLoginDestination(ctx({ tenant }), evil), "/app");
     }
   });
   test("convite em andamento volta ao convite, qualquer que seja o contexto", () => {
@@ -81,17 +89,20 @@ describe("destino depois do login", () => {
 });
 
 describe("rotas públicas (proxy)", () => {
-  test("abrem sem sessão", () => {
-    for (const p of ["/login", "/recuperar-senha", "/redefinir-senha", `/convite/${TOKEN}`, "/auth/callback"]) assert.equal(isPublicPath(p), true, p);
+  test("abrem sem sessão (landing só na raiz exata)", () => {
+    for (const p of ["/", "/login", "/recuperar-senha", "/redefinir-senha", `/convite/${TOKEN}`, "/auth/callback"]) assert.equal(isPublicPath(p), true, p);
   });
   test("todo o resto exige sessão — comparação por segmento", () => {
-    for (const p of ["/", "/admin", "/admincentral", "/acesso", "/comercial", "/convitex", "/login-falso", "/loginx/a"]) assert.equal(isPublicPath(p), false, p);
+    for (const p of ["/app", "/app/comercial", "/app/admin", "/app/admincentral", "/admin", "/admincentral", "/acesso", "/comercial", "/convitex", "/login-falso", "/loginx/a", "/landing", "/x"]) assert.equal(isPublicPath(p), false, p);
   });
-  test("só-visitante: login e recuperação; convite e redefinição aceitam sessão", () => {
+  test("só-visitante: landing, login e recuperação; convite e redefinição aceitam sessão", () => {
+    assert.equal(isGuestOnlyPath("/"), true);
     assert.equal(isGuestOnlyPath("/login"), true);
     assert.equal(isGuestOnlyPath("/recuperar-senha"), true);
     assert.equal(isGuestOnlyPath(`/convite/${TOKEN}`), false);
     assert.equal(isGuestOnlyPath("/redefinir-senha"), false);
+    // "/" é exata: nenhuma rota do ERP vira só-visitante por prefixo.
+    for (const p of ["/app", "/app/comercial", "/acesso", "/auth/callback"]) assert.equal(isGuestOnlyPath(p), false, p);
   });
 });
 
@@ -169,7 +180,7 @@ describe("links", () => {
   });
   test("recuperação volta por /auth/callback para /redefinir-senha; primeiro acesso leva next", () => {
     assert.equal(buildRecoveryCallbackUrl("https://erp.exemplo.com"), "https://erp.exemplo.com/auth/callback?next=%2Fredefinir-senha");
-    assert.equal(buildFirstAccessUrl("https://erp.exemplo.com", "/admincentral"), "https://erp.exemplo.com/redefinir-senha?primeiro-acesso=1&next=%2Fadmincentral");
+    assert.equal(buildFirstAccessUrl("https://erp.exemplo.com", "/app/admincentral"), "https://erp.exemplo.com/redefinir-senha?primeiro-acesso=1&next=%2Fapp%2Fadmincentral");
   });
 });
 

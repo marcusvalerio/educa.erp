@@ -94,7 +94,7 @@ export async function bootstrapOwner(admin, { email, name, appUrl, dryRun }, log
       // identidade no provedor + vínculo (0073) para continuar entrando.
       // Idempotente; não registra outro Owner nem mexe em platform_members.
       if (!appUrl) throw new Error("Informe --app-url (ou APP_URL) para o link de primeiro acesso.");
-      const redirectTo = `${appUrl}/redefinir-senha?primeiro-acesso=1&next=${encodeURIComponent("/admincentral")}`;
+      const redirectTo = `${appUrl}/redefinir-senha?primeiro-acesso=1&next=${encodeURIComponent("/app/admincentral")}`;
       if (dryRun) {
         log(`[simulação] Garantiria identidade no provedor e vínculo para o Owner existente ${email} (retorno: ${redirectTo}).`);
         return { status: "dry_run" };
@@ -111,7 +111,7 @@ export async function bootstrapOwner(admin, { email, name, appUrl, dryRun }, log
   let invited = false;
   if (provision) {
     if (!appUrl) throw new Error("Informe --app-url (ou APP_URL) para o link de primeiro acesso.");
-    const redirectTo = `${appUrl}/redefinir-senha?primeiro-acesso=1&next=${encodeURIComponent("/admincentral")}`;
+    const redirectTo = `${appUrl}/redefinir-senha?primeiro-acesso=1&next=${encodeURIComponent("/app/admincentral")}`;
     if (dryRun) {
       log(`[simulação] Garantiria login, identidade no provedor e vínculo para ${email} (retorno: ${redirectTo}).`);
     } else {
@@ -123,7 +123,7 @@ export async function bootstrapOwner(admin, { email, name, appUrl, dryRun }, log
     }
   } else if (!authUserId) {
     if (!appUrl) throw new Error("Não há login para este e-mail. Informe --app-url para enviar o convite de primeiro acesso.");
-    const redirectTo = `${appUrl}/redefinir-senha?primeiro-acesso=1&next=${encodeURIComponent("/admincentral")}`;
+    const redirectTo = `${appUrl}/redefinir-senha?primeiro-acesso=1&next=${encodeURIComponent("/app/admincentral")}`;
     if (dryRun) {
       log(`[simulação] Enviaria convite de primeiro acesso para ${email} (retorno: ${redirectTo}).`);
     } else {

@@ -125,7 +125,7 @@ try {
     check("owner: link do e-mail passa pelo Neon Auth e abre 'Crie sua senha'", new URL(link).origin === new URL(NEON).origin);
     check("owner: token do link sai da barra de endereço", clean);
     await o.page.waitForURL(/\/admincentral/, { timeout: 20000 });
-    check("owner: depois de criar a senha vai para /admincentral", o.page.url().includes("/admincentral"), o.page.url());
+    check("owner: depois de criar a senha vai para /app/admincentral", o.page.url().includes("/app/admincentral"), o.page.url());
     const ctx = await api(o.page, "/api/session/context");
     check("owner: contexto = plataforma OWNER, sem tenant", ctx.body?.data?.platform?.role === "OWNER" && ctx.body?.data?.tenant === null, JSON.stringify(ctx.body?.data?.platform));
     const ids = sql(`select l.auth_user_id = m.auth_user_id and l.auth_user_id = u.id from auth_identity_links l join platform_members m on m.email = l.email join auth.users u on u.email = l.email where l.email='${OWNER}'`);
@@ -158,8 +158,8 @@ try {
     await thief.ctx.addCookies([{ name: "educa_session", value: "neon-auth.session_token=forjado.assinatura", url: APP }]);
     check("cookie forjado → 401", (await api(thief.page, "/api/session/context")).status === 401);
     await thief.ctx.close();
-    await o.page.goto(`${APP}/admincentral`);
-    await o.page.waitForURL(/\/login\?next=%2Fadmincentral/, { timeout: 15000 });
+    await o.page.goto(`${APP}/app/admincentral`);
+    await o.page.waitForURL(/\/login\?next=%2Fapp%2Fadmincentral/, { timeout: 15000 });
     check("proxy: sem sessão → /login?next=", true);
     await login(o.page, OWNER, "senha-errada-123");
     await o.page.getByText("E-mail ou senha inválidos").waitFor();
@@ -354,7 +354,7 @@ try {
     neonSql(`update session set "expiresAt" = now() - interval '1 minute' where token='${token}'`);
     await new Promise((res) => setTimeout(res, 11000));
     check("sessão expirada no Neon → 401 no app", (await api(b1.page, "/api/session/context")).status === 401);
-    await b1.page.goto(`${APP}/admin`);
+    await b1.page.goto(`${APP}/app/admin`);
     await b1.page.waitForURL(/\/login/, { timeout: 15000 });
     check("sessão expirada → proxy leva ao login", true);
   }

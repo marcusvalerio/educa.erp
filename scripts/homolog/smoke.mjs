@@ -39,9 +39,18 @@ const newCtx = () => browser.newContext({ extraHTTPHeaders: BYPASS, viewport: { 
   check("Acesso", "login sem CTA de cadastro", !SIGNUP.test(text), "funciona", text.match(SIGNUP)?.[0]);
   check("Ambiente", "selo HOMOLOGAÇÃO visível no login", /homologa[cç][aã]o/i.test(text), "funciona", "selo ausente (APP_ENV não é homologacao?)");
   check("Ambiente", "título da aba indica homologação", /HOMOLOGA/i.test(await page.title()), "funciona", await page.title());
-  for (const path of ["/", "/comercial/pedidos", "/financeiro/contas-receber", "/admin", "/admincentral"]) {
+  // Landing pública em "/"; ERP em /app. Endereços antigos passam pelo 308.
+  const landing = await page.goto(`${APP}/`);
+  const landingText = await page.locator("body").innerText();
+  check("Landing", "/ sem sessão → landing (200, sem redirecionar)", landing?.status() === 200 && new URL(page.url()).pathname === "/" && /EDUCA/.test(await page.title()), "funciona", `${landing?.status()} ${page.url()}`);
+  check("Landing", "landing sem CTA de cadastro", !SIGNUP.test(landingText), "funciona", landingText.match(SIGNUP)?.[0]);
+  const enter = await page.locator('a:has-text("Entrar")').evaluateAll((as) => as.map((a) => a.getAttribute("href")));
+  check("Landing", `'Entrar no EDUCA' → /login (${enter.length} links)`, enter.length >= 3 && enter.every((h) => h === "/login"), "funciona", enter.join(", "));
+  for (const path of ["/app", "/app/comercial/pedidos", "/app/financeiro/contas-receber", "/app/admin", "/app/admincentral", "/comercial/pedidos", "/admin"]) {
     await page.goto(`${APP}${path}`);
-    check("Rotas protegidas", `${path} sem sessão → /login`, new URL(page.url()).pathname.startsWith("/login"), "funciona", page.url());
+    const to = new URL(page.url());
+    const next = to.searchParams.get("next") ?? "";
+    check("Rotas protegidas", `${path} sem sessão → /login`, to.pathname.startsWith("/login") && next.startsWith("/app"), "funciona", page.url());
   }
   const api = await ctx.request.get(`${APP}/api/session/context`);
   check("Rotas protegidas", "API sem sessão → 401", api.status() === 401, "funciona", api.status());
@@ -91,6 +100,12 @@ for (const [key, u] of Object.entries(users)) {
     continue;
   }
   sessions[key] = s;
+  check("Rotas com sessão", `${u.label}: depois do login cai no ERP (/app)`, new URL(s.page.url()).pathname.startsWith("/app"), "funciona", s.page.url());
+  for (const [from, to] of [["/", "/app"], ["/login", "/app"], ["/comercial/pedidos-venda?view=aprovacao", "/app/comercial/pedidos-venda"]]) {
+    await s.page.goto(`${APP}${from}`);
+    check("Rotas com sessão", `${u.label}: ${from} com sessão → ${to}`, new URL(s.page.url()).pathname === to, "funciona", s.page.url());
+  }
+  await s.page.goto(`${APP}/app`);
   const ctx = await s.page.evaluate(async () => (await (await fetch("/api/session/context")).json())?.data);
   const roles = (ctx?.tenant?.roles ?? []).map((r) => r.code);
   check("Sessão", `${u.label}: contexto carregado (${roles.join(",") || "sem papel"}${ctx?.platform?.role ? ` + plataforma ${ctx.platform.role}` : ""})`, !!ctx?.tenant, "funciona", JSON.stringify(ctx)?.slice(0, 160));
@@ -105,7 +120,8 @@ const has = (key, re) => (menus[key] ?? []).some((m) => re.test(m));
 if (menus.owner && menus.admin && menus.user) {
   check("RBAC: menu", "Usuário (Vendedor) vê Comercial e CRM", has("user", /comercial/i) && has("user", /crm/i), "funciona", menus.user.join(" · "));
   check("RBAC: menu", "Usuário (Vendedor) NÃO vê Financeiro, Fiscal, Suprimentos, Produção", !has("user", /\/financeiro|\/fiscal|\/suprimentos|\/producao/i), "funciona", menus.user.filter((m) => /financeiro|fiscal|suprimentos|producao/i.test(m)).join(" · "));
-  check("RBAC: menu", "Usuário (Vendedor) NÃO vê Administração", !has("user", /^\/admin/i), "funciona", menus.user.filter((m) => /^\/admin/.test(m)).join(" · "));
+  check("RBAC: menu", "Usuário (Vendedor) NÃO vê Administração", !has("user", /^\/app\/admin/i), "funciona", menus.user.filter((m) => /^\/app\/admin/.test(m)).join(" · "));
+  check("RBAC: menu", "todo item de menu mora em /app", Object.values(menus).flat().every((m) => /^\/app(\/|\||$)/.test(m)), "funciona", Object.values(menus).flat().filter((m) => !m.startsWith("/app")).join(" · "));
   check("RBAC: menu", "Admin (Operador) vê Financeiro e Fiscal", has("admin", /\/financeiro/) && has("admin", /\/fiscal/), "funciona", menus.admin.join(" · "));
   check("RBAC: menu", "Usuário vê menos itens que o Admin", menus.user.length < menus.admin.length, "funciona", `${menus.user.length} vs ${menus.admin.length}`);
 }
@@ -168,7 +184,7 @@ if (sessions.admin && sessions.user) {
 
 // Tela sem acesso: Vendedor abrindo Financeiro e Administração.
 if (sessions.user) {
-  for (const path of ["/financeiro/contas-receber", "/admin", "/admincentral"]) {
+  for (const path of ["/app/financeiro/contas-receber", "/app/admin", "/app/admincentral"]) {
     await sessions.user.page.goto(`${APP}${path}`);
     await sessions.user.page.waitForLoadState("networkidle").catch(() => {});
     const t = await sessions.user.page.locator("body").innerText();
@@ -205,7 +221,7 @@ const loggedOut = async (page) => {
 };
 async function logoutVia(key, how) {
   const s = sessions[key];
-  await s.page.goto(`${APP}/`);
+  await s.page.goto(`${APP}/app`);
   await s.page.getByRole("button", { name: /^Conta:/ }).first().click({ timeout: 10000 });
   const item = s.page.getByRole("menuitem", { name: /Sair/ });
   if (how === "mouse") await item.click({ timeout: 5000 });
@@ -215,7 +231,7 @@ async function logoutVia(key, how) {
   }
   const back = await loggedOut(s.page);
   const api = await apiStatus(s.page, "/api/session/context");
-  await s.page.goto(`${APP}/comercial/pedidos`);
+  await s.page.goto(`${APP}/app/comercial/pedidos`);
   const guarded = new URL(s.page.url()).pathname.startsWith("/login");
   check("Autenticação", `${users[key].label}: logout com o ${how === "mouse" ? "mouse" : "teclado"} (Conta → Sair) volta ao /login`, back, "funciona", s.page.url());
   check("Sessão", `${users[key].label}: após logout (${how}) a API recusa (401)`, api === 401, "funciona", `obtido ${api}`);

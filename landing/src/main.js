@@ -235,6 +235,24 @@
     });
   }
 
+  // Ato 04: protagonistas. A etapa em leitura escolhe a tela, a rota e o
+  // enquadramento da câmera (a transição é CSS).
+  document.querySelectorAll(".pro").forEach((pro) => {
+    const beats = [...pro.querySelectorAll(".pro-beat")];
+    const lists = [beats, pro.querySelectorAll(".pro-layer"), pro.querySelectorAll(".pro-stage .shot-route"), pro.querySelectorAll(".pro-dots li")].map((l) => [...l]);
+    const dots = lists[3];
+    const set = (k) => {
+      lists.forEach((l) => l.forEach((el, j) => el.classList.toggle("is-on", j === k)));
+      dots.forEach((el, j) => el.classList.toggle("is-done", j < k));
+    };
+    if (!hasIO) return;
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && set(Number(e.target.dataset.beat))),
+      { rootMargin: "-42% 0px -42% 0px" },
+    );
+    beats.forEach((b) => io.observe(b));
+  });
+
   // Ato 05: o plano do nível em leitura sobe na pilha (Base, Acesso, Central).
   const lvs = [...document.querySelectorAll(".lv[data-lv]")];
   const planes = [...document.querySelectorAll(".lv-plane")];

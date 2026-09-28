@@ -559,7 +559,7 @@ function legend() {
 
 const VIEW_RATIO = 1.5; // proporção da janela do palco
 
-function camParams(s, viewRatio) {
+function camParams(s, viewRatio, maxS = viewRatio ? 1.6 : 1.5) {
   const im = images.get(imgKey(s));
   const [ox, oy] = s._crop ?? [0, 0];
   const rImg = im.w / im.h;
@@ -570,7 +570,7 @@ function camParams(s, viewRatio) {
   let tx = 0;
   let ty = 0;
   if (f) {
-    S = Math.max(1, Math.min(viewRatio ? 1.6 : 1.5, 0.8 / f[2], 0.8 / Math.max(f[3], 0.001)));
+    S = Math.max(1, Math.min(maxS, 0.8 / f[2], 0.8 / Math.max(f[3], 0.001)));
     const cx = f[0] + f[2] / 2;
     const cy = f[1] + f[3] / 2;
     // A imagem ocupa [0,1] na horizontal e [0,k] na vertical (em unidades da
@@ -588,8 +588,8 @@ function camParams(s, viewRatio) {
 
 const CURSOR_SVG = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 3l14 8-6.2 1.6L10 19z" fill="#100c08" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
 
-function cam(s, { viewRatio = null, alt, sizes, inert = false } = {}) {
-  const p = camParams(s, viewRatio);
+function cam(s, { viewRatio = null, alt, sizes, inert = false, maxS } = {}) {
+  const p = camParams(s, viewRatio, maxS);
   const pc = (v) => `${(v * 100).toFixed(2)}%`;
   const focus = p.f
     ? `<span class="cam-focus" style="left:${pc(p.f[0])};top:${pc(p.f[1])};width:${pc(p.f[2])};height:${pc(p.f[3])}"></span>`
@@ -597,7 +597,7 @@ function cam(s, { viewRatio = null, alt, sizes, inert = false } = {}) {
   const cursor = p.cur
     ? `<span class="cam-cursor" style="left:${pc(p.cur[0])};top:${pc(p.cur[1])}" aria-hidden="true"><span class="cam-ripple"></span>${CURSOR_SVG}${s.action ? `<em>${esc(s.action)}</em>` : ""}</span>`
     : "";
-  return `<div class="cam" data-s="${p.S.toFixed(3)}" data-tx="${p.tx.toFixed(2)}" data-ty="${p.ty.toFixed(2)}">${picture(s, { alt: inert ? "" : alt ?? s.alt, sizes })}${focus}${cursor}</div>`;
+  return `<div class="cam" data-s="${p.S.toFixed(3)}" data-tx="${p.tx.toFixed(2)}" data-ty="${p.ty.toFixed(2)}" style="--s:${p.S.toFixed(3)};--tx:${p.tx.toFixed(2)};--ty:${p.ty.toFixed(2)}">${picture(s, { alt: inert ? "" : alt ?? s.alt, sizes })}${focus}${cursor}</div>`;
 }
 
 function apiCard(s) {
@@ -675,14 +675,6 @@ function journey() {
 </section>`;
 }
 
-function stateCounts(does) {
-  const counts = {};
-  does.forEach(([, st]) => (counts[st] = (counts[st] ?? 0) + 1));
-  return Object.keys(C.STATES)
-    .filter((k) => counts[k])
-    .map((k) => `<li>${chip(k)}<b>${counts[k]}</b></li>`)
-    .join("");
-}
 
 function viewer(id, screens, { label }) {
   return `<div class="viewer" data-viewer>
@@ -721,39 +713,153 @@ function connRow(m, to, what) {
   </a></li>`;
 }
 
-function moduleSection(m, index) {
-  const side = index % 2 ? "m-flip" : "";
-  return `<article class="module ${side}" id="mod-${m.id}" aria-labelledby="mod-${m.id}-title">
-  <header class="m-head">
-    <span class="m-ghost" aria-hidden="true">${pad(index + 1)}</span>
-    <p class="m-index"><span>${pad(index + 1)}</span>${esc(m.name)}</p>
-    <h3 id="mod-${m.id}-title" class="display-3">${esc(m.tagline)}</h3>
-    <div class="m-state"><span class="m-label">Estado atual</span>${stateBar(m.does)}<ul class="state-sum" aria-label="Capacidades por estado">${stateCounts(m.does)}</ul></div>
+
+// ---------------------------------------------------------------------------
+// Ato 04: protagonistas e capítulos.
+
+// Resumo de estados de um conjunto de capacidades ("4 na tela · 1 consulta …").
+const SS_LABEL = {
+  tela: (n) => `${n === 1 ? "ação" : "ações"} na tela`,
+  consulta: (n) => (n === 1 ? "consulta" : "consultas"),
+  api: () => "pela API",
+  evolucao: () => "em evolução",
+};
+function stateSummary(does, cls = "") {
+  const counts = {};
+  does.forEach(([, st]) => (counts[st] = (counts[st] ?? 0) + 1));
+  return `<p class="ssum ${cls}">${Object.keys(C.STATES)
+    .filter((k) => counts[k])
+    .map((k) => `<span class="ss ss-${k}" title="${esc(C.STATES[k].hint)}"><b>${counts[k]}</b> ${SS_LABEL[k](counts[k])}</span>`)
+    .join('<i aria-hidden="true">·</i>')}</p>`;
+}
+
+// Junta os pedaços de módulos que formam a ficha de um protagonista.
+function protagonistData(pr) {
+  const pick = (arr, idx) => (idx ? idx.map((i) => arr[i]) : arr);
+  const mods = pr.parts.map((pt) => ({ m: moduleById[pt.module], pt }));
+  const first = mods[0].m;
+  return {
+    first,
+    does: mods.flatMap(({ m, pt }) => pick(m.does, pt.does)),
+    controls: mods.flatMap(({ m, pt }) => pick(m.controls, pt.controls)),
+    links: mods.flatMap(({ m, pt }) => pick(m.links, pt.links).map((l) => ({ m, l }))),
+    flows: mods.map(({ m }) => ({ name: m.name, flow: m.flow })),
+    problems: mods.map(({ m }) => m.problem),
+    serves: mods.map(({ m }) => m.serves),
+    who: mods.map(({ m }) => m.who),
+    names: mods.map(({ m }) => m.name),
+  };
+}
+
+const PRO_RATIO = 1.5;
+function protagonist(pr, i) {
+  const d = protagonistData(pr);
+  const title = pr.id === "fiscal" ? "Fiscal e Logística" : pr.id === "estoque" ? "Estoque" : d.first.name;
+  const beats = pr.beats;
+  const route = (b) => `<span class="shot-route">${esc(b.route)}</span>`;
+  const apiBlock = (b) =>
+    b.api
+      ? `<div class="api-card"><p class="api-head">${chip("api")}<span>No núcleo da plataforma, sem botão na tela</span></p><ul>${b.api
+          .map((r) => {
+            const [m, ...rest] = r.split(" ");
+            return `<li><code><b>${esc(m)}</b> ${esc(rest.join(" "))}</code></li>`;
+          })
+          .join("")}</ul></div>`
+      : "";
+  return `<article class="pro" id="mod-${pr.id}" data-pro="${pr.id}" aria-labelledby="pro-${pr.id}-title" style="--beats:${beats.length}">
+  <header class="pro-head">
+    <span class="pro-sig" aria-hidden="true">${esc(pr.signature)}</span>
+    <div class="pro-title-col">
+      <p class="pro-kicker"><b>${pad(i + 1)}</b>${esc(title)}</p>
+      <h3 id="pro-${pr.id}-title" class="display-2 pro-mood">${esc(pr.mood)}</h3>
+      <p class="pro-chain" aria-label="Etapas da cena">${beats.map((b) => `<span>${esc(b.label)}</span>`).join('<i aria-hidden="true">→</i>')}</p>
+    </div>
+    <div class="pro-intro">
+      <p class="m-label">O problema</p>
+      ${d.problems.map((t) => `<p class="pro-problem">${esc(t)}</p>`).join("")}
+      <p class="m-label">Como o EDUCA resolve</p>
+      ${d.serves.map((t) => `<p class="pro-serves">${esc(t)}</p>`).join("")}
+      <p class="who">Para ${esc(d.who.map((w) => w.charAt(0).toLowerCase() + w.slice(1).replace(/\.$/, "")).join("; "))}.</p>
+      ${stateSummary(d.does, "pro-ssum")}
+    </div>
   </header>
-  <div class="m-ps">
-    <div class="m-problem"><p class="m-label">O problema</p><p>${esc(m.problem)}</p></div>
-    <div class="m-solution"><p class="m-label">Como o EDUCA funciona</p><p>${esc(m.serves)}</p><p class="who">Para ${esc(m.who.charAt(0).toLowerCase() + m.who.slice(1))}</p></div>
+  <div class="pro-theatre">
+    <ol class="pro-beats">
+      ${beats
+        .map(
+          (b, k) => `<li class="pro-beat${k === 0 ? " is-on" : ""}" data-beat="${k}">
+        <p class="pro-beat-n"><b>${pad(k + 1)}</b>${esc(b.label)}${chip(b.state)}</p>
+        <p class="pro-beat-text">${esc(b.text)}</p>
+        ${b.note ? `<p class="pro-beat-note">${esc(b.note)}</p>` : ""}
+        ${apiBlock(b)}
+        <figure class="pro-beat-shot shot">
+          <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span>${route(b)}</div>
+          <div class="shot-frame cam-frame" style="aspect-ratio:${PRO_RATIO}">${cam(b, { viewRatio: PRO_RATIO, alt: b.text, sizes: "(min-width: 1100px) 1px, 100vw", maxS: 1.9 })}</div>
+        </figure>
+      </li>`,
+        )
+        .join("")}
+    </ol>
+    <div class="pro-stage" aria-hidden="true">
+      <div class="pro-screen shot">
+        <div class="shot-bar"><span class="shot-mark"><i></i><i></i><i></i></span>${beats.map((b, k) => `<span class="shot-route${k === 0 ? " is-on" : ""}" data-route="${k}">${esc(b.route)}</span>`).join("")}</div>
+        <div class="pro-view" style="aspect-ratio:${PRO_RATIO}">
+          ${beats.map((b, k) => `<div class="pro-layer${k === 0 ? " is-on" : ""}" data-layer="${k}">${cam(b, { viewRatio: PRO_RATIO, inert: true, sizes: "(min-width: 1100px) 90vw, 1px", maxS: 1.9 })}</div>`).join("")}
+        </div>
+      </div>
+      <ol class="pro-dots">${beats.map((b, k) => `<li${k === 0 ? ' class="is-on"' : ""} data-dot="${k}"><span>${esc(b.label)}</span></li>`).join("")}</ol>
+    </div>
   </div>
-  <div class="m-rail">
-    <p class="m-label">O processo no sistema</p>
-    <ol>${m.flow.map((f, i) => `<li style="--i:${i}"${i === 0 ? ' data-cap="Entrada"' : i === m.flow.length - 1 ? ' data-cap="Resultado"' : ""}><span>${esc(f)}</span></li>`).join("")}</ol>
-    <span class="m-run" aria-hidden="true"><i></i></span>
+  <div class="pro-sheet">
+    <div class="m-part">
+      <h4 class="m-label">O que você faz</h4>
+      <ul class="does">${d.does.map(([t, st]) => `<li class="does-${st}"><span>${esc(t)}</span>${chip(st)}</li>`).join("")}</ul>
+    </div>
+    <div class="m-part">
+      <h4 class="m-label">O que o sistema controla</h4>
+      <ul class="controls">${d.controls.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>
+    </div>
+    <div class="m-part">
+      <h4 class="m-label">Etapas no sistema</h4>
+      ${d.flows.map((f) => `<ol class="pro-flow" aria-label="${esc(f.name)}">${f.flow.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>`).join("")}
+    </div>
+    <div class="m-part">
+      <h4 class="m-label">Como se conecta</h4>
+      <ul class="links conn">${d.links.map(({ m, l: [to, what] }) => connRow(m, to, what)).join("")}</ul>
+    </div>
   </div>
-  <div class="m-main">
-    <div class="m-screens">${viewer(`v-${m.id}`, m.screens, { label: `Telas do módulo ${m.name}` })}</div>
-    <div class="m-aside">
-      <div class="m-part">
-        <h4 class="m-label">O que você faz</h4>
-        <ul class="does">${m.does.map(([t, st]) => `<li class="does-${st}"><span>${esc(t)}</span>${chip(st)}</li>`).join("")}</ul>
-      </div>
-      <div class="m-part">
-        <h4 class="m-label">O que o sistema controla</h4>
-        <ul class="controls">${m.controls.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>
-      </div>
-      <div class="m-part">
-        <h4 class="m-label">Como se conecta</h4>
-        <ul class="links conn">${m.links.map(([to, what]) => connRow(m, to, what)).join("")}</ul>
-      </div>
+</article>`;
+}
+
+// Capítulo compacto: a mesma informação funcional, em ritmo editorial.
+function chapter(m, n) {
+  const [main, ...more] = m.screens;
+  return `<article class="chap" id="mod-${m.id}" aria-labelledby="chap-${m.id}-title">
+  <div class="chap-meta">
+    <p class="chap-n"><b>${pad(n)}</b>${esc(m.name)}</p>
+    <h3 id="chap-${m.id}-title" class="display-3 chap-title">${esc(m.tagline)}</h3>
+    <p class="chap-problem">${esc(m.problem)}</p>
+    <p class="chap-serves">${esc(m.serves)} <span class="who">Para ${esc(m.who.charAt(0).toLowerCase() + m.who.slice(1))}</span></p>
+    ${stateSummary(m.does)}
+    <ol class="chap-flow" aria-label="Etapas no sistema">${m.flow.map((f, i) => `<li style="--i:${i}">${esc(f)}</li>`).join("")}</ol>
+  </div>
+  <div class="chap-body">
+    <div class="chap-shot">${shot(main, { alt: main.caption, sizes: "(min-width: 1100px) 50vw, 100vw" })}
+      ${
+        more.length
+          ? `<ul class="chap-more" aria-label="Mais telas de ${esc(m.name)}">${more
+              .map((x) => {
+                const im = images.get(imgKey(x));
+                return `<li><a href="${im.file}" data-zoom data-w="${im.w}" data-h="${im.h}" data-caption="${esc(x.caption)}"><span>${esc(x.label)}</span>${picture(x, { alt: x.caption, sizes: "12vw" })}</a></li>`;
+              })
+              .join("")}</ul>`
+          : ""
+      }
+    </div>
+    <div class="chap-cols">
+      <div class="m-part"><h4 class="m-label">O que você faz</h4><ul class="does">${m.does.map(([t, st]) => `<li class="does-${st}"><span>${esc(t)}</span>${chip(st)}</li>`).join("")}</ul></div>
+      <div class="m-part"><h4 class="m-label">O que o sistema controla</h4><ul class="controls">${m.controls.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></div>
+      <div class="m-part"><h4 class="m-label">Como se conecta</h4><ul class="links conn">${m.links.map(([to, what]) => connRow(m, to, what)).join("")}</ul></div>
     </div>
   </div>
 </article>`;
@@ -1030,8 +1136,16 @@ function stateBar(does) {
     .join("")}</span>`;
 }
 
+// Ordem das cenas do Ato 04: protagonistas (com o módulo de cada um), depois
+// os capítulos. O índice segue a mesma numeração.
+function sceneOrder() {
+  const proMods = C.PROTAGONISTS.map((pr) => pr.parts[0].module);
+  const rest = C.MODULES.filter((m) => !C.PROTAGONISTS.some((pr) => pr.parts.some((pt) => pt.module === m.id)));
+  return [...proMods.map((id) => moduleById[id]), ...rest];
+}
+
 function areaIndex() {
-  const tiles = C.MODULES.map(
+  const tiles = sceneOrder().map(
     (m, i) => `<li><a href="#mod-${m.id}" class="tile">
       <span class="tile-n">${pad(i + 1)}</span>
       <span class="tile-name">${esc(m.name)}</span>
@@ -1104,8 +1218,18 @@ function areas(list) {
     </div>
     ${legend()}
     ${areaIndex()}
-    ${list.map((m) => moduleSection(m, C.MODULES.indexOf(m))).join("\n")}
-    ${base()}
+    <div class="pros">${C.PROTAGONISTS.map((pr, i) => protagonist(pr, i)).join("\n")}</div>
+    <div class="chaps">
+      <div class="chaps-head">
+        <p class="m-label">E as outras áreas</p>
+        <h3 class="display-3">Cada uma com o seu trabalho, na mesma base.</h3>
+      </div>
+      ${list
+        .filter((m) => !C.PROTAGONISTS.some((pr) => pr.parts.some((pt) => pt.module === m.id)))
+        .map((m, i) => chapter(m, C.PROTAGONISTS.length + i + 1))
+        .join("\n")}
+      ${base()}
+    </div>
   </div>
 </section>`;
 }

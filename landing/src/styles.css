@@ -4113,6 +4113,429 @@ main > section.act-dark {
   }
 }
 
+/* ================================================================ V4 — Ato 04: protagonistas */
+/* Cada protagonista é uma cena: a tela fica fixa e a câmera anda entre as
+   capturas reais de cada etapa enquanto o texto rola ao lado. Sem JS e
+   abaixo de 1100 px, a cena vira lista: cada etapa com o seu enquadramento. */
+.pros {
+  display: grid;
+  gap: clamp(120px, 14vw, 220px);
+  margin-top: clamp(96px, 10vw, 160px);
+}
+.pro {
+  position: relative;
+}
+.pro-head {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+  gap: 32px clamp(40px, 6vw, 96px);
+  align-items: end;
+  padding-bottom: clamp(36px, 4vw, 60px);
+  border-bottom: 1px solid var(--c-line);
+}
+/* Assinatura: um dado real da área, grande e vazado, ao fundo. */
+.pro-sig {
+  position: absolute;
+  left: -0.04em;
+  top: -0.62em;
+  z-index: 0;
+  font: 500 clamp(4.4rem, 11vw, 11.5rem) / 1 var(--mono);
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--c-line);
+  pointer-events: none;
+  user-select: none;
+}
+.pro-title-col,
+.pro-intro {
+  position: relative;
+  z-index: 1;
+}
+.pro-kicker,
+.chap-n {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 16px;
+  font: 500 13px/1 var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-mute);
+}
+.pro-kicker b,
+.chap-n b {
+  color: var(--c-accent);
+}
+.pro-mood {
+  margin: 0;
+  font-size: clamp(3rem, 6.4vw, 6.6rem);
+  line-height: 0.95;
+}
+.pro-chain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 24px 0 0;
+  font: 500 13px/1.2 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--c-ink);
+}
+.pro-chain i {
+  font-style: normal;
+  color: var(--fire);
+}
+.pro-intro {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+}
+.pro-intro .m-label {
+  margin: 0;
+}
+.pro-problem {
+  margin: 0 0 14px;
+  font-family: var(--serif);
+  font-size: clamp(1.25rem, 1.65vw, 1.6rem);
+  line-height: 1.2;
+  color: var(--c-ink);
+}
+.pro-serves {
+  margin: 0;
+  color: var(--c-ink);
+}
+.pro-intro .who {
+  margin: 0;
+}
+/* Resumo de estados: a honestidade em uma linha, o detalhe fica na ficha. */
+.ssum {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--c-mute);
+}
+.ssum b {
+  margin-right: 3px;
+  font: 600 19px/1 var(--mono);
+  color: var(--c-ink);
+}
+.ssum i {
+  font-style: normal;
+  color: var(--line-strong);
+}
+.ss-evolucao b {
+  color: var(--c-accent);
+}
+
+.pro-theatre {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  gap: clamp(32px, 4vw, 72px);
+  margin-top: clamp(24px, 3vw, 48px);
+}
+.pro-beats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pro-beat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  min-height: 58vh;
+  padding-block: 24px;
+  opacity: 0.32;
+  transition: opacity 0.5s var(--ease);
+}
+.pro-beat.is-on {
+  opacity: 1;
+}
+.pro-beat-n {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font: 500 13px/1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-ink);
+}
+.pro-beat-n b {
+  color: var(--c-accent);
+}
+.pro-beat-text {
+  margin: 0;
+  max-width: 38ch;
+  font-size: clamp(17px, 1.4vw, 21px);
+  line-height: 1.45;
+  color: var(--c-ink);
+  text-wrap: pretty;
+}
+.pro-beat-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--c-mute);
+}
+.pro-beat .api-card {
+  margin: 4px 0 0;
+}
+.pro-beat-shot {
+  display: none;
+}
+.pro-stage {
+  position: sticky;
+  top: calc(var(--top) + 32px);
+  align-self: start;
+  margin-top: 8vh;
+}
+.pro-stage .shot-route {
+  display: none;
+}
+.pro-stage .shot-route.is-on {
+  display: inline;
+}
+.pro-view {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--c-line);
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  background: #f5f6f6;
+  box-shadow: 0 50px 90px -40px rgba(16, 12, 8, 0.45);
+}
+.pro-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+.pro-layer.is-on {
+  opacity: 1;
+}
+/* Câmera: cada etapa entra no quadro inteiro e aproxima a região explicada. */
+.pro-layer .cam {
+  transform: none;
+  transition: transform 1.25s cubic-bezier(0.65, 0, 0.25, 1) 0.15s;
+}
+.pro-layer.is-on .cam {
+  transform: translate(calc(var(--tx) * 1%), calc(var(--ty) * 1%)) scale(var(--s));
+}
+.pro-layer .cam-focus,
+.pro-layer .cam-cursor {
+  opacity: 0;
+  transition: opacity 0.4s var(--ease) 1s;
+}
+.pro-layer.is-on .cam-focus,
+.pro-layer.is-on .cam-cursor {
+  opacity: 1;
+}
+.pro-layer .cam-cursor,
+.pro-beat-shot .cam-cursor {
+  transform: scale(calc(1 / var(--s, 1)));
+}
+.pro-dots {
+  list-style: none;
+  display: flex;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  font: 500 11px/1.2 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-mute);
+}
+.pro-dots li {
+  flex: 1;
+  padding-top: 10px;
+  border-top: 2px solid var(--c-line);
+  transition: border-color 0.4s, color 0.4s;
+}
+.pro-dots li.is-done {
+  border-top-color: color-mix(in srgb, var(--fire) 45%, var(--c-line));
+}
+.pro-dots li.is-on {
+  border-top-color: var(--fire);
+  color: var(--c-ink);
+}
+.pro-sheet {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 28px clamp(24px, 3vw, 48px);
+  margin-top: clamp(56px, 7vw, 104px);
+  padding-top: 32px;
+  border-top: 1px solid var(--c-line);
+}
+.pro-flow {
+  list-style: none;
+  counter-reset: f;
+  display: grid;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 0;
+  font-size: 14px;
+}
+.pro-flow li {
+  display: flex;
+  gap: 10px;
+  counter-increment: f;
+}
+.pro-flow li::before {
+  content: counter(f, decimal-leading-zero);
+  font: 500 11px/1.7 var(--mono);
+  color: var(--c-accent);
+}
+/* Lista (celular e sem JS): cada etapa com a tela já enquadrada. */
+html:not(.js) .pro-theatre {
+  grid-template-columns: minmax(0, 1fr);
+}
+html:not(.js) .pro-stage {
+  display: none;
+}
+html:not(.js) .pro-beat {
+  opacity: 1;
+  min-height: 0;
+}
+html:not(.js) .pro-beat-shot {
+  display: block;
+  margin-top: 8px;
+}
+.pro-beat-shot .cam {
+  transform: translate(calc(var(--tx) * 1%), calc(var(--ty) * 1%)) scale(var(--s));
+}
+@media (max-width: 1099px) {
+  .pro-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pro-theatre {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pro-stage {
+    display: none;
+  }
+  .pro-beat {
+    opacity: 1;
+    min-height: 0;
+    padding-block: 28px;
+  }
+  .pro-beat-shot {
+    display: block;
+    margin-top: 8px;
+  }
+  .pro-sheet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .pro-sheet {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---- capítulos compactos */
+.chaps {
+  display: grid;
+  gap: clamp(72px, 8vw, 120px);
+  margin-top: clamp(140px, 16vw, 240px);
+}
+.chaps-head {
+  max-width: 34ch;
+}
+.chaps-head .display-3 {
+  margin: 10px 0 0;
+}
+.chap {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 28px clamp(32px, 5vw, 80px);
+  padding-top: clamp(28px, 3vw, 44px);
+  border-top: 1px solid var(--c-line);
+}
+.chap-body {
+  display: contents;
+}
+.chap-cols {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px clamp(24px, 3vw, 48px);
+}
+.chap-title {
+  margin: 0 0 14px;
+  font-size: clamp(1.9rem, 2.9vw, 2.9rem);
+}
+.chap-problem {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: clamp(1.15rem, 1.45vw, 1.4rem);
+  line-height: 1.22;
+  color: var(--c-ink);
+}
+.chap-serves {
+  margin: 0;
+  color: var(--c-mute);
+}
+.chap-flow {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 0;
+  padding: 0;
+}
+.chap-flow li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 500 12px/1 var(--mono);
+  color: var(--c-ink);
+}
+.chap-flow li:not(:last-child)::after {
+  content: "→";
+  color: var(--fire);
+}
+.chap-more {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.chap-more a {
+  display: grid;
+  gap: 6px;
+  width: 112px;
+  text-decoration: none;
+  font: 500 11px/1 var(--mono);
+  color: var(--c-mute);
+}
+.chap-more img {
+  width: 112px;
+  height: 70px;
+  object-fit: cover;
+  object-position: 0 0;
+  border-radius: 6px;
+  border: 1px solid var(--c-line);
+  transition: transform 0.35s var(--ease), border-color 0.35s;
+}
+.chap-more a:hover img,
+.chap-more a:focus-visible img {
+  transform: translateY(-2px);
+  border-color: var(--fire);
+}
+@media (max-width: 1099px) {
+  .chap {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .chap-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* ---------------------------------------------------------------- entrada por rolagem */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {

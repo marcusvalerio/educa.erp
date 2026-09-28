@@ -530,6 +530,64 @@ export const MODULES = [
   },
 ];
 
+// Ato 04: quatro protagonistas, cada um como uma cena com câmera sobre as
+// telas reais. `parts`: de quais módulos vem a ficha (índices em does e
+// controls; ausente = tudo). `beats`: a câmera, etapa por etapa. Textos das
+// próprias telas ou das capacidades já conferidas; `focus` e `cursor` em px
+// da captura original (1440 × 900).
+export const PROTAGONISTS = [
+  {
+    id: "comercial",
+    mood: "Venda começando.",
+    signature: "PV-001013",
+    parts: [{ module: "comercial" }],
+    beats: [
+      { label: "Pedido", state: "tela", img: "comercial/04-pedidos-lista", route: "/comercial/pedidos-venda", focus: [289, 212, 480, 50], text: "Cada venda tem um lugar: visões prontas para entrega atrasada, aguardando aprovação e em andamento, com cliente, total e status." },
+      { label: "Aprovação", state: "tela", img: "comercial/12-pedido-aprovar-confirmar", route: "/comercial/pedidos-venda/:id", focus: [496, 372, 446, 150], cursor: [886, 479], text: "O pedido vai para aprovação e é aprovado por quem tem a permissão. Cada ação pede confirmação e fica no histórico." },
+      { label: "Cliente", state: "tela", img: "comercial/13-pedido-aprovado", route: "/comercial/pedidos-venda/:id", focus: [289, 112, 1110, 230], text: "Aprovado, o pedido mostra cliente, total, itens, reservado e expedido, e só as ações que fazem sentido naquele momento." },
+      { label: "Financeiro", state: "tela", img: "comercial/16-pedido-gerar-receber-confirmar", route: "/comercial/pedidos-venda/:id", focus: [497, 366, 446, 168], cursor: [843, 496], text: "Gerar conta a receber cria o título a partir do valor e das condições de pagamento do pedido. A venda chega ao Financeiro." },
+    ],
+  },
+  {
+    id: "estoque",
+    mood: "O físico.",
+    signature: "FIL03 rua 05",
+    parts: [{ module: "estoque", does: [0, 1, 3], controls: [0, 1, 2], links: [0, 1, 2] }],
+    beats: [
+      { label: "Endereço", state: "consulta", img: "logistica/06-enderecamento", route: "/logistica/enderecamento", focus: [289, 96, 1110, 210], text: "Locais de armazenagem por armazém, corredor, prateleira e nível: cada item tem um endereço." },
+      { label: "Produto no local", state: "tela", img: "comercial/14-pedido-reservar-dialogo", route: "/comercial/pedidos-venda/:id", focus: [528, 312, 382, 560], cursor: [717, 491], text: "A reserva do pedido escolhe o local de estoque: packing, armazenagem, quarentena, expedição. Itens sem saldo ficam com reserva pendente." },
+      { label: "Estoque", state: "consulta", img: "logistica/02-estoque", route: "/logistica/estoque", focus: [289, 96, 580, 165], text: "O saldo é derivado do registro de movimentações, nunca alterado diretamente pela tela, com visões sem disponibilidade e com reserva.", note: "No ambiente das capturas, ainda sem registros." },
+      { label: "Movimentação", state: "api", img: "logistica/03-movimentacoes", route: "/logistica/movimentacoes", focus: [289, 96, 580, 165], text: "Movimentações ficam num registro imutável. Entradas, saídas e transferências são registradas pelo núcleo; a tela consulta.", note: "No ambiente das capturas, ainda sem registros." },
+      { label: "Separação", state: "consulta", img: "logistica/08-picking", route: "/logistica/picking", focus: [289, 96, 580, 165], text: "Listas de separação geradas a partir dos pedidos confirmados.", note: "No ambiente das capturas, ainda sem registros." },
+    ],
+  },
+  {
+    id: "financeiro",
+    mood: "O dinheiro.",
+    signature: "CR-0002",
+    parts: [{ module: "financeiro" }],
+    beats: [
+      { label: "Título", state: "consulta", img: "financeiro/01b-contas-receber-detalhe", route: "/financeiro/contas-receber", focus: [770, 14, 662, 330], text: "Cada título tem cliente, descrição, vencimento, valor, situação e histórico." },
+      { label: "Vencimento", state: "consulta", img: "financeiro/90-receber-vencidos", route: "/financeiro/contas-receber", focus: [640, 345, 650, 185], text: "A visão Vencidos mostra o que já passou da data, com cliente, valor e o alerta de vencido." },
+      { label: "Contas", state: "consulta", img: "financeiro/02-contas-pagar", route: "/financeiro/contas-pagar", focus: [690, 345, 600, 250], text: "Do outro lado, contas a pagar a fornecedores: pagas, vencidas e em aberto, lado a lado." },
+      { label: "Caixa", state: "consulta", img: "financeiro/03-fluxo-caixa", route: "/financeiro/fluxo-caixa", focus: [289, 212, 1110, 106], text: "Saldo em contas, a receber, a pagar e o saldo projetado depois de liquidar todos os títulos, semana a semana." },
+    ],
+  },
+  {
+    id: "fiscal",
+    mood: "A operação avançando.",
+    signature: "DF-0004",
+    parts: [{ module: "fiscal" }, { module: "estoque", does: [2, 4], controls: [3, 4], links: [3] }],
+    beats: [
+      { label: "Documento", state: "api", img: "comercial/21-faturamento", route: "/comercial/faturamento", focus: [289, 312, 1110, 106], text: "O documento fiscal nasce do pedido e os impostos são calculados pelas regras, no núcleo. O Faturamento lista os documentos.", api: ["POST /api/sales-orders/:id/generate-fiscal-document", "POST /api/fiscal-documents/:id/calculate"] },
+      { label: "Documento calculado", state: "consulta", img: "fiscal/02b-nfe-detalhe", route: "/fiscal/nfe", focus: [770, 14, 662, 470], text: "DF-0004: cliente, emissão, total e status Calculada, com o histórico de cada alteração." },
+      { label: "Expedição", state: "consulta", img: "logistica/10-expedicao", route: "/logistica/expedicao", focus: [289, 96, 560, 165], text: "Expedições de pedidos de venda, da liberação ao despacho, com as visões expedição atrasada e prontas para expedir.", note: "No ambiente das capturas, ainda sem registros.", api: ["POST /api/sales-orders/:id/pick-lists", "POST /api/shipments/:id/ship"] },
+      { label: "Transporte", state: "consulta", img: "logistica/11-transportes", route: "/logistica/transportes", focus: [289, 96, 700, 165], text: "As mesmas expedições sob a ótica do transporte: transportadora, despacho e entrega, em trânsito e entregues.", note: "No ambiente das capturas, ainda sem registros." },
+      { label: "Entrega", state: "api", img: "inicio/04-fluxo-do-erp", route: "/", focus: [30, 70, 1115, 400], text: "O Início mostra o fluxo do período, do pedido à entrega: 12 pedidos, 7 em preparação, 1 expedido. O evento de entrega é registrado pelo núcleo.", api: ["POST /api/shipments/:id/deliver"] },
+    ],
+  },
+];
+
 export const CADASTROS = {
   kicker: "Base comum",
   title: "Os cadastros que todas as áreas usam.",

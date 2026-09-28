@@ -4254,11 +4254,54 @@ main > section.act-dark {
   gap: 14px;
   min-height: 58vh;
   padding-block: 24px;
-  opacity: 0.32;
-  transition: opacity 0.5s var(--ease);
 }
-.pro-beat.is-on {
-  opacity: 1;
+/* A etapa fora de foco recua pela cor (contraste AA), não pela transparência. */
+html.js .pro-beat:not(.is-on) .pro-beat-text,
+html.js .pro-beat:not(.is-on) .pro-beat-n {
+  color: var(--c-mute);
+}
+html.js .pro-beat:not(.is-on) .chip,
+html.js .pro-beat:not(.is-on) .api-card {
+  opacity: 0.7;
+}
+.pro-beat-text,
+.pro-beat-n {
+  transition: color 0.45s var(--ease);
+}
+/* Protagonistas escuros (Estoque, Fiscal e Logística): palco que sangra até
+   as bordas, com os mesmos componentes e os tokens do palco. */
+.pro-dark {
+  --paper: var(--stage);
+  --sheet: var(--stage-2);
+  --ink: var(--stage-ink);
+  --ink-2: var(--stage-mute);
+  --ink-3: #8e9396;
+  --line: var(--stage-line-2);
+  --line-2: var(--stage-line);
+  --line-strong: var(--stage-line-2);
+  --fire-deep: var(--stage-fire);
+  --c-bg: var(--stage);
+  --c-ink: var(--stage-ink);
+  --c-mute: var(--stage-mute);
+  --c-line: var(--stage-line-2);
+  --c-line-2: var(--stage-line);
+  --c-accent: var(--stage-fire);
+  --c-raised: var(--stage-2);
+  color: var(--stage-ink);
+  color-scheme: dark;
+  isolation: isolate;
+  padding-block: clamp(96px, 10vw, 150px);
+}
+.pro-dark::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 calc(50% - 50vw);
+  background: var(--stage);
+}
+.pro-dark .pro-view {
+  border-color: var(--stage-line-2);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 60px 110px -40px rgba(0, 0, 0, 0.95);
 }
 .pro-beat-n {
   display: flex;

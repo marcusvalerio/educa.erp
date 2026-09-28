@@ -90,3 +90,4 @@ supabase/migrations/0071_onboarding_identity.sql
 supabase/migrations/0072_protect_auth_user_link.sql
 supabase/migrations/0073_external_identity_links.sql
 supabase/migrations/0074_fix_reserve_sales_order_stock.sql
+supabase/migrations/0075_company_roles_and_user_invites.sql

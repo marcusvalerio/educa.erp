@@ -16,6 +16,8 @@ import {
   updatePositionSchema,
 } from "@/lib/validations/organization";
 import { setCompanyModuleEnabledSchema } from "@/lib/validations/platform";
+import { DEFAULT_INVITE_TTL_HOURS, inviteCompanyUserSchema } from "@/lib/onboarding/invitations";
+import { deliverCompanyInvitation, type InvitationRpcResult } from "./onboarding-handlers";
 
 // /api/admin/* — Administração da Empresa (Company Admin).
 //
@@ -116,6 +118,28 @@ export async function revokeAdminUserRole(request: NextRequest, context: IdRoute
     const { error } = await supabase.rpc("fn_revoke_user_role", { p_user_id: id, p_role_id: roleId });
     if (error) throw dbError(error);
     return ok({ userId: id, roleId });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+// POST /api/admin/users/invite — convite num passo só (nome, e-mail, papel).
+// O banco (fn_invite_company_user, 0075) decide tudo: empresa do próprio
+// Administrador (não há parâmetro de empresa), users.create + roles.manage e
+// nenhuma permissão além das que ele mesmo tem. Entrega igual à do convite de
+// um cadastro existente.
+export async function inviteCompanyUser(request: NextRequest) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const body = await parseJson(request, inviteCompanyUserSchema);
+    const { data, error } = await supabase.rpc("fn_invite_company_user", {
+      p_name: body.name,
+      p_email: body.email,
+      p_role_id: body.roleId,
+      p_ttl_hours: body.ttlHours ?? DEFAULT_INVITE_TTL_HOURS,
+    });
+    if (error) throw dbError(error);
+    return ok(await deliverCompanyInvitation(request, data as InvitationRpcResult & { user_id: string }), 201);
   } catch (error) {
     return jsonError(error);
   }

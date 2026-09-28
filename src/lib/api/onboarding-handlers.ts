@@ -39,7 +39,7 @@ import {
 
 const ok = (data: unknown, status = 200) => NextResponse.json({ success: true, data }, { status });
 
-type InvitationRpcResult = {
+export type InvitationRpcResult = {
   invitation_id: string;
   token: string;
   email: string;
@@ -156,6 +156,15 @@ export async function createUserInvitation(request: NextRequest, context: IdRout
   } catch (error) {
     return jsonError(error);
   }
+}
+
+// Entrega de um convite já emitido pelo banco (link + e-mail/provedor de
+// identidade), igual para todo convite de usuário da empresa. Usada pelo
+// convite num passo da Administração da Empresa (admin-handlers.ts).
+export async function deliverCompanyInvitation(request: NextRequest, result: InvitationRpcResult & { user_id: string }) {
+  const inviteUrl = buildInviteUrl(appOrigin(request), result.token);
+  const delivery = await sendAuthInvite(result.email, inviteUrl, result.user_name);
+  return { ...invitationResponse(result, inviteUrl, delivery), userId: result.user_id };
 }
 
 // DELETE /api/admin/invitations/:id

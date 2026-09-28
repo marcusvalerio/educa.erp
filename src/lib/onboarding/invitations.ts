@@ -65,6 +65,15 @@ export const createCompanySchema = strict({
 
 export const inviteCompanyAdminSchema = strict({ name, email });
 
+// Convite de usuário da empresa (Administração da Empresa → Usuários): nome,
+// e-mail e UM papel da própria empresa. Empresa nunca vem do cliente.
+export const inviteCompanyUserSchema = strict({
+  name,
+  email,
+  roleId: z.string().uuid("Escolha o papel."),
+  ttlHours: z.number().int().min(MIN_INVITE_TTL_HOURS).max(MAX_INVITE_TTL_HOURS).optional(),
+});
+
 export const invitePlatformMemberSchema = strict({ name, email, platformRole: z.enum(["OWNER", "ADMIN"]) });
 
 export const recoverPasswordSchema = strict({ email });

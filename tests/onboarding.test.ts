@@ -20,6 +20,7 @@ import {
   deliverAuthInvite,
   invitationStatus,
   inviteCompanyAdminSchema,
+  inviteCompanyUserSchema,
   invitePlatformMemberSchema,
   newPasswordSchema,
   resolveAppOrigin,
@@ -108,6 +109,20 @@ describe("rotas públicas (proxy)", () => {
 
 describe("schemas estritos — o cliente não injeta contexto", () => {
   const injected = [{ company_id: "c" }, { companyId: "c" }, { role_id: "r" }, { roleId: "r" }, { auth_user_id: "a" }, { authUserId: "a" }, { permissions: ["users.update"] }, { user_id: "u" }];
+
+  test("convite pela Administração da Empresa: nome, e-mail e UM papel; empresa nunca vem do cliente", () => {
+    const ROLE = "00000000-0000-4000-8000-000000000001";
+    const ok = inviteCompanyUserSchema.safeParse({ name: " Maria ", email: " Maria@Exemplo.com ", roleId: ROLE });
+    assert.equal(ok.success, true);
+    assert.equal(ok.data?.email, "maria@exemplo.com");
+    assert.equal(inviteCompanyUserSchema.safeParse({ name: "Maria", email: "maria@exemplo.com" }).success, false);
+    assert.equal(inviteCompanyUserSchema.safeParse({ name: "Maria", email: "maria@exemplo.com", roleId: "admin" }).success, false);
+    for (const extra of injected.filter((e) => !("roleId" in e))) {
+      const r = inviteCompanyUserSchema.safeParse({ name: "Maria", email: "maria@exemplo.com", roleId: ROLE, ...extra });
+      assert.equal(r.success, false, JSON.stringify(extra));
+      assert.match(r.error!.issues[0].message, /Campo não permitido/);
+    }
+  });
 
   test("convite de usuário: só ttlHours", () => {
     assert.equal(createInvitationSchema.safeParse({}).success, true);

@@ -68,7 +68,7 @@ export default function PlatformMembersPage() {
     <>
       <ResourceListPage<PlatformMember>
         title="Membros da plataforma"
-        description="Pessoas da operação EDUCA com acesso à Administração Central. Não são usuários de nenhuma empresa."
+        description="Governança da plataforma EDUCA (Owner e Admin da plataforma), com acesso à Administração Central. Não são usuários nem administradores de nenhuma empresa."
         apiPath="/api/platform/members"
         tableId="platform-members"
         refreshToken={refresh}
@@ -87,7 +87,7 @@ export default function PlatformMembersPage() {
           statusCol<PlatformMember>(undefined, "status", "Status"),
           dateCol<PlatformMember>("created_at", "Desde", { defaultHidden: true }),
         ]}
-        filters={[enumFilter<PlatformMember>("platform_role", "Papel", [["OWNER", "Owner"], ["ADMIN", "Admin"]]), enumFilter<PlatformMember>("status", "Status", [["active", "Ativo"], ["inactive", "Inativo"]])]}
+        filters={[enumFilter<PlatformMember>("platform_role", "Papel", [["OWNER", "Owner"], ["ADMIN", "Admin da plataforma"]]), enumFilter<PlatformMember>("status", "Status", [["active", "Ativo"], ["inactive", "Inativo"]])]}
         rowActions={
           canManage
             ? (row) => (
@@ -131,6 +131,11 @@ export default function PlatformMembersPage() {
       >
         {dialog && (
           <div className="flex flex-col gap-3">
+            {dialog.mode === "create" && (
+              <Alert tone="info" title="Administrador de uma empresa não é convidado aqui">
+                Membros da plataforma cuidam da governança do EDUCA e não operam empresas. O primeiro administrador de uma empresa é convidado em Empresas → Convidar administrador; os demais usuários (Administrador, Gerente, Operador, Vendedor…) são convidados pelo administrador da própria empresa, em Administração da Empresa → Usuários.
+              </Alert>
+            )}
             {myRole === "ADMIN" && <Alert tone="info" title="Regra de governança">Admins gerenciam apenas outros Admins. Owners são geridos somente por Owners.</Alert>}
             {dialog.mode === "edit" && dialog.form.platformRole === "OWNER" && (
               <Alert tone="warning">O último Owner ativo não pode ser rebaixado nem desativado — a plataforma sempre mantém um Owner.</Alert>
@@ -146,7 +151,7 @@ export default function PlatformMembersPage() {
                 <Select
                   value={dialog.form.platformRole}
                   onValueChange={(v) => setDialog({ ...dialog, form: { ...dialog.form, platformRole: v as MemberForm["platformRole"] } })}
-                  options={[{ value: "ADMIN", label: "Admin" }, ...(myRole === "OWNER" ? [{ value: "OWNER", label: "Owner" }] : [])]}
+                  options={[{ value: "ADMIN", label: "Admin da plataforma" }, ...(myRole === "OWNER" ? [{ value: "OWNER", label: "Owner" }] : [])]}
                 />
               </FormField>
               {dialog.mode === "edit" && <FormField label="Status">

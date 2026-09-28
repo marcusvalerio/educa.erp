@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { UserPlus } from "lucide-react";
+import { MailPlus, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { enumFilter, statusCol, textCol } from "@/components/data-table/columns";
 import { UserAccessPanel } from "@/components/admin/UserAccessPanel";
+import { InviteUserDialog } from "@/components/admin/InviteUserDialog";
 import { AccessStatusBadge, ACCESS_STATUS_META, UserLoginPanel } from "@/components/admin/UserLoginPanel";
 import { byId, latestInvitationByUser, useAdminCollections, type AdminInvitation, type AdminUser } from "@/components/admin/data";
 import { useSession } from "@/components/shell/SessionProvider";
@@ -15,12 +16,15 @@ import { useCached } from "@/lib/dashboard/client";
 import { userAccessStatus } from "@/lib/onboarding/invitations";
 
 // Usuários da empresa e seus vínculos de acesso (papéis, unidades,
-// setor e cargo). Cadastro básico (nome, e-mail, login) fica em
-// /admin/users/cadastro, sobre a mesma rota /api/users de antes.
+// setor e cargo). "Convidar usuário" (nome, e-mail, papel) é o caminho do
+// Administrador da empresa; o cadastro básico sem convite continua em
+// /app/admin/users/cadastro, sobre a mesma rota /api/users de antes.
 export default function AdminUsersPage() {
   const { can } = useSession();
   const { departments, positions, roles, branches } = useAdminCollections();
   const [refresh, setRefresh] = useState(0);
+  const [inviting, setInviting] = useState(false);
+  const canInvite = can("users.create") && can("roles.manage");
   const deps = byId(departments.data);
   const pos = byId(positions.data);
   const roleMap = byId(roles.data);
@@ -34,6 +38,7 @@ export default function AdminUsersPage() {
   };
 
   return (
+    <>
     <ResourceListPage<AdminUser>
       title="Usuários"
       description="Quem acessa a empresa: convite e situação do login, papéis, unidades, setor e cargo."
@@ -42,13 +47,23 @@ export default function AdminUsersPage() {
       searchPlaceholder="Buscar por nome, e-mail ou login..."
       refreshToken={refresh}
       actions={
-        can("users.create") || can("users.update") ? (
-          <Button asChild size="sm">
-            <Link href="/app/admin/users/cadastro">
-              <UserPlus size={14} aria-hidden />
-              Cadastro de usuários
-            </Link>
-          </Button>
+        canInvite || can("users.create") || can("users.update") ? (
+          <span className="flex flex-wrap gap-2">
+            {(can("users.create") || can("users.update")) && (
+              <Button asChild size="sm" variant={canInvite ? "secondary" : "primary"}>
+                <Link href="/app/admin/users/cadastro">
+                  <UserPlus size={14} aria-hidden />
+                  Cadastro de usuários
+                </Link>
+              </Button>
+            )}
+            {canInvite && (
+              <Button size="sm" onClick={() => setInviting(true)}>
+                <MailPlus size={14} aria-hidden />
+                Convidar usuário
+              </Button>
+            )}
+          </span>
         ) : undefined
       }
       columns={[
@@ -125,5 +140,7 @@ export default function AdminUsersPage() {
       }}
       emptyDescription="Nenhum usuário cadastrado nesta empresa."
     />
+    <InviteUserDialog open={inviting} onOpenChange={setInviting} roles={roles.data ?? []} onInvited={changed} />
+    </>
   );
 }

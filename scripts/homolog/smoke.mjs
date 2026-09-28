@@ -196,38 +196,44 @@ for (const key of Object.keys(users)) {
   check("Navegação", `${users[key].label}: ${okCount}/${hrefs.length} telas do menu abrem sem erro`, bad.length === 0, "visualizado", bad.join("; "));
 }
 
-// Logout pela interface e sessão encerrada: clique do mouse em Conta → Sair e,
-// se a sessão continuar, pelo teclado (Enter no mesmo item).
+// Logout pela interface, com o MOUSE e com o TECLADO, para cada usuário: após
+// cada saída a sessão precisa acabar de fato (volta ao /login, API 401 e rota
+// protegida redireciona para o /login). Entre os dois, novo login.
 const loggedOut = async (page) => {
-  await page.waitForURL((u) => u.pathname.startsWith("/login"), { timeout: 8000 }).catch(() => {});
+  await page.waitForURL((u) => u.pathname.startsWith("/login"), { timeout: 10000 }).catch(() => {});
   return new URL(page.url()).pathname.startsWith("/login");
 };
-for (const key of Object.keys(users)) {
+async function logoutVia(key, how) {
   const s = sessions[key];
-  if (!s) continue;
   await s.page.goto(`${APP}/`);
-  const openMenu = () => s.page.getByRole("button", { name: /^Conta:/ }).first().click({ timeout: 10000 });
-  let byMouse = false;
-  let byKeyboard = false;
-  try {
-    await openMenu();
-    await s.page.getByRole("menuitem", { name: /Sair/ }).click({ timeout: 5000 });
-    byMouse = await loggedOut(s.page);
-    if (!byMouse) {
-      await openMenu();
-      await s.page.getByRole("menuitem", { name: /Sair/ }).focus();
-      await s.page.keyboard.press("Enter");
-      byKeyboard = await loggedOut(s.page);
-    }
-  } catch {
-    // menu da conta não encontrado: fica registrado abaixo
+  await s.page.getByRole("button", { name: /^Conta:/ }).first().click({ timeout: 10000 });
+  const item = s.page.getByRole("menuitem", { name: /Sair/ });
+  if (how === "mouse") await item.click({ timeout: 5000 });
+  else {
+    await item.focus();
+    await s.page.keyboard.press("Enter");
   }
-  check("Autenticação", `${users[key].label}: logout com o mouse (Conta → Sair)`, byMouse, "funciona", "o clique não envia o logout; a sessão continua ativa");
-  if (!byMouse) check("Autenticação", `${users[key].label}: logout pelo teclado (Enter em Conta → Sair)`, byKeyboard, "funciona", "também não saiu");
-  if (!byMouse && !byKeyboard) await apiStatus(s.page, "/api/auth/logout", { method: "POST", body: "{}" });
-  const after = await apiStatus(s.page, "/api/session/context");
-  check("Sessão", `${users[key].label}: após logout a API recusa (401)`, after === 401, "funciona", `obtido ${after}`);
-  await s.ctx.close();
+  const back = await loggedOut(s.page);
+  const api = await apiStatus(s.page, "/api/session/context");
+  await s.page.goto(`${APP}/comercial/pedidos`);
+  const guarded = new URL(s.page.url()).pathname.startsWith("/login");
+  check("Autenticação", `${users[key].label}: logout com o ${how === "mouse" ? "mouse" : "teclado"} (Conta → Sair) volta ao /login`, back, "funciona", s.page.url());
+  check("Sessão", `${users[key].label}: após logout (${how}) a API recusa (401)`, api === 401, "funciona", `obtido ${api}`);
+  check("Rotas protegidas", `${users[key].label}: após logout (${how}) rota protegida → /login`, guarded, "funciona", s.page.url());
+  if (!back || api !== 401) await apiStatus(s.page, "/api/auth/logout", { method: "POST", body: "{}" });
+}
+for (const key of Object.keys(users)) {
+  if (!sessions[key]) continue;
+  await logoutVia(key, "mouse");
+  await sessions[key].ctx.close();
+  try {
+    sessions[key] = await login(users[key]);
+  } catch (error) {
+    check("Autenticação", `${users[key].label}: novo login para testar o teclado`, false, "", error.message);
+    continue;
+  }
+  await logoutVia(key, "teclado");
+  await sessions[key].ctx.close();
 }
 await browser.close();
 

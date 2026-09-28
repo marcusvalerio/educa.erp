@@ -20,7 +20,7 @@ import { useTheme } from "@/components/theme/ThemeProvider";
 import { initials } from "@/lib/navigation/access";
 import { apiGet } from "@/lib/api-client";
 import { useSession } from "./SessionProvider";
-import { LogoutForm } from "@/components/auth/LogoutButton";
+import { useLogout } from "@/components/auth/LogoutButton";
 
 type Variant = "default" | "platform";
 
@@ -261,94 +261,96 @@ export function UserMenu({ variant = "default", adminHref, platformHref, erpHref
       ? `Platform ${data?.platform?.role === "OWNER" ? "Owner" : "Admin"}`
       : [tenant?.position?.name, tenant?.department?.name].filter(Boolean).join(" · ") || tenant?.roles[0]?.name || tenant?.company.name || "";
 
+  // O <form> de saída fica fora do conteúdo do menu (ver useLogout).
+  const { logout, form: logoutForm } = useLogout();
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        className={cn(
-          "flex h-9 items-center gap-2 rounded-md py-0.5 pr-1.5 pl-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-ring",
-          variant === "platform" ? "hover:bg-platform-hover" : "hover:bg-surface-hover"
-        )}
-        aria-label={`Conta: ${name}`}
-      >
-        <Avatar name={name} initials={initials(name)} tone={variant === "platform" ? "platform" : "default"} className="h-7 w-7" />
-        <span className="hidden min-w-0 text-left leading-tight xl:block">
-          <span className={cn("block max-w-40 truncate text-sm font-medium", variant === "platform" ? "text-platform-foreground" : "text-foreground")}>{name}</span>
-          {subtitle && (
-            <span className={cn("block max-w-40 truncate text-2xs", variant === "platform" ? "text-platform-muted" : "text-subtle-foreground")}>{subtitle}</span>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className={cn(
+            "flex h-9 items-center gap-2 rounded-md py-0.5 pr-1.5 pl-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-ring",
+            variant === "platform" ? "hover:bg-platform-hover" : "hover:bg-surface-hover"
           )}
-        </span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-72">
-        <div className="flex items-center gap-2.5 px-2 py-2">
-          <Avatar name={name} initials={initials(name)} tone={variant === "platform" ? "platform" : "default"} />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{name}</p>
-            <p className="truncate text-xs text-subtle-foreground">{email}</p>
-          </div>
-        </div>
-        {tenant && (
-          <div className="mx-2 mb-1 rounded-md border border-border-subtle bg-surface-muted px-2.5 py-2 text-xs">
-            <p className="flex items-center gap-1.5 font-medium text-foreground">
-              <Building2 size={12} className="text-subtle-foreground" /> {tenant.company.name}
-            </p>
-            {(tenant.department || tenant.position) && (
-              <p className="mt-0.5 text-subtle-foreground">{[tenant.department?.name, tenant.position?.name].filter(Boolean).join(" · ")}</p>
+          aria-label={`Conta: ${name}`}
+        >
+          <Avatar name={name} initials={initials(name)} tone={variant === "platform" ? "platform" : "default"} className="h-7 w-7" />
+          <span className="hidden min-w-0 text-left leading-tight xl:block">
+            <span className={cn("block max-w-40 truncate text-sm font-medium", variant === "platform" ? "text-platform-foreground" : "text-foreground")}>{name}</span>
+            {subtitle && (
+              <span className={cn("block max-w-40 truncate text-2xs", variant === "platform" ? "text-platform-muted" : "text-subtle-foreground")}>{subtitle}</span>
             )}
-            {tenant.roles.length > 0 && <p className="mt-0.5 text-subtle-foreground">Papéis: {tenant.roles.map((r) => r.name).join(", ")}</p>}
+          </span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-72">
+          <div className="flex items-center gap-2.5 px-2 py-2">
+            <Avatar name={name} initials={initials(name)} tone={variant === "platform" ? "platform" : "default"} />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{name}</p>
+              <p className="truncate text-xs text-subtle-foreground">{email}</p>
+            </div>
           </div>
-        )}
-        <DropdownMenuSeparator />
-        {erpHref && (
-          <DropdownMenuItem asChild>
-            <Link href={erpHref}>
-              <LayoutGrid size={14} /> Voltar ao ERP
-            </Link>
+          {tenant && (
+            <div className="mx-2 mb-1 rounded-md border border-border-subtle bg-surface-muted px-2.5 py-2 text-xs">
+              <p className="flex items-center gap-1.5 font-medium text-foreground">
+                <Building2 size={12} className="text-subtle-foreground" /> {tenant.company.name}
+              </p>
+              {(tenant.department || tenant.position) && (
+                <p className="mt-0.5 text-subtle-foreground">{[tenant.department?.name, tenant.position?.name].filter(Boolean).join(" · ")}</p>
+              )}
+              {tenant.roles.length > 0 && <p className="mt-0.5 text-subtle-foreground">Papéis: {tenant.roles.map((r) => r.name).join(", ")}</p>}
+            </div>
+          )}
+          <DropdownMenuSeparator />
+          {erpHref && (
+            <DropdownMenuItem asChild>
+              <Link href={erpHref}>
+                <LayoutGrid size={14} /> Voltar ao ERP
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {adminHref && (
+            <DropdownMenuItem asChild>
+              <Link href={adminHref}>
+                <Building2 size={14} /> Administração da Empresa
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {platformHref && (
+            <DropdownMenuItem asChild>
+              <Link href={platformHref}>
+                <Landmark size={14} /> Administração Central
+              </Link>
+            </DropdownMenuItem>
+          )}
+          {tenant && (
+            <DropdownMenuItem asChild>
+              <Link href="/configuracoes/aparencia">
+                <Settings2 size={14} /> Preferências
+              </Link>
+            </DropdownMenuItem>
+          )}
+          <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+            <span className="text-xs text-muted-foreground">Tema</span>
+            <Segmented
+              label="Tema"
+              size="xs"
+              value={preference}
+              onChange={setPreference}
+              options={[
+                { value: "light", label: "Claro" },
+                { value: "dark", label: "Escuro" },
+                { value: "system", label: "Sistema" },
+              ]}
+            />
+          </div>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={logout}>
+            <LogOut size={14} /> Sair
           </DropdownMenuItem>
-        )}
-        {adminHref && (
-          <DropdownMenuItem asChild>
-            <Link href={adminHref}>
-              <Building2 size={14} /> Administração da Empresa
-            </Link>
-          </DropdownMenuItem>
-        )}
-        {platformHref && (
-          <DropdownMenuItem asChild>
-            <Link href={platformHref}>
-              <Landmark size={14} /> Administração Central
-            </Link>
-          </DropdownMenuItem>
-        )}
-        {tenant && (
-          <DropdownMenuItem asChild>
-            <Link href="/configuracoes/aparencia">
-              <Settings2 size={14} /> Preferências
-            </Link>
-          </DropdownMenuItem>
-        )}
-        <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-          <span className="text-xs text-muted-foreground">Tema</span>
-          <Segmented
-            label="Tema"
-            size="xs"
-            value={preference}
-            onChange={setPreference}
-            options={[
-              { value: "light", label: "Claro" },
-              { value: "dark", label: "Escuro" },
-              { value: "system", label: "Sistema" },
-            ]}
-          />
-        </div>
-        <DropdownMenuSeparator />
-        <LogoutForm>
-          <DropdownMenuItem asChild>
-            <button type="submit" className="w-full">
-              <LogOut size={14} /> Sair
-            </button>
-          </DropdownMenuItem>
-        </LogoutForm>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {logoutForm}
+    </>
   );
 }

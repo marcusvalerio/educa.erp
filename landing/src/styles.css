@@ -3628,6 +3628,250 @@ html:not(.js) .viewer-tabs button[aria-selected="true"]::after {
   }
 }
 
+/* ================================================================ V4 — abertura: o pedido como objeto */
+/* O pedido PV-001013 em perspectiva sutil; as partes que geram trabalho em
+   outra área se destacam dele (vista explodida) e ligam-se às telas reais
+   dessas áreas, que convergem em Gestão. Mundo de 1440 × 840 unidades
+   (--u = 1/1440 da largura): a cena inteira escala com a tela. Abaixo de
+   1100 px, a abertura usa a composição vertical (.hs). */
+.hx,
+.hx-legend {
+  display: none;
+}
+@media (min-width: 1100px) {
+  .hero {
+    padding-block: 0 clamp(36px, 3vw, 56px);
+  }
+  .hero .hs {
+    display: none;
+  }
+  .hero > .wrap {
+    position: static;
+  }
+  .hx {
+    display: block;
+    position: relative;
+    container-type: inline-size;
+    width: 100%;
+    aspect-ratio: 1440 / 840;
+    max-height: calc(100svh - var(--top) + 40px);
+    min-height: 640px;
+  }
+  .hx-world,
+  .hx-lines,
+  .hx-legend {
+    --u: calc(100cqw / 1440);
+  }
+  .hx-world {
+    position: absolute;
+    inset: 0;
+    perspective: calc(var(--u) * 1700);
+    perspective-origin: calc(var(--u) * 980) calc(var(--u) * 420);
+  }
+  .hx-cam {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+  .hx-order {
+    position: absolute;
+    transform-style: preserve-3d;
+    transform-origin: 0 50%;
+    transform: rotateY(var(--ry)) rotateX(var(--rx));
+  }
+  .hx-face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: calc(var(--u) * 10);
+    background: #f5f6f6;
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.07),
+      0 calc(var(--u) * 50) calc(var(--u) * 110) calc(var(--u) * -30) rgba(0, 0, 0, 0.9);
+  }
+  .hx-base {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  /* Onde a parte levantada "encaixa": a base escurece de leve sob ela. */
+  .hx-socket {
+    position: absolute;
+    border-radius: calc(var(--u) * 5);
+    background: rgba(16, 12, 8, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(16, 12, 8, 0.08);
+  }
+  /* Luz que atravessa o pedido quando ele acende (só com movimento). */
+  .hx-sheen {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, 0.55) 50%, transparent 62%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .hx-part,
+  .hx-dest {
+    position: absolute;
+    transform-style: preserve-3d;
+  }
+  .hx-part {
+    transform: translate3d(calc(var(--u) * var(--dx, 0)), calc(var(--u) * var(--dy, 0)), calc(var(--u) * var(--z, 0)));
+  }
+  .hx-dest {
+    transform: translateZ(calc(var(--u) * var(--z, 0)));
+  }
+  .hx-part img,
+  .hx-dest img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: calc(var(--u) * 6);
+    background: #fff;
+  }
+  .hx-part img {
+    box-shadow:
+      0 0 0 1px rgba(16, 12, 8, 0.1),
+      0 calc(var(--u) * 16) calc(var(--u) * 34) calc(var(--u) * -12) rgba(16, 12, 8, 0.6);
+  }
+  .hx-feeds img,
+  .hx-dest img {
+    box-shadow:
+      0 0 0 1px rgba(255, 148, 8, 0.75),
+      0 calc(var(--u) * 24) calc(var(--u) * 48) calc(var(--u) * -14) rgba(0, 0, 0, 0.8);
+  }
+  .hx-api img {
+    box-shadow:
+      0 0 0 1px rgba(255, 177, 77, 0.45),
+      0 calc(var(--u) * 24) calc(var(--u) * 48) calc(var(--u) * -14) rgba(0, 0, 0, 0.8);
+  }
+  .hx-tag {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + var(--u) * 9);
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 7);
+    margin: 0;
+    white-space: nowrap;
+    padding: calc(var(--u) * 5) calc(var(--u) * 8);
+    border-radius: calc(var(--u) * 6);
+    background: rgba(14, 11, 9, 0.9);
+    box-shadow: 0 0 0 1px var(--stage-line-2);
+    font: 500 calc(var(--u) * 11.5) / 1 var(--mono);
+    letter-spacing: 0.04em;
+    color: var(--stage-mute);
+    text-transform: uppercase;
+  }
+  .hx-tag b {
+    display: inline-grid;
+    place-items: center;
+    width: calc(var(--u) * 17);
+    height: calc(var(--u) * 17);
+    border-radius: 50%;
+    background: var(--fire);
+    color: #100c08;
+    font-size: calc(var(--u) * 10);
+  }
+  .hx-tag code {
+    color: var(--stage-ink);
+    text-transform: none;
+    font-size: calc(var(--u) * 12);
+  }
+  .hx-tag .hs-apichip {
+    font-size: calc(var(--u) * 9);
+  }
+  .hx-a {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+  .hx-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: calc(var(--u) * 840);
+    overflow: visible;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .hx-path {
+    fill: none;
+    stroke: #8a837b;
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+    transition: stroke 0.35s, opacity 0.35s;
+  }
+  .hx-api .hx-path {
+    stroke-dasharray: 5 6;
+  }
+  .hx-end {
+    fill: var(--stage);
+    stroke: #8a837b;
+    stroke-width: 1.4;
+    vector-effect: non-scaling-stroke;
+  }
+  .hx-sig {
+    fill: var(--fire);
+    opacity: 0;
+  }
+  .hx-api .hx-sig {
+    fill: var(--stage-fire);
+  }
+  .hero.is-live .hx-sig {
+    opacity: 1;
+  }
+  .hx-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    position: absolute;
+    left: max(var(--gutter), calc((100vw - var(--max)) / 2));
+    bottom: calc(var(--u) * 26);
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--stage-mute);
+    z-index: 3;
+  }
+  /* Texto da abertura sobre o espaço livre à esquerda da cena. */
+  .hero-head {
+    position: absolute;
+    z-index: 3;
+    top: calc(100vw * 92 / 1440);
+    left: max(var(--gutter), calc((100vw - var(--max)) / 2));
+    width: min(38vw, 560px);
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 30px;
+    margin: 0;
+  }
+  .hero .display {
+    font-size: clamp(3.2rem, 4.7vw, 6rem);
+  }
+  .hero .lead {
+    font-size: clamp(16px, 1.22vw, 19px);
+  }
+  /* Foco: passar sobre uma parte acende a ligação dela; o resto recua. */
+  .hx[data-focus] .hx-link {
+    opacity: 0.18;
+  }
+  .hx[data-focus] .hx-link.is-hot {
+    opacity: 1;
+  }
+  .hx-link.is-hot .hx-path {
+    stroke: var(--stage-fire);
+  }
+  .hx[data-focus] .hx-feeds:not(.is-hot) img,
+  .hx[data-focus] .hx-dest:not(.is-hot) img {
+    opacity: 0.55;
+  }
+  .hx-feeds img,
+  .hx-dest img {
+    transition: opacity 0.35s var(--ease);
+  }
+}
+
 /* ---------------------------------------------------------------- entrada por rolagem */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {

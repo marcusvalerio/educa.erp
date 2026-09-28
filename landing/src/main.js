@@ -27,6 +27,59 @@
   };
   EDUCA.startSignals = startSignals;
 
+  // Abertura V4 (desktop): as ligações saem das âncoras reais do pedido e das
+  // telas; quando a câmera ou as partes se movem, a linha acompanha. Cada
+  // ligação tem um progresso (0–1) para ser "desenhada": a curva é cortada
+  // no ponto certo (de Casteljau), e o tracejado da API continua intacto.
+  const hx = document.querySelector(".hx");
+  if (hx) {
+    const links = [...hx.querySelectorAll(".hx-link")];
+    const anchors = Object.fromEntries([...hx.querySelectorAll("[data-a]")].map((a) => [a.dataset.a, a]));
+    const f = (v) => v.toFixed(1);
+    const cut = (p0, p1, p2, p3, t) => {
+      const l = (a, b) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+      const a = l(p0, p1);
+      const b = l(p1, p2);
+      const c = l(p2, p3);
+      const d = l(a, b);
+      const e = l(b, c);
+      return [p0, a, d, l(d, e)];
+    };
+    const draw = () => {
+      const r = hx.getBoundingClientRect();
+      if (!r.width || !hx.offsetParent) return;
+      const k = 1440 / r.width;
+      const pt = (el) => {
+        const b = el.getBoundingClientRect();
+        return [(b.left - r.left) * k, (b.top - r.top) * k];
+      };
+      links.forEach((g) => {
+        const a = anchors[`${g.dataset.link}-a`];
+        const b = anchors[`${g.dataset.link}-b`];
+        if (!a || !b) return;
+        const p0 = pt(a);
+        const p3 = pt(b);
+        const v = g.dataset.mode === "v";
+        const p1 = v ? [p0[0], p0[1] + (p3[1] - p0[1]) * 0.55] : [p0[0] + (p3[0] - p0[0]) * 0.55, p0[1]];
+        const p2 = v ? [p3[0], p3[1] - (p3[1] - p0[1]) * 0.55] : [p3[0] - (p3[0] - p0[0]) * 0.55, p3[1]];
+        const t = g._t ?? 1;
+        const [q0, q1, q2, q3] = t < 1 ? cut(p0, p1, p2, p3, Math.max(0.001, t)) : [p0, p1, p2, p3];
+        g.querySelector(".hx-path").setAttribute("d", `M${f(q0[0])} ${f(q0[1])} C${f(q1[0])} ${f(q1[1])}, ${f(q2[0])} ${f(q2[1])}, ${f(q3[0])} ${f(q3[1])}`);
+        const [e0, e1] = g.querySelectorAll(".hx-end");
+        e0.setAttribute("cx", f(p0[0]));
+        e0.setAttribute("cy", f(p0[1]));
+        e1.setAttribute("cx", f(p3[0]));
+        e1.setAttribute("cy", f(p3[1]));
+        e0.style.opacity = t > 0 ? "" : "0";
+        e1.style.opacity = t >= 1 ? "" : "0";
+      });
+    };
+    EDUCA.hxDraw = draw;
+    draw();
+    window.addEventListener("resize", draw, { passive: true });
+    document.fonts?.ready.then(draw);
+  }
+
   // "Siga um pedido" em lista: a etapa no centro da tela acende a raia.
   const journey = document.querySelector(".journey");
   if (journey) {

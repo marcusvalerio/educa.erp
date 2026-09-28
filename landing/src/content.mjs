@@ -110,6 +110,19 @@ export const HERO = {
   },
   // Sinais soltos no começo da sequência: valores reais das mesmas telas.
   signals: ["PV-001013", "R$ 36.011,62", "FIL03 rua 05", "CR-0002", "DF-0004", "12 pedidos no período", "7 em preparação", "5 aguardando aprovação"],
+  // V4 (desktop): o pedido inteiro como objeto, e as partes dele que geram
+  // trabalho em outra área, recortadas da mesma captura (px da captura 17,
+  // 1176 × 1134). `to`: a área que aquela parte alimenta.
+  stage: { img: "comercial/17-pedido-receber-gerado", crop: [0, 80, 1176, 900], alt: "Pedido de venda PV-001013, aprovado, total de R$ 36.011,62, com as ações Reservar estoque e Gerar conta a receber, o andamento da reserva e da expedição e o título a receber CR-0002" },
+  parts: [
+    { id: "cabecalho", img: "comercial/17-pedido-receber-gerado", crop: [20, 88, 1136, 106], label: "PV-001013 · Aprovado" },
+    { id: "totais", img: "comercial/17-pedido-receber-gerado", crop: [33, 211, 1110, 120], label: "Total R$ 36.011,62" },
+    { id: "docfiscal", img: "comercial/17-pedido-receber-gerado", crop: [34, 530, 262, 60], label: "Documento fiscal", to: "fiscal" },
+    { id: "andamento", img: "comercial/17-pedido-receber-gerado", crop: [785, 347, 358, 311], label: "Reserva e expedição", to: "logistica" },
+    { id: "financeiro", img: "comercial/17-pedido-receber-gerado", crop: [597, 820, 546, 145], label: "CR-0002 · em aberto", to: "financeiro" },
+  ],
+  // Botões reais do cabeçalho (px da captura 17).
+  buttons: { estoque: [658, 155, 149, 32], financeiro: [815, 155, 177, 32] },
 };
 
 export const SCENARIO = {

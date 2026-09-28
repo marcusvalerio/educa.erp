@@ -230,8 +230,10 @@ function hero() {
   const posStyle = (b) => `left:${pct(b.x, HS.W)};top:${pct(b.y, HS.H)};width:${pct(b.w, HS.W)}`;
   const tag = (n, area, code, kind) =>
     `<p class="hs-tag">${n ? `<b>${n}</b>` : ""}<span>${esc(area)}</span><code>${esc(code)}</code>${kind === "api" ? `<i class="hs-apichip">API</i>` : ""}</p>`;
-  const frag = (s, b, eager) =>
-    `<a class="hs-img" href="${b.im.file}" data-zoom data-w="${b.im.w}" data-h="${b.im.h}" data-caption="${esc(s.alt)}" aria-label="Ampliar tela: ${esc(s.alt)}">${picture(s, { eager, sizes: `(min-width: 1100px) ${Math.round((b.w / HS.W) * 92)}vw, 100vw` })}</a>`;
+  // Abaixo de 1100 px (a cena V4 fica no desktop). Imagens lazy: o pedido é
+  // pré-carregado no <head> só nessas larguras.
+  const frag = (s, b) =>
+    `<a class="hs-img" href="${b.im.file}" data-zoom data-w="${b.im.w}" data-h="${b.im.h}" data-caption="${esc(s.alt)}" aria-label="Ampliar tela: ${esc(s.alt)}">${picture(s, { sizes: "100vw" })}</a>`;
 
   // Marcadores sobre o pedido: coordenadas da captura → % da imagem recortada.
   const [ox, oy, ow, oh] = H.order.crop;
@@ -297,6 +299,7 @@ function hero() {
   const [l1, l2] = H.title;
   return `<section class="hero stage" id="inicio" aria-labelledby="hero-title">
   <div class="hero-bg" aria-hidden="true">${Array.from({ length: 13 }, (_, i) => `<i class="gl" style="--i:${i}"></i>`).join("")}<span class="hero-glow"></span></div>
+  ${heroWorld()}
   <div class="wrap">
     <div class="hero-head">
       <div class="hero-title-col">
@@ -316,7 +319,7 @@ function hero() {
         ${svg}
         <figure class="hs-frag hs-order" style="${posStyle(order)}" data-depth="0.5">
           ${tag(null, H.order.area, H.order.code, "tela")}
-          <div class="hs-media">${frag(H.order, order, true)}${hots}<span class="hs-scan" aria-hidden="true"></span></div>
+          <div class="hs-media">${frag(H.order, order)}${hots}<span class="hs-scan" aria-hidden="true"></span></div>
           <span class="hs-ghost" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <figcaption class="hs-cap">${esc(H.order.text)}</figcaption>
         </figure>
@@ -324,7 +327,7 @@ function hero() {
           .map(
             ({ s, b }, i) => `<figure class="hs-frag hs-sat hs-${s.kind}" style="${posStyle(b)}" data-sat="${i}" data-depth="${(0.9 + i * 0.15).toFixed(2)}">
           ${tag(s.n, s.area, s.code, s.kind)}
-          <div class="hs-media">${frag(s, b, true)}</div>
+          <div class="hs-media">${frag(s, b)}</div>
           <span class="hs-ghost" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <figcaption class="hs-cap">${esc(s.text)}</figcaption>
         </figure>`,
@@ -332,7 +335,7 @@ function hero() {
           .join("")}
         <figure class="hs-frag hs-gestao" style="${posStyle(g)}" data-depth="1.4">
           ${tag(null, H.gestao.area, H.gestao.code, "tela")}
-          <div class="hs-media">${frag(H.gestao, g, true)}</div>
+          <div class="hs-media">${frag(H.gestao, g)}</div>
           <span class="hs-ghost" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <figcaption class="hs-cap">${esc(H.gestao.text)}</figcaption>
         </figure>
@@ -342,6 +345,193 @@ function hero() {
     </div>
   </div>
 </section>`;
+}
+
+// ---------------------------------------------------------------------------
+// Abertura V4 (≥ 1100 px): o pedido PV-001013 como objeto, em "vista
+// explodida". Mundo de 1440 × 840 unidades; 1 unidade = 1/1440 da largura
+// (var(--u) no CSS), então a cena escala inteira. O pedido fica em
+// perspectiva; as partes que geram trabalho em outra área se destacam dele em
+// profundidade e ligam-se às telas reais dessas áreas, que convergem em Gestão.
+//
+// As linhas do HTML estático (sem JS) saem da mesma projeção que o CSS faz:
+// perspective P com origem O no mundo, rotateY/rotateX no pedido e translateZ
+// nas partes. Com JS, main.js redesenha as linhas a partir das âncoras reais.
+
+const HX = { W: 1440, H: 840, P: 1700, O: [940, 440] };
+const HX_ORDER = { x: 650, y: 214, w: 574, ry: 17, rx: 6 };
+// A câmera começa perto (≈1,7×): pede a captura grande já no primeiro quadro.
+const HX_STAGE_SIZES = "80vw";
+const HX_PART_Z = { cabecalho: 34, totais: 20, docfiscal: 28, andamento: 14, financeiro: 64 };
+const HX_PART_SHIFT = { financeiro: [150, 26] };
+const HX_POP = { w: 200, lift: 46, z: 90 }; // janela de reserva que nasce do botão
+const HX_DEST = {
+  fiscal: { x: 470, y: 704, w: 320, z: 0 },
+  logistica: { x: 884, y: 722, w: 232, z: -20 },
+  gestao: { x: 1146, y: 380, w: 190, z: 0 },
+};
+
+const m4 = {
+  mul(a, b) {
+    const r = new Array(16).fill(0);
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) for (let k = 0; k < 4; k++) r[i * 4 + j] += a[i * 4 + k] * b[k * 4 + j];
+    return r;
+  },
+  T: (x, y, z) => [1, 0, 0, x, 0, 1, 0, y, 0, 0, 1, z, 0, 0, 0, 1],
+  Ry(d) {
+    const a = (d * Math.PI) / 180;
+    return [Math.cos(a), 0, Math.sin(a), 0, 0, 1, 0, 0, -Math.sin(a), 0, Math.cos(a), 0, 0, 0, 0, 1];
+  },
+  Rx(d) {
+    const a = (d * Math.PI) / 180;
+    return [1, 0, 0, 0, 0, Math.cos(a), -Math.sin(a), 0, 0, Math.sin(a), Math.cos(a), 0, 0, 0, 0, 1];
+  },
+  apply(m, [x, y, z = 0]) {
+    return [m[0] * x + m[1] * y + m[2] * z + m[3], m[4] * x + m[5] * y + m[6] * z + m[7], m[8] * x + m[9] * y + m[10] * z + m[11]];
+  },
+};
+const hxProject = ([x, y, z]) => {
+  const s = HX.P / (HX.P - z);
+  return [HX.O[0] + (x - HX.O[0]) * s, HX.O[1] + (y - HX.O[1]) * s];
+};
+
+function heroWorld() {
+  const H = C.HERO;
+  const o = HX_ORDER;
+  const stageIm = images.get(imgKey(H.stage));
+  const oh = (o.w * stageIm.h) / stageIm.w;
+  const s = o.w / H.stage.crop[2]; // px da captura → unidades do plano
+  const [cx0, cy0] = H.stage.crop;
+  const mOrder = m4.mul(m4.mul(m4.T(o.x, o.y + oh / 2, 0), m4.mul(m4.Ry(o.ry), m4.Rx(o.rx))), m4.T(0, -oh / 2, 0));
+  // Ponto (x, y) em px da captura, numa parte levantada (z, desvio) → tela.
+  const onOrder = (px, py, z = 0, [dx, dy] = [0, 0]) => hxProject(m4.apply(mOrder, [(px - cx0) * s + dx, (py - cy0) * s + dy, z]));
+  const u = (v) => `calc(var(--u) * ${+v.toFixed(2)})`;
+  const pc = (v, t) => `${((v / t) * 100).toFixed(3)}%`;
+
+  // Partes do pedido (recortes da mesma captura), na posição exata delas.
+  const partBox = (p) => {
+    const [x, y, w, h] = p.crop;
+    return { x: (x - cx0) * s, y: (y - cy0) * s, w: w * s, h: h * s };
+  };
+  const sat = Object.fromEntries(H.satellites.map((x) => [x.id, x]));
+  const parts = H.parts
+    .map((p) => {
+      const b = partBox(p);
+      const [dx, dy] = HX_PART_SHIFT[p.id] ?? [0, 0];
+      const dest = p.to ? sat[p.to] : null;
+      // Fiscal e Logística têm tela de destino no mundo (com a etiqueta); a
+      // parte do pedido só ganha etiqueta quando é ela mesma o destino.
+      const tag = dest && !HX_DEST[p.to]
+        ? `<p class="hx-tag"><b>${dest.n}</b><span>${esc(dest.area)}</span><code>${esc(dest.code)}</code>${dest.kind === "api" ? '<i class="hs-apichip">API</i>' : ""}</p>`
+        : "";
+      return `<div class="hx-part${dest ? " hx-feeds" : ""}" data-part="${p.id}"${dest ? ` data-to="${p.to}"` : ""} style="left:${pc(b.x, o.w)};top:${pc(b.y, oh)};width:${pc(b.w, o.w)};height:${pc(b.h, oh)};--z:${HX_PART_Z[p.id]};--dx:${dx};--dy:${dy}">${picture(p, { alt: "", sizes: HX_STAGE_SIZES })}${tag}</div>`;
+    })
+    .join("");
+  // Onde cada parte "encaixa" no pedido: a base escurece sob a parte levantada.
+  const sockets = H.parts.map((p) => {
+    const b = partBox(p);
+    return `<span class="hx-socket" style="left:${pc(b.x, o.w)};top:${pc(b.y, oh)};width:${pc(b.w, o.w)};height:${pc(b.h, oh)}"></span>`;
+  });
+
+  // Estoque: a janela real de reserva nasce do botão Reservar estoque.
+  const eb = H.buttons.estoque;
+  const est = sat.estoque;
+  const estIm = images.get(imgKey(est));
+  const popW = HX_POP.w;
+  const popH = (popW * estIm.h) / estIm.w;
+  const bx = (eb[0] - cx0) * s;
+  const by = (eb[1] - cy0) * s;
+  const popX = bx + (eb[2] * s) / 2 - popW / 2;
+  const popY = by - popH - HX_POP.lift;
+  const pop = `<figure class="hx-part hx-pop hx-feeds" data-part="estoque" data-to="estoque" style="left:${pc(popX, o.w)};top:${pc(popY, oh)};width:${pc(popW, o.w)};height:${pc(popH, oh)};--z:${HX_POP.z}">
+      ${picture(est, { alt: est.alt, sizes: "15vw" })}
+      <figcaption class="hx-tag"><b>${est.n}</b><span>${esc(est.area)}</span><code>${esc(est.code)}</code></figcaption>
+    </figure>`;
+
+  // Telas de destino no mundo (Fiscal e Logística pela API; Gestão recebe tudo).
+  const dest = (id, d) => {
+    const it = id === "gestao" ? H.gestao : sat[id];
+    const im = images.get(imgKey(it));
+    const h = (d.w * im.h) / im.w;
+    return {
+      h,
+      html: `<figure class="hx-dest hx-${it.kind ?? "tela"}" data-dest="${id}" style="left:${u(d.x)};top:${u(d.y)};width:${u(d.w)};height:${u(h)};--z:${d.z}">
+      <p class="hx-tag">${it.n ? `<b>${it.n}</b>` : ""}<span>${esc(it.area)}</span><code>${esc(it.code)}</code>${it.kind === "api" ? '<i class="hs-apichip">API</i>' : ""}</p>
+      ${picture(it, { alt: it.alt, sizes: `${Math.round((d.w / HX.W) * 100)}vw` })}
+    </figure>`,
+    };
+  };
+  const D = Object.fromEntries(Object.entries(HX_DEST).map(([id, d]) => [id, { ...d, ...dest(id, d) }]));
+  const onDest = (id, fx, fy) => {
+    const d = D[id];
+    return hxProject([d.x + d.w * fx, d.y + d.h * fy, d.z]);
+  };
+
+  // Ligações: origem real no pedido → destino. Âncoras nomeadas: o JS usa as
+  // mesmas para redesenhar as linhas com a câmera em movimento.
+  const fb = H.buttons.financeiro;
+  const pFin = H.parts.find((p) => p.id === "financeiro").crop;
+  const pDoc = H.parts.find((p) => p.id === "docfiscal").crop;
+  const pAnd = H.parts.find((p) => p.id === "andamento").crop;
+  const shiftF = HX_PART_SHIFT.financeiro;
+  const popPt = (fx, fy) => hxProject(m4.apply(mOrder, [popX + popW * fx, popY + popH * fy, HX_POP.z]));
+  const L = [
+    { id: "estoque", kind: "tela", mode: "v", a: onOrder(eb[0] + eb[2] / 2, eb[1], HX_PART_Z.cabecalho), b: popPt(0.5, 1) },
+    { id: "financeiro", kind: "tela", mode: "v", a: onOrder(fb[0] + fb[2] / 2, fb[1] + fb[3], HX_PART_Z.cabecalho), b: onOrder(pFin[0] + pFin[2] * 0.62, pFin[1], HX_PART_Z.financeiro, shiftF) },
+    { id: "fiscal", kind: "api", mode: "v", a: onOrder(pDoc[0] + 24, pDoc[1] + pDoc[3], HX_PART_Z.docfiscal), b: onDest("fiscal", 0.5, 0) },
+    { id: "logistica", kind: "api", mode: "v", a: onOrder(pAnd[0] + pAnd[2] * 0.5, pAnd[1] + pAnd[3], HX_PART_Z.andamento), b: onDest("logistica", 0.5, 0) },
+    { id: "g-estoque", kind: "tela", mode: "h", a: popPt(1, 0.5), b: onDest("gestao", 0.5, 0) },
+    { id: "g-financeiro", kind: "tela", mode: "h", a: onOrder(pFin[0] + pFin[2], pFin[1] + pFin[3] / 2, HX_PART_Z.financeiro, shiftF), b: onDest("gestao", 0, 0.62) },
+    { id: "g-fiscal", kind: "tela", mode: "h", a: onDest("fiscal", 1, 0.5), b: onDest("gestao", 0.2, 1) },
+    { id: "g-logistica", kind: "tela", mode: "h", a: onDest("logistica", 1, 0.5), b: onDest("gestao", 0.55, 1) },
+  ];
+  const curve = ({ a, b, mode }) => {
+    const [x0, y0] = a;
+    const [x1, y1] = b;
+    const c = mode === "v" ? [x0, y0 + (y1 - y0) * 0.55, x1, y1 - (y1 - y0) * 0.55] : [x0 + (x1 - x0) * 0.55, y0, x1 - (x1 - x0) * 0.55, y1];
+    return `M${f1(x0)} ${f1(y0)} C${f1(c[0])} ${f1(c[1])}, ${f1(c[2])} ${f1(c[3])}, ${f1(x1)} ${f1(y1)}`;
+  };
+  const lines = `<svg class="hx-lines" viewBox="0 0 ${HX.W} ${HX.H}" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    ${L.map(
+      (l, i) => `<g class="hx-link hx-${l.kind}" data-link="${l.id}" data-mode="${l.mode}">
+      <path id="hx-l${i}" class="hx-path" d="${curve(l)}"/>
+      <circle class="hx-end" r="3.2" cx="${f1(l.a[0])}" cy="${f1(l.a[1])}"/><circle class="hx-end" r="3.2" cx="${f1(l.b[0])}" cy="${f1(l.b[1])}"/>
+      <circle class="hx-sig" r="3.4" cx="-20" cy="-20"><animateMotion dur="${(2.4 + (i % 4) * 0.4).toFixed(1)}s" repeatCount="indefinite" begin="indefinite"><mpath href="#hx-l${i}"/></animateMotion></circle>
+    </g>`,
+    ).join("")}
+  </svg>`;
+
+  // Âncoras DOM (pontos das ligações), em % do elemento que as contém.
+  const anchor = (name, fx, fy) => `<i class="hx-a" data-a="${name}" style="left:${(fx * 100).toFixed(2)}%;top:${(fy * 100).toFixed(2)}%"></i>`;
+  const cab = H.parts.find((p) => p.id === "cabecalho").crop;
+  const cabA = [
+    anchor("estoque-a", (eb[0] + eb[2] / 2 - cab[0]) / cab[2], (eb[1] - cab[1]) / cab[3]),
+    anchor("financeiro-a", (fb[0] + fb[2] / 2 - cab[0]) / cab[2], (fb[1] + fb[3] - cab[1]) / cab[3]),
+  ].join("");
+  const withAnchors = (html, id, list) => html.replace(new RegExp(`(data-part="${id}"[^>]*>)`), `$1${list}`);
+  let partsHtml = withAnchors(parts, "cabecalho", cabA);
+  partsHtml = withAnchors(partsHtml, "financeiro", anchor("financeiro-b", 0.62, 0) + anchor("g-financeiro-a", 1, 0.5));
+  partsHtml = withAnchors(partsHtml, "docfiscal", anchor("fiscal-a", 24 / pDoc[2], 1));
+  partsHtml = withAnchors(partsHtml, "andamento", anchor("logistica-a", 0.5, 1));
+  const popHtml = pop.replace(/(data-part="estoque"[^>]*>)/, `$1${anchor("estoque-b", 0.5, 1)}${anchor("g-estoque-a", 1, 0.5)}`);
+  const destHtml = (id, list) => D[id].html.replace(/(<figure[^>]*>)/, `$1${list}`);
+
+  return `<div class="hx" role="group" aria-label="O pedido PV-001013 aprovado no Comercial e o que ele gera no Estoque, no Financeiro, no Fiscal e na Logística, até a Gestão, nas telas reais do EDUCA">
+    <div class="hx-world">
+      <div class="hx-cam">
+        <div class="hx-order" style="left:${u(o.x)};top:${u(o.y)};width:${u(o.w)};height:${u(oh)};--ry:${o.ry}deg;--rx:${o.rx}deg">
+          <div class="hx-face">${picture(H.stage, { alt: H.stage.alt, cls: "hx-base", sizes: HX_STAGE_SIZES })}${sockets.join("")}<span class="hx-sheen" aria-hidden="true"></span></div>
+          ${partsHtml}
+          ${popHtml}
+        </div>
+        ${destHtml("fiscal", anchor("fiscal-b", 0.5, 0) + anchor("g-fiscal-a", 1, 0.5))}
+        ${destHtml("logistica", anchor("logistica-b", 0.5, 0) + anchor("g-logistica-a", 1, 0.5))}
+        ${destHtml("gestao", anchor("g-estoque-b", 0.5, 0) + anchor("g-financeiro-b", 0, 0.62) + anchor("g-fiscal-b", 0.2, 1) + anchor("g-logistica-b", 0.55, 1))}
+      </div>
+    </div>
+    ${lines}
+    <p class="hx-legend"><span class="lg-solid" aria-hidden="true"></span>Ação na tela <span class="lg-dash" aria-hidden="true"></span>Pela API, sem botão na tela <span class="hs-legend-note">Telas reais do EDUCA, com dados fictícios.</span></p>
+  </div>`;
 }
 
 function legend() {
@@ -960,6 +1150,21 @@ ${footer()}
 </dialog>`;
 }
 
+// A imagem principal da abertura (LCP) é pré-carregada conforme a largura:
+// o pedido inteiro no desktop, o recorte do pedido abaixo de 1100 px.
+function heroPreload() {
+  const big = images.get(imgKey(C.HERO.stage));
+  const small = images.get(imgKey(C.HERO.order));
+  return [
+    big.small
+      ? `<link rel="preload" as="image" imagesrcset="${big.small.file} ${big.small.w}w, ${big.file} ${big.w}w" imagesizes="${HX_STAGE_SIZES}" media="(min-width: 1100px)" fetchpriority="high">`
+      : `<link rel="preload" as="image" href="${big.file}" media="(min-width: 1100px)" fetchpriority="high">`,
+    small.small
+      ? `<link rel="preload" as="image" imagesrcset="${small.small.file} ${small.small.w}w, ${small.file} ${small.w}w" imagesizes="100vw" media="(max-width: 1099px)" fetchpriority="high">`
+      : `<link rel="preload" as="image" href="${small.file}" media="(max-width: 1099px)" fetchpriority="high">`,
+  ].join("\n");
+}
+
 function sectionsList(sizes, opts) {
   return [hero(), scenario(), platform(), journey(), areas(C.MODULES), base(), access(), central(), network(), closing(sizes, opts)];
 }
@@ -1013,6 +1218,7 @@ async function main() {
 <meta property="og:title" content="${esc(C.META.title)}">
 <meta property="og:description" content="${esc(C.META.description)}">
 <link rel="icon" href="data:image/svg+xml,${encodeURIComponent(mark(24).replace('class="mark"', 'xmlns="http://www.w3.org/2000/svg"').replace(/class="mark-bar"/g, 'fill="#f5f6f6"').replace('class="mark-fire"', 'fill="#ff9408"').replace('fill="currentColor"', 'fill="#100c08"'))}">
+${heroPreload()}
 <link rel="preload" href="fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/instrument-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles.css">`;

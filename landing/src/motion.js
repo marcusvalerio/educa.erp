@@ -57,127 +57,118 @@
   /* ================================================================== abertura */
   const hero = q(".hero");
   if (hero) {
-    const hs = q(".hs", hero);
-    const box = q(".hs-box", hero);
+    // Abaixo de 1100 px: composição vertical (.hs).
     const order = q(".hs-order", hero);
     const sats = qa(".hs-sat", hero);
     const gest = q(".hs-gestao", hero);
     const frags = [order, ...sats, gest];
     const hots = qa(".hs-hot", hero);
     const lines = q(".hs-lines", hero);
-    const links = qa(".hs-link", hero);
-    const paths = qa(".hs-path", hero);
-    const draws = qa(".hs-draw", hero);
     const sigs = qa(".hs-sig", hero);
-    const ports = qa(".hs-port", hero);
-    const signals = qa(".hs-signal", hero);
     const titleLines = qa(".ln > span", hero);
-    const side = [q(".lead", hero), q(".actions", hero), q(".hs-legend", hero)];
-    const lens = draws.map(dashLen);
     const media = (f) => q(".hs-media", f);
-    const ghost = (f) => q(".hs-ghost", f);
-    const tagCode = (f) => q(".hs-tag code", f);
-    const port = (link, end) => ports.find((p) => p.dataset.port === `${link}-${end}`);
-    hots.forEach((h, i) => h.style.setProperty("--k", i));
+    const scene = wide(1100);
+    const side = [q(".lead", hero), q(".actions", hero), scene ? q(".hx-legend", hero) : q(".hs-legend", hero)];
+
+    // Desktop: o pedido PV-001013 como objeto (.hx).
+    const hx = q(".hx", hero);
+    const hxOrder = q(".hx-order", hero);
+    const hxCam = q(".hx-cam", hero);
+    const hxParts = qa(".hx-order > .hx-part", hero);
+    const hxPart = (id) => q(`.hx-part[data-part="${id}"]`, hero);
+    const hxDest = (id) => q(`.hx-dest[data-dest="${id}"]`, hero);
+    const hxDests = qa(".hx-dest", hero);
+    const hxLinks = qa(".hx-link", hero);
+    const hxDraw = () => EDUCA.hxDraw?.();
+    const cssNum = (el, v) => parseFloat(getComputedStyle(el).getPropertyValue(v)) || 0;
 
     const tl = gsap.timeline({ delay: 0.1, onComplete: live });
-    // Sequência compacta: o título e o texto entram em ~2,5 s (LCP), e a
-    // sequência inteira fecha em ~3,5 s.
-    tl.timeScale(1.3);
-    const scene = wide(1100);
+    // Desktop: a imagem do pedido é o LCP e entra em ~0,3 s; a sequência pode
+    // respirar. Tablet e celular: o título vem primeiro, em ritmo mais curto.
+    tl.timeScale(scene ? 1.15 : 1.3);
 
     // Vazio: só a grade das colunas, subindo devagar.
     tl.fromTo(".hero-bg .gl", { scaleY: 0, opacity: 0 }, { scaleY: 1, opacity: 1, duration: 1.4, ease: "power2.out", stagger: { each: 0.03, from: "center" } }, 0);
 
-    if (scene) {
-      // Câmera: a cena começa centrada e próxima; no fim recua para o lugar dela.
-      const r = hs.getBoundingClientRect();
-      const lift = Math.min(0, window.innerHeight / 2 - (r.top + r.height / 2));
-      gsap.set(hs, { y: lift, scale: 1.03, transformOrigin: "50% 50%" });
-      gsap.set(q(".hero-head", hero), { opacity: 0 });
-      tl.set(lines, { opacity: 1 }, 0);
-      draws.forEach((p, i) => gsap.set(p, { strokeDasharray: lens[i], strokeDashoffset: lens[i] }));
-      gsap.set(frags, { opacity: 1 });
-      gsap.set(frags.map(media), { opacity: 0 });
-      gsap.set(qa(".hs-tag", hero), { opacity: 0 });
-      gsap.set(qa(".hs-tag code, .hs-tag .hs-apichip", hero), { opacity: 0 });
-      gsap.set(hots, { scale: 0, opacity: 0 });
-      gsap.set(ports, { scale: 0, opacity: 0 });
-
-      // Sinais: as portas de cada ligação acendem, como pontos de um mapa.
-      tl.to(ports, { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(3)", stagger: { each: 0.025, from: "start" } }, 0.15);
-
-      // Estrutura: as molduras das áreas aparecem, ainda vazias, com o nome.
-      tl.fromTo(frags.map(ghost), { opacity: 0, scale: 0.97 }, { opacity: 1, scale: 1, duration: 0.5, ease: "power2.out", stagger: 0.05 }, 0.3);
-      tl.fromTo(qa(".hs-tag", hero), { opacity: 0, x: -8 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out", stagger: 0.05 }, 0.4);
-
-      // Dados: os códigos reais surgem soltos, perto de onde vão parar.
-      const bw = box.clientWidth;
-      const bh = box.clientHeight;
-      const dock = signals.map((s) => ({
-        x: ((Number(s.dataset.tx) - Number(s.dataset.sx)) / 100) * bw,
-        y: ((Number(s.dataset.ty) - Number(s.dataset.sy)) / 100) * bh,
-      }));
-      tl.fromTo(signals, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, ease: "power3.out", stagger: 0.04 }, 0.5);
-      tl.to(signals, { y: (i) => (i % 2 ? -5 : 5), duration: 0.8, ease: "sine.inOut" }, 0.85);
-      const dockTo = (k, at, f) => {
-        tl.to(signals[k], { x: dock[k].x, y: dock[k].y, opacity: 0, scale: 0.92, duration: 0.5, ease: "power3.inOut" }, at);
-        tl.to(tagCode(f), { opacity: 1, duration: 0.3, ease: "power1.out" }, at + 0.35);
+    if (scene && hx) {
+      const U = hx.clientWidth / 1440;
+      const RY = cssNum(hxOrder, "--ry");
+      const RX = cssNum(hxOrder, "--rx");
+      const pop = hxPart("estoque");
+      const finPart = hxPart("financeiro");
+      // Posição final de cada parte e tela (definida no CSS, em unidades).
+      const end = new Map([...hxParts, ...hxDests].map((el) => [el, { x: cssNum(el, "--dx") * U, y: cssNum(el, "--dy") * U, z: cssNum(el, "--z") * U }]));
+      const head = q(".hero-head", hero);
+      gsap.set(head, { opacity: 0 });
+      gsap.set(q(".hx-legend", hero), { opacity: 0 });
+      gsap.set(hxOrder, { rotationY: 0, rotationX: 0, transformOrigin: "0% 50%" });
+      gsap.set(hxParts, { x: 0, y: 0, z: 0, opacity: 0 });
+      gsap.set(pop, { y: 60 * U, scale: 0.35, transformOrigin: "50% 100%" });
+      gsap.set(hxDests, { z: -260 * U, opacity: 0 });
+      gsap.set(qa(".hx-socket", hero), { opacity: 0 });
+      gsap.set(q(".hx-face", hero), { opacity: 0, y: 10 * U });
+      hxLinks.forEach((g) => (g._t = 0));
+      hxDraw();
+      // Câmera documental: abre perto do título do pedido (PV-001013, cliente,
+      // Aprovado), faz uma panorâmica até as ações (Reservar estoque, Gerar
+      // conta a receber) e só então recua até o quadro final.
+      const oL = hxOrder.offsetLeft;
+      const oT = hxOrder.offsetTop;
+      const oW = hxOrder.offsetWidth;
+      const oH = hxOrder.offsetHeight;
+      // Origem fixa em (0, 0): a translação leva o ponto de interesse ao centro.
+      const shot = (fx, fy, S) => ({ scale: S, x: hx.clientWidth * 0.5 - S * (oL + oW * fx), y: hx.clientHeight * 0.46 - S * (oT + oH * fy) });
+      gsap.set(hxCam, { transformOrigin: "0px 0px", ...shot(0.26, 0.09, 2.5) });
+      tl.eventCallback("onUpdate", hxDraw);
+      const reveal = (id, at, duration = 0.45) => {
+        const g = q(`.hx-link[data-link="${id}"]`, hero);
+        const o = { t: 0 };
+        tl.to(o, { t: 1, duration, ease: "power1.inOut", onUpdate: () => (g._t = o.t) }, at);
       };
 
-      // Pedido: a tela real é "desenhada" de cima para baixo pela varredura.
-      const scan = q(".hs-scan", order);
-      const oh = media(order).offsetHeight;
-      tl.set(media(order), { opacity: 1, clipPath: "inset(0% 0% 100% 0% round 8px)" }, 0.7);
-      tl.to(media(order), { clipPath: "inset(0% 0% 0% 0% round 8px)", duration: 0.75, ease: "power2.inOut" }, 0.7);
-      tl.fromTo(scan, { y: 0, opacity: 1 }, { y: oh, opacity: 1, duration: 0.75, ease: "power2.inOut" }, 0.7);
-      tl.to(scan, { opacity: 0, duration: 0.2, ease: "power1.in" }, 1.45);
-      tl.to(ghost(order), { opacity: 0, duration: 0.3 }, 1.3);
-      dockTo(0, 1.0, order);
-      tl.to(signals[1], { x: dock[1].x, y: dock[1].y, opacity: 0, duration: 0.45, ease: "power3.inOut" }, 1.1);
-
-      // Marcadores: os botões e campos que geram trabalho em outra área.
-      tl.to(hots, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(2.4)", stagger: 0.08 }, 1.3);
-
-      // Ligações: o sinal sai do pedido, percorre a linha e só então a área acende.
-      sats.forEach((sat, i) => {
-        const t = 1.5 + i * 0.24;
-        tl.fromTo(hots[i], { scale: 1.4 }, { scale: 1, duration: 0.4, ease: "power2.out" }, t - 0.1);
-        tl.fromTo(port(i, 0), { scale: 2.2 }, { scale: 1, duration: 0.4, ease: "power2.out" }, t);
-        tl.to(draws[i], { strokeDashoffset: 0, duration: 0.4, ease: "power1.inOut" }, t);
-        tl.add(travel(sigs[i], paths[i], { duration: 0.4 }), t);
-        tl.set(sigs[i], { opacity: 0 }, t + 0.42);
-        tl.fromTo(port(i, 1), { scale: 2.2 }, { scale: 1, duration: 0.4, ease: "power2.out" }, t + 0.4);
-        tl.set(media(sat), { opacity: 1 }, t + 0.4);
-        tl.fromTo(media(sat), { clipPath: "inset(0% 100% 0% 0% round 8px)" }, { clipPath: "inset(0% 0% 0% 0% round 8px)", duration: 0.5, ease: "expo.out" }, t + 0.4);
-        tl.to(ghost(sat), { opacity: 0, duration: 0.3 }, t + 0.55);
-        dockTo(2 + i, t + 0.2, sat);
-        const chip = q(".hs-apichip", sat);
-        if (chip) tl.to(chip, { opacity: 1, duration: 0.3 }, t + 0.55);
-      });
-      tl.to(signals[6], { x: dock[6].x, y: dock[6].y, opacity: 0, duration: 0.4, ease: "power3.inOut" }, 2.4);
-
-      // Convergência: as quatro áreas mandam sinal para a Gestão ao mesmo tempo.
-      const cv = 2.55;
-      draws.slice(4).forEach((d, k) => {
-        tl.to(d, { strokeDashoffset: 0, duration: 0.45, ease: "power1.inOut" }, cv + k * 0.05);
-        tl.add(travel(sigs[4 + k], paths[4 + k], { duration: 0.45 }), cv + k * 0.05);
-        tl.set(sigs[4 + k], { opacity: 0 }, cv + 0.5 + k * 0.05);
-      });
-      tl.set(media(gest), { opacity: 1 }, cv + 0.45);
-      tl.fromTo(media(gest), { clipPath: "inset(0% 0% 100% 0% round 8px)", scale: 0.96 }, { clipPath: "inset(0% 0% 0% 0% round 8px)", scale: 1, duration: 0.6, ease: "expo.out" }, cv + 0.45);
-      tl.to(ghost(gest), { opacity: 0, duration: 0.3 }, cv + 0.65);
-      dockTo(7, cv + 0.2, gest);
-
-      // Sistema completo: a câmera recua e a declaração de marca entra.
-      // A câmera começa a recuar enquanto os sinais convergem; o título entra no recuo.
-      const cam = cv + 0.1;
-      tl.to(hs, { y: 0, scale: 1, duration: 1.1, ease: "power3.inOut" }, cam);
-      tl.set(q(".hero-head", hero), { opacity: 1 }, cam + 0.1);
-      tl.fromTo(q(".eyebrow", hero), { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, cam + 0.15);
-      tl.fromTo(titleLines, { yPercent: 112, opacity: 1 }, { yPercent: 0, opacity: 1, duration: 1.0, ease: "expo.out", stagger: 0.1 }, cam + 0.2);
-      tl.fromTo(q(".fire-bar", hero), { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power3.inOut" }, cam + 0.85);
-      tl.fromTo(side, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", stagger: 0.08 }, cam + 0.3);
+      // Luz: o pedido acende e uma faixa de luz atravessa a tela.
+      tl.to(q(".hx-face", hero), { opacity: 1, y: 0, duration: 0.7, ease: "power2.out" }, 0.2);
+      tl.fromTo(q(".hx-sheen", hero), { opacity: 0, xPercent: -70 }, { opacity: 1, xPercent: 70, duration: 1.1, ease: "power2.inOut" }, 0.5);
+      tl.to(q(".hx-sheen", hero), { opacity: 0, duration: 0.3, ease: "power1.in" }, 1.4);
+      // Panorâmica até as ações do pedido.
+      const pan = shot(0.72, 0.1, 2.2);
+      tl.to(hxCam, { x: pan.x, y: pan.y, scale: pan.scale, duration: 0.95, ease: "power2.inOut" }, 0.95);
+      // Silêncio curto; depois o recuo: a câmera se afasta e o pedido ganha
+      // perspectiva, como um objeto sobre a mesa.
+      tl.to(hxCam, { scale: 1, x: 0, y: 0, duration: 1.6, ease: "power3.inOut" }, 2.05);
+      tl.to(hxOrder, { rotationY: RY, rotationX: RX, duration: 1.6, ease: "power3.inOut" }, 2.05);
+      // As partes que geram trabalho em outra área se destacam do pedido.
+      tl.to(qa(".hx-socket", hero), { opacity: 1, duration: 0.4 }, 2.75);
+      hxParts
+        .filter((p) => p !== pop)
+        .forEach((p, i) => {
+          tl.set(p, { opacity: 1 }, 2.75 + i * 0.07);
+          tl.to(p, { z: p === finPart ? end.get(p).z * 0.45 : end.get(p).z, duration: 0.9, ease: "power3.out" }, 2.75 + i * 0.07);
+        });
+      // Consequências, uma a uma, cada uma saindo do lugar exato que a causa.
+      let t = 3.45;
+      reveal("estoque", t, 0.4); // Reservar estoque → a janela real de reserva
+      tl.to(pop, { opacity: 1, y: 0, z: end.get(pop).z, scale: 1, duration: 0.75, ease: "expo.out" }, t + 0.25);
+      t += 0.42;
+      tl.to(finPart, { x: end.get(finPart).x, y: end.get(finPart).y, z: end.get(finPart).z, duration: 0.85, ease: "power3.inOut" }, t); // o título CR-0002 sai do pedido
+      reveal("financeiro", t + 0.1, 0.55);
+      t += 0.46;
+      reveal("fiscal", t, 0.5); // pela API: tracejado
+      tl.to(hxDest("fiscal"), { opacity: 1, z: end.get(hxDest("fiscal")).z, duration: 0.75, ease: "expo.out" }, t + 0.35);
+      t += 0.42;
+      reveal("logistica", t, 0.5);
+      tl.to(hxDest("logistica"), { opacity: 1, z: end.get(hxDest("logistica")).z, duration: 0.75, ease: "expo.out" }, t + 0.35);
+      // Convergência: tudo chega à Gestão.
+      const cv = t + 0.62;
+      ["g-estoque", "g-financeiro", "g-fiscal", "g-logistica"].forEach((id, k) => reveal(id, cv + k * 0.06, 0.55));
+      tl.to(hxDest("gestao"), { opacity: 1, z: end.get(hxDest("gestao")).z, duration: 0.8, ease: "expo.out" }, cv + 0.5);
+      // Só então a declaração.
+      const hd = cv + 0.6;
+      tl.set(head, { opacity: 1 }, hd);
+      tl.fromTo(q(".eyebrow", hero), { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, hd);
+      tl.fromTo(titleLines, { yPercent: 112, opacity: 1 }, { yPercent: 0, opacity: 1, duration: 1.0, ease: "expo.out", stagger: 0.1 }, hd + 0.05);
+      tl.fromTo(q(".fire-bar", hero), { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power3.inOut" }, hd + 0.7);
+      tl.fromTo(side, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", stagger: 0.08 }, hd + 0.3);
     } else if (wide(700)) {
       // Tablet: pedido e áreas em grade, revelados em ordem de causa.
       tl.fromTo(q(".eyebrow", hero), { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.2);
@@ -221,8 +212,41 @@
     ["wheel", "touchmove", "keydown"].forEach((ev) => window.addEventListener(ev, hurry, { once: true, passive: true }));
 
     function live() {
+      hero.classList.add("is-live");
+      if (scene && hx) {
+        tl.eventCallback("onUpdate", null);
+        hxLinks.forEach((g) => (g._t = 1));
+        const U = hx.clientWidth / 1440;
+        // Sistema vivo: as partes e as telas flutuam de leve, cada uma no seu
+        // tempo; as linhas acompanham (redesenho só com a abertura visível).
+        [...hxParts.filter((p) => p.classList.contains("hx-feeds")), ...hxDests].forEach((el, i) =>
+          gsap.to(el, { y: `+=${(i % 2 ? -5 : 5) * U}`, duration: 2.8 + (i % 4) * 0.45, ease: "sine.inOut", yoyo: true, repeat: -1 }),
+        );
+        let visible = true;
+        new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(hero);
+        gsap.ticker.add(() => visible && hxDraw());
+        hxDraw();
+        EDUCA.startSignals?.(q(".hx-lines", hero));
+        // Profundidade: a câmera inclina de leve com o ponteiro e recua ao rolar.
+        if (finePointer) {
+          gsap.set(hxCam, { transformOrigin: "50% 50%" });
+          const ry = gsap.quickTo(hxCam, "rotationY", { duration: 1.1, ease: "power3.out" });
+          const rx = gsap.quickTo(hxCam, "rotationX", { duration: 1.1, ease: "power3.out" });
+          hero.addEventListener("pointermove", (e) => {
+            const r = hero.getBoundingClientRect();
+            ry(((e.clientX - r.left) / r.width - 0.5) * 4);
+            rx(-((e.clientY - r.top) / r.height - 0.5) * 3);
+          });
+          hero.addEventListener("pointerleave", () => {
+            rx(0);
+            ry(0);
+          });
+        }
+        gsap.to(hxCam, { y: -50 * U, scale: 0.97, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
+        gsap.to(q(".hero-head", hero), { y: -60, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "60% top", scrub: true } });
+        return;
+      }
       gsap.set(frags.map(media), { clearProps: "clipPath" });
-      // A opacidade volta para o CSS, que faz o foco (as outras áreas recuam).
       gsap.set(frags, { clearProps: "opacity" });
       gsap.set(sigs, { opacity: 0 });
       sigs.forEach((c) => {
@@ -230,53 +254,38 @@
         c.setAttribute("cy", "0");
       });
       gsap.set(sigs, { clearProps: "opacity" });
-      hero.classList.add("is-live");
       EDUCA.startSignals?.(lines);
-      if (!scene) return;
-      // Respiração: as áreas oscilam de leve, cada uma no seu tempo.
-      sats.forEach((s, i) => gsap.to(s, { y: i % 2 ? -3 : 3, duration: 2.6 + i * 0.4, ease: "sine.inOut", yoyo: true, repeat: -1 }));
-      // Profundidade: a cena inclina de leve com o ponteiro e recua ao rolar.
-      gsap.set(box, { transformPerspective: 1600, transformOrigin: "50% 40%" });
-      if (finePointer) {
-        const rx = gsap.quickTo(box, "rotationX", { duration: 0.9, ease: "power3.out" });
-        const ry = gsap.quickTo(box, "rotationY", { duration: 0.9, ease: "power3.out" });
-        hero.addEventListener("pointermove", (e) => {
-          const r = hero.getBoundingClientRect();
-          ry(((e.clientX - r.left) / r.width - 0.5) * 3);
-          rx(-((e.clientY - r.top) / r.height - 0.5) * 2);
-        });
-        hero.addEventListener("pointerleave", () => {
-          rx(0);
-          ry(0);
-        });
-      }
-      gsap.to(box, { yPercent: -5, scale: 0.965, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
-      gsap.to(q(".hero-head", hero), { y: -50, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "60% top", scrub: true } });
     }
 
-    // Foco: passar sobre uma área acende a cadeia dela (marcador → ligação →
-    // área → Gestão) e o resto recua.
-    if (scene && finePointer) {
-      const setFocus = (i) => {
-        if (i == null) delete box.dataset.focus;
-        else box.dataset.focus = String(i);
-        links.forEach((l, k) => l.classList.toggle("is-hot", i != null && (i === "g" ? k >= 4 : k === i || k === 4 + i)));
-        sats.forEach((s, k) => s.classList.toggle("is-hot", i != null && (i === "g" || k === i)));
-        gest.classList.toggle("is-hot", i != null);
-        hots.forEach((h, k) => h.classList.toggle("is-hot", i != null && (i === "g" || k === i)));
+    // Foco: passar sobre uma parte do pedido ou uma tela acende a ligação
+    // dela até a Gestão; o resto recua.
+    if (scene && hx && finePointer) {
+      const groups = {
+        estoque: ["estoque", "g-estoque"],
+        financeiro: ["financeiro", "g-financeiro"],
+        fiscal: ["fiscal", "g-fiscal"],
+        logistica: ["logistica", "g-logistica"],
+        gestao: ["g-estoque", "g-financeiro", "g-fiscal", "g-logistica"],
       };
-      sats.forEach((s, i) => {
-        s.addEventListener("pointerenter", () => setFocus(i));
-        s.addEventListener("pointerleave", () => setFocus(null));
-        s.addEventListener("focusin", () => setFocus(i));
-        s.addEventListener("focusout", () => setFocus(null));
-      });
-      hots.forEach((h, i) => {
-        h.addEventListener("pointerenter", () => setFocus(i));
-        h.addEventListener("pointerleave", () => setFocus(null));
-      });
-      gest.addEventListener("pointerenter", () => setFocus("g"));
-      gest.addEventListener("pointerleave", () => setFocus(null));
+      const owners = {
+        estoque: [hxPart("estoque")],
+        financeiro: [hxPart("financeiro")],
+        fiscal: [hxPart("docfiscal"), hxDest("fiscal")],
+        logistica: [hxPart("andamento"), hxDest("logistica")],
+        gestao: [hxDest("gestao")],
+      };
+      const setFocus = (k) => {
+        if (k) hx.dataset.focus = k;
+        else delete hx.dataset.focus;
+        hxLinks.forEach((g) => g.classList.toggle("is-hot", Boolean(k) && groups[k].includes(g.dataset.link)));
+        Object.entries(owners).forEach(([key, list]) => list.forEach((el) => el?.classList.toggle("is-hot", key === k || k === "gestao")));
+      };
+      Object.entries(owners).forEach(([k, list]) =>
+        list.forEach((el) => {
+          el?.addEventListener("pointerenter", () => setFocus(k));
+          el?.addEventListener("pointerleave", () => setFocus(null));
+        }),
+      );
     }
   } else done();
 

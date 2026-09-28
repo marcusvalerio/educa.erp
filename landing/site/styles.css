@@ -534,7 +534,7 @@ main > section {
   z-index: 1;
   border: 2px solid var(--fire);
   border-radius: 8px;
-  box-shadow: 0 0 0 100vmax rgba(16, 12, 8, 0.2);
+  box-shadow: 0 0 0 5px rgba(255, 148, 8, 0.2);
   pointer-events: none;
 }
 .stage-item .focus,
@@ -1326,7 +1326,8 @@ main > section {
   position: absolute;
   border: 2px solid var(--fire);
   border-radius: 7px;
-  box-shadow: 0 0 0 200vmax rgba(16, 12, 8, 0.2);
+  /* V4: o foco é anel e luz, nunca um véu sobre a tela. */
+  box-shadow: 0 0 0 5px rgba(255, 148, 8, 0.2), 0 12px 40px -8px rgba(255, 148, 8, 0.35);
   pointer-events: none;
 }
 .cam-cursor {
@@ -3875,6 +3876,246 @@ html:not(.js) .viewer-tabs button[aria-selected="true"]::after {
   .hx-feeds img,
   .hx-dest img {
     transition: opacity 0.35s var(--ease);
+  }
+}
+
+/* ================================================================ V4 — atos */
+/* Cada ato abre com um marcador; o nó fica na margem, onde passa o fio. */
+.act {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 0 0 clamp(28px, 3vw, 44px);
+  font: 500 12px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-mute);
+}
+.act-n {
+  color: var(--c-accent);
+}
+.act-name {
+  letter-spacing: 0.06em;
+  color: var(--c-ink);
+}
+.act-node {
+  position: absolute;
+  top: 50%;
+  left: calc(-1 * var(--thread-gap, 30px));
+  width: 11px;
+  height: 11px;
+  margin: -6px 0 0 -5.5px;
+  border-radius: 50%;
+  background: var(--c-bg);
+  border: 1.5px solid var(--fire);
+}
+@media (max-width: 1099px) {
+  .act-node {
+    display: none;
+  }
+}
+/* Costuras: a passagem entre um ato escuro e um claro é um degradê curto,
+   no espaço vazio antes do marcador (sem texto sobre ele). */
+.act-dark + .act-light,
+.hero + .act-light {
+  background-image: linear-gradient(to bottom, var(--stage), var(--paper) 96px);
+}
+.act-light + .act-dark {
+  background-image: linear-gradient(to bottom, var(--paper), var(--stage) 96px);
+}
+main > section.act-light,
+main > section.act-dark {
+  padding-top: max(128px, var(--pad-top, 0px));
+}
+
+/* Ato 02 curto: título e uma frase. */
+.scenario-short {
+  font-family: var(--serif);
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  line-height: 1.15;
+  color: var(--c-ink);
+  max-width: 24ch;
+}
+
+/* Ato 03 escuro: os mesmos componentes, com os tokens do palco. */
+.journey.stage {
+  --paper: var(--stage);
+  --sheet: var(--stage-2);
+  --ink: var(--stage-ink);
+  --ink-2: var(--stage-mute);
+  --ink-3: #8e9396;
+  --line: var(--stage-line-2);
+  --line-2: var(--stage-line);
+  --line-strong: var(--stage-line-2);
+  --fire-deep: var(--stage-fire);
+  --fire-soft: rgba(255, 148, 8, 0.12);
+  background-color: var(--stage);
+  color: var(--stage-ink);
+}
+.journey.stage .shot-frame,
+.journey.stage .jc-view {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 40px 90px -30px rgba(0, 0, 0, 0.9);
+}
+
+/* ---- Ato 05: uma base, três níveis */
+.lv-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(32px, 5vw, 88px);
+  align-items: start;
+}
+.lv-stack {
+  position: sticky;
+  top: calc(var(--top) + 40px);
+  height: min(640px, calc(100svh - var(--top) - 80px));
+  perspective: 1600px;
+}
+.lv-planes {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: translateX(-6%) scale(0.8) rotateX(52deg) rotateZ(-34deg) translateY(-4%);
+}
+.lv-plane {
+  position: absolute;
+  left: 8%;
+  width: 84%;
+  top: 22%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(16, 12, 8, 0.12),
+    0 40px 60px -20px rgba(16, 12, 8, 0.45);
+  transform: translateZ(calc(var(--lv) * 120px));
+  opacity: 0.5;
+  transition: transform 0.8s var(--ease), opacity 0.6s var(--ease), box-shadow 0.6s var(--ease);
+}
+.lv-plane[data-lv="0"] {
+  --lv: 0;
+}
+.lv-plane[data-lv="1"] {
+  --lv: 1;
+}
+.lv-plane[data-lv="2"] {
+  --lv: 2;
+}
+.lv-plane img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.lv-plane.is-on {
+  opacity: 1;
+  transform: translateZ(calc(var(--lv) * 120px + 40px));
+  box-shadow:
+    0 0 0 2px var(--fire),
+    0 60px 80px -24px rgba(16, 12, 8, 0.55);
+}
+.lv-plane-tag {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: #100c08;
+  color: #f3f4f5;
+  font: 500 12px/1 var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.lv-plane-tag b {
+  color: var(--fire);
+}
+.lv-plane-tag i {
+  font-style: normal;
+  color: #a9adaf;
+}
+.lv-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: clamp(96px, 12vw, 180px);
+}
+.lv {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.lv-n {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  font: 500 13px/1 var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-mute);
+}
+.lv-n b {
+  color: var(--c-accent);
+}
+.lv-claim {
+  margin: 0;
+  max-width: 18ch;
+}
+.lv-env,
+.lv-what,
+.lv-text {
+  margin: 0;
+  max-width: 58ch;
+  color: var(--c-mute);
+}
+.lv-env b {
+  color: var(--c-ink);
+}
+.lv .numbers {
+  margin: 8px 0 0;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 280px));
+  border-top-color: var(--c-line);
+}
+.lv .numbers .nb + .nb {
+  border-left-color: var(--c-line);
+}
+.lv .units i {
+  background: var(--line-strong);
+}
+.lv .nb:last-child .units i {
+  background: var(--fire);
+}
+.lv .numbers dt,
+.lv .numbers .num {
+  color: var(--c-ink);
+}
+.lv .numbers .nb:last-child .num {
+  color: var(--c-accent);
+}
+.lv .numbers .num-note {
+  color: var(--c-mute);
+}
+.lv-shot {
+  display: none;
+}
+.lv .chain {
+  margin: 6px 0 0;
+}
+@media (max-width: 1099px) {
+  .lv-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .lv-stack {
+    display: none;
+  }
+  .lv-shot {
+    display: block;
+  }
+  .lv-list {
+    gap: 88px;
   }
 }
 

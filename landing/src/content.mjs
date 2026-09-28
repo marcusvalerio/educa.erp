@@ -27,6 +27,18 @@ export const META = {
   edition: "Telas da versão redesenhada, capturadas em 27/09/2026 com dados fictícios",
 };
 
+// A página como um filme em atos. Um fio contínuo (a mesma operação)
+// atravessa todos eles.
+export const ACTS = [
+  { n: "01", name: "Ligação" },
+  { n: "02", name: "Silos" },
+  { n: "03", name: "Um pedido atravessa a empresa" },
+  { n: "04", name: "As áreas" },
+  { n: "05", name: "Uma base, três níveis" },
+  { n: "06", name: "O sistema" },
+  { n: "07", name: "Convergência" },
+];
+
 export const HERO = {
   eyebrow: "EDUCA.ERP · gestão integrada",
   title: ["Uma operação inteira,", "conectada."],
@@ -128,6 +140,8 @@ export const HERO = {
 export const SCENARIO = {
   kicker: "O cenário",
   title: "Cada área cuida de um pedaço da mesma operação.",
+  // Ato 02 (curto): a frase que a cena mostra.
+  short: "Quando cada área registra o seu pedaço em um lugar diferente, a empresa perde o fio.",
   body: [
     "O vendedor fecha o pedido. O estoque precisa separar. O financeiro precisa cobrar. O fiscal precisa documentar. A gestão precisa enxergar tudo isso junto.",
     "Quando cada área registra o seu pedaço em um lugar diferente, a empresa perde o fio: o mesmo cliente é digitado três vezes, o estoque não sabe o que foi vendido e o financeiro descobre a venda no fim do mês.",
@@ -586,6 +600,19 @@ export const CENTRAL = {
     { img: "central/02-empresas", route: "/admincentral/companies", label: "Empresas", caption: "Empresas identificadas por código, com ciclo de vida e módulos." },
     { img: "central/06-empresa-criada", route: "/admincentral/companies", label: "Nova empresa", caption: "Empresa criada; próximo passo: convidar o administrador." },
     { img: "central/18-politicas", route: "/admincentral/settings", label: "Políticas", caption: "Regras de governança garantidas pelo banco." },
+  ],
+};
+
+// Ato 05: a arquitetura do EDUCA em três níveis do mesmo sistema. Cada nível
+// reúne o ambiente, os números e o conteúdo de acesso/administração já
+// validados (PLATFORM, ACCESS, CENTRAL).
+export const LEVELS = {
+  title: "Uma base, três níveis.",
+  lead: "Todas as áreas gravam na mesma base. Em cima dela, cada pessoa vê o que o seu papel permite, e a plataforma cuida das empresas sem entrar na operação delas.",
+  levels: [
+    { id: "base", env: 0, name: "Base", claim: "A operação da empresa.", numbers: [15, 13] },
+    { id: "acesso", env: 1, name: "Acesso", claim: "Cada pessoa vê somente o que as suas permissões permitem.", numbers: [352] },
+    { id: "central", env: 2, name: "Central", claim: "A administração da plataforma controla empresas, ciclo de vida e módulos.", numbers: [19] },
   ],
 };
 

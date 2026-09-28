@@ -50,6 +50,12 @@ const mark = (size = 22, cls = "mark") =>
 const chip = (state, extra = "") =>
   `<span class="chip chip-${state}${extra}" title="${esc(C.STATES[state].hint)}">${esc(C.STATES[state].label)}</span>`;
 
+// Marcador de ato. O nó fica na margem: é por ele que o fio da página passa.
+const actHead = (i) => {
+  const a = C.ACTS[i];
+  return `<p class="act" data-act="${a.n}"><span class="act-node" aria-hidden="true"></span><span class="act-n">Ato ${a.n}</span><span class="act-name">${esc(a.name)}</span></p>`;
+};
+
 // ---------------------------------------------------------------------------
 // Imagens: cada captura usada vira um .webp (e uma versão de 760 px quando é larga).
 
@@ -616,10 +622,10 @@ function journey() {
       <li class="lane-track"><span class="lane-fire"></span><span class="lane-token"><i></i></span></li>
     </ol>`;
   const route = (s) => `<div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span><span class="shot-route">${esc(s.route)}</span></div>`;
-  return `<section class="journey paper" id="siga-um-pedido" aria-labelledby="journey-title">
+  return `<section class="journey stage act-dark" id="siga-um-pedido" aria-labelledby="journey-title">
   <div class="wrap">
+    ${actHead(2)}
     <div class="section-head journey-head">
-      <p class="kicker"><span>${esc(J.kicker)}</span></p>
       <p class="thesis">${esc(J.thesis)}</p>
       <h2 id="journey-title" class="display-2">${esc(J.title)}</h2>
       <p class="section-lead">${esc(J.lead)}</p>
@@ -755,12 +761,12 @@ function moduleSection(m, index) {
 
 function scenario() {
   const S = C.SCENARIO;
-  return `<section class="scenario paper" id="cenario" aria-labelledby="scenario-title">
+  return `<section class="scenario paper act-light" id="cenario" aria-labelledby="scenario-title">
+  <div class="wrap">${actHead(1)}</div>
   <div class="wrap scenario-grid">
     <div class="section-head scenario-head">
-      <p class="kicker"><span>${esc(S.kicker)}</span></p>
       <h2 id="scenario-title" class="display-2">${esc(S.title)}</h2>
-      ${S.body.map((b) => `<p class="section-lead">${esc(b)}</p>`).join("")}
+      <p class="section-lead scenario-short">${esc(S.short)}</p>
     </div>
     <figure class="ledger">
       <span class="ledger-thread" aria-hidden="true"></span>
@@ -773,19 +779,11 @@ function scenario() {
 </section>`;
 }
 
-function platform() {
-  const P = C.PLATFORM;
-  return `<section class="platform stage" id="plataforma" aria-labelledby="platform-title">
-  <div class="wrap">
-    <div class="platform-head">
-      <div class="section-head">
-        <p class="kicker"><span>${esc(P.kicker)}</span></p>
-        <h2 id="platform-title" class="display-2">${esc(P.title)}</h2>
-        <p class="section-lead">${esc(P.body)}</p>
-      </div>
-    </div>
-    <dl class="numbers">
-      ${[...P.numbers]
+// Números da plataforma como escala: cada unidade é um ponto.
+function numbersBand(values) {
+  return `<dl class="numbers">
+      ${C.PLATFORM.numbers
+        .filter((n) => values.includes(n.value))
         .sort((a, b) => a.value - b.value)
         .map(
           (n) => `<div class="nb${n.value > 100 ? " nb-dense" : ""}">
@@ -796,22 +794,67 @@ function platform() {
       </div>`,
         )
         .join("")}
-    </dl>
-    <ol class="envs">
-      ${P.environments
-        .map(
-          (e, i) => `<li class="env" data-env="${i}">
-        <div class="env-copy">
-          <p class="env-n">${pad(i + 1)}</p>
-          <h3 class="env-name">${esc(e.name)}</h3>
-          <p class="env-who">${esc(e.who)}</p>
-          <p class="env-what">${esc(e.what)}</p>
+    </dl>`;
+}
+
+// Ato 05: Base → Acesso → Central, três planos do mesmo sistema. No desktop,
+// a pilha fica fixa ao lado e o plano do nível em leitura sobe; abaixo de
+// 1100 px, cada nível mostra a própria tela.
+function levels() {
+  const L = C.LEVELS;
+  const P = C.PLATFORM;
+  const A = C.ACCESS;
+  const X = C.CENTRAL;
+  const ids = ["nivel-base", "acesso", "central"];
+  const extra = [
+    "",
+    `<p class="lv-text">${esc(A.body)}</p>
+        <ol class="chain" aria-label="Como o acesso é montado, no exemplo real do manual">
+          ${A.chain.map((c, i) => `<li style="--i:${i}"><span class="ch-label">${esc(c.label)}</span><span class="ch-value">${esc(c.value)}</span><span class="ch-note">${esc(c.note)}</span></li>`).join("")}
+        </ol>
+        <h4 class="m-label">Na Administração da Empresa</h4>
+        <ul class="does">${A.admin.map(([t, st]) => `<li class="does-${st}"><span>${esc(t)}</span>${chip(st)}</li>`).join("")}</ul>
+        <p class="note">Exemplo do manual: a usuária convidada entra sem papel, recebe o papel Comprador e passa a ver Suprimentos, mas continua sem acesso ao Financeiro.</p>
+        <div class="module-screens lv-screens">${viewer("v-acesso", A.story, { label: "Do convite ao acesso, passo a passo" })}</div>`,
+    `<p class="lv-text">${esc(X.body)}</p>
+        <ul class="does">${X.points.map(([t, st]) => `<li class="does-${st}"><span>${esc(t)}</span>${chip(st)}</li>`).join("")}</ul>
+        <div class="module-screens lv-screens">${viewer("v-central", X.screens, { label: "Telas da Administração Central" })}</div>`,
+  ];
+  return `<section class="levels paper act-light" id="niveis" aria-labelledby="levels-title">
+  <div class="wrap">
+    ${actHead(4)}
+    <div class="section-head">
+      <h2 id="levels-title" class="display-2">${esc(L.title)}</h2>
+      <p class="section-lead">${esc(L.lead)}</p>
+    </div>
+    <div class="lv-grid">
+      <div class="lv-stack" aria-hidden="true">
+        <div class="lv-planes">
+          ${L.levels
+            .map((lv, i) => {
+              const e = P.environments[lv.env];
+              return `<div class="lv-plane${i === 0 ? " is-on" : ""}" data-lv="${i}"><span class="lv-plane-tag"><b>${pad(i + 1)}</b>${esc(lv.name)}<i>${esc(e.name)}</i></span>${picture(e, { alt: "", sizes: "34vw" })}</div>`;
+            })
+            .join("")}
         </div>
-        <div class="env-shot">${shot(e, { caption: false, sizes: "(min-width: 1100px) 30vw, 100vw" })}</div>
-      </li>`,
-        )
-        .join("")}
-    </ol>
+      </div>
+      <ol class="lv-list">
+        ${L.levels
+          .map((lv, i) => {
+            const e = P.environments[lv.env];
+            return `<li class="lv" id="${ids[i]}" data-lv="${i}">
+          <p class="lv-n"><b>${pad(i + 1)}</b>${esc(lv.name)}</p>
+          <h3 class="display-3 lv-claim">${esc(lv.claim)}</h3>
+          <p class="lv-env"><b>${esc(e.name)}</b> · ${esc(e.who)}</p>
+          <p class="lv-what">${esc(e.what)}</p>
+          ${numbersBand(lv.numbers)}
+          <div class="lv-shot">${shot(e, { caption: false, sizes: "(min-width: 1100px) 1px, 100vw" })}</div>
+          ${extra[i]}
+        </li>`;
+          })
+          .join("")}
+      </ol>
+    </div>
   </div>
 </section>`;
 }
@@ -881,10 +924,10 @@ function network() {
   const mob = netSvg({ W: 360, H: 640, key: "m", px: "mx", py: "my", fs: 12, nodeH: 30, minW: 70, charW: 6.6, id: "netm" });
   const edges = desk.edges;
   const tela = edges.filter((e) => e.kind === "tela").length;
-  return `<section class="network stage" id="conexoes" aria-labelledby="net-title">
+  return `<section class="network stage act-dark" id="conexoes" aria-labelledby="net-title">
   <div class="wrap">
+    ${actHead(5)}
     <div class="section-head">
-      <p class="kicker"><span>${esc(N.kicker)}</span></p>
       <h2 id="net-title" class="display-2">${esc(N.title)}</h2>
       <p class="section-lead">Cada ligação abaixo foi conferida no código. Linha contínua: acontece por uma ação na tela. Tracejada: existe no núcleo (API e regras no banco), ainda sem botão na interface.</p>
     </div>
@@ -953,8 +996,9 @@ function converge(labels) {
 
 function closing(sizes, { preview = false } = {}) {
   const K = C.CLOSING;
-  return `<section class="closing stage" id="comecar" aria-labelledby="closing-title">
+  return `<section class="closing stage act-dark" id="comecar" aria-labelledby="closing-title">
   <div class="wrap closing-in">
+    ${actHead(6)}
     <h2 id="closing-title" class="display-2 closing-q">${esc(K.title)}</h2>
     ${converge(K.silos)}
     <p class="closing-a">${esc(K.answer)}</p>
@@ -1017,12 +1061,11 @@ function areaIndex() {
 function base() {
   const B = C.CADASTROS;
   const E = C.EVOLVING;
-  return `<section class="base sheet" id="base" aria-labelledby="base-title">
-  <div class="wrap">
-    <div class="module-top">
+  return `<div class="base-block">
+    <div class="module-top" id="base">
       <div class="module-intro">
         <p class="kicker"><span>${esc(B.kicker)}</span></p>
-        <h2 id="base-title" class="display-3">${esc(B.title)}</h2>
+        <h3 id="base-title" class="display-3">${esc(B.title)}</h3>
         <p class="lead-p">${esc(B.body)}</p>
         <ul class="does">${B.items.map(([t, st]) => `<li class="does-${st}"><span>${esc(t)}</span>${chip(st)}</li>`).join("")}</ul>
       </div>
@@ -1031,7 +1074,7 @@ function base() {
     <div class="evolving" id="evolucao" aria-labelledby="evo-title">
       <div class="section-head">
         <p class="kicker"><span>${esc(E.kicker)}</span></p>
-        <h2 id="evo-title" class="display-3">${esc(E.title)}</h2>
+        <h3 id="evo-title" class="display-3">${esc(E.title)}</h3>
         <p class="section-lead">${esc(E.body)}</p>
       </div>
       <ul class="evo-list">
@@ -1048,64 +1091,21 @@ function base() {
           .join("")}
       </ul>
     </div>
-  </div>
-</section>`;
-}
-
-function access() {
-  const A = C.ACCESS;
-  return `<section class="access paper" id="acesso" aria-labelledby="access-title">
-  <div class="wrap">
-    <div class="section-head">
-      <p class="kicker"><span>${esc(A.kicker)}</span></p>
-      <h2 id="access-title" class="display-2">${esc(A.title)}</h2>
-      <p class="section-lead">${esc(A.body)}</p>
-    </div>
-    <ol class="chain" aria-label="Como o acesso é montado, no exemplo real do manual">
-      ${A.chain
-        .map(
-          (c, i) => `<li style="--i:${i}"><span class="ch-label">${esc(c.label)}</span><span class="ch-value">${esc(c.value)}</span><span class="ch-note">${esc(c.note)}</span></li>`,
-        )
-        .join("")}
-    </ol>
-    <div class="access-grid">
-      <div class="access-copy">
-        <h3 class="q-title"><span>✓</span>Na Administração da Empresa</h3>
-        <ul class="does">${A.admin.map(([t, st]) => `<li class="does-${st}"><span>${esc(t)}</span>${chip(st)}</li>`).join("")}</ul>
-        <p class="note">Exemplo do manual: a usuária convidada entra sem papel, recebe o papel Comprador e passa a ver Suprimentos, mas continua sem acesso ao Financeiro.</p>
-      </div>
-      <div class="module-screens">${viewer("v-acesso", A.story, { label: "Do convite ao acesso, passo a passo" })}</div>
-    </div>
-  </div>
-</section>`;
-}
-
-function central() {
-  const X = C.CENTRAL;
-  return `<section class="central sheet" id="central" aria-labelledby="central-title">
-  <div class="wrap module-top">
-    <div class="module-intro">
-      <p class="kicker"><span>${esc(X.kicker)}</span></p>
-      <h2 id="central-title" class="display-3">${esc(X.title)}</h2>
-      <p class="lead-p">${esc(X.body)}</p>
-      <ul class="does">${X.points.map(([t, st]) => `<li class="does-${st}"><span>${esc(t)}</span>${chip(st)}</li>`).join("")}</ul>
-    </div>
-    <div class="module-screens">${viewer("v-central", X.screens, { label: "Telas da Administração Central" })}</div>
-  </div>
-</section>`;
+  </div>`;
 }
 
 function areas(list) {
-  return `<section class="areas paper" id="areas" aria-labelledby="areas-title">
+  return `<section class="areas paper act-light" id="areas" aria-labelledby="areas-title">
   <div class="wrap">
+    ${actHead(3)}
     <div class="section-head">
-      <p class="kicker"><span>Áreas, uma a uma</span></p>
       <h2 id="areas-title" class="display-2">O que cada área faz, e com quem ela fala.</h2>
       <p class="section-lead">Para cada área: o problema que ela resolve, o que dá para fazer hoje, como o trabalho anda, que informação ela guarda e para onde essa informação vai.</p>
     </div>
     ${legend()}
     ${areaIndex()}
     ${list.map((m) => moduleSection(m, C.MODULES.indexOf(m))).join("\n")}
+    ${base()}
   </div>
 </section>`;
 }
@@ -1166,7 +1166,7 @@ function heroPreload() {
 }
 
 function sectionsList(sizes, opts) {
-  return [hero(), scenario(), platform(), journey(), areas(C.MODULES), base(), access(), central(), network(), closing(sizes, opts)];
+  return [hero(), scenario(), journey(), areas(C.MODULES), levels(), network(), closing(sizes, opts)];
 }
 
 async function main() {

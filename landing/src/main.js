@@ -235,6 +235,23 @@
     });
   }
 
+  // Ato 05: o plano do nível em leitura sobe na pilha (Base, Acesso, Central).
+  const lvs = [...document.querySelectorAll(".lv[data-lv]")];
+  const planes = [...document.querySelectorAll(".lv-plane")];
+  if (lvs.length && planes.length && hasIO) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          const k = e.target.dataset.lv;
+          planes.forEach((p) => p.classList.toggle("is-on", p.dataset.lv === k));
+        });
+      },
+      { rootMargin: "-40% 0px -50% 0px" },
+    );
+    lvs.forEach((l) => io.observe(l));
+  }
+
   // Trilho do processo de cada módulo: o pulso só corre quando está visível.
   if (hasIO) {
     const io = new IntersectionObserver((entries) => entries.forEach((e) => e.target.classList.toggle("in-view", e.isIntersecting)), {

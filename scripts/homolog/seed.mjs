@@ -1,8 +1,9 @@
 // Dados FICTÍCIOS de homologação, criados pelas APIs oficiais do app (sem SQL),
 // na empresa ASTRA do seed (clientes, fornecedores e produtos já fictícios).
 // Cadeia coerente: estoque → orçamento → pedido → reserva → contas a receber →
-// recebimento; compras; contas a pagar; CRM; NF-e em HOMOLOGAÇÃO; qualidade;
-// projetos; ativos. Idempotente: se a conta "CX-HML" já existe, não repete.
+// recebimento → separação → expedição → entrega; compras; contas a pagar;
+// CRM; NF-e em HOMOLOGAÇÃO; qualidade; projetos; ativos. Idempotente: se a
+// conta "CX-HML" já existe, não repete.
 //
 //   APP=https://<preview> HOMOLOG_OWNER_PASSWORD=… [VERCEL_BYPASS_TOKEN=…] \
 //   node scripts/homolog/seed.mjs
@@ -83,6 +84,39 @@ const inst = arFull?.installments?.[0];
 if (inst && cx) {
   step("Financeiro: receber 1ª parcela no Caixa (PIX)", await post(`/api/accounts-receivable-installments/${inst.id}/receive`, { financialAccountId: cx.id, amount: Number(inst.amount ?? inst.open_amount ?? inst.openAmount), method: "PIX", idempotencyKey: `hml-ar-${inst.id}` }));
 } else step("Financeiro: receber 1ª parcela no Caixa (PIX)", { status: 0, json: { error: "sem parcela/conta" } }, false);
+
+// ------------------------------------------------------------ Logística
+// Pedido reservado → separação (pick list) → expedição → envio → entrega.
+const warehouses = await list("/api/warehouses");
+const wh = warehouses.find((w) => (w.codigo ?? w.code) === loc.armazem) ?? null;
+const order = (await get(`/api/sales-orders/${soId}`)).json?.data;
+const pl = wh ? await post(`/api/sales-orders/${soId}/pick-lists`, { warehouseId: wh.id, notes: "Separação de homologação" }) : { status: 0, json: { error: "depósito do local não encontrado" } };
+step("Logística: separação (pick list) do pedido reservado", pl, pl.status === 201);
+const plId = idOf(pl);
+if (plId) {
+  step("Logística: iniciar separação", await post(`/api/pick-lists/${plId}/start`));
+  const plFull = (await get(`/api/pick-lists/${plId}`)).json?.data;
+  for (const it of plFull?.items ?? []) {
+    const qty = Number(it.requested_quantity ?? it.quantity ?? it.requestedQuantity ?? 0);
+    step(`Logística: separar ${qty} un.`, await post(`/api/pick-lists/${plId}/items/${it.id}/pick`, { pickedQuantity: qty }));
+  }
+  step("Logística: concluir separação", await post(`/api/pick-lists/${plId}/complete`));
+}
+const shipItems = (order?.items ?? []).map((i) => ({ salesOrderItemId: i.id, locationId: loc.id, quantity: Number(i.ordered_quantity) }));
+const sh = wh && plId ? await post(`/api/sales-orders/${soId}/shipments`, { warehouseId: wh.id, pickListId: plId, expectedShipDate: inDays(1), notes: "Expedição de homologação", items: shipItems }) : { status: 0, json: { error: "sem separação" } };
+step("Logística: expedição do pedido", sh, sh.status === 201);
+const shId = idOf(sh);
+if (shId) {
+  const carrier = (await list("/api/carriers"))[0];
+  if (carrier) step("Logística: transportadora da expedição", await post(`/api/shipments/${shId}/transport`, { carrierId: carrier.id }));
+  step("Logística: volume da expedição", await post(`/api/shipments/${shId}/packages`, { packageNumber: 1, weight: 12.5, trackingCode: "HML-000001" }));
+  // Estados: draft → ready → packed → ready_to_ship (aprovada) → shipped → delivered.
+  step("Logística: liberar para embalagem", await post(`/api/shipments/${shId}/ready`));
+  step("Logística: embalar", await post(`/api/shipments/${shId}/pack`));
+  step("Logística: aprovar (pronta para envio)", await post(`/api/shipments/${shId}/approve`));
+  step("Logística: expedir", await post(`/api/shipments/${shId}/ship`, { idempotencyKey: `hml-ship-${shId}` }));
+  step("Logística: confirmar entrega", await post(`/api/shipments/${shId}/deliver`, { recipientName: "Recebedor Fictício", podType: "signature", notes: "Entrega de homologação" }));
+}
 
 const so2 = await post("/api/sales-orders", { customerId: customers[1].id, notes: "Pedido aguardando aprovação (homologação)", items: [{ productId: P[2].id, description: nameOf(P[2]), quantity: 6, unitPrice: 58 }] });
 step("Comercial: pedido direto (aguardando aprovação)", so2, so2.status === 201);

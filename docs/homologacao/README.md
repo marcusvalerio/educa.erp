@@ -97,8 +97,9 @@ As contas são criadas por `scripts/homolog/bootstrap.mjs` pelo fluxo oficial do
 | Qualidade | inspeção e não conformidade |
 | Projetos | projeto, tarefa e ordem de serviço |
 | Ativos | ativo e ordem de manutenção preventiva |
+| Logística | separação (pick list) do pedido reservado, iniciada, itens separados e concluída; expedição com transportadora e volume, liberada, embalada e aprovada. **Expedir** e **confirmar entrega** falham pelo BUG 9 da seção 7 |
 
-A reserva de estoque do pedido falha: é um BUG do banco, descrito na seção 7.
+A reserva de estoque passou a funcionar com a migration `0074`.
 
 ## 6. O que o dono do projeto precisa fazer (uma vez)
 
@@ -135,7 +136,12 @@ Nada disto passa pelo chat nem pelo Git.
    - `HOMOLOG_OWNER_PASSWORD`, `HOMOLOG_ADMIN_PASSWORD` e `HOMOLOG_USER_PASSWORD`: você mesmo gera as três (ex.: gerenciador de senhas, 16+ caracteres com maiúscula, minúscula, número e símbolo). São as senhas com que você vai entrar.
    - `LEGACY_OWNER_EMAIL`: o e-mail do Owner que hoje existe na homologação. Fica em segredo porque o repositório é público; só é usado na 1ª execução.
 6. **Neon Console → branch `homolog` → Auth → Settings:** desligue *Allow sign-ups* e *Allow localhost*. Hoje os dois estão ligados, e o MCP não altera esses dois campos.
-7. **Avise.** O bootstrap, o seed e o smoke rodam no runner com um push que altera `scripts/homolog/RUN`. O relatório sai como artefato `educa-homolog-relatorio`.
+7. **Migration `0074` na branch Neon `homolog`** (nunca na `main`/produção). Ela recria o CHECK de `audit_logs.action` (DDL), e por isso não foi aplicada sem a sua autorização. Duas formas:
+   - você autoriza e eu aplico pelo MCP do Neon;
+   - você cola o conteúdo de `supabase/migrations/0074_fix_reserve_sales_order_stock.sql` no SQL Editor, branch `homolog`, banco `educa`.
+
+   Antes, conferi só com leitura que a branch tem a mesma função com o bug (md5 `f95c1e61…`), um único CHECK de ação e só as ações `CREATE` e `ASSIGN` em uso: a recriação valida sem erro.
+8. **Avise.** O bootstrap, o seed e o smoke rodam no runner com um push que altera `scripts/homolog/RUN`. O relatório sai como artefato `educa-homolog-relatorio`.
 
 Já feito por esta sessão, só na homologação: a origem confiável `https://educaerp-git-claude-educa-homolog-meji-projects.vercel.app` foi adicionada ao Neon Auth da branch `homolog`.
 
@@ -148,22 +154,24 @@ Já feito por esta sessão, só na homologação: a origem confiável `https://e
 
 A landing não usa banco nem segredo.
 
-## 7. Problemas encontrados (não corrigidos, para decisão)
+## 7. Problemas encontrados e situação
 
-| # | Classe | Problema | Evidência | Proposta |
-|---|---|---|---|---|
-| 1 | BUG (banco, afeta a produção) | **Reservar estoque do pedido** falha com 500 genérico. Em `fn_reserve_sales_order_stock` (0021), `select public.fn_create_reservation(...) into v_reservation` atribui a linha inteira ao 1º campo (uuid) do rowtype | mesmo md5 da função na cópia de produção e local; erro `invalid input syntax for type uuid` | migration nova: `select * into v_reservation from public.fn_create_reservation(...)` |
-| 2 | BUG (autenticação, UI) | **Sair com o mouse** em Conta → Sair não envia o logout: a sessão continua. Pelo teclado (Enter) funciona | smoke: 3/3 usuários; nenhuma requisição `/api/auth/logout` no clique | o formulário está dentro do conteúdo do menu Radix, desmontado antes do submit. Enviar no `onSelect` (`preventDefault` + `form.requestSubmit()`) ou mover o `<form>` para fora do portal |
-| 3 | BUG (autenticação, só `AUTH_PROVIDER=neon`) | 1º convite de plataforma para uma conta que **já existe** no Neon devolve 503. `inviteWithNeon` descarta o `authUserId` quando a conta já está confirmada; a 2ª tentativa passa | bootstrap local, reproduzido | devolver `authUserId` também no ramo `existing_account` |
-| 4 | DÉBITO (script) | O `bootstrap-homolog.mjs` da POC contava com `admin/set-user-password` para contas criadas sem senha. O Better Auth só **atualiza** a credencial que já existe; não a cria | código do Better Auth 1.4 (`updatePassword`) | substituído por `scripts/homolog/bootstrap.mjs`, que usa impersonação |
-| 5 | CONFIGURAÇÃO | Neon Auth de homologação com *Allow sign-ups* e *Allow localhost* ligados. O app não expõe cadastro (o smoke confirma), mas a API do Neon aceitaria | sonda de 27/09 e config atual | passo 6 |
-| 6 | DADO DE TESTE / RBAC | O papel **Operador** não tem nenhuma aprovação e não move oportunidade no funil; na prática, só opera rascunhos | comparação Administrador × Operador: 97 permissões a menos | decidir se o Operador deve aprovar; a homologação usa o papel operacional novo |
-| 7 | PROBLEMA DE UX | O Vendedor, com só `stock.view`, vê no menu Transferências, Inventário, Almoxarifado e Devoluções. As telas abrem para consulta, sem ação | menu do smoke | exigir a permissão de ação para os itens de operação |
-| 8 | AMBIENTE | A réplica local usada nos testes desta sessão tem menos permissões de sistema que a cópia de produção (ex.: Operador sem `leads.view`) | contagem de `role_permissions` | nenhuma: o Preview usa a cópia de produção |
+| # | Classe | Problema | Situação |
+|---|---|---|---|
+| 1 | BUG (banco, afeta a produção) | **Reservar estoque do pedido** falhava com 500 genérico | **CORRIGIDO** na rodada de correções (migration `0074`, seção 9) |
+| 2 | BUG (autenticação, UI) | **Sair com o mouse** em Conta → Sair não encerrava a sessão | **CORRIGIDO** (seção 9) |
+| 3 | BUG (autenticação, só `AUTH_PROVIDER=neon`) | 1º convite de plataforma para conta já existente e confirmada devolvia 503 | **CORRIGIDO** (seção 9); o bootstrap não repete mais o convite |
+| 4 | DÉBITO (script) | O bootstrap da POC contava com `admin/set-user-password` para contas sem senha, e o Better Auth só **atualiza** a credencial que existe | resolvido na 1ª rodada: `scripts/homolog/bootstrap.mjs` usa impersonação |
+| 5 | CONFIGURAÇÃO | Neon Auth de homologação com *Allow sign-ups* e *Allow localhost* ligados | pendente (passo 6) |
+| 6 | DADO DE TESTE / RBAC | O papel **Operador** não tem nenhuma aprovação e não move oportunidade no funil | para decisão; a homologação usa o papel operacional novo |
+| 7 | PROBLEMA DE UX | O Vendedor, com só `stock.view`, vê itens de operação de Estoque | para decisão |
+| 8 | AMBIENTE | A réplica local tem menos permissões de sistema que a cópia de produção | sem ação |
+| 9 | **BUG novo (banco, afeta a produção) — BLOQUEIO** | **Expedir** (`POST /api/shipments/:id/ship`) falha com 500. A API grava `serial_numbers` como JSON `null` (escalar, não SQL NULL), via `serial_numbers: item.serialNumbers ?? null` e `v_item->'serial_numbers'` em `fn_create_shipment`, e `fn_ship_shipment` chama `jsonb_array_length` nele: `cannot get array length of a scalar` | **não corrigido nesta rodada** (fora da lista). Só apareceu agora porque a reserva nunca funcionou, e sem reserva não há separação nem expedição. Mesmo md5 das duas funções na cópia de produção. Proposta: migration nova tratando `jsonb_typeof(serial_numbers) = 'array'` em `fn_ship_shipment`, e a API sem gravar `null` |
+| 10 | BUG novo (banco) | `'INSERT'` fora do vocabulário de `audit_logs.action` em 0055 (conversões do CRM) e 0057 (custo de ordem de manutenção). É a causa do débito "lead → oportunidade" | não corrigido (fora da lista); proposta: trocar por `'CREATE'` numa migration nova |
 
 Débitos já registrados pela POC, confirmados no mesmo esquema:
 
-- lead → oportunidade (`convert-to-opportunity`) falha por auditoria fora do CHECK;
+- lead → oportunidade (`convert-to-opportunity`) falha por auditoria fora do CHECK (item 10);
 - iniciar instância de workflow falha;
 - a API de produtos não expõe `production_type` nem `unit_id`.
 
@@ -178,4 +186,79 @@ node scripts/homolog/seed.mjs
 SMOKE_OUT=smoke.md node scripts/homolog/smoke.mjs
 ```
 
-Resultado local desta branch: `evidencias/smoke-local.md` (**78/81**) e `evidencias/seed-local.txt` (**51/52**).
+Resultado local desta branch, na rodada de correções: `evidencias/smoke-local.md` (**90/90**) e `evidencias/seed-local.txt` (**63/65**; as 2 falhas são o BUG 9). Na 1ª rodada tinham sido 78/81 e 51/52.
+
+## 9. Rodada de correções (bugs 1, 2 e 3)
+
+Só na `claude/educa-homolog`. Nada na `main`, na produção ou no Supabase de produção; nenhum cutover.
+
+### 9.1 Reserva de estoque (BUG 1) — migration `0074_fix_reserve_sales_order_stock.sql`
+
+- **Causa 1:**
+  - `fn_create_reservation` (0011) devolve a linha `public.stock_reservations`, um tipo composto.
+  - A `fn_reserve_sales_order_stock` (0021) gravava esse retorno com `select public.fn_create_reservation(...) into v_reservation`.
+  - Com `v_reservation` do tipo linha, o PL/pgSQL põe a única coluna do `select` (o valor composto inteiro) no 1º campo (`id uuid`), e a transação aborta: `invalid input syntax for type uuid`.
+- **Causa 2, escondida atrás da 1ª:** a auditoria da reserva usa a ação `'RESERVE'`, que nunca entrou no CHECK de `audit_logs.action`.
+- **Correção:**
+  - `'RESERVE'` entra no vocabulário, com o mesmo padrão aditivo da 0017/0064;
+  - a função passa a fazer `v_reservation := public.fn_create_reservation(...)`. O resto é idêntico à 0021, e os grants ficam preservados.
+- **Não mexido:** migrations antigas; nenhuma linha de dado.
+- **Varredura:**
+  - nenhuma outra função usa `select f() into` com retorno composto;
+  - `'INSERT'` também está fora do vocabulário (0055 e 0057); registrado como BUG 10.
+- **Teste de banco:** `tests/sales-order-reservation-db.test.ts`, com `POC_DATABASE_OWNER_URL` de um banco descartável, tudo numa transação desfeita. Cobre, 7/7:
+  - pedido aprovado → reserva ativa, estoque reservado e pedido `reserved`;
+  - reserva parcial e 2ª chamada sem reservar de novo;
+  - pedido já reservado recusado;
+  - separação a partir da reserva;
+  - liberação;
+  - contas a receber;
+  - RBAC (sem `sales_orders.reserve` → recusado, nada reservado).
+
+  Sem a correção, 0/7, com o erro da homologação.
+
+### 9.2 Logout com o mouse (BUG 2)
+
+- **Causa:**
+  - o `<form>` de saída ficava **dentro** do conteúdo do menu Radix;
+  - no clique do mouse, o Radix fecha o menu durante o evento, e o conteúdo, com o formulário, é desmontado antes da ação padrão do clique;
+  - o navegador descarta o envio. Pelo teclado passava por outro caminho.
+- **Correção:**
+  - `useLogout()` (`src/components/auth/LogoutButton.tsx`) renderiza o `<form>` **fora** do conteúdo do menu;
+  - o item "Sair" chama `logout` no `onSelect`, o mesmo evento para mouse, toque e teclado;
+  - o envio é síncrono, por `requestSubmit()`, via `src/lib/session/submit-form.ts`, sem temporizador;
+  - `LogoutForm` e `LogoutButton`, usados fora de menus, não mudaram.
+- **Testes:**
+  - `tests/submit-form.test.ts`;
+  - smoke com os 3 usuários: mouse **e** teclado, cada um verificando volta ao `/login`, API 401 e rota protegida → `/login`.
+
+### 9.3 1º convite Neon devolvia 503 (BUG 3)
+
+- **Causa:**
+  - `inviteWithNeon` descartava o `authUserId` quando a conta já existia e estava confirmada (`existing_account`);
+  - no 1º convite ainda não havia login-sombra achado antes, e a rota respondia 503;
+  - a 2ª tentativa passava porque a 1ª já tinha criado o login-sombra.
+- **Correção:**
+  - `Delivery` carrega `authUserId` também quando não há e-mail;
+  - `deliveryFromProvision` (`src/lib/auth/neon/flows.ts`) mapeia sem perder o login;
+  - a rota decide por `resolveInvitedLogin` (`src/lib/onboarding/invitations.ts`).
+- **O retry do bootstrap foi removido.** O bootstrap num ambiente do zero passa no 1º convite.
+- **Testes:** `tests/neon-invite.test.ts`, com dublê com estado, cobre:
+  - identidade inexistente;
+  - existente sem senha;
+  - existente e confirmada (o caso do bug);
+  - convite repetido: mesmo login, sem identidade nem login duplicados, sem religar;
+  - as regras de `resolveInvitedLogin`.
+
+### 9.4 Resultados (comparação)
+
+| Verificação | 1ª rodada | Rodada de correções |
+|---|---|---|
+| Testes (com Postgres) | 728/728 | **746/746** (+18 novos) |
+| Testes (sem banco) | 725/725 | **736/736** |
+| Typecheck / lint / build | OK / 0 erros / OK | OK / 0 erros (2 avisos da POC) / OK |
+| Migrations no banco do zero | 91/91 | **92/92** (com a 0074) |
+| Bootstrap | precisava repetir o convite | **1º convite passa**; idempotente |
+| Seed | 51/52 (reserva) | **63/65**: reserva e separação OK. Falham só *expedir* e *confirmar entrega* (BUG 9, novo) |
+| Smoke 3 perfis | 78/81 (logout com mouse) | **90/90** |
+| E2E histórico da POC (`poc/neon-full/e2e/run-all.sh`: autenticação, RLS, 2 empresas, 8 módulos) | 210/210 | **210/210** (sem regressão) |

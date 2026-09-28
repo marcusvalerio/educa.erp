@@ -1,6 +1,6 @@
-# Smoke de homologação — 2026-09-28 03:17 UTC
+# Smoke de homologação — 2026-09-28 04:01 UTC
 
-App: http://localhost:3200 · Resultado: **78/81**
+App: http://localhost:3200 · Resultado: **90/90**
 
 | Área | Verificação | Resultado | Classificação | Detalhe |
 |---|---|---|---|---|
@@ -76,15 +76,24 @@ App: http://localhost:3200 · Resultado: **78/81**
 | Navegação | Owner: 72/72 telas do menu abrem sem erro | passou | visualizado |  |
 | Navegação | Admin: 72/72 telas do menu abrem sem erro | passou | visualizado |  |
 | Navegação | Usuário: 19/19 telas do menu abrem sem erro | passou | visualizado |  |
-| Autenticação | Owner: logout com o mouse (Conta → Sair) | FALHOU | com bug | o clique não envia o logout; a sessão continua ativa |
-| Autenticação | Owner: logout pelo teclado (Enter em Conta → Sair) | passou | funciona |  |
-| Sessão | Owner: após logout a API recusa (401) | passou | funciona |  |
-| Autenticação | Admin: logout com o mouse (Conta → Sair) | FALHOU | com bug | o clique não envia o logout; a sessão continua ativa |
-| Autenticação | Admin: logout pelo teclado (Enter em Conta → Sair) | passou | funciona |  |
-| Sessão | Admin: após logout a API recusa (401) | passou | funciona |  |
-| Autenticação | Usuário: logout com o mouse (Conta → Sair) | FALHOU | com bug | o clique não envia o logout; a sessão continua ativa |
-| Autenticação | Usuário: logout pelo teclado (Enter em Conta → Sair) | passou | funciona |  |
-| Sessão | Usuário: após logout a API recusa (401) | passou | funciona |  |
+| Autenticação | Owner: logout com o mouse (Conta → Sair) volta ao /login | passou | funciona |  |
+| Sessão | Owner: após logout (mouse) a API recusa (401) | passou | funciona |  |
+| Rotas protegidas | Owner: após logout (mouse) rota protegida → /login | passou | funciona |  |
+| Autenticação | Owner: logout com o teclado (Conta → Sair) volta ao /login | passou | funciona |  |
+| Sessão | Owner: após logout (teclado) a API recusa (401) | passou | funciona |  |
+| Rotas protegidas | Owner: após logout (teclado) rota protegida → /login | passou | funciona |  |
+| Autenticação | Admin: logout com o mouse (Conta → Sair) volta ao /login | passou | funciona |  |
+| Sessão | Admin: após logout (mouse) a API recusa (401) | passou | funciona |  |
+| Rotas protegidas | Admin: após logout (mouse) rota protegida → /login | passou | funciona |  |
+| Autenticação | Admin: logout com o teclado (Conta → Sair) volta ao /login | passou | funciona |  |
+| Sessão | Admin: após logout (teclado) a API recusa (401) | passou | funciona |  |
+| Rotas protegidas | Admin: após logout (teclado) rota protegida → /login | passou | funciona |  |
+| Autenticação | Usuário: logout com o mouse (Conta → Sair) volta ao /login | passou | funciona |  |
+| Sessão | Usuário: após logout (mouse) a API recusa (401) | passou | funciona |  |
+| Rotas protegidas | Usuário: após logout (mouse) rota protegida → /login | passou | funciona |  |
+| Autenticação | Usuário: logout com o teclado (Conta → Sair) volta ao /login | passou | funciona |  |
+| Sessão | Usuário: após logout (teclado) a API recusa (401) | passou | funciona |  |
+| Rotas protegidas | Usuário: após logout (teclado) rota protegida → /login | passou | funciona |  |
 
 ## Menus por papel
 

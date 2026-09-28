@@ -1,0 +1,212 @@
+PASS  owner: link do e-mail passa pelo Neon Auth e abre 'Crie sua senha'
+PASS  owner: token do link sai da barra de endereço
+PASS  owner: depois de criar a senha vai para /admincentral
+PASS  owner: contexto = plataforma OWNER, sem tenant
+PASS  vínculo: Neon → auth_user_id = platform_members.auth_user_id = login sombra
+PASS  login sombra: auth.users não guarda senha (sem GoTrue)
+PASS  app sem nenhuma variável SUPABASE_* (DATA_BACKEND=postgres)
+PASS  Neon: e-mail confirmado pelo primeiro acesso (servidor)
+PASS  sessão: cookie do EDUCA HttpOnly + SameSite=Lax; nenhum cookie do Neon no navegador
+PASS  sessão: /api/auth/session devolve só autenticado + e-mail
+PASS  link de primeiro acesso não funciona duas vezes
+PASS  logout: API sem sessão (401)
+PASS  logout: cookie local apagado
+PASS  logout: cookie antigo reaproveitado não vale (sessão revogada no Neon)
+PASS  cookie forjado → 401
+PASS  proxy: sem sessão → /login?next=
+PASS  login: senha errada e e-mail inexistente → mesma mensagem
+PASS  login: Owner volta para /admincentral
+PASS  empresa Alfa criada pelo Owner
+PASS  convite admin A1: criado e e-mail de primeiro acesso do Neon enviado
+PASS  A1: link de primeiro acesso volta para o convite depois da senha
+PASS  A1: contexto = Alfa, papel admin, sem plataforma
+PASS  A1: users.auth_user_id = vínculo do Neon (UUID do EDUCA)
+PASS  convite A2 (leitura): e-mail do Neon enviado
+PASS  A2: contexto Alfa com papel leitura
+PASS  B1 admin e B2 operador na Beta
+PASS  4 identidades Neon vinculadas a 4 UUIDs distintos do EDUCA
+PASS  A1 lista só usuários da Alfa
+PASS  B1 não vê A1/A2
+PASS  IDOR: A1 não altera usuário da Beta pelo id
+PASS  A1 não convida usuário da Beta
+PASS  A2 (leitura) não cria usuário
+PASS  B2 (operador) não se promove a admin
+PASS  Company Admin não acessa a Administração Central
+PASS  Owner não acessa dados de empresa (/api/admin/users 403)
+PASS  identidade no corpo é recusada (auth_user_id)
+PASS  banco: nenhum vínculo/usuário cruzado entre empresas
+PASS  A2: segunda sessão aberta antes da recuperação
+PASS  recuperação: e-mail inexistente recebe a mesma resposta
+PASS  recuperação: nova senha → volta ao login
+PASS  recuperação: sessões anteriores revogadas (as duas)
+PASS  recuperação: senha antiga recusada, nova aceita
+PASS  recuperação: link de uso único
+PASS  desativado no EDUCA: contexto 'inactive' e sem dados
+PASS  banido no Neon: sessão cai (401)
+PASS  banido no Neon: login recusado com mensagem genérica
+PASS  identidade Neon válida SEM vínculo no EDUCA: login recusado (403), sem cookie
+PASS  e-mail não confirmado no Neon: login recusado mesmo com vínculo
+PASS  cadastro público recusado no provedor
+PASS  o app não tem rota de cadastro
+PASS  login CSRF: formulário de outro site recusado (403, sem cookie)
+PASS  login CSRF: JSON de outra origem recusado (403, sem cookie)
+PASS  redirect externo no link de senha recusado pelo provedor
+PASS  login com next externo fica no app
+PASS  callback do Supabase inerte com AUTH_PROVIDER=neon
+PASS  sem cookie: API 401
+PASS  sessão expirada no Neon → 401 no app
+PASS  sessão expirada → proxy leva ao login
+PASS  linha de base: categorias sem permissão no catálogo (403, igual a produção)
+PASS  linha de base: unidades sem permissão no catálogo (403, igual a produção)
+PASS  catálogo: unidades padrão criadas junto com a empresa (UN existe na Alfa)
+PASS  catálogo: produto com unidade inexistente recusado pela FK composta (4xx, nada gravado)
+PASS  CRUD catálogo: criar produto (201)
+PASS  CRUD catálogo: ler produto por id (numérico volta como número)
+PASS  CRUD catálogo: editar produto
+PASS  CRUD catálogo: listar com busca, ordenação, paginação e total
+PASS  CRUD estoque: criar depósito
+PASS  CRUD estoque: editar depósito
+PASS  linha de base: POST de local falha por warehouse_id NOT NULL (igual a produção; nada gravado)
+PASS  CRUD estoque: ler local pela API (RLS da Alfa)
+PASS  CRUD estoque: editar local pela API
+PASS  estoque: entrada via função do banco (rpc) atualiza saldo
+PASS  estoque: mesma chave de idempotência não duplica a entrada
+PASS  CRUD compras: criar fornecedor
+PASS  compras: criar solicitação com itens (função transacional)
+PASS  compras: enviar solicitação para aprovação (workflow no banco)
+PASS  CRUD vendas: criar cliente
+PASS  vendas: criar pedido de venda com itens
+PASS  vendas: ler pedido (total calculado pelo banco — coluna gerada)
+PASS  CRUD logística: criar transportadora
+PASS  CRUD logística: editar transportadora
+PASS  CRUD logística: excluir transportadora
+PASS  auditoria: operações registradas em audit_logs da Alfa
+PASS  cross-tenant: B1 não lê produto da Alfa pelo id (404)
+PASS  cross-tenant: B1 não vê produtos da Alfa na lista
+PASS  cross-tenant: B1 não altera depósito da Alfa
+PASS  cross-tenant: B1 não exclui transportadora da Alfa
+PASS  cross-tenant: B1 não lê pedido de venda da Alfa
+PASS  cross-tenant: B1 não movimenta estoque da Alfa (função do banco recusa)
+PASS  papel leitura: A2 lista produtos (200)
+PASS  papel leitura: A2 não cria produto (403)
+PASS  papel leitura: A2 não exclui (403)
+PASS  papel operador: B2 cria na própria empresa
+PASS  papel operador: B2 não exclui (403)
+PASS  injeção: busca com SQL vira texto (0 resultados, 200)
+PASS  injeção de filtro (.or): erro genérico igual a produção, sem vazar SQL nem dados
+PASS  injeção de filtro válida (.or com coluna real): RLS mantém só a Alfa
+PASS  injeção na ordenação: erro genérico (igual a produção); tabela intacta
+PASS  injeção na ordenação: nada no log de 'erro não tratado' (erro devolvido como {error}, como no supabase-js)
+PASS  banco: papel de login da app (educa_app) sem privilégio direto
+PASS  banco: educa_app não assume papel de dono/superusuário
+PASS  banco: 'authenticated' sem claims não vê nada (RLS)
+PASS  banco: com as claims de A1, RLS esconde outras empresas mesmo sem filtro
+PASS  banco: A1 não insere linha na Beta nem por SQL direto (RLS)
+PASS  banco: auth_user_id não pode ser trocado nem pelo próprio usuário
+PASS  banco: vínculo de identidade (0073) invisível para authenticated
+PASS  [Financeiro] categoria: criar (201) na Alfa
+PASS  [Financeiro] categoria: editar
+PASS  [Financeiro] validação: tipo de categoria inválido → 422
+PASS  [Financeiro] conta: criar via RPC fn_create_financial_account (saldo = abertura)
+PASS  [Financeiro] validação: título sem parcelas → 422
+PASS  [Financeiro] contas a pagar: criar título com 2 parcelas (RPC transacional)
+PASS  [Financeiro] contas a pagar: ler com parcelas
+PASS  [Financeiro] contas a pagar: editar via RPC
+PASS  [Financeiro] pagamento: baixa parcela e debita a conta (1000 → 850)
+PASS  [Financeiro] pagamento: mesma chave de idempotência não debita de novo
+PASS  [Financeiro] pagamento: valor acima do saldo da parcela recusado (409), nada gravado
+PASS  [Financeiro] contas a pagar: cancelar título sem pagamento (RPC)
+PASS  [Financeiro] contas a pagar: cancelar título parcialmente pago mantém a parcela paga e cancela a aberta (regra do banco)
+PASS  [Financeiro] contas a pagar: título já cancelado não cancela de novo (409)
+PASS  [Financeiro] papel leitura: leitura segue accounts_payable.view do papel; criação 403
+PASS  [Financeiro] outra empresa: B1 não lê título da Alfa (404) nem o vê na lista
+PASS  [Financeiro] outra empresa: B1 não paga parcela da Alfa (saldo intacto)
+PASS  [Financeiro] sem sessão: 401
+PASS  [Fiscal] estabelecimento: criar (201)
+PASS  [Fiscal] estabelecimento: editar
+PASS  [Fiscal] validação: regime tributário inválido → 422
+PASS  [Fiscal] natureza de operação: criar
+PASS  [Fiscal] documento fiscal: criar rascunho via RPC
+PASS  [Fiscal] documento fiscal: incluir item via RPC
+PASS  [Fiscal] validação: item com quantidade 0 → 422
+PASS  [Fiscal] documento fiscal: calcular (RPC) com total 27,80
+PASS  [Fiscal] documento fiscal: ler
+PASS  [Fiscal] papel leitura: leitura segue fiscal_documents.view do papel; criação 403
+PASS  [Fiscal] outra empresa: B1 não lê documento da Alfa (404)
+PASS  [Fiscal] outra empresa: B1 não inclui item em documento da Alfa
+PASS  [Fiscal] outra empresa: B1 não usa estabelecimento da Alfa em documento próprio
+PASS  [Fiscal] sem sessão: 401
+PASS  [Produção] centro de trabalho: criar
+PASS  [Produção] centro de trabalho: editar
+PASS  [Produção] linha de base: produto 'purchased' não gera ordem (409, regra do banco; a API não expõe production_type)
+PASS  [Produção] linha de base: produto criado pela API fica sem unit_id (igual a produção)
+PASS  [Produção] estrutura (BOM): criar, incluir componente e ativar (RPCs)
+PASS  [Produção] outra empresa: B1 não mexe na BOM da Alfa
+PASS  [Produção] validação: quantidade planejada 0 → 422
+PASS  [Produção] ordem de produção: criar via RPC
+PASS  [Produção] ordem de produção: planejar (transição no banco)
+PASS  [Produção] ordem de produção: ler
+PASS  [Produção] papel leitura: leitura segue production_orders.view do papel; criação 403
+PASS  [Produção] outra empresa: B1 não lê (404) nem cancela ordem da Alfa
+PASS  [Produção] outra empresa: B1 não cria ordem com produto/depósito da Alfa
+PASS  [Produção] ordem de produção: cancelar
+PASS  [Produção] sem sessão: 401
+PASS  [CRM] validação: e-mail inválido → 422
+PASS  [CRM] lead: criar
+PASS  [CRM] lead: editar status
+PASS  [CRM] pipeline + 2 estágios: criar
+PASS  [CRM] linha de base (bug de produção): lead → oportunidade falha como no Supabase (audit 'INSERT' fora do CHECK); erro genérico e nada gravado
+PASS  [CRM] oportunidade: criar pelo cadastro direto
+PASS  [CRM] oportunidade: mover estágio (RPC)
+PASS  [CRM] oportunidades: listar
+PASS  [CRM] papel leitura: leitura segue leads.view do papel; criação 403
+PASS  [CRM] outra empresa: B1 não lê lead (404) nem move oportunidade da Alfa
+PASS  [CRM] outra empresa: B1 não altera lead da Alfa
+PASS  [CRM] sem sessão: 401
+PASS  [Qualidade] validação: tipo de inspeção inválido → 422
+PASS  [Qualidade] inspeção: criar
+PASS  [Qualidade] não conformidade a partir da inspeção (RPC)
+PASS  [Qualidade] não conformidade: transição de status (RPC)
+PASS  [Qualidade] validação: status de transição inválido → 422
+PASS  [Qualidade] inspeção: finalizar como reprovada (RPC)
+PASS  [Qualidade] papel leitura: leitura segue quality_inspections.view do papel; criação 403
+PASS  [Qualidade] outra empresa: B1 não lê inspeção (404) nem muda NC da Alfa
+PASS  [Qualidade] sem sessão: 401
+PASS  [Projetos] validação: projeto sem nome → 422
+PASS  [Projetos] projeto: criar
+PASS  [Projetos] projeto: editar status
+PASS  [Projetos] tarefa do projeto: criar
+PASS  [Projetos] validação: OS sem cliente → 422
+PASS  [Projetos] ordem de serviço: criar vinculada ao projeto
+PASS  [Projetos] ordem de serviço: transição (RPC)
+PASS  [Projetos] papel leitura: leitura segue projects.view do papel; criação 403
+PASS  [Projetos] outra empresa: B1 não lê (404) nem altera projeto da Alfa
+PASS  [Projetos] outra empresa: B1 não muda OS da Alfa
+PASS  [Projetos] sem sessão: 401
+PASS  [Workflow] validação: workflow sem módulo/entidade → 422
+PASS  [Workflow] workflow: criar (RPC)
+PASS  [Workflow] versão: criar
+PASS  [Workflow] etapa + aprovador (papel admin): criar
+PASS  [Workflow] versão: publicar
+PASS  [Workflow] versão publicada é imutável (recusa nova etapa)
+PASS  [Workflow] linha de base (bug de produção): iniciar instância falha como no Supabase (v_step record → workflow_steps); erro genérico e nada gravado
+PASS  [Workflow] aprovações pendentes: listar (RPC)
+PASS  [Workflow] workflow: ler com versões
+PASS  [Workflow] workflow: desativar (RPC)
+PASS  [Workflow] validação: status inválido → 422
+PASS  [Workflow] papel leitura: leitura segue workflow.view do papel; criação 403
+PASS  [Workflow] outra empresa: B1 não lê (404), não versiona nem ativa workflow da Alfa
+PASS  [Workflow] sem sessão: 401
+PASS  [Importação] validação: entidade não importável → 422
+PASS  [Importação] validação: XLSX recusado → 422
+PASS  [Importação] upload CSV: job criado e 3 linhas encenadas (RPC)
+PASS  [Importação] mapeamento de colunas
+PASS  [Importação] validação: 2 válidas, 1 inválida (com erro registrado)
+PASS  [Importação] erros da importação: listar
+PASS  [Importação] papel leitura: não importa (403); leitura segue import_export.view do papel
+PASS  [Importação] outra empresa: B1 não lê (404) nem processa importação da Alfa
+PASS  [Importação] processar: 2 clientes criados na Alfa (validação do cadastro manual)
+PASS  [Importação] reimportar o mesmo arquivo não duplica (chave natural = documento)
+PASS  [Importação] sem sessão: 401
+
+210/210 verificações passaram

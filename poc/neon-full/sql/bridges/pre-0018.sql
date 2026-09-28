@@ -1,0 +1,2 @@
+-- Ponte: chaves (id, company_id) que a versão de produção criou antes/nesta etapa.
+do $$ begin if not exists (select 1 from pg_constraint where conrelid = 'public.purchase_order_items'::regclass and contype in ('u','p') and pg_get_constraintdef(oid) = 'UNIQUE (id, company_id)') then alter table public.purchase_order_items add constraint purchase_order_items_id_company_id_key unique (id, company_id); end if; end $$;

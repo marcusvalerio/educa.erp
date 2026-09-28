@@ -1,0 +1,35 @@
+PASS  sem cookie: API 401
+PASS  sem sessão: /admin → /login
+PASS  senha errada → mensagem genérica
+PASS  cookie do EDUCA HttpOnly + Secure + SameSite=Lax; nenhum cookie do Neon no navegador
+PASS  Owner: plataforma OWNER, sem tenant
+PASS  admin A: empresa A, papel admin
+PASS  leitura A: mesma empresa, só leitura
+PASS  admin B: outra empresa
+PASS  Company Admin não acessa a Administração Central (403)
+PASS  Owner não acessa dados de empresa (403)
+PASS  CRUD: admin A cria (201)
+PASS  CRUD: admin A edita
+PASS  cross-tenant: admin B não lê (404)
+PASS  cross-tenant: admin B não altera (404)
+PASS  RBAC: leitura não cria (403)
+PASS  RBAC: leitura não exclui (403)
+PASS  injeção na busca vira texto (200, 0 linhas)
+PASS  CRUD: admin A exclui
+PASS  módulo /api/accounts-payable: 200 para admin A
+PASS  módulo /api/fiscal-documents: 200 para admin A
+PASS  módulo /api/production-orders: 200 para admin A
+PASS  módulo /api/leads: 200 para admin A
+PASS  módulo /api/quality-inspections: 200 para admin A
+PASS  módulo /api/projects: 200 para admin A
+PASS  módulo /api/workflows: 200 para admin A
+PASS  módulo /api/imports: 200 para admin A
+PASS  módulo /api/products: 200 para admin A
+PASS  módulo /api/customers: 200 para admin A
+PASS  login CSRF de outra origem → 403, sem cookie
+PASS  cadastro público recusado no Neon Auth (allow_sign_up=false)
+PASS  login com next externo fica no app
+PASS  logout: 401 em seguida
+PASS  logout: cookie antigo reaproveitado não vale (sessão revogada no Neon Auth)
+
+33/33 verificações passaram

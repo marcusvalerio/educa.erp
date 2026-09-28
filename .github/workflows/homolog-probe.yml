@@ -1,0 +1,34 @@
+# Sonda de homologação SEM segredos e SEM escrita (poc/neon-full/homolog/probe-preview.mjs):
+# a partir do runner do GitHub (com internet), verifica se o Preview da branch
+# existe, se tem Deployment Protection, em que modo de auth ele está e em qual
+# região a função roda; e se os dois Neon Auth respondem. Produção: só leitura.
+# Roda a cada push desta branch que mexa na homologação (a Vercel publica o
+# Preview da branch automaticamente pela integração com o GitHub).
+name: homolog-probe
+on:
+  push:
+    branches: [poc/supabase-to-neon]
+    paths:
+      - "poc/neon-full/homolog/**"
+      - ".github/workflows/homolog-*.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Aguardar o Preview da Vercel ficar pronto
+        run: sleep 240
+      - name: Sonda
+        env:
+          PREVIEW_URL: https://educaerp-git-poc-supabase-to-neon-meji-projects.vercel.app
+          PROD_URL: https://educaerp.vercel.app
+          HOMOLOG_AUTH_URL: https://ep-royal-flower-b6tz0xde.neonauth.c-2.sa-east-1.aws.neon.tech/authdb/auth
+          PROD_AUTH_URL: https://ep-long-leaf-b86ezbh8.neonauth.c-14.us-east-1.aws.neon.tech/neondb/auth
+        run: node poc/neon-full/homolog/probe-preview.mjs

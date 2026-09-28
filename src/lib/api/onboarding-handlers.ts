@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jsonError } from "./response";
 import { dbError, parseJson, requireCompanyUser, requirePlatformMember, requireSession, type IdRouteContext } from "./governance";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { adminAccessConfigured, createAdminClient } from "@/lib/supabase/admin";
 import { ApiError, validationError } from "@/lib/database/errors";
 import { existingLoginNeedsIdentity, inviteIdentity } from "@/lib/auth/provisioning";
 import {
@@ -55,7 +55,7 @@ function appOrigin(request: NextRequest): string {
 async function sendAuthInvite(email: string, redirectTo: string, name: string): Promise<Delivery> {
   // Sem service role configurada, não há envio: o link continua válido
   // para entrega manual.
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return { delivered: false, reason: "email_unavailable" };
+  if (!adminAccessConfigured()) return { delivered: false, reason: "email_unavailable" };
   return inviteIdentity({ email, name, redirectTo }, () => {
     const admin = createAdminClient();
     return deliverAuthInvite((to, options) => admin.auth.admin.inviteUserByEmail(to, options), email, redirectTo);
@@ -248,7 +248,7 @@ export async function invitePlatformMember(request: NextRequest) {
     let authUserId = (found.data as string | null) ?? null;
     let emailSent = false;
     if (!authUserId || existingLoginNeedsIdentity()) {
-      if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      if (!adminAccessConfigured()) {
         throw new ApiError("SERVICE_UNAVAILABLE", "O envio de convites não está configurado neste ambiente.", 503);
       }
       const redirectTo = buildFirstAccessUrl(appOrigin(request), "/admincentral");

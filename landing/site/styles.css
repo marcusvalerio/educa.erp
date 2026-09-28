@@ -4542,6 +4542,80 @@ html:not(.js) .pro-beat-shot {
   }
 }
 
+/* ================================================================ V4 — o fio */
+/* A assinatura: uma linha na margem que atravessa a página (a mesma
+   operação), passando pelos nós de cada ato até a convergência. */
+main {
+  position: relative;
+}
+.thread {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 5;
+  overflow: visible;
+  pointer-events: none;
+}
+.thread-base {
+  fill: none;
+  stroke: rgba(140, 134, 128, 0.3);
+  stroke-width: 1.2;
+}
+.thread-lit {
+  fill: none;
+  stroke: var(--fire);
+  stroke-width: 1.8;
+}
+.thread-knot {
+  fill: var(--stage);
+  stroke: rgba(140, 134, 128, 0.6);
+  stroke-width: 1.4;
+  transition: fill 0.4s, stroke 0.4s;
+}
+.thread-knot.is-lit {
+  fill: var(--fire);
+  stroke: var(--fire);
+}
+.thread-head {
+  fill: var(--fire);
+  stroke: rgba(255, 148, 8, 0.28);
+  stroke-width: 8;
+  paint-order: stroke;
+}
+/* Os nós do HTML são só âncoras: o desenho fica no SVG do fio. */
+.act-node {
+  visibility: hidden;
+}
+.eyebrow {
+  position: relative;
+}
+.thread-start {
+  position: absolute;
+  top: 50%;
+  left: calc(-1 * var(--thread-gap, 30px));
+}
+.converge {
+  position: relative;
+}
+.thread-end {
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  width: 1px;
+  height: 1px;
+}
+@media (max-width: 1099px) {
+  :root {
+    --thread-gap: calc(var(--gutter) - 7px);
+  }
+  .act-node {
+    display: block;
+  }
+  .thread-knot {
+    r: 3.5;
+  }
+}
+
 /* ---------------------------------------------------------------- entrada por rolagem */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {

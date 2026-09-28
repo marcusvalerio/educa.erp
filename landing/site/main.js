@@ -278,6 +278,103 @@
     document.querySelectorAll(".m-rail").forEach((r) => io.observe(r));
   }
 
+  // O fio: a mesma operação atravessa a página, do Ato 01 à convergência.
+  // Uma linha na margem passa pelos nós de cada ato e entra na convergência
+  // final; ela se desenha com a rolagem, com um ponto na frente, e cada nó
+  // acende quando o fio passa. Com movimento reduzido, aparece inteira.
+  const mainEl = document.querySelector("main");
+  const threadEnd = document.querySelector(".thread-end");
+  if (mainEl && threadEnd && "ResizeObserver" in window) {
+    const NS = "http://www.w3.org/2000/svg";
+    const el = (tag, cls) => {
+      const n = document.createElementNS(NS, tag);
+      n.setAttribute("class", cls);
+      return n;
+    };
+    const svg = el("svg", "thread");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    const base = el("path", "thread-base");
+    const lit = el("path", "thread-lit");
+    const knots = el("g", "thread-knots");
+    const head = el("circle", "thread-head");
+    head.setAttribute("r", "4");
+    svg.append(base, lit, knots, head);
+    mainEl.prepend(svg);
+    let L = 0;
+    let samples = [];
+    let knotY = [];
+    const layout = () => {
+      const mr = mainEl.getBoundingClientRect();
+      const pts = [...document.querySelectorAll(".act-node")]
+        .filter((n) => n.offsetParent)
+        .map((n) => {
+          const r = n.getBoundingClientRect();
+          return [r.left + r.width / 2 - mr.left, r.top + r.height / 2 - mr.top];
+        })
+        .sort((a, b) => a[1] - b[1]);
+      const er = threadEnd.getBoundingClientRect();
+      if (pts.length < 2 || !er.height) {
+        svg.style.display = "none";
+        return;
+      }
+      svg.style.display = "";
+      const x = pts[0][0];
+      const [ex, ey] = [er.left - mr.left, er.top + er.height / 2 - mr.top];
+      const d = `M${x} ${pts[0][1]} L${x} ${ey - 80} C${x} ${ey - 20}, ${x + 20} ${ey}, ${ex} ${ey}`;
+      svg.setAttribute("width", mr.width);
+      svg.setAttribute("height", mainEl.scrollHeight);
+      base.setAttribute("d", d);
+      lit.setAttribute("d", d);
+      L = lit.getTotalLength();
+      lit.style.strokeDasharray = `${L}`;
+      samples = [];
+      for (let l = 0; l <= L; l += 24) samples.push([l, lit.getPointAtLength(l).y]);
+      knots.replaceChildren(
+        ...pts.map(([px, py]) => {
+          const c = el("circle", "thread-knot");
+          c.setAttribute("cx", px);
+          c.setAttribute("cy", py);
+          c.setAttribute("r", "5");
+          return c;
+        }),
+      );
+      knotY = pts.map((p) => p[1]);
+      draw();
+    };
+    const draw = () => {
+      if (!L) return;
+      const mr = mainEl.getBoundingClientRect();
+      const line = reduce ? Infinity : innerHeight * 0.62 - mr.top;
+      let len = L;
+      if (line !== Infinity) {
+        let lo = 0;
+        let hi = samples.length - 1;
+        while (lo < hi) {
+          const mid = (lo + hi + 1) >> 1;
+          if (samples[mid][1] <= line) lo = mid;
+          else hi = mid - 1;
+        }
+        len = samples[lo]?.[1] <= line ? samples[lo][0] : 0;
+      }
+      lit.style.strokeDashoffset = `${L - len}`;
+      const pt = lit.getPointAtLength(len);
+      head.setAttribute("cx", pt.x);
+      head.setAttribute("cy", pt.y);
+      head.style.opacity = reduce || len <= 0 || len >= L ? "0" : "1";
+      [...knots.children].forEach((k, i) => k.classList.toggle("is-lit", knotY[i] <= pt.y + 1));
+    };
+    let raf = 0;
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(() => ((raf = 0), draw()));
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    new ResizeObserver(() => layout()).observe(mainEl);
+    window.addEventListener("load", layout);
+    document.fonts?.ready.then(layout);
+    layout();
+  }
+
   // Topo: a seção visível fica marcada no menu, com um traço que desliza.
   const nav = document.querySelector(".topnav");
   if (nav && hasIO) {

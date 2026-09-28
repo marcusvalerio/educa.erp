@@ -309,7 +309,7 @@ function hero() {
   <div class="wrap">
     <div class="hero-head">
       <div class="hero-title-col">
-        <p class="eyebrow" data-intro><span class="eyebrow-bar" aria-hidden="true"></span>${esc(H.eyebrow)}</p>
+        <p class="eyebrow" data-intro><span class="act-node thread-start" aria-hidden="true"></span><span class="eyebrow-bar" aria-hidden="true"></span>${esc(H.eyebrow)}</p>
         <h1 id="hero-title" class="display"><span class="ln"><span>${esc(l1)}</span></span><span class="ln ln-last"><span><em>${esc(l2)}</em><i class="fire-bar" aria-hidden="true"></i></span></span></h1>
       </div>
       <div class="hero-side">
@@ -1097,7 +1097,7 @@ function converge(labels) {
     ${markSvg(180, 335, 100)}
     <text class="cv-word" x="180" y="440" text-anchor="middle">EDUCA</text>
   </svg>`;
-  return `<div class="converge">${desk}${mob}</div>`;
+  return `<div class="converge"><span class="thread-end" aria-hidden="true"></span>${desk}${mob}</div>`;
 }
 
 function closing(sizes, { preview = false } = {}) {

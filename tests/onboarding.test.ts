@@ -319,7 +319,7 @@ describe("bootstrap do primeiro Platform Owner (script de servidor)", () => {
       await bootstrapOwner(admin, { email: "dono@educa.com", name: "D", appUrl: "https://erp.exemplo.com", dryRun: false }, quiet, provision),
       { status: "already_owner", provisioned: true, invited: true }
     );
-    assert.deepEqual(provisioned, ["dono@educa.com:https://erp.exemplo.com/redefinir-senha?primeiro-acesso=1&next=%2Fadmincentral"]);
+    assert.deepEqual(provisioned, ["dono@educa.com:https://erp.exemplo.com/redefinir-senha?primeiro-acesso=1&next=%2Fapp%2Fadmincentral"]);
     assert.deepEqual(calls, []);
     await assert.rejects(bootstrapOwner(admin, { email: "dono@educa.com", name: "D", appUrl: null, dryRun: false }, quiet, provision), /--app-url/);
   });
@@ -338,10 +338,10 @@ describe("bootstrap do primeiro Platform Owner (script de servidor)", () => {
     await bootstrapOwner(admin, { email: "dono@educa.com", name: "D", appUrl: null, dryRun: false }, quiet);
     assert.deepEqual(calls, ["rpc:bootstrap_platform_owner:auth-9"]);
   });
-  test("sem login → convite de primeiro acesso para /admincentral, depois registra", async () => {
+  test("sem login → convite de primeiro acesso para /app/admincentral, depois registra", async () => {
     const { admin, calls } = fakeAdmin();
     await bootstrapOwner(admin, { email: "dono@educa.com", name: "D", appUrl: "https://erp.exemplo.com", dryRun: false }, quiet);
-    assert.deepEqual(calls, ["invite:dono@educa.com:https://erp.exemplo.com/redefinir-senha?primeiro-acesso=1&next=%2Fadmincentral", "rpc:bootstrap_platform_owner:new-auth"]);
+    assert.deepEqual(calls, ["invite:dono@educa.com:https://erp.exemplo.com/redefinir-senha?primeiro-acesso=1&next=%2Fapp%2Fadmincentral", "rpc:bootstrap_platform_owner:new-auth"]);
   });
   test("sem login e sem --app-url → erro claro; simulação não escreve nada", async () => {
     await assert.rejects(bootstrapOwner(fakeAdmin().admin, { email: "d@e.co", name: "D", appUrl: null, dryRun: false }, quiet), /--app-url/);

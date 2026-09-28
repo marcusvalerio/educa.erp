@@ -1,0 +1,28 @@
+# Smoke SOMENTE LEITURA da produção (https://educaerp.vercel.app), sem
+# segredo e sem escrita. Roda no runner do GitHub, que alcança a Vercel.
+# Disparo: push na main que altera scripts/prod/** ou este arquivo (espera o
+# deploy com a landing entrar no ar) ou Run workflow.
+name: prod-smoke
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/prod/**"
+      - ".github/workflows/prod-smoke.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Smoke de produção (só leitura)
+        env:
+          PROD_URL: https://educaerp.vercel.app
+          WAIT_FOR_LANDING: "1"
+        run: node scripts/prod/smoke-readonly.mjs

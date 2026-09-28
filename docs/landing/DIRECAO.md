@@ -214,3 +214,200 @@ As imagens lado a lado (mesmos enquadramentos, v2 à esquerda) estão em `docs/l
 ## Áudio
 
 Não há áudio. Uma possibilidade futura é um som discreto quando o sinal chega ao destino, só depois de um gesto do visitante, com controle visível para desligar. Fica documentado, não implementado.
+
+---
+
+# Versão 4 — a operação como um filme em atos
+
+A V4 parte da V3 validada. A arquitetura, os conteúdos, os fluxos reais e a distinção de estados (na tela, consulta, na API, em evolução) não mudam. O que muda é a encenação: direção de arte, composição, ritmo de rolagem, motion, transições entre cenas e o tratamento das telas.
+
+## Crítica da V3 (o que impedia a página de parecer produto premium)
+
+1. Metade da página (os 10 módulos, ~17.400 de 35.200 px) repetia o mesmo molde.
+2. Nenhum módulo tinha identidade própria.
+3. Nos módulos, as telas ainda pareciam capturas: listas inteiras e pequenas.
+4. A abertura era um diagrama de cartões num plano só, sem protagonista.
+5. Na jornada, o escurecimento em volta do foco deixava a tela lavada.
+6. ~25.000 px seguidos de fundo claro no meio da página.
+7. A tipografia não tinha picos: quase todos os títulos no mesmo tamanho.
+8. Base, Acesso e Central eram três seções parecidas logo antes do clímax.
+9. Cada cena terminava em um corte seco, e a ideia de conexão não atravessava a página.
+10. Dezenas de selos pequenos repetidos: a honestidade virava textura.
+
+Decisões aprovadas: direção "filme em atos" com o fio contínuo; módulos na opção A (quatro protagonistas e capítulos compactos); Base, Acesso e Central fundidos em uma cena.
+
+## Estrutura
+
+| Ato | Tom | Cena |
+|---|---|---|
+| 01 Ligação | escuro | O pedido PV-001013 como objeto de produto, em vista explodida, até a convergência em Gestão e a declaração. |
+| 02 Silos | claro, curto | Os registros de cada área soltos, que se alinham num fio. Título e uma frase: "a empresa perde o fio". |
+| 03 Um pedido atravessa a empresa | escuro | Cena fixa com câmera documental: Venda → Estoque → Financeiro → Fiscal → Logística → Gestão. |
+| 04 As áreas | claro, com cenas escuras | Quatro protagonistas (Comercial, Estoque, Financeiro, Fiscal e Logística) e capítulos compactos (CRM, Suprimentos, Qualidade, Projetos, Ativos, Painéis, Cadastros, Em evolução). |
+| 05 Uma base, três níveis | claro, arquitetural | Base → Acesso → Central como três planos do mesmo sistema. |
+| 06 O sistema | escuro | O mapa de conexões conferidas, em capítulos. |
+| 07 Convergência | escuro | As áreas convergem na marca; "EDUCA conecta a operação."; Entrar no EDUCA e os manuais. |
+
+Ritmo: respiro → informação → demonstração → movimento → conclusão, com costuras em degradê entre atos claros e escuros (no espaço vazio antes do marcador, nunca sob texto).
+
+## O fio (assinatura)
+
+Uma linha na margem atravessa a página do Ato 01 à convergência final:
+- passa pelo nó de cada ato;
+- desenha-se com a rolagem, com um ponto na frente (a mesma operação avançando);
+- acende cada nó quando passa;
+- entra na convergência das áreas.
+
+Detalhes de implementação:
+- É SVG gerado pelo `main.js`, recalculado com o layout (`ResizeObserver`), inclusive com a cena fixa da jornada.
+- Com movimento reduzido, aparece inteira e sem o ponto.
+- Sem JS, não aparece: é decorativa, e o conteúdo não depende dela.
+
+## Ato 01: o pedido como objeto
+
+No desktop (≥ 1100 px), a abertura é uma cena 3D. O mundo tem 1440 × 840 unidades; `--u` é 1/1440 da largura, então a cena inteira escala com a tela.
+
+- **Objeto.** A captura real do pedido PV-001013 em perspectiva sutil (`rotateY 17°`, `rotateX 6°`), com luz controlada: uma faixa de luz atravessa a tela quando ela acende, e as sombras são longas e suaves.
+- **Vista explodida.** As partes que geram trabalho em outra área são recortes da mesma captura e se destacam do pedido em profundidade:
+  - cabeçalho com as ações;
+  - totais;
+  - Documento fiscal;
+  - Andamento;
+  - bloco Financeiro.
+
+  Onde uma parte saiu, a base escurece de leve.
+- **Consequências, uma a uma, do lugar exato que as causa.**
+  - A janela real de reserva nasce do botão Reservar estoque.
+  - O título CR-0002 sai do bloco Financeiro.
+  - Documento fiscal e Andamento ligam-se, em tracejado (pela API), às telas reais de Faturamento e do fluxo do Início.
+  - Tudo converge em Gestão.
+- **Câmera documental.**
+  1. Close no título do pedido (PV-001013, cliente, Aprovado).
+  2. Panorâmica até as ações.
+  3. Silêncio curto.
+  4. Recuo com perspectiva.
+  5. As partes se destacam.
+  6. As consequências chegam.
+  7. Convergência.
+  8. Só então a declaração.
+- **Sistema vivo.** Depois da sequência:
+  - as partes flutuam de leve, cada uma no seu tempo;
+  - sinais percorrem as ligações;
+  - a câmera inclina com o ponteiro;
+  - passar sobre uma parte acende a cadeia dela até a Gestão, e o resto recua.
+- **Ligações.**
+  - Com JS, são redesenhadas a cada quadro a partir das âncoras reais (`main.js`, com o corte da curva por de Casteljau para revelar sem desmanchar o tracejado).
+  - No HTML estático, as mesmas linhas saem de uma projeção feita no build, com a mesma matemática do CSS (perspectiva, `rotateY`, `rotateX`, `translateZ`).
+- **LCP.** A própria imagem do pedido é o maior elemento e aparece em ~0,3 s. Ela é pré-carregada por largura (`<link rel=preload media>`), e as telas de desktop e celular não baixam uma a outra.
+
+Abaixo de 1100 px, a abertura segue a composição vertical (título, pedido e a espinha que desce com a rolagem).
+
+## Ato 03: jornada escura e foco sem véu
+
+A jornada vira palco escuro: os mesmos componentes, com os tokens redefinidos na seção. O foco sobre as telas passou a ser anel e luz. Nenhum véu escurece a captura; a câmera aproxima a região explicada. O escurecimento que aparece atrás de alguns diálogos é o do próprio app.
+
+## Ato 04: protagonistas e capítulos
+
+**Protagonistas.** Cada um é uma cena:
+- a tela fica fixa, e a câmera anda entre as capturas reais de cada etapa, aproximando exatamente o que é explicado (troca por CSS: `translate` + `scale` com `cubic-bezier(0.65, 0, 0.25, 1)`, ~1,25 s);
+- o texto da etapa rola ao lado;
+- a etapa fora de foco recua pela cor.
+
+| Protagonista | Tom | Etapas | Assinatura |
+|---|---|---|---|
+| Comercial | claro | Pedido → Aprovação → Cliente → Financeiro | PV-001013 |
+| Estoque | escuro | Endereço → Produto no local → Estoque → Movimentação → Separação | FIL03 rua 05 |
+| Financeiro | claro | Título → Vencimento → Contas → Caixa | CR-0002 |
+| Fiscal e Logística | escuro | Documento → Documento calculado → Expedição → Transporte → Entrega | DF-0004 |
+
+Cada protagonista traz:
+- o problema;
+- como o EDUCA resolve e para quem;
+- um resumo de estados ("4 ações na tela · 1 consulta · 1 pela API · 1 em evolução");
+- a ficha completa: o que você faz (com os selos), o que o sistema controla, as etapas no sistema e como se conecta (origem → destino, com o estado da ligação).
+
+Nas etapas que existem só na API, aparece o cartão "Na API" com o endpoint real.
+
+Honestidade nas cenas novas:
+- Estoque e Fiscal/Logística dividem entre si os itens já conferidos do módulo Estoque e Logística; nenhum item foi criado.
+- A palavra "rota" não existe no inventário; a cena usa "transporte".
+- Telas vazias no ambiente das capturas (Saldo, Movimentações, Picking, Expedição, Transportes) aparecem com o aviso "No ambiente das capturas, ainda sem registros". Nelas, a câmera foca a estrutura e a regra da tela (por exemplo: "saldo derivado do registro de movimentações, nunca alterado diretamente pela tela").
+
+**Capítulos compactos.** CRM, Suprimentos, Qualidade, Projetos e Serviços, Ativos e Manutenção, e Início, Painéis e Controladoria. Cada capítulo mantém:
+- o problema;
+- o funcionamento;
+- o resumo de estados;
+- as etapas (mini fluxo);
+- o que você faz, com selos;
+- o que o sistema controla;
+- as ligações;
+- todas as telas: a principal e as demais em miniaturas que ampliam.
+
+Cadastros e Em evolução seguem no ato.
+
+Sem JS e abaixo de 1100 px, os protagonistas viram lista: cada etapa com a tela já enquadrada.
+
+## Ato 05: uma base, três níveis
+
+**No desktop.** Uma pilha fixa de três planos (ERP, Administração da Empresa, Administração Central); o plano do nível em leitura sobe e ganha contorno. O texto de cada nível rola ao lado:
+
+- **Base, a operação da empresa:** ERP · toda a empresa; 15 áreas; 13 painéis.
+- **Acesso, cada pessoa vê o que as permissões permitem:**
+  - convite;
+  - cadeia Carla Mendes → Comprador → 23 permissões de Compras → Suprimentos;
+  - o que a Administração da Empresa faz;
+  - o passo a passo do convite ao limite de acesso;
+  - 352 permissões.
+- **Central, a plataforma controla empresas, ciclo de vida e módulos:** os pontos da Central; as telas; 19 módulos contratáveis; e a garantia de que ela não enxerga dados operacionais.
+
+**Abaixo de 1100 px.** Cada nível mostra a própria tela.
+
+## Motion
+
+| Uso | Easing | Duração |
+|---|---|---|
+| Câmera (close, panorâmica, recuo) | `power2/3.inOut` | 0,95–1,6 s |
+| Partes que se destacam | `power3.out` | 0,9 s |
+| Consequências que surgem | `expo.out` | 0,75 s |
+| Ligação desenhada | `power1.inOut` | 0,4–0,55 s |
+| Troca de etapa (protagonistas) | `cubic-bezier(0.65, 0, 0.25, 1)` | 1,25 s |
+| Plano do nível (Ato 05) | `cubic-bezier(0.2, 0.7, 0.1, 1)` | 0,8 s |
+| Respiração | `sine.inOut` yoyo | 2,8–4,1 s |
+
+A abertura completa roda uma vez por sessão, e rolar ou usar o teclado acelera a sequência (5×). Nada bloqueia conteúdo: sem JS, sem GSAP ou com movimento reduzido, cada cena está no estado final.
+
+## Responsivo
+
+| Largura | Composição |
+|---|---|
+| ≥ 1100 (1440, 1280) | Cena 3D da abertura; jornada fixa; protagonistas em teatro (texto 4/12, tela 8/12); pilha fixa do Ato 05 |
+| 1024 / 820 | Abertura em grade; jornada, protagonistas e níveis em lista, cada etapa com a sua tela |
+| < 700 (390) | Abertura vertical (título, pedido, espinha); raia fixa na jornada; protagonistas em lista vertical; mapa em camadas; convergência vertical; o fio corre rente à borda |
+
+## Desempenho (V3 × V4)
+
+Mesma máquina, Chromium headless sem GPU:
+
+| Métrica | V3 | V4 |
+|---|---|---|
+| LCP 1ª visita (1440 / 390) | 2,67 / 1,05 s | 0,35 / 1,05 s |
+| CLS | 0 | 0 |
+| FPS abertura (1440) | 51 | 53 |
+| FPS repouso na abertura (1440) | 61 | 57 (as ligações acompanham as partes que flutuam) |
+| FPS jornada, rede, final (1440) | 60 | 60 |
+| FPS Ato 04 rolando (1440) | — | 56 |
+| FPS em todas as cenas (390) | 60 | 60 |
+| Transferido na carga (1440) | JS 152 KB · CSS 71 KB · imagens 118 KB | JS 160 KB · CSS 92 KB · imagens 222 KB (partes do pedido, em WebP) |
+
+As imagens abaixo da dobra são lazy. As telas da abertura de desktop e de celular são pré-carregadas só na largura delas.
+
+## Acessibilidade
+
+- **Axe:** 0 violações em 1440 e 390, claro e escuro, com movimento e com movimento reduzido.
+- **Teclado:** mesma ordem de tabulação da V3; o foco visível segue em laranja.
+- **Etapas fora de foco:** recuam pela cor, com contraste AA, nunca por transparência.
+- **Sem JS:** a página fica completa, com todas as cenas em lista e as ligações da abertura já desenhadas.
+
+## Comparação V3 × V4
+
+As imagens lado a lado estão em `docs/landing/comparacao/v3-v4/`. As capturas finais da V4 estão em `docs/landing/capturas/`, e as da V3 em `capturas/v3/`.

@@ -63,28 +63,46 @@ Assim o app, a autenticação e o banco não são tocados.
 - **Rotas de detalhe** aparecem como `/:id`, porque o app usa identificadores internos, não o código do registro.
 - **Destaques (`focus`)** usam coordenadas da captura original em pixels: `[x, y, largura, altura]`.
 
-## Cenas e movimento (v3)
+## Cenas e movimento (V4)
 
-A direção está em `docs/landing/DIRECAO.md`, na seção "Versão 3". Cada cena tem um estado final completo no HTML. O JavaScript apenas anima até esse estado.
+A direção está em `docs/landing/DIRECAO.md`, na seção "Versão 4". A página é um filme em sete atos, atravessado por um fio contínuo. Cada cena tem um estado final completo no HTML; o JavaScript apenas anima até esse estado.
 
-| Cena | Desktop (≥ 1100 px) | Tablet e celular | Sem JS / movimento reduzido |
+| Ato | Desktop (≥ 1100 px) | Tablet e celular | Sem JS / movimento reduzido |
 |---|---|---|---|
-| Abertura | Timeline única, uma vez por sessão:<br>vazio → portas → molduras → códigos → varredura do pedido → marcadores → sinal por ligação e revelação de cada área → convergência em Gestão → câmera recua → título.<br><br>Depois: respiração, inclinação sob o ponteiro e foco por área. | Tablet: declaração e depois a grade.<br>Celular: declaração, pedido e espinha que desce com a rolagem. | Composição final estática |
-| Cenário | Registros saem dos silos e se alinham num fio (scrub) | Idem, deslocamentos menores | Lista alinhada |
-| Plataforma | Números como escala (pontos que acendem e valor que conta); ambientes em leque | Números em 2 × 2 | Pontos e valores finais |
-| Siga um pedido | Cena fixa: origem "00 Pedido" e seis tempos com câmera, legenda "Em foco", cursor (na tela) ou endpoint (na API) | Lista com raia fixa; cada tela aproxima a sua região | Lista com destaques e legendas |
-| Módulos | Tela 8/12, fixa ao ler; endireita ao entrar; troca de aba por máscara; numeral em parallax | Tela endireita (≥ 700 px) | Estático |
-| Conexões | Capítulos acendem as cadeias; sinal origem → destino com resposta no destino | Mapa em camadas verticais | Todas as ligações acesas |
-| Chamada | Seis áreas convergem para a marca EDUCA (SVG) | Versão vertical | Convergência desenhada |
+| 01 Ligação | O pedido PV-001013 como objeto 3D em vista explodida:<br>- câmera documental;<br>- partes que se destacam;<br>- consequências nas áreas;<br>- convergência em Gestão;<br>- declaração.<br><br>Uma vez por sessão. | Título, pedido e espinha vertical | Quadro final, com as ligações projetadas no build |
+| 02 Silos | Registros soltos que se alinham num fio | Idem | Lista alinhada |
+| 03 Um pedido atravessa a empresa | Cena fixa escura com câmera por etapa | Lista com raia fixa | Lista com destaques |
+| 04 As áreas | 4 protagonistas em "teatro":<br>- tela fixa;<br>- câmera por etapa;<br>- alternância claro/escuro;<br>- ficha completa.<br><br>Mais capítulos compactos. | Lista: cada etapa com a sua tela | Lista |
+| 05 Uma base, três níveis | Pilha fixa de três planos; o nível em leitura sobe | Cada nível com a sua tela | Estático |
+| 06 O sistema | Mapa em capítulos; sinal origem → destino | Mapa em camadas verticais | Todas as ligações acesas |
+| 07 Convergência | As áreas convergem na marca; o fio entra na convergência | Versão vertical | Convergência desenhada |
+
+Arquivos novos da V4:
+- `scripts/build-landing.mjs`:
+  - `heroWorld()`: a cena 3D e a projeção das ligações;
+  - `protagonist()` e `chapter()`: o Ato 04;
+  - `levels()`: o Ato 05;
+  - `actHead()`: o marcador de ato.
+- `landing/src/content.mjs`:
+  - `ACTS`;
+  - `HERO.stage`, `HERO.parts` e `HERO.buttons`: recortes da captura do pedido;
+  - `PROTAGONISTS`: etapas, enquadramentos e textos conferidos;
+  - `LEVELS`.
+- `landing/src/main.js`:
+  - ligações da abertura (`EDUCA.hxDraw`);
+  - o fio;
+  - etapas dos protagonistas;
+  - níveis.
+- `landing/src/motion.js`: sequência da abertura (GSAP).
 
 Regras:
 
-- Só se animam `transform`, `opacity` e `clip-path` (em revelações curtas). Não há blur na abertura.
-- A câmera usa zoom com contratranslação calculado no build, a partir das coordenadas da captura (`focus`, `cursor`).
-- Os traços com `non-scaling-stroke` são medidos em pixels de tela (`dashLen` em `motion.js`).
-- Com `prefers-reduced-motion` ou sem GSAP, `motion.js` não roda e a página mostra o estado final.
+- Só se animam `transform`, `opacity` e `clip-path` (em revelações curtas). Não há blur, glow ou vidro na abertura.
+- As câmeras usam zoom com contratranslação calculado no build, a partir das coordenadas da captura (`focus`, `cursor`). O foco é anel e luz, nunca um véu sobre a tela.
+- A imagem do pedido é o LCP no desktop e é pré-carregada só nessa largura. As telas do celular têm o próprio preload.
 - A abertura completa roda uma vez por sessão (`sessionStorage`, chave `educa-intro`). Para rever, abra uma aba nova.
-- Não há CTA de cadastro. O único acesso é "Entrar no EDUCA", que leva a `/login` do app.
+- Com `prefers-reduced-motion` ou sem GSAP, `motion.js` não roda: a página mostra o estado final, e o fio aparece inteiro.
+- Não há CTA de cadastro. O único acesso é "Entrar no EDUCA" (topo, abertura e final), que leva a `/login` do app.
 
 ## Verificação
 

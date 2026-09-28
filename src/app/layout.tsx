@@ -3,6 +3,8 @@ import localFont from "next/font/local";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { Toaster } from "@/components/ui/Toast";
 import { TooltipProvider } from "@/components/ui/Tooltip";
+import { EnvironmentBadge } from "@/components/shell/EnvironmentBadge";
+import { isHomologation } from "@/lib/environment";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
 import "./globals.css";
 
@@ -36,8 +38,11 @@ const jetbrains = localFont({
   display: "swap",
 });
 
+// Em homologação (APP_ENV=homologacao) a aba do navegador também avisa.
+const TITLE_SUFFIX = isHomologation() ? " · HOMOLOGAÇÃO" : "";
+
 export const metadata: Metadata = {
-  title: { default: "EDUCA.ERP", template: "%s · EDUCA.ERP" },
+  title: { default: `EDUCA.ERP${TITLE_SUFFIX}`, template: `%s · EDUCA.ERP${TITLE_SUFFIX}` },
   description: "EDUCA.ERP — gestão empresarial integrada: operação, finanças, fiscal e governança.",
   applicationName: "EDUCA.ERP",
 };
@@ -64,6 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <TooltipProvider delayDuration={300}>
             {children}
+            <EnvironmentBadge />
             <Toaster />
           </TooltipProvider>
         </ThemeProvider>

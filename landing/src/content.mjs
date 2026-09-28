@@ -21,7 +21,9 @@ export const META = {
   title: "EDUCA.ERP",
   description:
     "O EDUCA conecta vendas, compras, estoque, finanças, fiscal, qualidade, projetos e manutenção em uma operação só. Conheça o produto pelas telas reais.",
-  appUrl: "https://educaerp.vercel.app/login",
+  // LANDING_APP_URL (só no build): aponta "Entrar no EDUCA" para outro app,
+  // ex.: o Preview de homologação. Sem ela, vai para a produção.
+  appUrl: process.env.LANDING_APP_URL || "https://educaerp.vercel.app/login",
   manualUser: "manuais/EDUCA-Manual-do-Usuario.pdf",
   manualAdmin: "manuais/EDUCA-Manual-de-Administracao.pdf",
   edition: "Telas da versão redesenhada, capturadas em 27/09/2026 com dados fictícios",

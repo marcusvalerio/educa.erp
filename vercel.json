@@ -1,4 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["gru1"]
+  "regions": ["gru1"],
+  "ignoreCommand": "node scripts/homolog/vercel-guard.mjs ignore",
+  "buildCommand": "node scripts/homolog/vercel-guard.mjs build && next build"
 }

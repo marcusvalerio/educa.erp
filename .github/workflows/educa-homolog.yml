@@ -1,0 +1,84 @@
+# Homologação do EDUCA (branch claude/educa-homolog → Vercel Preview → Neon
+# branch "homolog"). Roda no runner do GitHub, que alcança a Vercel e o Neon.
+#
+# probe: a cada push — sem segredos e sem escrita. Diz se o Preview existe, se
+#   tem Deployment Protection, em que modo de autenticação está e se o Neon
+#   Auth de homologação responde.
+# homologacao: bootstrap das 3 contas → dados fictícios → smoke com navegador.
+#   Dispara por push que altera scripts/homolog/RUN (ou Run workflow, quando
+#   este arquivo estiver na branch padrão). Segredos no ambiente "homolog":
+#   NEON_AUTH_SERVICE_EMAIL, NEON_AUTH_SERVICE_PASSWORD (conta de serviço do
+#   Neon Auth de HOMOLOGAÇÃO), HOMOLOG_OWNER_PASSWORD, HOMOLOG_ADMIN_PASSWORD,
+#   HOMOLOG_USER_PASSWORD (definidas pelo dono do projeto) e, se o Preview
+#   tiver proteção, VERCEL_BYPASS_TOKEN. Nenhum valor é impresso.
+name: educa-homolog
+on:
+  push:
+    branches: [claude/educa-homolog]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  PREVIEW_URL: https://educaerp-git-claude-educa-homolog-meji-projects.vercel.app
+  HOMOLOG_AUTH_URL: https://ep-royal-flower-b6tz0xde.neonauth.c-2.sa-east-1.aws.neon.tech/authdb/auth
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Aguardar o Preview da Vercel
+        run: sleep 240
+      - name: Sonda (sem segredos)
+        env:
+          PROD_URL: https://educaerp.vercel.app
+          PROD_AUTH_URL: https://ep-long-leaf-b86ezbh8.neonauth.c-14.us-east-1.aws.neon.tech/neondb/auth
+        run: node poc/neon-full/homolog/probe-preview.mjs
+
+  homologacao:
+    needs: probe
+    if: github.event_name == 'workflow_dispatch' || contains(join(github.event.commits.*.modified, ','), 'scripts/homolog/RUN') || contains(join(github.event.commits.*.added, ','), 'scripts/homolog/RUN')
+    runs-on: ubuntu-latest
+    environment: homolog
+    timeout-minutes: 30
+    env:
+      APP: https://educaerp-git-claude-educa-homolog-meji-projects.vercel.app
+      NEON_AUTH_BASE_URL: https://ep-royal-flower-b6tz0xde.neonauth.c-2.sa-east-1.aws.neon.tech/authdb/auth
+      NEON_AUTH_SERVICE_EMAIL: ${{ secrets.NEON_AUTH_SERVICE_EMAIL }}
+      NEON_AUTH_SERVICE_PASSWORD: ${{ secrets.NEON_AUTH_SERVICE_PASSWORD }}
+      HOMOLOG_OWNER_PASSWORD: ${{ secrets.HOMOLOG_OWNER_PASSWORD }}
+      HOMOLOG_ADMIN_PASSWORD: ${{ secrets.HOMOLOG_ADMIN_PASSWORD }}
+      HOMOLOG_USER_PASSWORD: ${{ secrets.HOMOLOG_USER_PASSWORD }}
+      VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
+      # Owner que já existe na homologação (copiado da produção): só convida o
+      # Owner novo e é desativado em seguida — sua senha não é usada.
+      LEGACY_OWNER_EMAIL: contatomarcusjr@gmail.com
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Playwright numa pasta própria (npm i na raiz instalaria o projeto inteiro).
+      - run: mkdir -p "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw" && npm init -y > /dev/null && npm i playwright@1 > /dev/null && npx playwright install --with-deps chromium > /dev/null
+      - name: Contas (Owner, Admin, Usuário de Homologação)
+        run: node scripts/homolog/bootstrap.mjs 2>&1 | tee bootstrap.log
+      - name: Dados fictícios
+        run: node scripts/homolog/seed.mjs 2>&1 | tee seed.log
+        continue-on-error: true
+      - name: Smoke com os 3 usuários
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/pw/node_modules/playwright/index.mjs
+          SMOKE_OUT: smoke.md
+        run: node scripts/homolog/smoke.mjs 2>&1 | tee smoke.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: educa-homolog-relatorio
+          path: |
+            bootstrap.log
+            seed.log
+            smoke.log
+            smoke.md

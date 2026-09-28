@@ -133,6 +133,7 @@ Nada disto passa pelo chat nem pelo Git.
    - `NEON_AUTH_SERVICE_EMAIL` e `NEON_AUTH_SERVICE_PASSWORD` (passo 2);
    - `VERCEL_BYPASS_TOKEN` (passo 4);
    - `HOMOLOG_OWNER_PASSWORD`, `HOMOLOG_ADMIN_PASSWORD` e `HOMOLOG_USER_PASSWORD`: você mesmo gera as três (ex.: gerenciador de senhas, 16+ caracteres com maiúscula, minúscula, número e símbolo). São as senhas com que você vai entrar.
+   - `LEGACY_OWNER_EMAIL`: o e-mail do Owner que hoje existe na homologação. Fica em segredo porque o repositório é público; só é usado na 1ª execução.
 6. **Neon Console → branch `homolog` → Auth → Settings:** desligue *Allow sign-ups* e *Allow localhost*. Hoje os dois estão ligados, e o MCP não altera esses dois campos.
 7. **Avise.** O bootstrap, o seed e o smoke rodam no runner com um push que altera `scripts/homolog/RUN`. O relatório sai como artefato `educa-homolog-relatorio`.
 

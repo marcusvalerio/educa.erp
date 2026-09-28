@@ -57,7 +57,7 @@ Para liberar a branch, todas estas condições precisam valer:
 - conta de serviço presente;
 - nenhuma variável `SUPABASE_*` ativa. Cada uma deve ficar ausente ou sobrescrita com `desativado` só para esta branch.
 
-A trava imprime apenas nomes de variáveis. Outras branches não são afetadas. **Antes de qualquer merge na `main`, retire o `ignoreCommand` e o `buildCommand` do `vercel.json`.**
+A trava imprime apenas nomes de variáveis. Outras branches não são afetadas. Na `main` a trava de homologação não faz nada: o `ignoreCommand` responde "build normal". Ela foi mantida no merge para continuar protegendo os Previews da branch de homologação. Em Production vale a trava da seção 10.
 
 ## 4. Usuários e papéis
 
@@ -262,3 +262,19 @@ Só na `claude/educa-homolog`. Nada na `main`, na produção ou no Supabase de p
 | Seed | 51/52 (reserva) | **63/65**: reserva e separação OK. Falham só *expedir* e *confirmar entrega* (BUG 9, novo) |
 | Smoke 3 perfis | 78/81 (logout com mouse) | **90/90** |
 | E2E histórico da POC (`poc/neon-full/e2e/run-all.sh`: autenticação, RLS, 2 empresas, 8 módulos) | 210/210 | **210/210** (sem regressão) |
+
+## 10. Produção (merge na `main`)
+
+- **Backend:** a produção continua no **Supabase** (`AUTH_PROVIDER=supabase`, `DATA_BACKEND` ausente). O código aceita o modo Neon, mas o Neon `main` ainda **não tem os dados**: na verificação feita antes do merge, 1 empresa, 0 usuários, 0 clientes e 0 produtos.
+- **Trava de produção** (`scripts/homolog/vercel-guard.mjs`, etapa de build):
+  - em `VERCEL_ENV=production`, se `DATA_BACKEND=postgres` ou `AUTH_PROVIDER=neon` aparecerem, o build falha;
+  - a Vercel mantém no ar o deploy atual, porque build com erro não é promovido;
+  - só passa com `EDUCA_CUTOVER_NEON_CONFIRMADO=sim` em Production, para um cutover planejado, depois da carga de dados no Neon.
+- **Região:** `vercel.json` com `regions: ["gru1"]`. As funções saem de Washington (iad1) para São Paulo, a mesma região do Supabase de produção (sa-east-1).
+- **Migration `0074`** (reserva de estoque): está no repositório e validada localmente, mas **não foi aplicada** em nenhum banco de produção (Supabase ou Neon `main`). O repositório não tem etapa automática de migration:
+  - o build é só `next build`;
+  - nenhum workflow aplica migrations;
+  - o Supabase de produção não tem integração de branches e registrou as migrations com versões próprias (aplicação manual).
+
+  Até alguém aplicar a `0074` em produção, "Reservar pedido" continua falhando lá.
+- **BUG 9 (Expedir)** e **BUG 10** (`'INSERT'` na auditoria) continuam abertos: seção 7.

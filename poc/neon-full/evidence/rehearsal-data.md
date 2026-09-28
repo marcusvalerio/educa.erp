@@ -80,7 +80,7 @@ Por tabela (contagem:md5, idêntico nos dois lados):
 
 ## Identidade, vínculos e acesso (dados reais)
 
-- **Owner:** `auth.users` `527fad15…` (contatomarcusjr@gmail.com) →
+- **Owner:** `auth.users` `527fad15…` (e-mail pessoal do dono do projeto) →
   `platform_members` OWNER ativo → `auth_identity_links` (provider `neon`,
   external `33e3fb0b…`). Esse usuário **existe** no Neon Auth de produção
   (projeto `educa-auth-prod`, `young-mode-67474663`, `neon_auth.user`). O Owner entra

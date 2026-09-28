@@ -7,7 +7,8 @@
 //       sai 0 (pula o deploy) se a branch é a de homologação e o ambiente não
 //       está seguro; sai 1 (segue) nos demais casos.
 //   node scripts/homolog/vercel-guard.mjs build   → antes do "next build":
-//       falha o build (sai 1) nas mesmas condições.
+//       falha o build (sai 1) nas mesmas condições — e, em Production, se o
+//       backend trocar para o Neon sem confirmação do cutover (ver abaixo).
 // Imprime só NOMES de variáveis, nunca valores.
 export const HOMOLOG_BRANCH = "claude/educa-homolog";
 export const HOMOLOG_NEON_ENDPOINT = "ep-royal-flower-b6tz0xde"; // branch "homolog" do projeto educa-erp-prod
@@ -35,6 +36,22 @@ export function homologProblems(env) {
   return problems;
 }
 
+// Produção continua no Supabase até um cutover PLANEJADO. O código aceita
+// DATA_BACKEND=postgres / AUTH_PROVIDER=neon (Neon), mas o Neon de produção
+// ainda não tem os dados: se essas variáveis aparecerem em Production sem a
+// confirmação explícita do cutover, o build FALHA — e a Vercel mantém no ar o
+// deploy de produção atual (build com erro nunca é promovido).
+export const CUTOVER_CONFIRMATION = "EDUCA_CUTOVER_NEON_CONFIRMADO";
+export function productionProblems(env) {
+  if (env.VERCEL_ENV !== "production") return [];
+  if (env[CUTOVER_CONFIRMATION] === "sim") return [];
+  const problems = [];
+  if ((env.DATA_BACKEND ?? "").trim().toLowerCase() === "postgres") problems.push("DATA_BACKEND=postgres em Production (produção ainda é Supabase)");
+  if ((env.AUTH_PROVIDER ?? "").trim().toLowerCase() === "neon") problems.push("AUTH_PROVIDER=neon em Production (produção ainda é Supabase)");
+  if (problems.length) problems.push(`para um cutover planejado, defina ${CUTOVER_CONFIRMATION}=sim só em Production`);
+  return problems;
+}
+
 function main(mode) {
   const env = process.env;
   const onHomologBranch = env.VERCEL_GIT_COMMIT_REF === HOMOLOG_BRANCH;
@@ -49,6 +66,11 @@ function main(mode) {
   }
   if (problems.length) {
     console.error(`Homologação: build RECUSADO — ambiente inseguro:\n- ${problems.join("\n- ")}`);
+    process.exit(1);
+  }
+  const prod = productionProblems(env);
+  if (prod.length) {
+    console.error(`Produção: build RECUSADO — troca de banco/autenticação não confirmada:\n- ${prod.join("\n- ")}`);
     process.exit(1);
   }
 }

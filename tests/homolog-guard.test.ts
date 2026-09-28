@@ -3,7 +3,7 @@
 // produção nem com outro banco que não seja a branch "homolog" do Neon.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { homologProblems } from "../scripts/homolog/vercel-guard.mjs";
+import { homologProblems, productionProblems } from "../scripts/homolog/vercel-guard.mjs";
 
 const safe = {
   APP_ENV: "homologacao",
@@ -36,4 +36,20 @@ test("sem as variáveis da branch (modo supabase padrão) é recusado", () => {
 test("banco ou Neon Auth de outra branch/projeto é recusado", () => {
   assert.ok(homologProblems({ ...safe, DATABASE_URL: "postgres://u:p@ep-other-123-pooler.c-2.sa-east-1.aws.neon.tech/educa" }).some((p: string) => p.startsWith("DATABASE_URL")));
   assert.ok(homologProblems({ ...safe, NEON_AUTH_BASE_URL: "https://ep-long-leaf-b86ezbh8.neonauth.c-14.us-east-1.aws.neon.tech/neondb/auth" }).some((p: string) => p.startsWith("NEON_AUTH_BASE_URL")));
+});
+
+test("produção: Supabase (sem DATA_BACKEND/AUTH_PROVIDER Neon) passa", () => {
+  assert.deepEqual(productionProblems({ VERCEL_ENV: "production" }), []);
+  assert.deepEqual(productionProblems({ VERCEL_ENV: "production", AUTH_PROVIDER: "supabase", DATABASE_URL: "postgres://u:p@ep-x.neon.tech/db" }), []);
+});
+
+test("produção: DATA_BACKEND=postgres ou AUTH_PROVIDER=neon sem confirmação é recusado", () => {
+  assert.equal(productionProblems({ VERCEL_ENV: "production", DATA_BACKEND: "postgres" }).length, 2);
+  assert.equal(productionProblems({ VERCEL_ENV: "production", AUTH_PROVIDER: "neon" }).length, 2);
+  assert.equal(productionProblems({ VERCEL_ENV: "production", DATA_BACKEND: " Postgres ", AUTH_PROVIDER: "NEON" }).length, 3);
+});
+
+test("produção: cutover confirmado explicitamente passa; Preview não é afetado", () => {
+  assert.deepEqual(productionProblems({ VERCEL_ENV: "production", DATA_BACKEND: "postgres", AUTH_PROVIDER: "neon", EDUCA_CUTOVER_NEON_CONFIRMADO: "sim" }), []);
+  assert.deepEqual(productionProblems({ VERCEL_ENV: "preview", DATA_BACKEND: "postgres", AUTH_PROVIDER: "neon" }), []);
 });

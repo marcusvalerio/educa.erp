@@ -29,7 +29,7 @@ const need = (n) => {
 const APP = need("APP").replace(/\/+$/, "");
 const NEON = need("NEON_AUTH_BASE_URL").replace(/\/+$/, "");
 const SVC = [need("NEON_AUTH_SERVICE_EMAIL"), need("NEON_AUTH_SERVICE_PASSWORD")];
-const OWNER_EMAIL = (process.env.OWNER_EMAIL ?? "contatomarcusjr@gmail.com").toLowerCase();
+const OWNER_EMAIL = need("OWNER_EMAIL").toLowerCase(); // e-mail do Owner (fora do repositório, que é público)
 // Empresa A: por padrão a ASTRA da homologação (a plataforma só convida o PRIMEIRO
 // admin de uma empresa — a ASTRA não tem nenhum com acesso). COMPANY_A_ID="" cria
 // uma empresa própria do E2E ("Alfa Homologação E2E").

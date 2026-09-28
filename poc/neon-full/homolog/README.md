@@ -17,7 +17,7 @@ ele que a homologação roda. O que falta é **configurar as variáveis desse Pr
 |---|---|---|
 | Banco de homologação | educa-erp-prod (`old-butterfly-53570465`, sa-east-1), branch **`homolog`** (`br-icy-cell-b62lgh06`), banco `educa` | cópia do ensaio: esquema de produção + dados de produção (173/173 tabelas iguais, ver `evidence/rehearsal-data.md`) |
 | Neon Auth de homologação | mesma branch, banco `authdb` | provisionado: `https://ep-royal-flower-b6tz0xde.neonauth.c-2.sa-east-1.aws.neon.tech/authdb/auth` (sa-east-1, a mesma região do banco) |
-| Usuários do Neon Auth de homologação | `svc-educa@educaerp.com` (papel `admin`) e `contatomarcusjr@gmail.com` (Owner) | criados **sem senha** |
+| Usuários do Neon Auth de homologação | `svc-educa@educaerp.com` (papel `admin`) e e-mail pessoal do dono do projeto (Owner) | criados **sem senha** |
 | Vínculo do Owner | `auth_identity_links` **só no banco `educa` da branch `homolog`** | apontado para o Owner do Auth de homologação (`2cdfefb7…`) |
 | Papel da app | `educa_app` (herdado de `main`) | **sem senha**. A senha é criada no Console, só nesta branch |
 | E2E remoto | `homolog/e2e-homolog.mjs` | 33/33 contra a pilha local; **ainda não executado contra o Preview** |
@@ -110,7 +110,7 @@ Nada disto passa pelo chat. Contas de teste **não** são mais criadas à mão: 
 
 ### O que o bootstrap faz no Neon Auth de homologação
 
-- **Owner** (`contatomarcusjr@gmail.com`, o único; nunca cria outro): recebe uma
+- **Owner** (e-mail pessoal do dono do projeto, o único; nunca cria outro): recebe uma
   senha aleatória a cada execução e fica com e-mail confirmado. Depois do E2E, o
   dono entra no Preview por "Esqueci a senha". Para manter uma senha fixa, defina o
   segredo `E2E_OWNER_PASSWORD`. **Só a homologação é afetada**: o Owner de produção

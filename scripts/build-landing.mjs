@@ -766,7 +766,8 @@ function protagonist(pr, i) {
           })
           .join("")}</ul></div>`
       : "";
-  return `<article class="pro" id="mod-${pr.id}" data-pro="${pr.id}" aria-labelledby="pro-${pr.id}-title" style="--beats:${beats.length}">
+  // Alterna claro e escuro entre os protagonistas: ritmo e identidade.
+  return `<article class="pro${i % 2 ? " pro-dark" : ""}" id="mod-${pr.id}" data-pro="${pr.id}" aria-labelledby="pro-${pr.id}-title" style="--beats:${beats.length}">
   <header class="pro-head">
     <span class="pro-sig" aria-hidden="true">${esc(pr.signature)}</span>
     <div class="pro-title-col">

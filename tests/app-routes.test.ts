@@ -97,7 +97,7 @@ describe("proxy × landing", () => {
   const matcher = new RegExp(`^${source!.replace(/\\\\/g, "\\")}$`);
 
   test("arquivos da landing (CSS, JS, fontes, imagens, PDFs) ficam fora do proxy", () => {
-    for (const p of ["/landing/styles.css", "/landing/main.js", "/landing/motion.js", "/landing/vendor/gsap.min.js", "/landing/fonts/instrument-sans-latin-wght-normal.woff2", "/landing/img/x.webp", "/landing/manuais/ATLAS-ERP-Manual-do-Usuario.pdf", "/landing/manuais/EDUCA-Manual-do-Usuario.pdf"]) {
+    for (const p of ["/landing/styles.css", "/landing/main.js", "/landing/motion.js", "/landing/vendor/gsap.min.js", "/landing/fonts/dm-sans-latin-wght-normal.woff2", "/landing/img/x.webp", "/landing/manuais/ATLAS-ERP-Manual-do-Usuario.pdf", "/landing/manuais/EDUCA-Manual-do-Usuario.pdf"]) {
       assert.equal(matcher.test(p), false, p);
     }
   });

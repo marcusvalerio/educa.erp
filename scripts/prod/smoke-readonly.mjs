@@ -46,7 +46,7 @@ check(`'Entrar no ATLAS.ERP' → /login (${enter.length} links)`, enter.length >
 check("landing sem CTA de cadastro", landing !== "" && !SIGNUP.test(landing));
 
 // 2. Arquivos da landing, sem sessão (não passam pelo proxy)
-const files = ["/landing/styles.css", "/landing/main.js", "/landing/motion.js", "/landing/vendor/gsap.min.js", "/landing/fonts/instrument-sans-latin-wght-normal.woff2"];
+const files = ["/landing/styles.css", "/landing/main.js", "/landing/motion.js", "/landing/vendor/gsap.min.js", "/landing/fonts/dm-sans-latin-wght-normal.woff2"];
 const img = landing.match(/\/landing\/img\/[^"' ,]+\.webp/)?.[0];
 if (img) files.push(img);
 for (const f of files) {

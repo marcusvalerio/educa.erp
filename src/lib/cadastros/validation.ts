@@ -1,3 +1,4 @@
+import { documentChanged, onlyDigits, personDocumentError } from "@/lib/documents";
 import type {
   Produto,
   Cliente,
@@ -11,7 +12,6 @@ import type {
 
 export type FieldErrors = Record<string, string>;
 
-const onlyDigits = (v: string) => (v ?? "").replace(/\D/g, "");
 
 function required(value: unknown, message: string, errors: FieldErrors, key: string) {
   const isEmpty =
@@ -53,9 +53,12 @@ export function validateCliente(data: Partial<Cliente>, list: Cliente[], current
   required(data.nome, "Informe o nome ou razão social.", errors, "nome");
   required(data.documento, "Informe o CPF/CNPJ.", errors, "documento");
   if (data.documento) {
-    const digitsLen = onlyDigits(data.documento).length;
-    if (data.tipo === "Pessoa Física" && digitsLen !== 11) errors.documento = "CPF deve conter 11 dígitos.";
-    if (data.tipo === "Pessoa Jurídica" && digitsLen !== 14) errors.documento = "CNPJ deve conter 14 dígitos.";
+    // Formato e dígitos verificadores (mesma regra da API); na edição, só se
+    // o documento ou o tipo mudaram.
+    const current = currentId ? list.find((c) => c.id === currentId) : undefined;
+    const changed = !current || documentChanged(current.documento, data.documento) || current.tipo !== data.tipo;
+    const documentError = changed ? personDocumentError(data.tipo, data.documento) : null;
+    if (documentError) errors.documento = documentError;
     duplicate(list, currentId, (c) => onlyDigits(c.documento) === onlyDigits(data.documento!), "Já existe um cliente com este documento.", errors, "documento");
   }
   return errors;
@@ -122,7 +125,7 @@ export function validateUsuario(data: Partial<Usuario>, list: Usuario[], current
 export function validateLocalEstoque(data: Partial<LocalEstoque>, list: LocalEstoque[], currentId?: string): FieldErrors {
   const errors: FieldErrors = {};
   required(data.codigoLocal, "Informe o código do local.", errors, "codigoLocal");
-  required(data.armazem, "Informe o armazém.", errors, "armazem");
+  required(data.depositoId, "Selecione o depósito.", errors, "depositoId");
   required(data.tipo, "Selecione o tipo de local.", errors, "tipo");
   if (data.codigoLocal) {
     duplicate(list, currentId, (l) => l.codigoLocal.toUpperCase() === data.codigoLocal!.toUpperCase(), "Já existe um local com este código.", errors, "codigoLocal");

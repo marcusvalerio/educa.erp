@@ -8,6 +8,7 @@ import type {
   Veiculo,
   Usuario,
   LocalEstoque,
+  Deposito,
   CategoriaProduto,
   MarcaProduto,
   UnidadeMedida,
@@ -158,6 +159,7 @@ export const motoristasRepository = createRepository<Motorista>("drivers");
 export const veiculosRepository = createRepository<Veiculo>("vehicles");
 export const usuariosRepository = createRepository<Usuario>("users");
 export const locaisEstoqueRepository = createRepository<LocalEstoque>("warehouse-locations");
+export const depositosRepository = createRepository<Deposito>("warehouses");
 export const categoriasProdutoRepository = createRepository<CategoriaProduto>("product-categories");
 export const marcasProdutoRepository = createRepository<MarcaProduto>("product-brands");
 export const unidadesMedidaRepository = createRepository<UnidadeMedida>("units");

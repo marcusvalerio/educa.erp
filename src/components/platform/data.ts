@@ -11,6 +11,8 @@ export type LifecycleStatus = "TRIAL" | "ACTIVE" | "SUSPENDED" | "CANCELLED";
 
 export type PlatformCompany = {
   company_id: string;
+  /** Nome de exibição do perfil na plataforma (0079). */
+  display_name: string | null;
   lifecycle_status: LifecycleStatus;
   plan_code: string | null;
   contracted_at: string | null;
@@ -71,9 +73,13 @@ export type PlatformOverview = {
 
 export const LIFECYCLE_LABEL: Record<LifecycleStatus, string> = { TRIAL: "Avaliação", ACTIVE: "Ativa", SUSPENDED: "Suspensa", CANCELLED: "Cancelada" };
 
-/** Identificação possível da empresa na plataforma (a RLS não expõe o nome — ver docs/UI.md). */
-export function companyRef(id: string) {
-  return `Empresa ${id.slice(0, 8)}`;
+/**
+ * Identificação da empresa na plataforma: o nome de exibição do perfil SaaS
+ * (0079); sem ele, o código curto do id. A RLS não expõe o cadastro da
+ * empresa à plataforma — ver docs/UI.md.
+ */
+export function companyRef(id: string, displayName?: string | null) {
+  return displayName?.trim() ? displayName.trim() : `Empresa ${id.slice(0, 8)}`;
 }
 
 export async function platformSend<T>(path: string, method: "POST" | "PATCH", body?: unknown): Promise<T> {

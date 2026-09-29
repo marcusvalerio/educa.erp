@@ -95,6 +95,7 @@ const baseLocationRow: WarehouseLocationRow = {
   code: "CD01-R01-M01-N01-P01",
   name: "Rua 1",
   warehouse: "CD01",
+  warehouse_id: "55555555-5555-4555-8555-555555555555",
   purpose: "STOCK",
   zone: null,
   aisle: "R01",
@@ -121,5 +122,24 @@ describe("warehouseLocationFromRow / warehouseLocationToRowFields — finalidade
     const entity = warehouseLocationFromRow({ ...baseLocationRow, purpose: "OPERATIONAL_WAREHOUSE" });
     const fields = warehouseLocationToRowFields(entity);
     assert.equal(fields.purpose, "OPERATIONAL_WAREHOUSE");
+  });
+});
+
+// ---------------------------------------------- Depósito do local (0076)
+describe("warehouseLocationFromRow / warehouseLocationToRowFields — depósito", () => {
+  test("lê o depósito pelo warehouse_id", () => {
+    assert.equal(warehouseLocationFromRow(baseLocationRow).depositoId, baseLocationRow.warehouse_id);
+  });
+
+  test("grava warehouse_id quando o depósito é escolhido (o banco mantém o texto legado)", () => {
+    const fields = warehouseLocationToRowFields({ codigoLocal: "NO-A01", depositoId: baseLocationRow.warehouse_id, armazem: "CD01" });
+    assert.equal(fields.warehouse_id, baseLocationRow.warehouse_id);
+    assert.equal("warehouse" in fields, false);
+  });
+
+  test("sem depósito, envia só o código legado para o banco resolver", () => {
+    const fields = warehouseLocationToRowFields({ codigoLocal: "NO-A01", depositoId: "", armazem: "PRINCIPAL" });
+    assert.equal("warehouse_id" in fields, false);
+    assert.equal(fields.warehouse, "PRINCIPAL");
   });
 });

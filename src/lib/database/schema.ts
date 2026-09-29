@@ -255,6 +255,7 @@ export type WarehouseLocationRow = {
   code: string;
   name: string | null;
   warehouse: string | null;
+  warehouse_id: string;
   purpose: LocationPurpose;
   zone: string | null;
   aisle: string | null;

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cnpjError } from "@/lib/documents";
 
 // Validação server-side do domínio Fiscal/Núcleo Tributário
 // (supabase/migrations/0036-0040). Mesmo espírito de
@@ -15,7 +16,9 @@ const optionalDateString = z.string().trim().optional();
 const goodsOriginCode = z.enum(["0", "1", "2", "3", "4", "5", "6", "7", "8"]);
 
 // ----------------------------------------------------- Estabelecimento fiscal
-export const fiscalEstablishmentSchema = z.object({
+// Sem a regra dos dígitos do CNPJ: usado na ALTERAÇÃO, em que o handler só
+// valida o CNPJ quando ele muda (cadastros antigos podem ter CNPJ fictício).
+export const fiscalEstablishmentBaseSchema = z.object({
   code: z.string().trim().min(1, "Informe o código do estabelecimento."),
   name: z.string().trim().min(1, "Informe o nome do estabelecimento."),
   cnpj: z.string().trim().min(1, "Informe o CNPJ."),
@@ -29,6 +32,14 @@ export const fiscalEstablishmentSchema = z.object({
   state: z.string().trim().optional(),
   zipCode: z.string().trim().optional(),
   status: z.enum(["active", "inactive"]).optional(),
+});
+
+/** Criação: o CNPJ do emitente precisa ser válido (formato e dígitos verificadores). */
+export const fiscalEstablishmentSchema = fiscalEstablishmentBaseSchema.extend({
+  cnpj: fiscalEstablishmentBaseSchema.shape.cnpj.superRefine((v, ctx) => {
+    const error = cnpjError(v);
+    if (error) ctx.addIssue({ code: "custom", message: error });
+  }),
 });
 
 // -------------------------------------------------------------------- NCM

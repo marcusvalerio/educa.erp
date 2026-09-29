@@ -472,6 +472,7 @@ export function warehouseLocationFromRow(row: WarehouseLocationRow): LocalEstoqu
     atualizadoEm: row.updated_at,
     codigoLocal: row.code,
     descricao: row.name ?? "",
+    depositoId: row.warehouse_id,
     armazem: row.warehouse ?? "",
     finalidade: finalidadeFromDb(row.purpose),
     area: row.zone ?? "",
@@ -488,7 +489,10 @@ export function warehouseLocationToRowFields(data: Partial<LocalEstoque>): Parti
   return omitUndefined({
     code: data.codigoLocal,
     name: nullableText(data.descricao),
-    warehouse: nullableText(data.armazem),
+    // O banco resolve o depósito (0076): pelo id, ou pelo código/nome
+    // legado quando só o texto vier, e mantém `warehouse` sincronizado.
+    warehouse_id: data.depositoId ? data.depositoId : undefined,
+    warehouse: data.depositoId ? undefined : nullableText(data.armazem),
     purpose: finalidadeToDb(data.finalidade),
     zone: nullableText(data.area),
     aisle: nullableText(data.rua),

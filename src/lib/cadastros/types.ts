@@ -233,6 +233,9 @@ export type FinalidadeLocal = "Estoque" | "Almoxarifado Operacional" | "Produç�
 export type LocalEstoque = BaseEntity & {
   codigoLocal: string;
   descricao: string;
+  /** Depósito da empresa (warehouses.id) — a fonte de verdade. */
+  depositoId: string;
+  /** Código do depósito, mantido pelo banco (coluna legada `warehouse`). */
   armazem: string;
   finalidade: FinalidadeLocal;
   area: string;

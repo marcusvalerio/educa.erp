@@ -147,7 +147,10 @@ export const userSchema = z.object({
 export const warehouseLocationSchema = z.object({
   codigoLocal: z.string().trim().min(1, "Informe o código do local."),
   descricao: optionalText,
-  armazem: z.string().trim().min(1, "Informe o armazém."),
+  // Depósito da empresa. O código/nome legado (armazem) ainda é aceito: o
+  // banco o resolve dentro da empresa e recusa quando não existe (0076).
+  depositoId: z.union([z.string().trim().uuid("Selecione o depósito."), z.literal("")]).optional().default(""),
+  armazem: optionalText,
   finalidade: z
     .enum(["Estoque", "Almoxarifado Operacional", "Produção", "Quarentena", "Trânsito"])
     .optional()
@@ -160,6 +163,16 @@ export const warehouseLocationSchema = z.object({
   tipo: z.string().trim().min(1, "Selecione o tipo de local."),
   capacidade: optionalNumber,
   status: statusSchema.optional().default("Ativo"),
+});
+
+/**
+ * Criação de local: depósito obrigatório. Fica fora de warehouseLocationSchema
+ * porque a alteração usa .partial(), que o zod não aceita em esquema com
+ * refinamento (o banco também recusa local sem depósito — 0076).
+ */
+export const warehouseLocationCreateSchema = warehouseLocationSchema.refine((v) => v.depositoId !== "" || v.armazem !== "", {
+  message: "Selecione o depósito.",
+  path: ["depositoId"],
 });
 
 export const productCategorySchema = z.object({
@@ -265,5 +278,13 @@ export const schemasByEntity = {
   "price-lists": priceListSchema,
   "price-list-items": priceListItemSchema,
 } as const;
+
+/**
+ * Regras que só valem na CRIAÇÃO (o POST genérico usa este esquema quando
+ * existe; o PATCH usa schemasByEntity[x].partial()).
+ */
+export const createSchemasByEntity: Partial<Record<keyof typeof schemasByEntity, z.ZodType>> = {
+  "warehouse-locations": warehouseLocationCreateSchema,
+};
 
 export type EntityRoute = keyof typeof schemasByEntity;

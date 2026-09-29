@@ -1,6 +1,7 @@
 import {
   fornecedoresRepository,
   locaisEstoqueRepository,
+  depositosRepository,
   transportadorasRepository,
   motoristasRepository,
   categoriasProdutoRepository,
@@ -11,6 +12,7 @@ import {
 export type OptionsSourceKey =
   | "fornecedores"
   | "locais"
+  | "depositos"
   | "transportadoras"
   | "motoristas"
   | "categorias-produto"
@@ -31,6 +33,11 @@ export function resolveOptionsSource(key: OptionsSourceKey): SelectOption[] {
         .list()
         .filter((l) => l.status === "Ativo")
         .map((l) => ({ value: l.codigoLocal, label: l.codigoLocal }));
+    case "depositos":
+      return depositosRepository
+        .list()
+        .filter((d) => d.status === "Ativo")
+        .map((d) => ({ value: d.id, label: `${d.codigo} — ${d.nome}` }));
     case "transportadoras":
       return transportadorasRepository
         .list()

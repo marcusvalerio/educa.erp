@@ -35,7 +35,7 @@ export default function PlatformCompaniesPage() {
       tableId="platform-companies"
       rowId={(row) => row.company_id}
       refreshToken={refresh}
-      searchPlaceholder="Buscar por identificador ou plano..."
+      searchPlaceholder="Buscar por nome, identificador ou plano..."
       actions={
         canPlatform("platform.companies.create") ? (
           <Button size="sm" onClick={() => setCreating(true)}>
@@ -44,12 +44,13 @@ export default function PlatformCompaniesPage() {
         ) : undefined
       }
       summary={
-        <Alert tone="info" title="Identificação por código">
-          As empresas aparecem pelo identificador: a Administração Central não lê o cadastro (nome, documento) das empresas.
+        <Alert tone="info" title="Identificação pelo nome de exibição">
+          As empresas aparecem pelo nome informado na criação (mantido quando a empresa o altera). A Administração Central não lê o cadastro das empresas (razão social, documento, dados operacionais).
         </Alert>
       }
       columns={[
-        textCol<PlatformCompany>("company_id", "Empresa", { mono: true, mobile: "title", cell: (row) => companyRef(row.company_id), exportValue: (row) => row.company_id }),
+        textCol<PlatformCompany>("display_name", "Empresa", { mobile: "title", cell: (row) => companyRef(row.company_id, row.display_name), exportValue: (row) => companyRef(row.company_id, row.display_name) }),
+        textCol<PlatformCompany>("company_id", "Identificador", { mono: true, defaultHidden: true, cell: (row) => row.company_id.slice(0, 8), exportValue: (row) => row.company_id }),
         statusCol<PlatformCompany>("company_lifecycle", "lifecycle_status", "Ciclo de vida"),
         textCol<PlatformCompany>("plan_code", "Plano", { mono: true }),
         dateCol<PlatformCompany>("contracted_at", "Contratada em"),
@@ -59,7 +60,7 @@ export default function PlatformCompaniesPage() {
       ]}
       filters={[enumFilter<PlatformCompany>("lifecycle_status", "Ciclo de vida", (Object.keys(LIFECYCLE_LABEL) as LifecycleStatus[]).map((k) => [k, LIFECYCLE_LABEL[k]]))]}
       detail={{
-        title: (row) => companyRef(row.company_id),
+        title: (row) => companyRef(row.company_id, row.display_name),
         subtitle: (row) => <span className="code">{row.company_id}</span>,
         badges: (row) => <StatusBadge entity="company_lifecycle" status={row.lifecycle_status} />,
         sections: [],

@@ -18,7 +18,8 @@ import { companyLifecycleStatusSchema, upsertPlatformMemberSchema } from "@/lib/
 // public.companies só expõe a linha da empresa aos seus próprios membros.
 // A plataforma enxerga cada empresa pelo seu perfil SaaS
 // (company_platform_profiles) e pelos módulos contratados, identificada
-// pelo id — não pelo nome/razão social.
+// pelo id e pelo NOME DE EXIBIÇÃO do perfil (0079: o nome informado na
+// criação, sincronizado) — nunca pela razão social ou pelos dados da empresa.
 
 const ok = (data: unknown, status = 200) => NextResponse.json({ success: true, data }, { status });
 
@@ -66,7 +67,7 @@ export async function listPlatformCompanies() {
     const [profiles, companyModules] = await Promise.all([
       supabase
         .from("company_platform_profiles")
-        .select("company_id, lifecycle_status, plan_code, contracted_at, suspended_at, cancelled_at, notes, created_at, updated_at")
+        .select("company_id, display_name, lifecycle_status, plan_code, contracted_at, suspended_at, cancelled_at, notes, created_at, updated_at")
         .order("created_at", { ascending: true }),
       supabase.from("company_modules").select("company_id, contracted, enabled_by_company"),
     ]);

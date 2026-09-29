@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { taxIdError } from "@/lib/documents";
 
 // Convites e entrega por e-mail — lógica pura (sem "server-only", sem
 // Supabase importado): as rotas injetam os clientes. Isso permite testar
@@ -42,7 +43,11 @@ export const acceptInvitationSchema = strict({ token: invitationTokenSchema });
 export const createCompanySchema = strict({
     name: z.string().trim().min(1, "Informe o nome da empresa.").max(160),
     legalName: optionalText(200),
-    document: optionalText(32),
+    // CNPJ (ou CPF) com dígitos verificadores, quando informado.
+    document: optionalText(32).superRefine((v, ctx) => {
+      const error = v ? taxIdError(v) : null;
+      if (error) ctx.addIssue({ code: "custom", message: error });
+    }),
     email: z
       .string()
       .trim()

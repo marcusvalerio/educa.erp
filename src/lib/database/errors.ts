@@ -61,9 +61,13 @@ export function translatePostgresError(error: { code?: string; message?: string;
     return new ApiError("DUPLICATE", "Já existe um registro com estes dados.", 409);
   }
 
-  // foreign_key_violation — rede de segurança do banco além da checagem
-  // de dependentes feita antes da exclusão.
+  // foreign_key_violation. Na exclusão, é a rede de segurança além da
+  // checagem de dependentes; na gravação (insert/update), o registro
+  // informado não existe nesta empresa — não é uma exclusão.
   if (error.code === "23503") {
+    if (/^insert or update on table/i.test(error.message ?? "")) {
+      return new ApiError("RELATED_NOT_FOUND", relatedNotFoundMessage(`${error.message ?? ""} ${error.details ?? ""}`), 422);
+    }
     return new ApiError(
       "HAS_DEPENDENTS",
       "Não é possível excluir: existem registros vinculados a este cadastro. Utilize a inativação.",
@@ -71,5 +75,40 @@ export function translatePostgresError(error: { code?: string; message?: string;
     );
   }
 
+  // not_null_violation: campo obrigatório que chegou vazio ao banco.
+  if (error.code === "23502") {
+    return new ApiError("VALIDATION_ERROR", "Preencha os campos obrigatórios antes de salvar.", 422);
+  }
+
+  // Regras de negócio das funções e gatilhos do banco (raise exception
+  // ... using errcode ...): mensagens escritas para o usuário. Sem isso,
+  // "NCM não informado", "Selecione o depósito" etc. viravam HTTP 500.
+  // Só passam as mensagens escritas para o usuário (as das funções do banco
+  // começam com maiúscula, em português). As do próprio PostgreSQL ("cannot
+  // get array length of a scalar", "permission denied for table x") seguem
+  // o padrão em minúscula e continuam como erro genérico.
+  const message = (error.message ?? "").trim();
+  if (/^[A-ZÀ-Ý]/.test(message)) {
+    if (error.code === "P0001" || error.code === "22023") return new ApiError("BUSINESS_RULE", message, 422);
+    if (error.code === "P0002") return new ApiError("NOT_FOUND", message, 404);
+    if (error.code === "42501") return new ApiError("FORBIDDEN", message, 403);
+  }
+
   return new ApiError("DATABASE_ERROR", "Não foi possível concluir a operação. Tente novamente.", 500);
+}
+
+// Nome da restrição -> o que não foi encontrado (mais específico primeiro).
+const RELATED_LABELS: [RegExp, string][] = [
+  [/location/, "O local de estoque informado não existe nesta empresa."],
+  [/warehouse/, "O depósito informado não existe nesta empresa."],
+  [/product/, "O produto informado não existe nesta empresa."],
+  [/customer/, "O cliente informado não existe nesta empresa."],
+  [/supplier/, "O fornecedor informado não existe nesta empresa."],
+  [/carrier/, "A transportadora informada não existe nesta empresa."],
+  [/lot/, "O lote informado não existe nesta empresa."],
+];
+
+function relatedNotFoundMessage(text: string) {
+  const constraint = /constraint "([^"]+)"/.exec(text)?.[1] ?? text;
+  return RELATED_LABELS.find(([re]) => re.test(constraint))?.[1] ?? "Um dos registros informados não existe nesta empresa.";
 }

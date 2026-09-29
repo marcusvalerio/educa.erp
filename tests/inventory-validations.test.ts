@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { warehouseSchema, productLotSchema, warehouseLocationSchema } from "@/lib/validations/cadastros";
+import { warehouseSchema, productLotSchema, warehouseLocationSchema, warehouseLocationCreateSchema } from "@/lib/validations/cadastros";
 import {
   productSerialNumberSchema,
   receiveStockSchema,
@@ -157,6 +157,26 @@ describe("warehouseLocationSchema — finalidade (Almoxarifado Operacional)", ()
       finalidade: "Almoxarifado",
     });
     assert.equal(invalid.success, false);
+  });
+});
+
+describe("warehouseLocationSchema — depósito (0076)", () => {
+  test("aceita o depósito pelo id", () => {
+    const result = warehouseLocationSchema.safeParse({ codigoLocal: "NO-A01", depositoId: "55555555-5555-4555-8555-555555555555", tipo: "Armazenagem" });
+    assert.equal(result.success, true);
+  });
+
+  test("criação: recusa local sem depósito, com mensagem no campo", () => {
+    const result = warehouseLocationCreateSchema.safeParse({ codigoLocal: "NO-A01", tipo: "Armazenagem" });
+    assert.equal(result.success, false);
+    if (!result.success) {
+      assert.equal(result.error.issues[0]?.message, "Selecione o depósito.");
+      assert.deepEqual(result.error.issues[0]?.path, ["depositoId"]);
+    }
+  });
+
+  test("recusa id de depósito malformado", () => {
+    assert.equal(warehouseLocationSchema.safeParse({ codigoLocal: "NO-A01", depositoId: "CD01", tipo: "Armazenagem" }).success, false);
   });
 });
 

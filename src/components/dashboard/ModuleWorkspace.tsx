@@ -18,6 +18,7 @@ import type { StatusEntity } from "@/lib/status";
 import { DashboardHeader, PeriodPicker, usePeriod } from "./Context";
 import { SummaryStrip } from "./ReportBlocks";
 import { ProblemsPanel } from "./Problems";
+import { FiscalSetupPanel } from "./FiscalSetupPanel";
 
 // Área de trabalho de um módulo: contexto, resumo do período, pendências
 // do módulo, registros recentes e a navegação interna — tudo filtrado
@@ -299,6 +300,8 @@ export function ModuleWorkspace({ section: sectionId }: { section: string }) {
       />
 
       {reportOk && report && <SummaryStrip report={report} range={range} previous={previous} enabled keys={def.summaryKeys} />}
+
+      {sectionId === "fiscal" && <FiscalSetupPanel />}
 
       {hasActivity && (
         <div className="grid gap-4 lg:grid-cols-5">

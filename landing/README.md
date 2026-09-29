@@ -61,7 +61,14 @@ Assim o app, a autenticação e o banco não são tocados.
   - `evolucao`: parcial ou com falha conhecida.
 - **Códigos e valores** citados (PV-001013, CR-0002, R$ 36.011,62…) aparecem nas capturas. Ao trocar uma captura, confira de novo o texto que a cita.
 - **Rotas de detalhe** aparecem como `/:id`, porque o app usa identificadores internos, não o código do registro.
-- **Destaques (`focus`)** usam coordenadas da captura original em pixels: `[x, y, largura, altura]`.
+- **Destaques (`focus`)** usam coordenadas da captura original em pixels: `[x, y, largura, altura]`. Nos módulos, `zoom` (padrão 1.9) permite aproximar mais a câmera; é o que enquadra as telas que, no ambiente das capturas, ainda estão sem registros (título, abas e filtros ficam; o "Nenhum registro ainda" sai do quadro).
+
+## Identidade e tipografia (refino de 29/09/2026)
+
+- **Símbolo "Núcleo":** quatro módulos em torno de um centro em fogo. A geometria única está em `BRAND_MARK` (`src/lib/brand.ts`) e é repetida no gerador (cabeçalho, rodapé, nó da convergência e favicon) e em `src/app/icon.svg`.
+- **Tipografia:** títulos em Instrument Serif; corpo, rótulos, metadados e selos em DM Sans (token `--label`); a JetBrains Mono fica só para código, rotas de tela, códigos de registro, a marca-d'água e as composições do hero e da convergência.
+- **Hierarquia dos módulos:** título → problema (serifado) → como resolve → metadados (resumo de estados). Selos e blocos de API ficam um nível abaixo da narrativa.
+- **Manuais:** os PDFs continuam gerados e publicados em `/landing/manuais/` (e os endereços antigos respondem 308), mas a landing não os oferece — os manuais completos são para quem já usa o sistema.
 
 ## Cenas e movimento (V4)
 

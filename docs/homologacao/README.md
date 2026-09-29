@@ -1,6 +1,6 @@
-# Homologação do EDUCA — branch `claude/educa-homolog`
+# Homologação do ATLAS.ERP — branch `claude/educa-homolog`
 
-Ambiente para avaliar o EDUCA completo (ERP redesenhado, manuais e landing) antes
+Ambiente para avaliar o ATLAS.ERP completo (ERP redesenhado, manuais e landing) antes
 de qualquer decisão sobre a `main`. **Nada aqui toca a produção.** Nenhuma senha,
 token ou string de conexão está neste repositório.
 
@@ -28,13 +28,13 @@ Mudanças próprias desta branch:
   - `scripts/homolog/seed.mjs`: dados fictícios;
   - `scripts/homolog/smoke.mjs`: smoke com navegador;
   - `.github/workflows/educa-homolog.yml`: roda tudo isso no runner do GitHub.
-- **Landing:** a variável de build `LANDING_APP_URL` aponta "Entrar no EDUCA" para o app de homologação. Sem ela, o link vai para a produção. O conteúdo da landing não mudou.
+- **Landing:** a variável de build `LANDING_APP_URL` aponta "Entrar no ATLAS.ERP" para o app de homologação. Sem ela, o link vai para a produção. O conteúdo da landing não mudou.
 
 ## 2. Arquitetura
 
 ```
 Landing (projeto estático na Vercel, público)
-  └─ "Entrar no EDUCA" → https://educaerp-git-claude-educa-homolog-meji-projects.vercel.app/login
+  └─ "Entrar no ATLAS.ERP" → https://educaerp-git-claude-educa-homolog-meji-projects.vercel.app/login
 ERP (Preview desta branch no projeto meji-projects/educa.erp, região gru1)
   ├─ Neon Auth da branch "homolog" (ep-royal-flower-b6tz0xde…/authdb/auth)
   └─ Neon PostgreSQL, projeto educa-erp-prod, branch "homolog", banco "educa", papel educa_app
@@ -45,7 +45,7 @@ ERP (Preview desta branch no projeto meji-projects/educa.erp, região gru1)
 
 ## 3. Trava da Vercel (por que o Preview pode aparecer "Canceled")
 
-A Vercel também aplica a este Preview as **variáveis de Preview gerais** do projeto. Hoje o único projeto Supabase do EDUCA é o de produção, então elas provavelmente apontam para ele. O `vercel.json` desta branch:
+A Vercel também aplica a este Preview as **variáveis de Preview gerais** do projeto. Hoje o único projeto Supabase do ATLAS.ERP é o de produção, então elas provavelmente apontam para ele. O `vercel.json` desta branch:
 
 - **Ignored Build Step:** `node scripts/homolog/vercel-guard.mjs ignore` **pula o deploy** da branch `claude/educa-homolog` enquanto o ambiente não estiver seguro;
 - **Build:** `node scripts/homolog/vercel-guard.mjs build && next build` recusa o build nas mesmas condições.

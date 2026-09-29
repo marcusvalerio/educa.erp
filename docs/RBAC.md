@@ -1,4 +1,43 @@
-# RBAC e RLS — Fase 2b
+# RBAC e RLS — ATLAS.ERP
+
+## Estado atual (migrations até 0075)
+
+Três níveis de governança, sempre separados:
+
+| Nível | Quem | Onde | Autoridade no banco |
+|---|---|---|---|
+| **Plataforma** | Owner, Admin da plataforma | Administração Central (`/app/admincentral`) | `platform_members`, `has_platform_permission` (0064) |
+| **Administração da empresa** | Administrador | Administração da Empresa (`/app/admin`) | papel de sistema `admin` da empresa; `users.create` + `roles.manage` |
+| **Operação** | Gerente, Operador, Vendedor, Somente leitura, papéis próprios | ERP (`/app`) | `has_permission(empresa, código)` |
+
+Papéis de sistema criados em **toda** empresa (gatilho `seed_default_roles`,
+retroativo pela 0075):
+
+| Código | Nome | Resumo |
+|---|---|---|
+| `admin` | Administrador | todas as permissões; protegido contra redefinição |
+| `gerente` | Gerente | opera e aprova em todos os módulos; não administra usuários, papéis, módulos nem configurações |
+| `operador` | Operador | consulta, cria e edita; **sem** `users.create`/`users.update` (0075) |
+| `vendedor` | Vendedor | comercial e CRM (orçamentos, pedidos, clientes, funil); sem aprovar, cancelar ou reservar |
+| `leitura` | Somente leitura | só consulta |
+
+Regras garantidas pelo banco (0075):
+
+- **Convite pela empresa** — `fn_invite_company_user(nome, e-mail, papel)`: a empresa é sempre a de quem convida; exige `users.create` e `roles.manage`; o papel tem de ser da mesma empresa e estar ativo.
+- **Sem escalada de privilégio** — `fn_assert_can_grant`: ninguém atribui papel (`fn_assign_user_role`), edita permissões de papel (`fn_set_role_permissions`) ou convida com um papel que tenha permissões que ele mesmo não possui.
+- **Empresa ≠ plataforma** — o Administrador da empresa não chama `fn_upsert_platform_member` nem `fn_platform_invite_company_admin`, e `has_platform_permission` é falso para ele. O Owner/Admin da plataforma convida só o **primeiro** administrador de cada empresa.
+- **Isolamento** — nenhum papel, usuário ou convite atravessa empresas.
+
+Testes: `tests/company-user-admin-db.test.ts` (PostgreSQL real) e o aceite no
+navegador descrito em `docs/manual/MANUAL_DE_ADMINISTRACAO.md` §3.3.
+
+---
+
+## Histórico — Fase 2b
+
+O texto abaixo registra o desenho original (papéis `admin`, `operator`,
+`viewer`, bootstrap e API da Fase 2b). Ele continua válido para RLS e
+`bootstrap_admin_user`, mas os papéis e telas atuais são os da seção acima.
 
 Este documento descreve a camada de segurança/autorização introduzida
 nesta fase: RLS real (não mais "habilitada mas vazia") e RBAC

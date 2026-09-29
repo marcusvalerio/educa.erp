@@ -1,4 +1,4 @@
-# EDUCA.ERP — Runbook de cutover Supabase → Neon
+# ATLAS.ERP — Runbook de cutover Supabase → Neon
 
 Arquitetura final: **Neon Auth → Next.js → PostgreSQL Neon**. RLS, RBAC, funções e
 gatilhos continuam no banco. Não há ponte JWT: com `DATA_BACKEND=postgres` o

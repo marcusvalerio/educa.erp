@@ -1,6 +1,6 @@
-# Landing do EDUCA
+# Landing do ATLAS.ERP
 
-Site institucional e demonstração do produto: o que o EDUCA é, para quem, como cada área funciona e como as áreas se conectam, sempre com as telas reais do manual.
+Site institucional e demonstração do produto: o que o ATLAS.ERP é, para quem, como cada área funciona e como as áreas se conectam, sempre com as telas reais do manual.
 
 É um **site estático** fora do app Next. O `proxy.ts` do app manda qualquer rota não pública para `/login`, e abrir uma rota pública exigiria mexer na autenticação. Por isso a landing não depende do app, do banco nem da API.
 
@@ -102,7 +102,7 @@ Regras:
 - A imagem do pedido é o LCP no desktop e é pré-carregada só nessa largura. As telas do celular têm o próprio preload.
 - A abertura completa roda uma vez por sessão (`sessionStorage`, chave `educa-intro`). Para rever, abra uma aba nova.
 - Com `prefers-reduced-motion` ou sem GSAP, `motion.js` não roda: a página mostra o estado final, e o fio aparece inteiro.
-- Não há CTA de cadastro. O único acesso é "Entrar no EDUCA" (topo, abertura e final), que leva a `/login` do app.
+- Não há CTA de cadastro. O único acesso é "Entrar no ATLAS.ERP" (topo, abertura e final), que leva a `/login` do app.
 
 ## Verificação
 

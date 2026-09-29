@@ -1,108 +1,96 @@
-# Educa ERP — Logístico
+# ATLAS.ERP
 
-Sistema de gestão empresarial e operações logísticas.
+ERP empresarial, modular e generalista: comercial e CRM, compras, estoque e
+logística, produção, financeiro, fiscal, custos e controladoria, qualidade,
+projetos e serviços, ativos e manutenção, workflow e governança — todos na
+mesma base, com permissões por papel e isolamento entre empresas.
 
-## Status do projeto
+Criado por Marcus Valério.
 
-- **Fase 1** — estrutura visual e de navegação completa (dashboard,
-  menu, 9 módulos, dados simulados).
-- **Fase 4** — módulo de Cadastros funcional (CRUD, validação,
-  relacionamentos, auditoria) — inicialmente com persistência em
-  `localStorage`.
-- **Fase 2** — persistência definitiva em **Supabase / PostgreSQL**,
-  API própria (`/api/*`) e repositório do cliente reescrito para falar
-  com ela.
-- **Fase 2b** (atual) — RLS real, RBAC (usuários/papéis/permissões),
-  autenticação real via Supabase Auth (login), e evolução do catálogo
-  de produtos (categorias, marcas, unidades/conversões, múltiplos
-  fornecedores por produto). Ver **[docs/SUPABASE.md](docs/SUPABASE.md)**
-  para configurar o banco, **[docs/RBAC.md](docs/RBAC.md)** para o
-  modelo de segurança/autorização e **[docs/TESTING.md](docs/TESTING.md)**
-  para o roteiro de testes.
+## Arquitetura
 
-Ainda não implementados (ciclos futuros): UI de administração de
-papéis/permissões (hoje só via API), filiais, estoque real (saldo),
-módulos de Comercial/Suprimentos/Logística/Financeiro/Fiscal além dos
-cadastros, emissão fiscal real, integrações externas.
+Um único projeto (Next.js, um deploy na Vercel):
 
-### Módulos
+| Endereço | O que é | Acesso |
+|---|---|---|
+| `/` | Landing pública (HTML estático em `public/landing/`, gerado de `landing/src/`) | público |
+| `/login`, `/convite/…`, `/recuperar-senha`, `/redefinir-senha` | entrada e fluxos de acesso | público |
+| `/app` | o ERP | autenticado |
+| `/app/admin` | Administração da Empresa (usuários, papéis, estrutura) | administrador da empresa |
+| `/app/admincentral` | Administração Central (governança da plataforma) | Owner / Admin da plataforma |
+| `/api/*` | API do sistema | autenticada, RBAC no banco |
 
-Dashboard · Cadastros · Comercial · Suprimentos · Logística · Financeiro ·
-Fiscal · Gestão · Configurações
+Endereços antigos do ERP (`/comercial/…`, `/admin/…`) respondem **308** para
+`/app/…`; os PDFs com o nome anterior respondem 308 para os atuais.
 
-### Stack
+**Banco e autenticação.** O código funciona com dois provedores, escolhidos
+por variável de ambiente (`AUTH_PROVIDER`, `DATA_BACKEND`):
 
-- [Next.js](https://nextjs.org) (App Router) + TypeScript
-- Tailwind CSS v4
-- [Supabase](https://supabase.com) (PostgreSQL) — banco de dados definitivo
-- [Zod](https://zod.dev) — validação server-side
-- [Recharts](https://recharts.org) para os gráficos do dashboard
-- [lucide-react](https://lucide.dev) para ícones
-- Fontes: [Inter](https://fonts.google.com/specimen/Inter) (texto) e
-  [Supreme](https://www.fontshare.com/fonts/supreme) (títulos e destaques)
+- **Produção hoje:** Supabase (PostgreSQL + Supabase Auth).
+- **Destino:** Neon (PostgreSQL + Neon Auth) — já em uso na homologação e nos
+  testes locais.
+
+O estado da migração, o que ainda depende do Supabase e o plano para
+desligá-lo estão em **[docs/SUPABASE_PARA_NEON.md](docs/SUPABASE_PARA_NEON.md)**.
+
+**Autorização.** RBAC e Row Level Security no próprio banco (funções
+`SECURITY DEFINER`, `has_permission`). Governança separada em três níveis:
+plataforma (Owner, Admin da plataforma), administração da empresa
+(Administrador) e operação (Gerente, Operador, Vendedor, Somente leitura e
+papéis próprios). Ver **[docs/RBAC.md](docs/RBAC.md)** e
+**[docs/ONBOARDING.md](docs/ONBOARDING.md)**.
+
+## Stack
+
+- [Next.js](https://nextjs.org) 16 (App Router) + TypeScript, React 19
+- Tailwind CSS v4, Radix UI, lucide-react, Recharts
+- PostgreSQL (Supabase hoje; Neon no destino) com RLS
+- [Zod](https://zod.dev) para validação no servidor
+- Fontes servidas pelo próprio app: Instrument Sans, Instrument Serif, JetBrains Mono
 
 ## Desenvolvimento
 
 ```bash
 npm install
-cp .env.local.example .env.local   # preencha com as credenciais do Supabase
+cp .env.local.example .env.local   # preencha as variáveis do ambiente escolhido
 npm run dev
 ```
 
-Abra [http://localhost:3000](http://localhost:3000). Sem um projeto
-Supabase configurado, a UI carrega mas as chamadas de API retornam erro
-— configure o banco primeiro (**[docs/SUPABASE.md](docs/SUPABASE.md)**).
-Com o banco configurado, é preciso **entrar em `/login`** com um
-usuário criado via `bootstrap_admin_user()` (**[docs/RBAC.md](docs/RBAC.md)**)
-antes de usar `/cadastros/*` — todas as rotas de API agora exigem
-autenticação e permissão RBAC.
-
 ```bash
-npm run build   # build de produção (inclui typecheck completo)
-npm run lint    # eslint
-npm test        # testes automatizados (validação + mapeamento de dados)
+npm run lint             # eslint
+npx tsc --noEmit         # typecheck
+npm test                 # testes (os de banco rodam com POC_DATABASE_OWNER_URL)
+npm run build            # build de produção (copia os PDFs para a landing)
+npm run landing:build    # regenera public/landing a partir de landing/src
+npm run manuals:pdf      # regenera os PDFs dos manuais a partir de docs/manual
 ```
 
-## Estrutura do projeto
+A pilha local completa (PostgreSQL descartável + dublê do Neon Auth + caixa de
+e-mail local) está descrita em `poc/neon-full/README.md`.
 
-```
-src/
-  app/
-    api/                 rotas REST (GET/POST/PATCH/DELETE) dos cadastros + catálogo + RBAC + audit-logs
-    login/                página de login (Supabase Auth)
-    <módulo>/<página>/    rotas de UI (App Router) — uma pasta por módulo/submódulo
-  components/
-    layout/              Sidebar, Topbar (com logout), AppShell
-    ui/                   componentes reutilizáveis (tabela, filtros, drawer, etc.)
-    cadastro/             CadastroPage, EntityDrawer/Form, RelatedList, AuditTrail
-    dashboard/            gráficos do dashboard
-  lib/
-    nav.ts                estrutura do menu lateral
-    pages/                configuração das telas mockadas (módulos ainda não migrados)
-    mock/                 geradores de dados simulados (dashboard e módulos futuros)
-    cadastros/             tipos, formulários, colunas, validação client-side, repository (fala com /api)
-    validations/           schemas Zod usados pelas rotas de API (server-side)
-    database/              mapeamento camelCase↔snake_case, acesso genérico às tabelas, auditoria
-    supabase/               clientes Supabase (browser, server SSR, admin/service-role)
-    auth/                   contexto do usuário autenticado + checagem de permissão (RBAC)
-  proxy.ts                 sessão Supabase Auth + redirect para /login (Next.js 16: antigo middleware.ts)
-supabase/
-  migrations/             schema versionado (companies, cadastros, audit_logs, RBAC, RLS, catálogo)
-  tests/                  verificação de RLS/RBAC contra um Supabase real (rls_rbac.sql)
-  seed.sql                dados iniciais (gerado por scripts/generate-seed.mjs)
-scripts/
-  generate-seed.mjs        gera supabase/seed.sql a partir dos mesmos pools de dados da UI
-tests/                    testes automatizados (node --test via tsx)
-docs/
-  SUPABASE.md             como configurar o banco, arquitetura, RLS, verificação de persistência
-  RBAC.md                  modelo de usuários/papéis/permissões, RLS real, bootstrap do admin
-  TESTING.md              roteiro de testes manuais e automatizados
-```
+## Documentação
 
-A camada `src/lib/cadastros/repository.ts` mantém a mesma assinatura
-pública desde a Fase 4 (`list/get/create/update/toggleStatus/remove`) —
-por baixo, ela chama `/api/*`, que por sua vez fala com o Supabase. Os
-componentes de tela (`CadastroPage`, `EntityDrawer`, etc.) não sabem
-que existe um banco de dados por trás; trocar a implementação interna
-do repositório de novo (ex.: cache mais elaborado, GraphQL) não deve
-exigir tocar nas telas.
+| Documento | Conteúdo |
+|---|---|
+| [docs/manual/](docs/manual/README.md) | Manual do Usuário e Manual de Administração (Markdown + PDF) |
+| [docs/SUPABASE_PARA_NEON.md](docs/SUPABASE_PARA_NEON.md) | Supabase × Neon: dependências, e-mails, variáveis, cutover, rollback, remoção |
+| [docs/CUTOVER_RUNBOOK.md](docs/CUTOVER_RUNBOOK.md) | Passo a passo da virada de produção para o Neon |
+| [docs/RBAC.md](docs/RBAC.md) | Usuários, papéis, permissões e RLS |
+| [docs/ONBOARDING.md](docs/ONBOARDING.md) | Owner, empresas, convites e primeiro acesso |
+| [docs/UI.md](docs/UI.md) | Design system e padrões de tela |
+| [docs/TESTING.md](docs/TESTING.md) | Testes automatizados e roteiros |
+| [docs/homologacao/](docs/homologacao/README.md) | Ambiente de homologação (Neon) |
+| Módulos | `docs/COMMERCIAL.md`, `INVENTORY.md`, `PURCHASING.md`, `LOGISTICS.md`, `PRODUCTION.md`, `FINANCE.md`, `FISCAL.md`, `COSTS.md`, `CONTROLLING.md`, `CRM.md`, `QUALITY.md`, `PROJECTS_SERVICES.md`, `ASSETS.md`, `WORKFLOWS.md`, `IMPORT_EXPORT.md`, `REPORTING.md`, `SETTINGS.md`, `MASTER_DATA.md` |
+
+Registros históricos (mantidos como estavam, com o nome anterior do produto):
+`docs/SUPABASE_TO_NEON_AUDIT.md`, `docs/NEON_AUTH_MIGRATION.md`,
+`docs/PRE_CUTOVER_CHECKLIST.md`, `docs/landing/`, `poc/`.
+
+## Nomes técnicos mantidos
+
+O produto se chamava EDUCA.ERP. O nome mudou só como marca: identificadores
+técnicos continuam iguais para não quebrar sessão, convites, preferências,
+banco ou integrações — repositório `educa.erp`, projeto Vercel `educaerp`,
+domínio `educaerp.vercel.app`, projetos Neon `educa-*`, banco `educa`, papel
+`educa_app`, cookie `educa_session`, GUC `educa.auth_link`, chaves `educa-*`
+do navegador e a variável `EDUCA_CUTOVER_NEON_CONFIRMADO`.

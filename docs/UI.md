@@ -1,4 +1,4 @@
-# Interface do EDUCA.ERP — Design System, shells e padrões de tela
+# Interface do ATLAS.ERP — Design System, shells e padrões de tela
 
 Este documento descreve a camada de interface depois da fase de design. A
 arquitetura de dados não mudou: **nenhuma migração, policy de RLS,
@@ -91,7 +91,7 @@ gaveta.
 | --- | --- | --- | --- |
 | ERP | `/` e módulos | usuários da empresa | chrome claro/escuro, folha no tema |
 | Administração da Empresa | `/admin` | Company Admin, só a própria empresa | faixa laranja "alterações aqui afetam somente esta empresa" no topo da folha |
-| Administração Central | `/admincentral` | Platform Owner/Admin | moldura Smoky Black nos dois temas, filete bordô e selo "Plataforma EDUCA" |
+| Administração Central | `/admincentral` | Platform Owner/Admin | moldura Smoky Black nos dois temas, filete bordô e selo "Plataforma ATLAS.ERP" |
 
 - **Onde estou:** trilha no cabeçalho (Início › Módulo › Recurso ›
   Registro) + **sobrelinha automática** do módulo no PageHeader

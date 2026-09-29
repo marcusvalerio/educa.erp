@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// Gera os PDFs dos manuais do EDUCA.ERP a partir dos Markdown de docs/manual/.
+// Gera os PDFs dos manuais do ATLAS.ERP a partir dos Markdown de docs/manual/.
 //
 //   npm run manuals:pdf                      # gera os dois PDFs em docs/manual/pdf/
 //   node scripts/build-manuals.mjs --only usuario --snapshots /tmp/pags 1,5,12
 //
-// Pipeline: Markdown (marked) -> HTML com a identidade do EDUCA (fontes de
+// Pipeline: Markdown (marked) -> HTML com a identidade do ATLAS.ERP (fontes de
 // src/app/fonts, tokens de cor do globals.css) -> paginação de impressão com
 // Paged.js no Chromium (Playwright) -> PDF. As figuras são embutidas no PDF,
 // logo abaixo do trecho que explicam, com a legenda "Figura N — ...".
@@ -30,7 +30,7 @@ const MANUAL_DIR = path.join(ROOT, "docs/manual");
 const OUT_DIR = path.join(MANUAL_DIR, "pdf");
 
 const MANUALS = [
-  { key: "usuario", source: "MANUAL_DO_USUARIO.md", output: "ATLAS-ERP-Manual-do-Usuario.pdf", title: "Manual do Usuário", audience: "Para quem usa o EDUCA.ERP no dia a dia" },
+  { key: "usuario", source: "MANUAL_DO_USUARIO.md", output: "ATLAS-ERP-Manual-do-Usuario.pdf", title: "Manual do Usuário", audience: "Para quem usa o ATLAS.ERP no dia a dia" },
   { key: "administracao", source: "MANUAL_DE_ADMINISTRACAO.md", output: "ATLAS-ERP-Manual-de-Administracao.pdf", title: "Manual de Administração", audience: "Administrador da Empresa e Administração Central" },
 ];
 // Referências entre manuais citam o PDF irmão pelo nome do arquivo.
@@ -168,7 +168,7 @@ function pageCss(manual, meta) {
 @page {
   size: A4;
   margin: 20mm 17mm 20mm 17mm;
-  @top-left { content: "EDUCA.ERP · ${manual.title}"; font: 600 7.5pt "Instrument Sans"; color: var(--muted); letter-spacing: .02em; }
+  @top-left { content: "ATLAS.ERP · ${manual.title}"; font: 600 7.5pt "Instrument Sans"; color: var(--muted); letter-spacing: .02em; }
   @top-right { content: string(section); font: 500 7.5pt "Instrument Sans"; color: var(--subtle); }
   @bottom-left { content: "${footerLeft}"; font: 400 7pt "Instrument Sans"; color: var(--subtle); }
   @bottom-center { content: "Dados fictícios de demonstração"; font: 400 7pt "Instrument Sans"; color: var(--subtle); }
@@ -194,6 +194,7 @@ body { margin: 0; }
 .cover .meta dt { color: #8f8c88; }
 .cover .meta dd { margin: 0; color: #f3f4f5; }
 .cover code { background: none; border: 0; padding: 0; color: #ffb454; }
+.cover .credit { margin-top: 6mm; font-size: 7.8pt; letter-spacing: .02em; color: #8f8c88; }
 .cover .notice { margin-top: 9mm; padding: 4mm 5mm; border: 1px solid #3a342e; border-radius: 2mm; font-size: 8.4pt; color: #d9d7d4; }
 
 /* sumário */
@@ -258,13 +259,13 @@ function buildDocument(manual) {
     .join("\n");
 
   const doc = `<!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><title>EDUCA.ERP — ${manual.title}</title>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>ATLAS.ERP — ${manual.title}</title>
 <style>${pageCss(manual, meta)}</style>
 <script>window.PagedConfig = { auto: false };</script>
 <script src="/node_modules/pagedjs/dist/paged.polyfill.js"></script>
 </head><body>
 <section class="cover">
-  <div class="brand">${MARK_SVG(30)}<span>EDUCA<span class="erp">.ERP</span></span></div>
+  <div class="brand">${MARK_SVG(30)}<span>ATLAS<span class="erp">.ERP</span></span></div>
   <div class="eyebrow">Manual oficial</div>
   <h1>${manual.title}</h1>
   <div class="audience">${manual.audience}</div>
@@ -274,7 +275,8 @@ function buildDocument(manual) {
     <dt>Edição</dt><dd>${brDate(meta.date)} · conteúdo ${meta.hash}</dd>
     <dt>Figuras</dt><dd>${prepared.figures} capturas da aplicação real</dd>
   </dl>
-  <div class="notice">${notes.filter((n) => /Dados das telas|Atenção/.test(n)).join("<br>")}</div>
+  <div class="notice">${notes.filter((n) => /Dados das telas|Arquitetura|Atenção/.test(n)).join("<br>")}</div>
+  <div class="credit">ATLAS.ERP · Criado por Marcus Valério</div>
 </section>
 <nav class="toc"><h2 class="toc-title">Sumário</h2><ol>${tocHtml}</ol></nav>
 <main>${html}</main>

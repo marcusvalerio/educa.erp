@@ -1,10 +1,9 @@
-# EDUCA.ERP — Manual do Usuário
+# ATLAS.ERP — Manual do Usuário
 
-> **Versão documentada:** interface redesenhada do EDUCA.ERP (branch `claude/educa-redesign`), em modo PostgreSQL/Neon Auth, percorrida em ambiente local de QA em 27/09/2026.
+> **Versão documentada:** ATLAS.ERP com a interface atual (landing em `/`, entrada em `/login`, sistema em `/app`). Telas capturadas em ambiente local de QA em 27/09/2026, com dados fictícios.
 > **Dados das telas:** fictícios, da empresa de testes *Empresa Replica Local*. Nenhum dado real de cliente aparece nas figuras.
-> **Atenção:** a produção ainda usa a interface anterior. Os nomes de menus e botões deste manual valem para a versão redesenhada.
 
-Este manual é para quem **usa** o EDUCA.ERP no dia a dia. A gestão de usuários, papéis e empresas está no [Manual de Administração](MANUAL_DE_ADMINISTRACAO.md).
+Este manual é para quem **usa** o ATLAS.ERP no dia a dia. A gestão de usuários, papéis e empresas está no [Manual de Administração](MANUAL_DE_ADMINISTRACAO.md).
 
 Tudo o que está descrito aqui foi **executado na interface** durante a elaboração do manual. Quando uma função existe no sistema mas não pode ser usada pela tela, ou falhou no teste, isso está dito no próprio texto e reunido em [17. Problemas conhecidos](#17-problemas-conhecidos).
 
@@ -12,7 +11,7 @@ Tudo o que está descrito aqui foi **executado na interface** durante a elabora�
 
 ## Índice
 
-1. [Sobre o EDUCA.ERP](#1-sobre-o-educaerp)
+1. [Sobre o ATLAS.ERP](#1-sobre-o-atlaserp)
 2. [Primeiros passos](#2-primeiros-passos)
 3. [Início e Painéis](#3-início-e-painéis)
 4. [Comercial](#4-comercial)
@@ -46,11 +45,11 @@ Tudo o que está descrito aqui foi **executado na interface** durante a elabora�
 
 ---
 
-## 1. Sobre o EDUCA.ERP
+## 1. Sobre o ATLAS.ERP
 
 ### O que é
 
-O EDUCA.ERP é um sistema de gestão empresarial integrado. Ele reúne em um só lugar a operação comercial, o relacionamento com clientes, as compras, o estoque e a logística, a produção, as finanças, o fiscal, a qualidade, os projetos e a manutenção de ativos.
+O ATLAS.ERP é um sistema de gestão empresarial integrado, modular e generalista. Ele reúne em um só lugar a operação comercial, o relacionamento com clientes, as compras, o estoque e a logística, a produção, as finanças, o fiscal, a qualidade, os projetos e a manutenção de ativos.
 
 ### Como o sistema está organizado
 
@@ -68,7 +67,7 @@ No rodapé da barra ficam **Administração da Empresa** (para administradores, 
 
 ### O que você vê depende do seu papel
 
-Cada usuário recebe um ou mais **papéis** (por exemplo *Administrador*, *Operador*, *Somente leitura*). Cada papel reúne **permissões**. O menu mostra apenas os módulos permitidos para você. Se alguém enviar um link para uma tela que o seu papel não permite, o sistema mostra **Sem acesso a este recurso** com o botão **Voltar**.
+Cada usuário recebe um ou mais **papéis** (por exemplo *Administrador*, *Gerente*, *Operador*, *Vendedor*, *Somente leitura*). Cada papel reúne **permissões**. O menu mostra apenas os módulos permitidos para você. Se alguém enviar um link para uma tela que o seu papel não permite, o sistema mostra **Sem acesso a este recurso** com o botão **Voltar**.
 
 ### O que já dá para fazer pela tela nesta versão
 
@@ -88,11 +87,11 @@ Cada usuário recebe um ou mais **papéis** (por exemplo *Administrador*, *Opera
 
 ### 2.1 Receber o acesso
 
-O acesso ao EDUCA.ERP é **sempre por convite**. O administrador da sua empresa cadastra você e envia um convite para o seu e-mail. No primeiro acesso você cria a sua senha. O passo a passo, com as telas, está em [Aceitar um convite](MANUAL_DE_ADMINISTRACAO.md#39-como-a-pessoa-convidada-aceita-o-convite).
+O acesso ao ATLAS.ERP é **sempre por convite**. O administrador da sua empresa convida você (nome, e-mail e papel) e o convite chega ao seu e-mail. No primeiro acesso você cria a sua senha. O passo a passo, com as telas, está em [Aceitar um convite](MANUAL_DE_ADMINISTRACAO.md#310-como-a-pessoa-convidada-aceita-o-convite).
 
 ### 2.2 Entrar no sistema
 
-**Como acessar:** abra o endereço do EDUCA.ERP informado pela sua empresa. A tela **Acesse sua conta** aparece.
+**Como acessar:** abra o endereço do ATLAS.ERP informado pela sua empresa. A página inicial apresenta o produto; clique em **Entrar no ATLAS.ERP** (ou vá direto a `/login`). A tela **Acesse sua conta** aparece. Depois do login, o sistema abre em `/app`.
 
 1. Informe o **E-mail**.
 2. Informe a **Senha**. O ícone de olho mostra ou oculta o que foi digitado.
@@ -166,6 +165,7 @@ Clique no seu nome, no canto superior direito. O menu mostra:
 - **Administração da Empresa** (só para quem tem permissão);
 - **Preferências**, que abre *Configurações › Aparência*;
 - **Tema**: *Claro*, *Escuro* ou *Sistema*;
+- **Sobre o ATLAS.ERP**: versão e data de publicação do sistema;
 - **Sair**.
 
 ![Menu da conta](assets/primeiros-passos/09-menu-conta.webp)
@@ -1000,7 +1000,7 @@ Disponível para todos. Escolha **Claro**, **Escuro** ou **Sistema** (segue o si
 
 ## 15. Busca, filtros e tabelas
 
-Todas as listas do EDUCA.ERP seguem o mesmo padrão.
+Todas as listas do ATLAS.ERP seguem o mesmo padrão.
 
 | Recurso | Como usar |
 |---|---|
@@ -1098,7 +1098,7 @@ Problemas encontrados ao percorrer o sistema. Nenhum foi corrigido durante a pro
 | 7 | Produção | Não é possível criar ordens de produção. | — |
 | 8 | Painéis de Produção e Fiscal (e relatório de estoque) | Resumo não carrega. | Usar os demais blocos e as listas. |
 | 9 | Configurações › Dados da empresa | Sem acesso para todos (permissão `companies.read` inexistente). | — |
-| 10 | Conta | Não há troca de senha logado. | Sair e usar **Esqueci minha senha**. |
+| 10 | Conta | Não há troca de senha logado (nem troca de e-mail). | Sair e usar **Esqueci minha senha**. |
 | 11 | Detalhes de CRM, Manutenção e Auditoria | Alguns valores aparecem com código interno (ex.: *CALL*, *CORRECTIVE*, *opportunity*). | — |
 | 12 | Pedido de venda | Após uma ação, o status pode levar alguns segundos para atualizar. | Aguardar ou recarregar a página. |
 

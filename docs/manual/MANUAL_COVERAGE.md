@@ -1,4 +1,4 @@
-# EDUCA.ERP — Cobertura do Manual
+# ATLAS.ERP — Cobertura do Manual
 
 Matriz de rastreabilidade entre o que existe no sistema, o que foi documentado e o que foi **executado na interface** durante a elaboração do [Manual do Usuário](MANUAL_DO_USUARIO.md) e do [Manual de Administração](MANUAL_DE_ADMINISTRACAO.md).
 
@@ -11,8 +11,9 @@ Matriz de rastreabilidade entre o que existe no sistema, o que foi documentado e
 | Data da verificação | 27/09/2026 |
 | Perfis usados | Administrador da empresa (*Admin A*), Somente leitura (*Leitura A*), Owner da plataforma, usuária convidada criada no fluxo (*Carla Mendes Manual*) |
 | Dados | Fixtures locais e dados de demonstração criados pelas APIs oficiais (sem dados reais) |
-| Produção | **Não** foi acessada nem alterada. Produção ainda usa a interface anterior. |
-| Capturas | 246 imagens WebP em `docs/manual/assets/<módulo>/`, 1440×900 (desktop) e 390×844 (celular) |
+| Produção | **Não** foi acessada nem alterada. |
+| Atualização de 29/09/2026 | Nome do produto ATLAS.ERP (texto, capturas e PDFs), convite pela Administração da Empresa (§3.3 do Manual de Administração, 2 figuras novas), papéis de sistema Gerente e Vendedor, acesso pela landing (`/` → Entrar no ATLAS.ERP → `/login` → `/app`), item **Sobre o ATLAS.ERP** no menu da conta. Recapturadas: `central/13`–`15` e `central/20`. |
+| Capturas | 248 imagens WebP em `docs/manual/assets/<módulo>/`, 1440×900 (desktop) e 390×844 (celular) |
 
 ## Legenda
 

@@ -1,13 +1,13 @@
-# EDUCA.ERP — Manual de Administração
+# ATLAS.ERP — Manual de Administração
 
-> **Versão documentada:** interface redesenhada do EDUCA.ERP (branch `claude/educa-redesign`), em modo PostgreSQL/Neon Auth, percorrida em ambiente local de QA em 27/09/2026.
+> **Versão documentada:** ATLAS.ERP com a interface atual (landing em `/`, entrada em `/login`, sistema em `/app`). Telas capturadas em ambiente local de QA em 27/09/2026; convite pela Administração da Empresa e papéis Gerente e Vendedor em 29/09/2026.
 > **Dados das telas:** fictícios. Os e-mails usam domínios de teste (`example.com`, `.test`). O código do convite foi ocultado nas figuras.
-> **Atenção:** a produção ainda usa a interface anterior. Os nomes de menus e botões deste manual valem para a versão redesenhada.
+> **Arquitetura:** os fluxos de acesso deste manual (convite, primeiro acesso, recuperação de senha) são os mesmos com os dois provedores de autenticação do ATLAS.ERP. Hoje a produção usa o **Supabase** (banco e autenticação); a homologação usa o **Neon** (PostgreSQL e Neon Auth), que será o provedor principal após a migração. Os e-mails de convite e de senha são enviados pelo provedor ativo.
 
-Este manual é para quem **administra** o EDUCA.ERP:
+Este manual é para quem **administra** o ATLAS.ERP:
 
 - o **Administrador da Empresa**, que cuida dos usuários, papéis e estrutura de **uma** empresa;
-- o **Owner / Administração Central**, que cuida da **plataforma**: empresas clientes, módulos contratados e membros da operação EDUCA.
+- o **Owner / Administração Central**, que cuida da **plataforma**: empresas clientes, módulos contratados e membros da plataforma.
 
 Para o uso do dia a dia, veja o [Manual do Usuário](MANUAL_DO_USUARIO.md).
 
@@ -32,19 +32,20 @@ Para o uso do dia a dia, veja o [Manual do Usuário](MANUAL_DO_USUARIO.md).
 
 ## 1. Conceito: empresa, plataforma e acesso
 
-O EDUCA.ERP tem **três ambientes**, cada um com a sua cor de barra lateral e o seu escopo:
+O ATLAS.ERP tem **três ambientes**, cada um com a sua cor de barra lateral e o seu escopo:
 
 | Ambiente | Quem usa | O que controla | Como chegar |
 |---|---|---|---|
 | **ERP** (barra clara) | Todos os usuários da empresa | A operação: vendas, estoque, finanças… | Após o login |
 | **Administração da Empresa** (faixa âmbar *"alterações aqui afetam somente esta empresa"*) | Administrador da empresa | Usuários, papéis, setores, cargos, unidades, módulos e foco dos painéis **desta** empresa | Barra lateral › **Administração da Empresa**, ou menu da conta |
-| **Administração Central** (barra escura, selo *Plataforma EDUCA*) | Owner e Admin da plataforma | Empresas clientes, módulos contratados e membros da plataforma | Menu da conta › **Administração Central** |
+| **Administração Central** (barra escura, selo *Plataforma ATLAS.ERP*) | Owner e Admin da plataforma | Empresas clientes, módulos contratados e membros da plataforma | Menu da conta › **Administração Central** |
 
 **Regras que valem sempre:**
 
 - As empresas são **isoladas** entre si. Um usuário de uma empresa nunca vê dados de outra.
 - A Administração Central **não vê** pedidos, estoque, financeiro ou cadastros das empresas, e **não existe** modo "entrar como empresa".
 - O acesso é **sempre por convite**. Ninguém cria a própria conta.
+- **Administrador da Empresa não é Admin da plataforma.** O Owner (ou Admin da plataforma) convida só o **primeiro** administrador de cada empresa, pela Administração Central. Depois, é esse Administrador quem convida Gerentes, Operadores, Vendedores e demais usuários, sempre dentro da própria empresa. Um *Admin* criado em *Membros da plataforma* cuida da governança da plataforma e **não** opera nenhuma empresa.
 
 ---
 
@@ -100,7 +101,7 @@ No celular, a administração funciona com o mesmo menu recolhível do ERP.
 | Coluna | Significado |
 |---|---|
 | Nome, E-mail | Identificação. |
-| **Acesso** | Situação do login (seção 3.7). |
+| **Acesso** | Situação do login (seção 3.8). |
 | **Papéis** | Papéis atribuídos. *Nenhum papel* em âmbar significa que a pessoa entra, mas não vê módulos. |
 | Setor, Unidades | Contexto organizacional. |
 | Status | Ativo ou Inativo. |
@@ -125,9 +126,35 @@ Quando você abre o **seu próprio** usuário, aparece o aviso **Este é o seu u
 ![Próprio usuário](assets/admin/03-usuario-proprio.webp)
 *Figura 5 — Painel do próprio administrador, com o aviso de proteção.*
 
-### 3.3 Cadastrar uma pessoa
+### 3.3 Convidar um usuário (nome, e-mail e papel)
 
-O convite é enviado a partir de um **cadastro de usuário**. Se a pessoa ainda não existe, cadastre-a primeiro.
+É o caminho principal para dar acesso a alguém: em um passo, o ATLAS.ERP cria o usuário **nesta empresa**, atribui o papel escolhido e envia o convite por e-mail.
+
+🔐 `users.create` **e** `roles.manage` · **Disponível para:** Administrador da Empresa · **Como acessar:** Administração da Empresa › **Usuários** › **Convidar usuário**.
+
+1. Clique em **Convidar usuário**.
+2. Preencha **Nome** e **E-mail**.
+3. Em **Papel**, escolha *Administrador*, *Gerente*, *Operador*, *Vendedor*, *Somente leitura* ou um papel criado em **Papéis e permissões**.
+4. Clique em **Enviar convite**. A janela confirma **Convite enviado** (ou **Convite criado — envie o link**, se o e-mail não puder ser enviado), mostra a validade e o **Link do convite** com o botão **Copiar**. Clique em **Concluir**.
+
+![Convidar usuário](assets/admin/60-convidar-usuario.webp)
+*Figura 6 — Janela "Convidar usuário": nome, e-mail e papel.*
+
+![Convite enviado pela empresa](assets/admin/61-convidar-usuario-enviado.webp)
+*Figura 7 — Convite enviado, com a validade e o link (código ocultado no manual).*
+
+**Regras garantidas pelo banco de dados:**
+
+- O usuário é criado **sempre na empresa de quem convida**. Não existe escolha de empresa nesta tela.
+- Só convida quem tem `users.create` e `roles.manage` (por padrão, só o **Administrador**). Gerente, Operador, Vendedor e Somente leitura **não** veem o botão e recebem *Permissão negada* pela API.
+- **Ninguém concede o que não tem:** um papel com permissões que você não possui é recusado (*"Você não pode conceder permissões que não possui"*). A mesma regra vale para atribuir papéis e para editar as permissões de um papel.
+- O papel precisa ser **desta empresa** e estar **ativo**.
+
+A pessoa convidada segue o fluxo da seção 3.9: cria a senha, aceita o convite e passa a ver **somente** o que o papel permite.
+
+### 3.4 Cadastrar uma pessoa (sem convite)
+
+O cadastro de usuário continua disponível para registrar pessoas antes de convidá-las. Um cadastro sem login recebe o convite pela seção 3.5.
 
 🔐 `users.create` (ou `users.update`) · **Como acessar:** Usuários › **Cadastro de usuários**.
 
@@ -145,19 +172,19 @@ O convite é enviado a partir de um **cadastro de usuário**. Se a pessoa ainda 
 | Status | Não | Ativo (padrão) ou Inativo. |
 
 ![Cadastro de usuários](assets/admin/05-cadastro-usuarios.webp)
-*Figura 6 — Cadastro de usuários.*
+*Figura 8 — Cadastro de usuários.*
 
 ![Novo usuário](assets/admin/06-novo-usuario.webp)
-*Figura 7 — Painel "Novo usuário" preenchido.*
+*Figura 9 — Painel "Novo usuário" preenchido.*
 
 ![Usuário criado](assets/admin/07-novo-usuario-salvo.webp)
-*Figura 8 — Aviso "Usuário criado.".*
+*Figura 10 — Aviso "Usuário criado.".*
 
-> ⚠️ **Importante:** o campo **Perfil** do cadastro **não concede permissões**. Uma pessoa cadastrada com Perfil *Compras* entra no sistema **sem papel** e vê apenas *Início* e *Configurações*. O acesso real é dado pelos **Papéis** no painel do usuário (seção 3.8).
+> ⚠️ **Importante:** o campo **Perfil** do cadastro **não concede permissões**. Uma pessoa cadastrada com Perfil *Compras* entra no sistema **sem papel** e vê apenas *Início* e *Configurações*. O acesso real é dado pelos **Papéis** no painel do usuário (seção 3.9).
 
 > ⚠️ A mesma limitação de **Inativar pelo menu da linha** descrita no Manual do Usuário vale para este cadastro. Para inativar, prefira **Editar › Status › Salvar**.
 
-### 3.4 Enviar o convite
+### 3.5 Enviar o convite a um cadastro existente
 
 🔐 `users.update`
 
@@ -166,23 +193,23 @@ O convite é enviado a partir de um **cadastro de usuário**. Se a pessoa ainda 
 3. O aviso *"Convite enviado para <e-mail>."* confirma. O painel passa a mostrar **Convite enviado**, com a validade (*"Ele vale até … e só pode ser usado uma vez."*) e o campo **Link do convite** com o botão **Copiar**.
 
 ![Sem login](assets/admin/08-usuarios-sem-login.webp)
-*Figura 9 — Visão "Sem login".*
+*Figura 11 — Visão "Sem login".*
 
 ![Antes do convite](assets/admin/09-usuario-sem-login.webp)
-*Figura 10 — Usuário sem login, com o botão Enviar convite.*
+*Figura 12 — Usuário sem login, com o botão Enviar convite.*
 
 ![Convite enviado](assets/admin/10-convite-enviado.webp)
-*Figura 11 — Convite enviado, com o link (código ocultado no manual).*
+*Figura 13 — Convite enviado, com o link (código ocultado no manual).*
 
 ![Convite pendente](assets/admin/11-convite-pendente-lista.webp)
-*Figura 12 — Visão "Convite pendente".*
+*Figura 14 — Visão "Convite pendente".*
 
 **Cuidados:**
 
 - O convite é pessoal: só quem tem acesso ao e-mail cadastrado consegue aceitá-lo.
-- Se usar **Copiar** para enviar o link por outro canal, a pessoa que **ainda não tem senha** precisa abrir o link do **e-mail** para criar a senha (seção 3.9).
+- Se usar **Copiar** para enviar o link por outro canal, a pessoa que **ainda não tem senha** precisa abrir o link do **e-mail** para criar a senha (seção 3.10).
 
-### 3.5 Reenviar ou cancelar um convite
+### 3.6 Reenviar ou cancelar um convite
 
 Com o convite pendente, o painel mostra **Reenviar convite**, **Cancelar convite** e **Desativar acesso**.
 
@@ -191,9 +218,9 @@ Com o convite pendente, o painel mostra **Reenviar convite**, **Cancelar convite
 - **Reenviar convite** foi executado durante a elaboração do manual.
 
 ![Cancelar convite](assets/admin/12-cancelar-convite-confirmar.webp)
-*Figura 13 — Confirmação de cancelamento do convite.*
+*Figura 15 — Confirmação de cancelamento do convite.*
 
-### 3.6 Desativar e reativar o acesso
+### 3.7 Desativar e reativar o acesso
 
 🔐 `users.update`
 
@@ -202,7 +229,7 @@ Com o convite pendente, o painel mostra **Reenviar convite**, **Cancelar convite
 
 Você não pode desativar o próprio acesso. *(Botões conferidos na tela; a desativação não foi executada durante a elaboração do manual.)*
 
-### 3.7 Situações de acesso
+### 3.8 Situações de acesso
 
 | Situação | Significado | O que fazer |
 |---|---|---|
@@ -212,18 +239,18 @@ Você não pode desativar o próprio acesso. *(Botões conferidos na tela; a des
 | **Sem login** | Cadastro sem conta de acesso. | Enviar convite. |
 | **Desativado** | Acesso desligado pelo administrador. | Reativar, se for o caso. |
 
-### 3.8 Papéis, contexto e unidades do usuário
+### 3.9 Papéis, contexto e unidades do usuário
 
 **Atribuir um papel** (🔐 `roles.manage`): no painel do usuário, em **Papéis**, marque a caixa do papel. A alteração vale na hora. Aviso: *"Papel <nome> atribuído."* Desmarcar remove: *"Papel <nome> removido."*
 
 ![Papel atribuído](assets/admin/54-papel-atribuido.webp)
-*Figura 14 — Papel "Comprador" atribuído a um usuário.*
+*Figura 16 — Papel "Comprador" atribuído a um usuário.*
 
 **Contexto organizacional** (🔐 `org.assign`): escolha **Unidade principal**, **Setor** e **Cargo** e clique em **Salvar contexto**. O setor e o cargo orientam o **foco dos painéis** (seção 10.5).
 
 **Unidades com acesso:** os dados operacionais visíveis ao usuário ficam limitados às unidades liberadas. Sem unidades cadastradas, aparece *"Nenhuma unidade cadastrada."*
 
-### 3.9 Como a pessoa convidada aceita o convite
+### 3.10 Como a pessoa convidada aceita o convite
 
 Este fluxo foi executado do início ao fim neste manual.
 
@@ -233,29 +260,29 @@ Este fluxo foi executado do início ao fim neste manual.
 4. A pessoa entra no **Início** do ERP.
 
 ![Crie sua senha](assets/admin/41-convite-primeiro-acesso.webp)
-*Figura 15 — Primeiro acesso: "Crie sua senha".*
+*Figura 17 — Primeiro acesso: "Crie sua senha".*
 
 ![Senhas diferentes](assets/admin/42-convite-senhas-diferentes.webp)
-*Figura 16 — Validação: "As senhas não conferem."*
+*Figura 18 — Validação: "As senhas não conferem."*
 
 ![Aceitar convite](assets/admin/43-convite-aceitar.webp)
-*Figura 17 — Tela "Aceitar convite".*
+*Figura 19 — Tela "Aceitar convite".*
 
 ![Convite aceito](assets/admin/44-convite-aceito.webp)
-*Figura 18 — Primeiro acesso concluído. Sem papel, a pessoa vê apenas Início e Configurações.*
+*Figura 20 — Primeiro acesso concluído. Sem papel, a pessoa vê apenas Início e Configurações.*
 
 ![Conta ativa](assets/admin/46-usuario-conta-ativa.webp)
-*Figura 19 — Na lista do administrador, a situação passa a "Conta ativa".*
+*Figura 21 — Na lista do administrador, a situação passa a "Conta ativa".*
 
 **Quem já tem senha** e abre o link copiado vê **Você recebeu um convite** e o botão **Já tenho senha — entrar**.
 
 ![Você recebeu um convite](assets/admin/40-convite-recebido.webp)
-*Figura 20 — "Você recebeu um convite".*
+*Figura 22 — "Você recebeu um convite".*
 
 **Link inválido:** *"Convite inválido — Este link de convite não existe. Confira se ele foi copiado por inteiro ou peça um novo ao administrador da sua organização."*
 
 ![Convite inválido](assets/admin/45-convite-invalido.webp)
-*Figura 21 — Convite inválido.*
+*Figura 23 — Convite inválido.*
 
 ---
 
@@ -268,17 +295,23 @@ Este fluxo foi executado do início ao fim neste manual.
 🔐 **Ver:** `roles.read` · **Criar, editar e salvar permissões:** `roles.manage`
 
 ![Papéis](assets/admin/13-papeis.webp)
-*Figura 22 — Papéis e permissões.*
+*Figura 24 — Papéis e permissões.*
 
 ### 4.1 Papéis de sistema
 
-Toda empresa nasce com três papéis de sistema (selo **Sistema**):
+Toda empresa nasce com cinco papéis de sistema (selo **Sistema**), na hierarquia da operação:
 
 | Papel | Descrição na tela | Permissões |
 |---|---|---|
 | **Administrador** | Acesso total às funcionalidades existentes da empresa. | 352 |
-| **Operador** | Pode consultar, criar e editar cadastros, sem excluir. | 227 |
+| **Gerente** | Opera e aprova em todos os módulos; sem administrar usuários, papéis, módulos e configurações. | 332 |
+| **Operador** | Pode consultar, criar e editar cadastros, sem excluir. | 225 |
+| **Vendedor** | Comercial e CRM: orçamentos, pedidos, clientes e funil; sem aprovar, cancelar ou reservar. | 39 |
 | **Somente leitura** | Pode apenas consultar cadastros e auditoria. | 76 |
+
+Só o **Administrador** convida usuários e define papéis (`users.create` + `roles.manage`). O **Operador** não cria nem edita usuários.
+
+A contagem de permissões é a da empresa de demonstração e pode variar conforme o catálogo do ambiente.
 
 O **Administrador** é um **papel protegido**: *"As permissões do administrador de sistema não podem ser redefinidas — isso evita perder o acesso administrativo."*
 
@@ -287,7 +320,7 @@ O **Administrador** é um **papel protegido**: *"As permissões do administrador
 Clique no papel na lista à esquerda. À direita aparece a **matriz de permissões**, agrupada por módulo (*Núcleo, Cadastros, Estoque, Compras, Comercial, Logística, Produção, Financeiro, Fiscal, Custos, Controladoria, CRM, Ativos, Manutenção, Qualidade, Projetos e Serviços, Workflow e Aprovações, Importação e Exportação, Relatórios*). Cada linha é um recurso; cada coluna, uma ação (Consultar, Ler, Criar, Editar, Excluir, Aprovar, Administrar, Atribuir…). Use **Filtrar permissões…** para achar um item.
 
 ![Matriz de permissões](assets/admin/14-papel-permissoes.webp)
-*Figura 23 — Matriz de permissões do papel "Somente leitura".*
+*Figura 25 — Matriz de permissões do papel "Somente leitura".*
 
 ### 4.3 Criar um papel — passo a passo validado
 
@@ -303,13 +336,13 @@ Clique no papel na lista à esquerda. À direita aparece a **matriz de permissõ
 | Setor | Não | Setor típico do papel. |
 
 ![Novo papel](assets/admin/15-novo-papel.webp)
-*Figura 24 — Janela "Novo papel".*
+*Figura 26 — Janela "Novo papel".*
 
 ![Novo papel preenchido](assets/admin/50-novo-papel-preenchido.webp)
-*Figura 25 — Novo papel "Comprador" preenchido.*
+*Figura 27 — Novo papel "Comprador" preenchido.*
 
 ![Papel criado](assets/admin/51-papel-criado.webp)
-*Figura 26 — Papel criado, ainda sem permissões.*
+*Figura 28 — Papel criado, ainda sem permissões.*
 
 ### 4.4 Dar permissões a um papel
 
@@ -319,10 +352,10 @@ Clique no papel na lista à esquerda. À direita aparece a **matriz de permissõ
 4. Aviso: *"Permissões de <papel> salvas."*
 
 ![Permissões marcadas](assets/admin/52-papel-permissoes-marcadas.webp)
-*Figura 27 — Grupo "Compras" marcado (23 permissões adicionadas).*
+*Figura 29 — Grupo "Compras" marcado (23 permissões adicionadas).*
 
 ![Permissões salvas](assets/admin/53-papel-permissoes-salvas.webp)
-*Figura 28 — Permissões salvas.*
+*Figura 30 — Permissões salvas.*
 
 **Para editar nome, descrição, setor ou situação** de um papel, clique em **Editar** no topo da matriz. *(Botão conferido na tela; edição não executada neste manual.)*
 
@@ -364,29 +397,29 @@ Além disso:
 | 5. A pessoa abre Contas a receber | ERP | **Sem acesso a este recurso** (não tem permissão financeira). |
 
 ![Início com papel](assets/admin/55-usuario-com-papel-inicio.webp)
-*Figura 29 — Início da usuária com o papel "Comprador".*
+*Figura 31 — Início da usuária com o papel "Comprador".*
 
 ![Módulo liberado](assets/admin/56-usuario-com-papel-modulo.webp)
-*Figura 30 — Pedidos de compra liberados pelo papel.*
+*Figura 32 — Pedidos de compra liberados pelo papel.*
 
 ![Sem acesso](assets/admin/57-usuario-com-papel-sem-acesso.webp)
-*Figura 31 — Contas a receber bloqueado: sem permissão financeira.*
+*Figura 33 — Contas a receber bloqueado: sem permissão financeira.*
 
 ---
 
 ## 6. Administração Central
 
-**Disponível para:** Owner / Administração Central (membros da plataforma EDUCA).
+**Disponível para:** Owner / Administração Central (membros da plataforma ATLAS.ERP).
 
-**O que é:** a governança da plataforma: empresas como clientes, contratação de módulos e membros da operação EDUCA. **Não** é usada por administradores de empresa.
+**O que é:** a governança da plataforma: empresas como clientes, contratação de módulos e membros da plataforma. **Não** é usada por administradores de empresa.
 
-**Como acessar:** menu da conta › **Administração Central**. Quem não é membro da plataforma vê **Acesso restrito à Administração Central** — *"Este ambiente é exclusivo dos membros da plataforma EDUCA (Owner e Admin)."*
+**Como acessar:** menu da conta › **Administração Central**. Quem não é membro da plataforma vê **Acesso restrito à Administração Central** — *"Este ambiente é exclusivo dos membros da plataforma ATLAS.ERP (Owner e Admin)."*
 
 ![Menu do Owner](assets/central/20-owner-menu-conta.webp)
-*Figura 32 — Menu da conta de um Owner.*
+*Figura 34 — Menu da conta de um Owner.*
 
 ![Acesso restrito](assets/central/19-sem-acesso-admin-empresa.webp)
-*Figura 33 — Administrador de empresa tentando abrir a Administração Central.*
+*Figura 35 — Administrador de empresa tentando abrir a Administração Central.*
 
 ### 6.1 Owner, Admin da plataforma e Administrador da Empresa
 
@@ -397,15 +430,18 @@ Além disso:
 | Módulos contratados | Contrata/descontrata | Contrata/descontrata | Habilita/desabilita os **contratados** |
 | Catálogo de módulos | Mantém (*Só Owner*) | Consulta | — |
 | Membros da plataforma | Gerencia Owners e Admins | Gerencia apenas Admins | — |
-| Usuários e papéis de uma empresa | Convida o **primeiro** administrador | Convida o primeiro administrador | Gerencia todos |
+| Usuários e papéis de uma empresa | Convida o **primeiro** administrador | Convida o primeiro administrador | Convida e gerencia todos (Gerente, Operador, Vendedor…) |
 | Dados operacionais da empresa | **Não vê** | **Não vê** | Vê (conforme papéis) |
+| Owners e membros da plataforma | Gerencia | Gerencia Admins | **Não** vê nem gerencia |
+
+> **Não confunda:** o *Admin da plataforma* (Membros da plataforma) não é administrador de nenhuma empresa. Para alguém administrar a operação de uma empresa, convide-o como **administrador da empresa** (Empresas › Convidar administrador) ou, se a empresa já tiver administrador, peça a ele que convide pela Administração da Empresa › Usuários › **Convidar usuário** com o papel *Administrador*.
 
 ### 6.2 Visão geral
 
 Mostra o aviso **Isolamento entre empresas**, os contadores (Empresas, Ativas, Em avaliação, Suspensas, Módulos no catálogo, Membros ativos), **Empresas por ciclo de vida**, **Adoção de módulos** (com **Gráfico/Tabela**) e as **Áreas da Administração Central**.
 
 ![Visão geral da Central](assets/central/01-visao-geral.webp)
-*Figura 34 — Visão geral da Administração Central.*
+*Figura 36 — Visão geral da Administração Central.*
 
 ---
 
@@ -418,7 +454,7 @@ Mostra o aviso **Isolamento entre empresas**, os contadores (Empresas, Ativas, E
 > **Identificação por código:** as empresas aparecem pelo identificador (ex.: *Empresa 62d8e72c*). A Administração Central não lê o cadastro (nome, documento) das empresas.
 
 ![Empresas](assets/central/02-empresas.webp)
-*Figura 35 — Lista de empresas.*
+*Figura 37 — Lista de empresas.*
 
 ### 7.1 Criar uma empresa — passo a passo validado
 
@@ -439,19 +475,19 @@ Mostra o aviso **Isolamento entre empresas**, os contadores (Empresas, Ativas, E
 | Código / Nome da unidade | Sim, se a unidade inicial estiver ligada | Unidade criada junto com a empresa. |
 
 ![Nova empresa](assets/central/03-nova-empresa.webp)
-*Figura 36 — Janela "Nova empresa".*
+*Figura 38 — Janela "Nova empresa".*
 
 ![Validação](assets/central/04-nova-empresa-validacao.webp)
-*Figura 37 — Validação: "Informe o nome da empresa."*
+*Figura 39 — Validação: "Informe o nome da empresa."*
 
 ![Preenchida](assets/central/05-nova-empresa-preenchida.webp)
-*Figura 38 — Nova empresa preenchida.*
+*Figura 40 — Nova empresa preenchida.*
 
 ![Documento duplicado](assets/central/06b-empresa-documento-duplicado.webp)
-*Figura 39 — Documento já usado: "Já existe uma empresa com este documento."*
+*Figura 41 — Documento já usado: "Já existe uma empresa com este documento."*
 
 ![Empresa criada](assets/central/06-empresa-criada.webp)
-*Figura 40 — Empresa criada, com o próximo passo: configurar o administrador.*
+*Figura 42 — Empresa criada, com o próximo passo: configurar o administrador.*
 
 ### 7.2 Convidar o administrador da empresa
 
@@ -460,17 +496,17 @@ Logo após criar a empresa (ou depois, no detalhe dela), informe **Nome do admin
 Se preferir fazer depois, clique em **Configurar depois**.
 
 ![Convidar administrador](assets/central/07-convidar-admin.webp)
-*Figura 41 — Convite do administrador da empresa preenchido.*
+*Figura 43 — Convite do administrador da empresa preenchido.*
 
 ![Administrador convidado](assets/central/08-admin-convidado.webp)
-*Figura 42 — Convite enviado ao administrador.*
+*Figura 44 — Convite enviado ao administrador.*
 
 ### 7.3 Detalhe e ciclo de vida
 
 Abra a empresa (**⋯ › Abrir**). O painel mostra plano, datas (contratada, suspensa, cancelada), observações, **Administrador da empresa**, **Ciclo de vida** e **Módulos contratados**.
 
 ![Detalhe da empresa](assets/central/09-empresa-detalhe.webp)
-*Figura 43 — Detalhe da empresa.*
+*Figura 45 — Detalhe da empresa.*
 
 **Mudar a situação** (🔐 `platform.companies.lifecycle`):
 
@@ -481,10 +517,10 @@ Abra a empresa (**⋯ › Abrir**). O painel mostra plano, datas (contratada, su
 Ao suspender, o sistema avisa: *"A empresa deixa de operar normalmente. Os dados dela não são apagados."*
 
 ![Confirmar situação](assets/central/10-situacao-confirmar.webp)
-*Figura 44 — Confirmação "Alterar para suspensa?".*
+*Figura 46 — Confirmação "Alterar para suspensa?".*
 
 ![Situação aplicada](assets/central/11-situacao-aplicada.webp)
-*Figura 45 — Empresa ativada.*
+*Figura 47 — Empresa ativada.*
 
 **Módulos contratados** (🔐 `platform.company_modules.manage`): no fim do painel, use a chave de cada módulo para contratar ou descontratar (aviso: *"<módulo> contratado."* / *"descontratado."*). Os módulos **Essenciais** (Núcleo, Cadastros) não têm chave e não podem ser descontratados. Quando a empresa desliga um módulo contratado, aparece *"desabilitado pela empresa"*. A empresa só pode habilitar internamente o que estiver contratado aqui. *(Conferido na tela; a contratação não foi executada durante a elaboração do manual.)*
 
@@ -496,31 +532,31 @@ Ao suspender, o sistema avisa: *"A empresa deixa de operar normalmente. Os dados
 
 🔐 **Ver:** `platform.members.view` · **Gerenciar:** `platform.members.manage`
 
-**O que é:** as pessoas da operação EDUCA com acesso à Administração Central. **Não** são usuários de nenhuma empresa.
+**O que é:** a governança da plataforma ATLAS.ERP (Owner e Admin da plataforma), com acesso à Administração Central. **Não** são usuários nem administradores de nenhuma empresa. A janela de convite avisa: *"Administrador de uma empresa não é convidado aqui."*
 
 **Como acessar:** Administração Central › **Membros da plataforma**.
 
 ![Membros](assets/central/13-membros.webp)
-*Figura 46 — Membros da plataforma.*
+*Figura 48 — Membros da plataforma.*
 
-**Convidar um membro:** **Convidar membro** › **Nome**, **E-mail**, **Papel** (*Admin* ou *Owner*) › **Enviar convite**. *"A pessoa recebe um e-mail para criar a senha. Se já tiver conta no EDUCA, passa a ver a Administração Central no próximo acesso."*
+**Convidar um membro:** **Convidar membro** › **Nome**, **E-mail**, **Papel** (*Admin da plataforma* ou *Owner*) › **Enviar convite**. *"A pessoa recebe um e-mail para criar a senha. Se já tiver conta no ATLAS.ERP, passa a ver a Administração Central no próximo acesso."*
 
 ![Convidar membro](assets/central/14-convidar-membro.webp)
-*Figura 47 — Janela "Convidar membro da plataforma".*
+*Figura 49 — Janela "Convidar membro da plataforma".*
 
 **Editar um membro:** **⋯ › Editar membro** › altere **Nome**, **Papel** ou **Status** › **Salvar**. O e-mail (login) não muda por aqui. *(Janelas de convite e edição abertas e conferidas; nenhum membro foi convidado ou alterado neste manual.)*
 
 > **Regra de governança:** *"O último Owner ativo não pode ser rebaixado nem desativado — a plataforma sempre mantém um Owner."* Admins gerenciam apenas Admins; Owners são geridos somente por Owners.
 
 ![Editar membro](assets/central/15-editar-membro.webp)
-*Figura 48 — Edição de membro, com o aviso de proteção do último Owner.*
+*Figura 50 — Edição de membro, com o aviso de proteção do último Owner.*
 
 ### 8.2 Permissões da plataforma
 
 **Como acessar:** Administração Central › **Permissões**. Mostra, por permissão, o que o **Owner** e o **Admin** podem fazer. Itens marcados **Só Owner** (ex.: manter o catálogo de módulos) não estão disponíveis ao Admin. Estas permissões **não valem** dentro das empresas.
 
 ![Permissões da plataforma](assets/central/16-permissoes.webp)
-*Figura 49 — Permissões da plataforma (Owner × Admin).*
+*Figura 51 — Permissões da plataforma (Owner × Admin).*
 
 ---
 
@@ -559,36 +595,36 @@ Estrutura de setores da empresa (pode ter **Setor superior**). Setores orientam 
 3. Na linha: ícone de lápis (**Editar**) e ícone de liga/desliga (**Desativar/Reativar**).
 
 ![Setores](assets/admin/16-setores.webp)
-*Figura 50 — Setores.*
+*Figura 52 — Setores.*
 
 ![Novo setor](assets/admin/17-novo-setor.webp)
-*Figura 51 — Janela "Novo(a) setor".*
+*Figura 53 — Janela "Novo(a) setor".*
 
 ![Código duplicado](assets/admin/18-setor-duplicado.webp)
-*Figura 52 — Código já existente.*
+*Figura 54 — Código já existente.*
 
 ![Setor criado](assets/admin/18b-setor-criado.webp)
-*Figura 53 — Setor "Expedição" criado.*
+*Figura 55 — Setor "Expedição" criado.*
 
 ### 10.2 Cargos
 
 🔐 `positions.view` / `positions.create` / `positions.update` · Mesma mecânica: **Novo(a) cargo**. *(Janela aberta e conferida; criação não executada neste manual.)*
 
 ![Cargos](assets/admin/19-cargos.webp)
-*Figura 54 — Cargos.*
+*Figura 56 — Cargos.*
 
 ![Novo cargo](assets/admin/20-novo-cargo.webp)
-*Figura 55 — Janela "Novo(a) cargo".*
+*Figura 57 — Janela "Novo(a) cargo".*
 
 ### 10.3 Unidades
 
 🔐 `branches.read` / `branches.manage` · Filiais e unidades de operação. O acesso de cada usuário é liberado por unidade. **Novo(a) unidade** › **Código** (até 32 caracteres, ex.: MATRIZ, SP01) e **Nome** › **Criar**. *(Janela aberta e conferida; criação não executada neste manual.)*
 
 ![Unidades](assets/admin/21-unidades.webp)
-*Figura 56 — Unidades (nenhuma cadastrada no ambiente de teste).*
+*Figura 58 — Unidades (nenhuma cadastrada no ambiente de teste).*
 
 ![Nova unidade](assets/admin/22-nova-unidade.webp)
-*Figura 57 — Janela "Novo(a) unidade".*
+*Figura 59 — Janela "Novo(a) unidade".*
 
 ### 10.4 Módulos
 
@@ -603,10 +639,10 @@ Módulos contratados pela empresa e quais estão habilitados. *"Desabilitar um m
 *(Confirmação aberta e conferida; a desabilitação não foi confirmada neste manual.)*
 
 ![Módulos](assets/admin/23-modulos.webp)
-*Figura 58 — Módulos da empresa.*
+*Figura 60 — Módulos da empresa.*
 
 ![Confirmar desabilitar](assets/admin/24-modulo-confirmar.webp)
-*Figura 59 — Confirmação "Desabilitar Estoque?".*
+*Figura 61 — Confirmação "Desabilitar Estoque?".*
 
 ### 10.5 Configurações: foco dos painéis
 
@@ -618,10 +654,10 @@ Define quais áreas aparecem primeiro nos painéis (bloco **Seu foco**) para cad
 2. Aviso: *"Regra de foco salva."* (ou *"Foco ocultado para este escopo."*). *(Janela aberta e conferida; nenhuma regra foi salva neste manual.)*
 
 ![Configurações](assets/admin/25-configuracoes.webp)
-*Figura 60 — Foco dos painéis.*
+*Figura 62 — Foco dos painéis.*
 
 ![Nova regra](assets/admin/26-nova-regra-foco.webp)
-*Figura 61 — Janela "Nova regra de foco".*
+*Figura 63 — Janela "Nova regra de foco".*
 
 ### 10.6 Auditoria da empresa
 
@@ -630,27 +666,27 @@ Define quais áreas aparecem primeiro nos painéis (bloco **Seu foco**) para cad
 Alterações de acesso, estrutura e cadastros registradas para esta empresa: data, usuário, entidade e ação. Busca por usuário e filtro **Ação**. O detalhe mostra o registro e as alterações.
 
 ![Auditoria](assets/admin/27-auditoria.webp)
-*Figura 62 — Auditoria da empresa.*
+*Figura 64 — Auditoria da empresa.*
 
 ![Detalhe](assets/admin/28-auditoria-detalhe.webp)
-*Figura 63 — Detalhe de um evento de auditoria.*
+*Figura 65 — Detalhe de um evento de auditoria.*
 
 ### 10.7 Módulos, auditoria e políticas da plataforma (Central)
 
 **Módulos da plataforma** (🔐 `platform.modules.view`): catálogo de módulos, categoria, empresas contratantes, habilitados e permissões governadas.
 
 ![Módulos da plataforma](assets/central/12-modulos.webp)
-*Figura 64 — Catálogo de módulos da plataforma.*
+*Figura 66 — Catálogo de módulos da plataforma.*
 
 **Auditoria da plataforma** (🔐 `platform.audit.view`): ciclo de vida, módulos contratados e membros. Não inclui dados operacionais das empresas.
 
 ![Auditoria da plataforma](assets/central/17-auditoria.webp)
-*Figura 65 — Auditoria da plataforma.*
+*Figura 67 — Auditoria da plataforma.*
 
 **Políticas** (🔐 `platform.settings.view`): o seu acesso (membro, papel, permissões) e as regras de governança garantidas pelo banco: isolamento entre empresas, sem acesso como empresa, hierarquia de membros, contratação × habilitação, auditoria e visibilidade do cadastro.
 
 ![Políticas](assets/central/18-politicas.webp)
-*Figura 66 — Políticas da plataforma.*
+*Figura 68 — Políticas da plataforma.*
 
 ---
 
@@ -660,20 +696,20 @@ Alterações de acesso, estrutura e cadastros registradas para esta empresa: dat
 |---|---|---|---|
 | 1 | Cadastros e Cadastro de usuários › **Inativar/Ativar** pelo menu e em lote | Apaga dados complementares do registro. | Alterar o **Status** pelo formulário **Editar**. |
 | 2 | Cadastro de usuários › **Perfil** | Não concede papel. A pessoa entra sem acesso a módulos. | Atribuir **Papéis** no painel do usuário. |
-| 3 | Papel *Somente leitura* | Entra na Administração da Empresa (visão geral, usuários, papéis) em modo leitura, porque tem `users.read`. | Avaliar se é desejado. |
+| 3 | Papéis *Gerente*, *Operador* e *Somente leitura* | Entram na Administração da Empresa (visão geral, usuários, papéis) em modo leitura, porque têm `users.read`. Não convidam, não atribuem papéis e não alteram nada. | Avaliar se é desejado. |
 | 4 | Empresas novas | O papel *Somente leitura* criado para empresas novas tem poucas permissões. | Revisar o papel após criar a empresa. |
 | 5 | Papéis e permissões | A matriz mostra os recursos com nomes técnicos em inglês (*Audit, Branches, Company modules…*). | Use **Filtrar permissões** e a descrição ao passar o mouse. |
 | 6 | Configurações › Dados da empresa | Sem acesso para todos: a permissão `companies.read` não existe no catálogo. | — |
 | 7 | Produtos | Não carrega por falta de `product_categories.read` (e marcas/unidades) no catálogo. | — |
-| 8 | Conta | Não há troca de senha logado. | **Esqueci minha senha**. |
+| 8 | Conta | Não há troca de senha logado (nem troca de e-mail). | **Esqueci minha senha**. |
 | 9 | Auditoria | Entidades e ações aparecem com nomes técnicos (*sales_orders*, *Approve*). | — |
 | 10 | Ambiente de QA | O e-mail de convite chega com o assunto *"Redefinir senha"* e o link aponta para o ambiente local. Em produção, o texto depende do provedor de e-mail configurado. | — |
 
 ![Somente leitura na administração](assets/admin/29-leitura-admin.webp)
-*Figura 67 — Usuário "Somente leitura" na Visão geral da Administração da Empresa (problema nº 3).*
+*Figura 69 — Usuário "Somente leitura" na Visão geral da Administração da Empresa (problema nº 3).*
 
 ![Somente leitura em papéis](assets/admin/30-leitura-papeis.webp)
-*Figura 68 — Usuário "Somente leitura" consultando Papéis e permissões, sem poder alterar.*
+*Figura 70 — Usuário "Somente leitura" consultando Papéis e permissões, sem poder alterar.*
 
 
 ---
@@ -682,16 +718,16 @@ Alterações de acesso, estrutura e cadastros registradas para esta empresa: dat
 
 | Termo | Significado |
 |---|---|
-| **Administração Central** | Ambiente da plataforma EDUCA para gerir empresas clientes, módulos e membros. |
+| **Administração Central** | Ambiente da plataforma ATLAS.ERP para gerir empresas clientes, módulos e membros. |
 | **Administração da Empresa** | Ambiente do administrador de uma empresa para gerir usuários, papéis e estrutura. |
-| **Admin (plataforma)** | Membro da plataforma que gerencia empresas e Admins. |
+| **Admin (plataforma)** | Membro da plataforma que gerencia empresas e Admins. Não é administrador de empresa. |
 | **Ciclo de vida** | Situação da empresa na plataforma: Avaliação, Ativa, Suspensa, Cancelada. |
 | **Contexto organizacional** | Unidade principal, setor e cargo do usuário. |
 | **Convite** | Link pessoal, com validade e uso único, para criar o acesso. |
 | **Módulo contratado / habilitado** | Contratado: liberado pela plataforma. Habilitado: ligado pela empresa. |
 | **Owner** | Membro máximo da plataforma. Sempre existe ao menos um. |
 | **Papel** | Conjunto de permissões atribuído a usuários. |
-| **Papel de sistema** | Papel padrão (Administrador, Operador, Somente leitura). |
+| **Papel de sistema** | Papel padrão de toda empresa (Administrador, Gerente, Operador, Vendedor, Somente leitura). |
 | **Permissão** | Autorização no formato `recurso.ação`. |
 | **RBAC** | Controle de acesso baseado em papéis. |
 | **Unidade** | Filial ou unidade de operação; limita os dados visíveis. |

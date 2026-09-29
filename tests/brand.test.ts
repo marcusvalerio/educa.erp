@@ -36,6 +36,11 @@ describe("identidade ATLAS.ERP", () => {
   test("versão do build: commit curto da Vercel ou 'local'", () => {
     assert.deepEqual(buildInfo({ NEXT_PUBLIC_BUILD_COMMIT: "0123456789abcdef", NEXT_PUBLIC_BUILD_DATE: "2026-09-29" }), { commit: "0123456", date: "2026-09-29" });
     assert.deepEqual(buildInfo({}), { commit: "local", date: "" });
+    // No navegador o Next só substitui referências diretas a process.env.NEXT_PUBLIC_*.
+    const src = read("src/lib/brand.ts");
+    assert.match(src, /process\.env\.NEXT_PUBLIC_BUILD_COMMIT/);
+    assert.match(src, /process\.env\.NEXT_PUBLIC_BUILD_DATE/);
+    assert.match(read("next.config.ts"), /NEXT_PUBLIC_BUILD_COMMIT: process\.env\.VERCEL_GIT_COMMIT_SHA/);
   });
 
   test("interface (src/) sem o nome anterior como marca", () => {

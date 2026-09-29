@@ -1,0 +1,49 @@
+# Preview da branch claude/atlas-erp (ATLAS.ERP): verificação SOMENTE LEITURA
+# a partir do runner do GitHub, que alcança a Vercel e o Neon.
+#
+# probe: sem segredos — o Preview existe, está protegido, em que modo de
+#   autenticação está e se o Neon Auth de homologação responde.
+# smoke: landing, /login, /app protegido, 308 dos endereços e PDFs antigos,
+#   PDFs dos manuais, APIs 401 e o provedor em uso. Usa VERCEL_BYPASS_TOKEN
+#   (ambiente "homolog") só como cabeçalho; nada é criado nem alterado.
+name: atlas-preview
+on:
+  push:
+    branches: [claude/atlas-erp]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  PREVIEW_URL: https://educaerp-git-claude-atlas-erp-meji-projects.vercel.app
+  HOMOLOG_AUTH_URL: https://ep-royal-flower-b6tz0xde.neonauth.c-2.sa-east-1.aws.neon.tech/authdb/auth
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Aguardar o Preview da Vercel
+        run: sleep 240
+      - name: Sonda (sem segredos)
+        run: node poc/neon-full/homolog/probe-preview.mjs
+
+  smoke:
+    needs: probe
+    runs-on: ubuntu-latest
+    environment: homolog
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Smoke somente leitura no Preview
+        env:
+          PROD_URL: ${{ env.PREVIEW_URL }}
+          EXPECT_AUTH: report
+          ALLOW_HOMOLOG_SEAL: "1"
+          VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
+        run: node scripts/prod/smoke-readonly.mjs

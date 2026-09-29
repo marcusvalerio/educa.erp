@@ -16,8 +16,16 @@ export const PRODUCT_DESCRIPTION = "ERP empresarial modular: operação, finanç
 export const PRODUCT_AUTHOR = "Marcus Valério";
 export const PRODUCT_CREDIT = `Criado por ${PRODUCT_AUTHOR}`;
 
-/** Versão do build (Vercel informa o commit; localmente, "local"). */
-export function buildInfo(env: Record<string, string | undefined> = process.env) {
+/**
+ * Versão do build (Vercel informa o commit; localmente, "local"). As variáveis
+ * são lidas por nome completo: só assim o Next as grava no bundle do navegador.
+ */
+export function buildInfo(
+  env: { NEXT_PUBLIC_BUILD_COMMIT?: string; NEXT_PUBLIC_BUILD_DATE?: string } = {
+    NEXT_PUBLIC_BUILD_COMMIT: process.env.NEXT_PUBLIC_BUILD_COMMIT,
+    NEXT_PUBLIC_BUILD_DATE: process.env.NEXT_PUBLIC_BUILD_DATE,
+  }
+) {
   const commit = (env.NEXT_PUBLIC_BUILD_COMMIT ?? "").slice(0, 7);
   const date = env.NEXT_PUBLIC_BUILD_DATE ?? "";
   return { commit: commit || "local", date };

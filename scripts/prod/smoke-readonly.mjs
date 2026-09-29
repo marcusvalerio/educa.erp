@@ -9,7 +9,9 @@
 // sem sessão. WAIT_FOR_LANDING=1 espera (até 15 min) o deploy com a landing
 // entrar no ar antes de verificar — útil logo depois de um push na main.
 // EXPECT_AUTH (supabase|neon, padrão supabase) e ALLOW_HOMOLOG_SEAL=1 servem
-// para rodar o mesmo smoke contra a pilha local de homologação.
+// para rodar o mesmo smoke contra a pilha local de homologação. Contra um
+// Preview protegido pela Vercel, VERCEL_BYPASS_TOKEN (nunca impresso) envia o
+// cabeçalho de bypass; EXPECT_AUTH=report só informa o provedor em uso.
 const APP = (process.env.PROD_URL ?? "https://educaerp.vercel.app").replace(/\/+$/, "");
 const EXPECT_AUTH = (process.env.EXPECT_AUTH ?? "supabase").toLowerCase();
 const results = [];
@@ -17,7 +19,8 @@ const check = (name, ok, detail = "") => {
   results.push(ok);
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? ` — ${String(detail).slice(0, 180)}` : ""}`);
 };
-const hit = (path, init = {}) => fetch(`${APP}${path}`, { redirect: "manual", signal: AbortSignal.timeout(30000), ...init });
+const BYPASS = process.env.VERCEL_BYPASS_TOKEN ? { "x-vercel-protection-bypass": process.env.VERCEL_BYPASS_TOKEN } : {};
+const hit = (path, init = {}) => fetch(`${APP}${path}`, { redirect: "manual", signal: AbortSignal.timeout(30000), ...init, headers: { ...BYPASS, ...(init.headers ?? {}) } });
 const region = (r) => (r.headers.get("x-vercel-id") ?? "—").split("::").slice(0, -1).join(" → ") || "—";
 const SIGNUP = /criar conta|cadastre-se|teste gr[aá]tis|come[cç]ar agora|solicitar acesso/i;
 const HOMOLOG_SEAL = /Homologação · dados fictícios|HOMOLOGAÇÃO<\/title>/;
@@ -95,7 +98,8 @@ for (const path of ["/api/session/context", "/api/sales-orders", "/api/customers
 // 7. Provedor de autenticação em uso (sem credencial: POST de outra origem)
 const signIn = await hit("/api/auth/sign-in", { method: "POST", headers: { "content-type": "application/json", origin: "https://exemplo.invalid" }, body: JSON.stringify({ email: "x@example.com", password: "x" }) });
 const mode = signIn.status === 404 ? "supabase" : signIn.status === 403 ? "neon" : `desconhecido (${signIn.status})`;
-check(`autenticação no provedor esperado (AUTH_PROVIDER=${EXPECT_AUTH})`, mode === EXPECT_AUTH, `POST /api/auth/sign-in de outra origem → ${signIn.status} ⇒ ${mode}`);
+if (EXPECT_AUTH === "report") console.log(`INFO  provedor de autenticação em uso: ${mode} (POST /api/auth/sign-in de outra origem → ${signIn.status})`);
+else check(`autenticação no provedor esperado (AUTH_PROVIDER=${EXPECT_AUTH})`, mode === EXPECT_AUTH, `POST /api/auth/sign-in de outra origem → ${signIn.status} ⇒ ${mode}`);
 
 const pass = results.filter(Boolean).length;
 console.log(`\nprodução (${APP}): ${pass}/${results.length} verificações passaram`);

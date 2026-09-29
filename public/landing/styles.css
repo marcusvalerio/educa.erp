@@ -343,44 +343,42 @@ main > section {
 }
 
 /* ---------------------------------------------------------------- selos de estado */
+/* Selos discretos: um sinal e o nome em cinza. Quem lê a narrativa passa
+   por eles; quem procura o detalhe distingue os quatro pelo sinal:
+   ● na tela · ○ consulta · ◌ na API · ● (fogo) em evolução. */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   flex: none;
-  height: 22px;
-  padding: 0 8px;
-  border-radius: 999px;
-  font: 600 11px/1 var(--sans);
-  letter-spacing: 0.02em;
+  height: 20px;
+  padding: 0;
+  font: 500 11.5px/1 var(--label);
+  letter-spacing: 0.01em;
   white-space: nowrap;
-  border: 1px solid transparent;
-}
-.chip-tela {
-  background: var(--c-ink);
-  color: var(--c-bg);
-}
-.chip-consulta {
-  border-color: var(--c-ink);
-  color: var(--c-ink);
-}
-.chip-api {
-  border: 1px dashed var(--c-mute);
   color: var(--c-mute);
-  font-family: var(--label);
-  font-weight: 500;
-  letter-spacing: 0;
+}
+.chip::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+.chip-tela::before {
+  background: var(--c-ink);
+}
+.chip-consulta::before {
+  border: 1.5px solid var(--c-ink);
+}
+.chip-api::before {
+  border: 1.5px dashed var(--c-mute);
 }
 .chip-evolucao {
-  background: var(--c-evo-bg);
   color: var(--c-accent);
-  border-color: color-mix(in srgb, var(--fire) 55%, transparent);
 }
 .chip-evolucao::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
   background: var(--fire);
 }
 
@@ -1383,24 +1381,26 @@ main > section {
 .result-tag span {
   color: var(--fire);
 }
+/* Camada técnica: presente e legível, mas um nível abaixo da narrativa —
+   sem fundo nem sombra, só uma régua à esquerda. */
 .api-card {
-  margin-top: 14px;
-  padding: 16px 18px;
-  border-radius: 12px;
-  background: #15120f;
-  color: #f3f4f5;
-  box-shadow: 0 24px 50px -24px rgba(16, 12, 8, 0.6);
-  --c-ink: #f3f4f5;
-  --c-mute: #a9adaf;
-  --c-bg: #15120f;
+  margin-top: 16px;
+  padding: 2px 0 2px 16px;
+  border-left: 1px solid var(--c-line);
+  color: var(--c-mute);
 }
 .api-head {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 0 0 10px;
-  font-size: 13px;
-  color: #a9adaf;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  color: var(--c-mute);
+}
+/* O selo já diz "Na API"; a frase ao lado é a explicação. */
+.api-head .chip {
+  font-size: 0;
+  gap: 0;
 }
 .api-card ul {
   list-style: none;
@@ -1410,21 +1410,20 @@ main > section {
   gap: 6px;
 }
 .api-card code {
-  font-size: 12.5px;
-  color: #f3f4f5;
+  font-size: 12px;
+  color: var(--c-ink);
+  opacity: 0.82;
   overflow-wrap: anywhere;
 }
 .api-card code b {
-  color: var(--fire);
-  font-weight: 600;
+  color: var(--c-accent);
+  font-weight: 500;
   margin-right: 4px;
 }
 .api-foot {
-  margin: 12px 0 0;
-  padding-top: 10px;
-  border-top: 1px solid #2b2723;
-  font-size: 13px;
-  color: #a9adaf;
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--c-mute);
 }
 
 /* Cena fixa (desktop com movimento): o JS fixa .jc e troca as etapas. */
@@ -2166,6 +2165,7 @@ main > section {
 .m-part {
   display: grid;
   gap: 10px;
+  align-content: start;
 }
 .viewer-panels {
   perspective: 1800px;
@@ -2827,8 +2827,8 @@ html:not(.js) .viewer-tabs button[aria-selected="true"]::after {
 .sbar {
   display: flex;
   gap: 2px;
-  height: 6px;
-  margin-top: 10px;
+  height: 4px;
+  margin-top: 12px;
 }
 .sbar i,
 .ai-key i {
@@ -3362,8 +3362,8 @@ html:not(.js) .viewer-tabs button[aria-selected="true"]::after {
   align-items: center;
   gap: 8px;
   min-width: 0;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13.5px;
+  font-weight: 500;
 }
 .lk-node {
   white-space: nowrap;
@@ -4063,8 +4063,14 @@ main > section.act-dark {
 }
 .lv {
   display: grid;
-  gap: 18px;
+  gap: 22px;
   min-width: 0;
+}
+.lv .ch-value {
+  font-size: clamp(1.5rem, 2.1vw, 2rem);
+}
+.lv > .m-label {
+  margin-top: 18px;
 }
 .lv-n {
   display: flex;
@@ -4162,13 +4168,15 @@ main > section.act-dark {
 .pro-sig {
   position: absolute;
   left: -0.04em;
-  top: -0.62em;
+  top: -0.3em;
   z-index: 0;
-  font: 500 clamp(4.4rem, 11vw, 11.5rem) / 1 var(--mono);
+  font: 500 clamp(4rem, 9.5vw, 10rem) / 1 var(--mono);
   letter-spacing: -0.05em;
   white-space: nowrap;
   color: transparent;
-  -webkit-text-stroke: 1px var(--c-line);
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--c-line) 75%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, #000 30%, transparent 52%);
+  mask-image: linear-gradient(90deg, #000 30%, transparent 52%);
   pointer-events: none;
   user-select: none;
 }
@@ -4218,10 +4226,10 @@ main > section.act-dark {
   margin: 0;
 }
 .pro-problem {
-  margin: 0 0 14px;
+  margin: 0 0 16px;
   font-family: var(--serif);
-  font-size: clamp(1.25rem, 1.65vw, 1.6rem);
-  line-height: 1.2;
+  font-size: clamp(1.15rem, 1.4vw, 1.4rem);
+  line-height: 1.25;
   color: var(--c-ink);
 }
 .pro-serves {
@@ -4236,14 +4244,15 @@ main > section.act-dark {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px 12px;
-  margin: 14px 0 0;
-  font-size: 14px;
+  gap: 6px 10px;
+  margin: 12px 0 0;
+  font-size: 13px;
   color: var(--c-mute);
 }
 .ssum b {
-  margin-right: 3px;
-  font: 600 19px/1 var(--label);
+  margin-right: 2px;
+  font: 600 14px/1 var(--label);
+  font-variant-numeric: tabular-nums;
   color: var(--c-ink);
 }
 .ssum i {

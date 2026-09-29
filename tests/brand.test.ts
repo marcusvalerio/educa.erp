@@ -7,7 +7,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
-import { buildInfo, PRODUCT_AUTHOR, PRODUCT_CREDIT, PRODUCT_NAME, PRODUCT_WORDMARK } from "@/lib/brand";
+import { BRAND_MARK, buildInfo, PRODUCT_AUTHOR, PRODUCT_CREDIT, PRODUCT_NAME, PRODUCT_WORDMARK } from "@/lib/brand";
 
 const ROOT = process.cwd();
 const read = (p: string) => readFileSync(path.join(ROOT, p), "utf8");
@@ -31,6 +31,22 @@ describe("identidade ATLAS.ERP", () => {
     assert.equal(`${PRODUCT_WORDMARK.name}${PRODUCT_WORDMARK.suffix}`, PRODUCT_NAME);
     assert.equal(PRODUCT_AUTHOR, "Marcus Valério");
     assert.equal(PRODUCT_CREDIT, "Criado por Marcus Valério");
+  });
+
+  test("símbolo \"Núcleo\": a mesma geometria no app, na landing e no favicon", () => {
+    const { modules, core, radius } = BRAND_MARK;
+    const rects = [...modules, core].map(([x, y, w, h]) => `x="${x}" y="${y}" width="${w}" height="${h}" rx="${radius}"`);
+    // Landing: o gerador declara a mesma geometria.
+    const gen = read("scripts/build-landing.mjs");
+    assert.ok(gen.includes(`modules: [${modules.map((m) => `[${m.join(", ")}]`).join(", ")}], core: [${core.join(", ")}], r: ${radius}`), "build-landing.mjs");
+    // Favicon do app e página gerada: os cinco retângulos, com o centro em fogo.
+    const icon = read("src/app/icon.svg");
+    for (const r of rects) assert.ok(icon.includes(r), `icon.svg: ${r}`);
+    assert.match(icon, /x="13" y="13" width="6" height="6" rx="1.4" fill="#ff9408"/);
+    const html = read("public/landing/index.html");
+    for (const r of rects) assert.ok(html.includes(r), `index.html: ${r}`);
+    // As três barras antigas não voltam.
+    assert.doesNotMatch(read("src/components/shell/Brand.tsx") + icon, /mark-bar|x="7" y="6.5"/);
   });
 
   test("versão do build: commit curto da Vercel ou 'local'", () => {

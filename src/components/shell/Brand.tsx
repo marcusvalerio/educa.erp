@@ -1,19 +1,18 @@
 import { cn } from "@/lib/cn";
-import { PRODUCT_WORDMARK } from "@/lib/brand";
+import { BRAND_MARK, PRODUCT_WORDMARK } from "@/lib/brand";
 
-// Símbolo do produto: três barras sobre um quadrado arredondado — a do meio
-// em Merin's Fire. Desenho mantido da identidade anterior até haver um
-// símbolo definido para o ATLAS.ERP (o mesmo SVG está em src/app/icon.svg,
-// scripts/build-landing.mjs e scripts/build-manuals.mjs).
-// Usa currentColor para a estrutura (funciona sobre claro e escuro).
+// Símbolo do produto — "Núcleo": quatro módulos em torno de um centro em
+// Merin's Fire (geometria em BRAND_MARK; a mesma de src/app/icon.svg e da
+// landing). Os módulos usam currentColor, então funciona sobre claro e escuro.
 
 export function BrandMark({ className, size = 22 }: { className?: string; size?: number }) {
+  const { modules, core, radius } = BRAND_MARK;
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden className={cn("shrink-0", className)}>
-      <rect x="1" y="1" width="22" height="22" rx="5" className="fill-current" />
-      <rect x="7" y="6.5" width="11" height="2.5" rx="1" className="fill-[var(--mark-bar,var(--color-background))]" />
-      <rect x="7" y="10.75" width="8" height="2.5" rx="1" className="fill-accent" />
-      <rect x="7" y="15" width="11" height="2.5" rx="1" className="fill-[var(--mark-bar,var(--color-background))]" />
+    <svg viewBox="0 0 32 32" width={size} height={size} aria-hidden className={cn("shrink-0", className)}>
+      {modules.map(([x, y, w, h]) => (
+        <rect key={`${x}-${y}`} x={x} y={y} width={w} height={h} rx={radius} className="fill-current" />
+      ))}
+      <rect x={core[0]} y={core[1]} width={core[2]} height={core[3]} rx={radius} className="fill-accent" />
     </svg>
   );
 }

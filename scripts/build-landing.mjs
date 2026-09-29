@@ -49,9 +49,19 @@ const moduleById = Object.fromEntries(C.MODULES.map((m) => [m.id, m]));
 const moduleName = (id) => (id === "cadastros" ? "Cadastros" : moduleById[id]?.name ?? id);
 const pad = (n) => String(n).padStart(2, "0");
 
-// Símbolo do produto (mesmo desenho de src/components/shell/Brand.tsx).
+// Símbolo do produto — "Núcleo": quatro módulos girando em torno de um
+// centro laranja (áreas diferentes, uma base só). Mesma geometria de
+// BRAND_MARK em src/lib/brand.ts (tests/brand.test.ts confere), grade 32×32.
+const MARK = { modules: [[3, 3, 16, 8], [21, 3, 8, 16], [13, 21, 16, 8], [3, 13, 8, 16]], core: [13, 13, 6, 6], r: 1.4 };
+const markRects = (modCls, coreCls) =>
+  MARK.modules.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${MARK.r}" ${modCls}/>`).join("") +
+  `<rect x="${MARK.core[0]}" y="${MARK.core[1]}" width="${MARK.core[2]}" height="${MARK.core[3]}" rx="${MARK.r}" ${coreCls}/>`;
+// Só o símbolo (cabeçalho, rodapé): módulos em currentColor, centro em fogo.
 const mark = (size = 22, cls = "mark") =>
-  `<svg class="${cls}" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="currentColor"/><rect x="7" y="6.5" width="11" height="2.5" rx="1" class="mark-bar"/><rect x="7" y="10.75" width="8" height="2.5" rx="1" class="mark-fire"/><rect x="7" y="15" width="11" height="2.5" rx="1" class="mark-bar"/></svg>`;
+  `<svg class="${cls}" viewBox="0 0 32 32" width="${size}" height="${size}" aria-hidden="true">${markRects('class="mark-mod"', 'class="mark-core"')}</svg>`;
+// Em placa (favicon): placa escura, módulos claros, centro em fogo.
+const markTile = () =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#100c08"/><g transform="translate(16 16) scale(.64) translate(-16 -16)">${markRects('fill="#f3f4f5"', 'fill="#ff9408"')}</g></svg>`;
 
 // Nome do produto no cabeçalho e no rodapé: "ATLAS" + ".ERP" em tom menor.
 const BRAND_WORD = `${esc(C.META.title.replace(/\.ERP$/, ""))}<span class="brand-dim">.ERP</span>`;
@@ -1078,11 +1088,12 @@ function network() {
 // Final: as áreas separadas convergem para uma marca só (desktop: da
 // esquerda para a direita; celular: de cima para baixo).
 function converge(labels) {
+  // Destino da convergência: o símbolo sobre uma placa clara.
   const markSvg = (cx, cy, size) => {
-    const u = size / 24;
     const x = cx - size / 2;
     const y = cy - size / 2;
-    return `<g class="cv-mark"><rect x="${f1(x + u)}" y="${f1(y + u)}" width="${f1(22 * u)}" height="${f1(22 * u)}" rx="${f1(5 * u)}" class="cv-mark-bg"/><rect x="${f1(x + 7 * u)}" y="${f1(y + 6.5 * u)}" width="${f1(11 * u)}" height="${f1(2.5 * u)}" rx="${f1(u)}" class="cv-mark-bar"/><rect x="${f1(x + 7 * u)}" y="${f1(y + 10.75 * u)}" width="${f1(8 * u)}" height="${f1(2.5 * u)}" rx="${f1(u)}" class="cv-mark-fire"/><rect x="${f1(x + 7 * u)}" y="${f1(y + 15 * u)}" width="${f1(11 * u)}" height="${f1(2.5 * u)}" rx="${f1(u)}" class="cv-mark-bar"/></g>`;
+    const s = (size * 0.64) / 32;
+    return `<g class="cv-mark"><rect x="${f1(x)}" y="${f1(y)}" width="${f1(size)}" height="${f1(size)}" rx="${f1(size * 0.22)}" class="cv-mark-bg"/><g transform="translate(${f1(cx)} ${f1(cy)}) scale(${s.toFixed(4)}) translate(-16 -16)">${markRects('class="cv-mark-mod"', 'class="cv-mark-core"')}</g></g>`;
   };
   const pill = (x, y, w, h, label, i) =>
     `<g class="cv-silo" data-silo="${i}"><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}"/><text x="${x + w / 2}" y="${f1(y + h / 2 + 4)}" text-anchor="middle">${esc(label.toUpperCase())}</text></g>`;
@@ -1376,7 +1387,7 @@ ${AUTH_HASH_FORWARD}
 <meta property="og:title" content="${esc(C.META.title)}">
 <meta property="og:description" content="${esc(C.META.description)}">
 <meta property="og:url" content="${esc(C.META.siteUrl)}">
-<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(mark(24).replace('class="mark"', 'xmlns="http://www.w3.org/2000/svg"').replace(/class="mark-bar"/g, 'fill="#f5f6f6"').replace('class="mark-fire"', 'fill="#ff9408"').replace('fill="currentColor"', 'fill="#100c08"'))}">
+<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(markTile())}">
 ${heroPreload()}
 <link rel="preload" href="fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/instrument-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>

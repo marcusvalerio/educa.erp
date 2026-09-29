@@ -17,6 +17,22 @@ export const PRODUCT_AUTHOR = "Marcus Valério";
 export const PRODUCT_CREDIT = `Criado por ${PRODUCT_AUTHOR}`;
 
 /**
+ * Símbolo "Núcleo" (grade 32×32): quatro módulos girando em torno de um
+ * centro — áreas diferentes, uma base só. O centro é sempre o acento (fogo).
+ * Mesma geometria em scripts/build-landing.mjs e src/app/icon.svg.
+ */
+export const BRAND_MARK = {
+  modules: [
+    [3, 3, 16, 8],
+    [21, 3, 8, 16],
+    [13, 21, 16, 8],
+    [3, 13, 8, 16],
+  ],
+  core: [13, 13, 6, 6],
+  radius: 1.4,
+} as const;
+
+/**
  * Versão do build (Vercel informa o commit; localmente, "local"). As variáveis
  * são lidas por nome completo: só assim o Next as grava no bundle do navegador.
  */

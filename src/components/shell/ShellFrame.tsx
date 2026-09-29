@@ -241,7 +241,7 @@ function ShellInner({ environment, children }: { environment: Environment; child
 
   const sidebarHeader =
     environment === "platform" ? (
-      <Link href="/app/admincentral" className="flex min-w-0 items-center gap-2.5 text-platform-foreground" style={{ ["--mark-bar" as string]: "var(--color-platform)" }}>
+      <Link href="/app/admincentral" className="flex min-w-0 items-center gap-2.5 text-platform-foreground">
         <BrandMark className="text-platform-foreground" />
         <span className={cn("min-w-0", collapsed && "lg:hidden")}>
           <BrandWordmark context="Administração Central" />

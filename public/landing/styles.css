@@ -194,10 +194,10 @@ main > section {
 }
 
 /* ---------------------------------------------------------------- marca */
-.mark .mark-bar {
-  fill: var(--stage);
+.mark .mark-mod {
+  fill: currentColor;
 }
-.mark .mark-fire {
+.mark .mark-core {
   fill: var(--fire);
 }
 .brand {
@@ -3623,10 +3623,10 @@ html:not(.js) .viewer-tabs button[aria-selected="true"]::after {
 .cv-mark-bg {
   fill: var(--stage-ink);
 }
-.cv-mark-bar {
+.cv-mark-mod {
   fill: var(--stage);
 }
-.cv-mark-fire {
+.cv-mark-core {
   fill: var(--fire);
 }
 .cv-word {

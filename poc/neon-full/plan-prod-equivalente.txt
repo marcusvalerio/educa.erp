@@ -91,3 +91,8 @@ supabase/migrations/0072_protect_auth_user_link.sql
 supabase/migrations/0073_external_identity_links.sql
 supabase/migrations/0074_fix_reserve_sales_order_stock.sql
 supabase/migrations/0075_company_roles_and_user_invites.sql
+supabase/migrations/0076_empresa_nova_estoque_e_papeis.sql
+supabase/migrations/0077_relatorios_e_autor_da_auditoria.sql
+supabase/migrations/0078_nfe_pre_requisitos.sql
+supabase/migrations/0079_nome_da_empresa_na_central.sql
+supabase/migrations/0080_itens_sem_numero_de_serie.sql

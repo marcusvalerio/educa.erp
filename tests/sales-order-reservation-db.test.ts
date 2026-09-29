@@ -1,5 +1,5 @@
 // Reserva de estoque do pedido de venda executada de verdade no PostgreSQL
-// com o esquema do EDUCA. POC_DATABASE_OWNER_URL: conexão do DONO de um banco
+// com o esquema do ATLAS.ERP. POC_DATABASE_OWNER_URL: conexão do DONO de um banco
 // DESCARTÁVEL (ver poc/neon-full/README.md; nunca produção) — o dono prepara
 // os logins de teste com a mesma marca do aceite de convite (0072) e as ações
 // rodam como "authenticated", pela RLS e pelas funções do banco. Tudo numa

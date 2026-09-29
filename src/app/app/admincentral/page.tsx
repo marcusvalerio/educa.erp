@@ -36,7 +36,7 @@ export default function PlatformOverviewPage() {
       <PageHeader
         eyebrow="Plataforma ATLAS.ERP"
         title="Administração Central"
-        description="Governança da plataforma: empresas como clientes, contratação de módulos e membros da operação ATLAS.ERP."
+        description="Governança da plataforma: empresas como clientes, contratação de módulos e membros da operação."
         meta={data?.platform ? <StatusBadge entity="platform_role" status={data.platform.role} /> : undefined}
       />
 

@@ -1,7 +1,7 @@
 // Camada de dados em PostgreSQL direto (DATA_BACKEND=postgres): o adaptador
 // com a mesma forma de uso do supabase-js. Testes puros (geração de SQL,
 // parâmetros, erros) rodam sempre; os de integração só com
-// POC_DATABASE_URL (um banco descartável com o esquema do EDUCA — ver
+// POC_DATABASE_URL (um banco descartável com o esquema do ATLAS.ERP — ver
 // poc/neon-full/README.md), nunca contra produção.
 import { test, describe, after } from "node:test";
 import assert from "node:assert/strict";

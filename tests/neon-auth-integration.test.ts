@@ -1,4 +1,4 @@
-// Integração do Neon Auth ao EDUCA (Plano A, Etapa 2): chave de provedor,
+// Integração do Neon Auth ao ATLAS.ERP (Plano A, Etapa 2): chave de provedor,
 // cliente HTTP do Neon Auth, fluxos de conta, provisionamento de convite e
 // invariantes de código. Sem rede: fetch simulado com as respostas REAIS
 // observadas no Neon (docs/NEON_AUTH_MIGRATION.md §10).
@@ -174,7 +174,7 @@ describe("resolução da sessão (servidor)", () => {
     assert.deepEqual(await resolveNeonSession(null, { getSession: async () => session(), bridge: okBridge }), { status: "none" });
     assert.deepEqual(await resolveNeonSession("c", { getSession: async () => null, bridge: okBridge }), { status: "none" });
   });
-  test("sessão válida → auth_user_id do EDUCA + token do banco", async () => {
+  test("sessão válida → auth_user_id do ATLAS.ERP + token do banco", async () => {
     const r = await resolveNeonSession("c", { getSession: async () => session(), bridge: okBridge });
     assert.equal(r.status, "ok");
     assert.equal(r.status === "ok" && r.identity.authUserId, AUTH_USER);
@@ -218,7 +218,7 @@ describe("rotas de conta: só o próprio app (login CSRF)", () => {
 });
 
 describe("login", () => {
-  test("identidade que não chega ao EDUCA: sessão do Neon é encerrada, nada de cookie", async () => {
+  test("identidade que não chega ao ATLAS.ERP: sessão do Neon é encerrada, nada de cookie", async () => {
     const calls: string[] = [];
     const r = await signInFlow("a@b.co", "x", {
       signIn: async () => ({ cookie: "c", user: realUser as NeonUser }),

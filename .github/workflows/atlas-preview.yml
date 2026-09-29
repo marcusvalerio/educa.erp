@@ -46,4 +46,9 @@ jobs:
           EXPECT_AUTH: report
           ALLOW_HOMOLOG_SEAL: "1"
           VERCEL_BYPASS_TOKEN: ${{ secrets.VERCEL_BYPASS_TOKEN }}
-        run: node scripts/prod/smoke-readonly.mjs
+        run: |
+          if [ -z "$VERCEL_BYPASS_TOKEN" ]; then
+            echo "::warning::Preview protegido pela Vercel Authentication e sem VERCEL_BYPASS_TOKEN no ambiente 'homolog': smoke não executado."
+            exit 0
+          fi
+          node scripts/prod/smoke-readonly.mjs

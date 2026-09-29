@@ -148,11 +148,14 @@ function renderHtml(markdown) {
 }
 
 // ---------------------------------------------------------------- página
-const MARK_SVG = (size) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true">
-  <rect x="1" y="1" width="22" height="22" rx="5" fill="#100c08"/>
-  <rect x="7" y="6.5" width="11" height="2.5" rx="1" fill="#f5f6f6"/>
-  <rect x="7" y="10.75" width="8" height="2.5" rx="1" fill="#ff9408"/>
-  <rect x="7" y="15" width="11" height="2.5" rx="1" fill="#f5f6f6"/></svg>`;
+// Símbolo "Núcleo" — mesma geometria de BRAND_MARK (src/lib/brand.ts),
+// conferida por tests/brand.test.ts. Na capa escura: módulos claros e o
+// centro em fogo.
+const MARK = { modules: [[3, 3, 16, 8], [21, 3, 8, 16], [13, 21, 16, 8], [3, 13, 8, 16]], core: [13, 13, 6, 6], r: 1.4 };
+const MARK_SVG = (size) =>
+  `<svg viewBox="0 0 32 32" width="${size}" height="${size}" aria-hidden="true">` +
+  MARK.modules.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${MARK.r}" class="mark-mod"/>`).join("") +
+  `<rect x="${MARK.core[0]}" y="${MARK.core[1]}" width="${MARK.core[2]}" height="${MARK.core[3]}" rx="${MARK.r}" class="mark-core"/></svg>`;
 
 function pageCss(manual, meta) {
   const footerLeft = `Versão ${brDate(meta.date)} · ${meta.hash}`;
@@ -183,8 +186,8 @@ body { margin: 0; }
 /* capa */
 .cover { page: cover; break-after: page; height: 297mm; width: 210mm; box-sizing: border-box; padding: 26mm 22mm 20mm; background: var(--ink); color: #f3f4f5; display: flex; flex-direction: column; position: relative; }
 .cover .brand { display: flex; align-items: center; gap: 10px; font: 600 12pt "Instrument Sans"; letter-spacing: .02em; }
-.cover .brand svg rect:first-child { fill: #f3f4f5; }
-.cover .brand svg rect:nth-child(2), .cover .brand svg rect:nth-child(4) { fill: #100c08; }
+.cover .brand .mark-mod { fill: #f3f4f5; }
+.cover .brand .mark-core { fill: var(--accent); }
 .cover .brand .erp { opacity: .55; }
 .cover .eyebrow { margin-top: 62mm; font: 600 8.5pt "Instrument Sans"; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
 .cover h1 { font: 400 46pt/1.02 "Instrument Serif"; margin: 6mm 0 0; letter-spacing: -.01em; string-set: none; }

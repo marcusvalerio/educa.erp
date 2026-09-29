@@ -33,12 +33,16 @@ describe("identidade ATLAS.ERP", () => {
     assert.equal(PRODUCT_CREDIT, "Criado por Marcus Valério");
   });
 
-  test("símbolo \"Núcleo\": a mesma geometria no app, na landing e no favicon", () => {
+  test("símbolo \"Núcleo\": a mesma geometria no app, na landing, no favicon e nos manuais", () => {
     const { modules, core, radius } = BRAND_MARK;
     const rects = [...modules, core].map(([x, y, w, h]) => `x="${x}" y="${y}" width="${w}" height="${h}" rx="${radius}"`);
-    // Landing: o gerador declara a mesma geometria.
-    const gen = read("scripts/build-landing.mjs");
-    assert.ok(gen.includes(`modules: [${modules.map((m) => `[${m.join(", ")}]`).join(", ")}], core: [${core.join(", ")}], r: ${radius}`), "build-landing.mjs");
+    // Landing e manuais (capa dos PDFs): os geradores declaram a mesma geometria.
+    const decl = `modules: [${modules.map((m) => `[${m.join(", ")}]`).join(", ")}], core: [${core.join(", ")}], r: ${radius}`;
+    for (const gen of ["scripts/build-landing.mjs", "scripts/build-manuals.mjs"]) {
+      const src = read(gen);
+      assert.ok(src.includes(decl), gen);
+      assert.doesNotMatch(src, /x="7" y="6\.5"/, `${gen}: três barras antigas`);
+    }
     // Favicon do app e página gerada: os cinco retângulos, com o centro em fogo.
     const icon = read("src/app/icon.svg");
     for (const r of rects) assert.ok(icon.includes(r), `icon.svg: ${r}`);

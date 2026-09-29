@@ -61,7 +61,36 @@ A trava imprime apenas nomes de variáveis. Outras branches não são afetadas. 
 
 ## 4. Usuários e papéis
 
-As contas são criadas por `scripts/homolog/bootstrap.mjs` pelo fluxo oficial do app (convites e tela de papéis). O script é idempotente. Os e-mails usam `@example.com`, um domínio reservado sem caixa real. As senhas são as que **o dono do projeto** define nos segredos do GitHub; ninguém mais as conhece e elas não aparecem em log.
+### 4.1 Contas funcionais de homologação (conjunto oficial, desde 29/09/2026)
+
+Seis contas permanentes, uma por papel real do ATLAS.ERP, para percorrer os fluxos completos do ERP. Existem no banco (branch Neon `homolog`, banco `educa`) **e** no Neon Auth da mesma branch. O domínio `atlaserp.test` é reservado para testes: a caixa de e-mail não existe.
+
+| E-mail | Papel | Empresa | Principais permissões |
+|---|---|---|---|
+| `owner@atlaserp.test` | **OWNER** da plataforma | nenhuma | Administração Central inteira (14 permissões de plataforma); concede Owner e Admin; não lê dados de empresa |
+| `admin@atlaserp.test` | **ADMIN** da plataforma | nenhuma | Administração Central (12 permissões); só gere Admins; não altera nem cria Owner; não é administrador de empresa |
+| `gerente@atlaserp.test` | **Gerente** (papel de sistema) | ASTRA.ERP | gestão da empresa: Comercial, Financeiro, Suprimentos, Logística, Produção, Fiscal; aprova orçamentos, pedidos e compras; não convida usuários nem altera papéis |
+| `vendedor@atlaserp.test` | **Vendedor** (papel de sistema) | ASTRA.ERP | Comercial e CRM: clientes, orçamentos e pedidos (cria e edita); consulta estoque; sem aprovar, sem Financeiro |
+| `operador@atlaserp.test` | **Operador** (papel de sistema) | ASTRA.ERP | Estoque/Operação: entradas de estoque, separação, orçamentos e pedidos; sem aprovar nem reservar |
+| `leitura@atlaserp.test` | **Somente leitura** (papel de sistema) | ASTRA.ERP | consulta de todos os módulos liberados; nenhuma criação, alteração ou aprovação |
+
+- **Senha:** a mesma para as seis. Ela **não está neste repositório** (público). Está no arquivo privado `CREDENCIAIS-HOMOLOGACAO.md`, entregue ao dono do projeto fora do Git. Guarde-a no gerenciador de senhas e, para automação, no segredo `HOMOLOG_PASSWORD` do ambiente `homolog` do GitHub.
+- **Isolamento:** Owner e Admin são membros da plataforma, sem cadastro em nenhuma empresa. Gerente, Vendedor, Operador e Somente leitura são usuários da ASTRA.ERP, com os papéis de sistema da migration `0075`, sem papel de plataforma.
+- **Como foram criadas:** pelas regras dos fluxos oficiais, na ordem do app.
+  - O Owner foi convidado pelo Owner que já existia na homologação (Membros da plataforma → Convidar membro).
+  - O Admin foi convidado pelo Owner novo.
+  - Os quatro usuários da ASTRA foram convidados pelo administrador da empresa (Administração → Usuários → Convidar usuário, `fn_invite_company_user`) e aceitaram o convite (`fn_accept_user_invitation`) com a própria identidade.
+  - A identidade de cada um nasceu no Neon Auth pela API de administração e foi vinculada com `fn_link_identity`, como no provisionamento do app.
+  - O primeiro acesso gravou a senha no Neon Auth e confirmou o e-mail, como o app faz ao concluir o link.
+  - O ambiente desta sessão não alcança o app de homologação (Preview) nem o Neon Auth por HTTP. Por isso as mesmas chamadas foram feitas no banco com a identidade de quem convida, e não pelo navegador. O percurso completo pela interface (convite → e-mail → primeiro acesso → aceite) foi ensaiado no app, na pilha local, com as mesmas seis contas (seção 8).
+- **Contas que já existiam e continuam:** o Owner copiado da produção e `owner.qa@example.com` (Owner da plataforma e administrador da ASTRA, usado pelos testes existentes e como o administrador da empresa que emitiu os convites). Nenhuma foi alterada ou removida.
+- **Evidências:** `evidencias/contas-funcionais.md`.
+
+### 4.2 Plano anterior (substituído, nunca executado na branch `homolog`)
+
+O `scripts/homolog/bootstrap.mjs` foi escrito para as contas abaixo, com papéis criados só para a homologação. Elas **não existem** na branch `homolog`; o conjunto oficial é o da seção 4.1.
+
+Pelo plano, as contas seriam criadas por `scripts/homolog/bootstrap.mjs` pelo fluxo oficial do app (convites e tela de papéis). O script é idempotente. Os e-mails usam `@example.com`, um domínio reservado sem caixa real. As senhas seriam as que **o dono do projeto** define nos segredos do GitHub.
 
 | Usuário | Papel | E-mail | Senha |
 |---|---|---|---|

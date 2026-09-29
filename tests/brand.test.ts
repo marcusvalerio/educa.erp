@@ -82,14 +82,17 @@ describe("identidade ATLAS.ERP", () => {
     for (const src of ["landing/src/content.mjs", "scripts/build-landing.mjs"]) assert.doesNotMatch(read(src), OLD_BRAND, src);
   });
 
-  test("manuais: PDFs com o nome novo, oferecidos pela landing e gerados pelo script", () => {
+  // Os manuais completos são para quem já usa o sistema (Admin e Owner): os
+  // PDFs continuam gerados e publicados em /landing/manuais, mas a landing
+  // pública não os oferece (decisão do refino de 29/09/2026).
+  test("manuais: PDFs com o nome novo, gerados e publicados, fora da landing pública", () => {
     const content = read("landing/src/content.mjs");
     for (const pdf of ["ATLAS-ERP-Manual-do-Usuario.pdf", "ATLAS-ERP-Manual-de-Administracao.pdf"]) {
       assert.ok(existsSync(path.join(ROOT, "docs/manual/pdf", pdf)), pdf);
       assert.ok(content.includes(`manuais/${pdf}`), pdf);
       assert.ok(read("scripts/build-manuals.mjs").includes(`output: "${pdf}"`), pdf);
-      assert.ok(read("public/landing/index.html").includes(`/landing/manuais/${pdf}`), pdf);
     }
+    assert.doesNotMatch(read("public/landing/index.html"), /\/landing\/manuais\//);
     assert.deepEqual(readdirSync(path.join(ROOT, "docs/manual/pdf")).filter((f) => f.startsWith("EDUCA")), []);
   });
 

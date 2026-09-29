@@ -814,7 +814,7 @@ function protagonist(pr, i) {
         ${apiBlock(b)}
         <figure class="pro-beat-shot shot">
           <div class="shot-bar"><span class="shot-mark" aria-hidden="true"><i></i><i></i><i></i></span>${route(b)}</div>
-          <div class="shot-frame cam-frame" style="aspect-ratio:${PRO_RATIO}">${cam(b, { viewRatio: PRO_RATIO, alt: b.text, sizes: "(min-width: 1100px) 1px, 100vw", maxS: 1.9 })}</div>
+          <div class="shot-frame cam-frame" style="aspect-ratio:${PRO_RATIO}">${cam(b, { viewRatio: PRO_RATIO, alt: b.text, sizes: "(min-width: 1100px) 1px, 100vw", maxS: b.zoom ?? 1.9 })}</div>
         </figure>
       </li>`,
         )
@@ -824,7 +824,7 @@ function protagonist(pr, i) {
       <div class="pro-screen shot">
         <div class="shot-bar"><span class="shot-mark"><i></i><i></i><i></i></span>${beats.map((b, k) => `<span class="shot-route${k === 0 ? " is-on" : ""}" data-route="${k}">${esc(b.route)}</span>`).join("")}</div>
         <div class="pro-view" style="aspect-ratio:${PRO_RATIO}">
-          ${beats.map((b, k) => `<div class="pro-layer${k === 0 ? " is-on" : ""}" data-layer="${k}">${cam(b, { viewRatio: PRO_RATIO, inert: true, sizes: "(min-width: 1100px) 90vw, 1px", maxS: 1.9 })}</div>`).join("")}
+          ${beats.map((b, k) => `<div class="pro-layer${k === 0 ? " is-on" : ""}" data-layer="${k}">${cam(b, { viewRatio: PRO_RATIO, inert: true, sizes: "(min-width: 1100px) 90vw, 1px", maxS: b.zoom ?? 1.9 })}</div>`).join("")}
         </div>
       </div>
       <ol class="pro-dots">${beats.map((b, k) => `<li${k === 0 ? ' class="is-on"' : ""} data-dot="${k}"><span>${esc(b.label)}</span></li>`).join("")}</ol>
@@ -980,6 +980,7 @@ function levels() {
           })
           .join("")}
       </ol>
+      <p class="levels-cta"><a class="link-cta" href="${esc(C.META.appUrl)}">Entrar no ATLAS.ERP<span aria-hidden="true">→</span></a></p>
     </div>
   </div>
 </section>`;
@@ -1129,7 +1130,7 @@ function closing(sizes, { preview = false } = {}) {
     <h2 id="closing-title" class="display-2 closing-q">${esc(K.title)}</h2>
     ${converge(K.silos)}
     <p class="closing-a">${esc(K.answer)}</p>
-    <p class="section-lead">${esc(K.body)}</p>
+    ${K.body ? `<p class="section-lead">${esc(K.body)}</p>` : ""}
     <div class="actions">
       ${K.actions
         .map((a) => {
@@ -1390,7 +1391,7 @@ ${AUTH_HASH_FORWARD}
 <link rel="icon" href="data:image/svg+xml,${encodeURIComponent(markTile())}">
 ${heroPreload()}
 <link rel="preload" href="fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="fonts/instrument-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/dm-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles.css">`;
   await writeFile(
     path.join(OUT, "index.html"),

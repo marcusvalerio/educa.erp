@@ -563,9 +563,9 @@ export const PROTAGONISTS = [
     beats: [
       { label: "Endereço", state: "consulta", img: "logistica/06-enderecamento", route: "/logistica/enderecamento", focus: [289, 96, 1110, 210], text: "Locais de armazenagem por armazém, corredor, prateleira e nível: cada item tem um endereço." },
       { label: "Produto no local", state: "tela", img: "comercial/14-pedido-reservar-dialogo", route: "/comercial/pedidos-venda/:id", focus: [528, 312, 382, 560], cursor: [717, 491], text: "A reserva do pedido escolhe o local de estoque: packing, armazenagem, quarentena, expedição. Itens sem saldo ficam com reserva pendente." },
-      { label: "Estoque", state: "consulta", img: "logistica/02-estoque", route: "/logistica/estoque", focus: [289, 96, 580, 165], text: "O saldo é derivado do registro de movimentações, nunca alterado diretamente pela tela, com visões sem disponibilidade e com reserva.", note: "No ambiente das capturas, ainda sem registros." },
-      { label: "Movimentação", state: "api", img: "logistica/03-movimentacoes", route: "/logistica/movimentacoes", focus: [289, 96, 580, 165], text: "Movimentações ficam num registro imutável. Entradas, saídas e transferências são registradas pelo núcleo; a tela consulta.", note: "No ambiente das capturas, ainda sem registros." },
-      { label: "Separação", state: "consulta", img: "logistica/08-picking", route: "/logistica/picking", focus: [289, 96, 580, 165], text: "Listas de separação geradas a partir dos pedidos confirmados.", note: "No ambiente das capturas, ainda sem registros." },
+      { label: "Estoque", state: "consulta", img: "logistica/02-estoque", route: "/logistica/estoque", focus: [289, 96, 420, 200], zoom: 2.3, text: "O saldo é derivado do registro de movimentações, nunca alterado diretamente pela tela, com visões sem disponibilidade e com reserva.", note: "No ambiente das capturas, ainda sem registros." },
+      { label: "Movimentação", state: "api", img: "logistica/03-movimentacoes", route: "/logistica/movimentacoes", focus: [289, 96, 420, 170], zoom: 2.3, text: "Movimentações ficam num registro imutável. Entradas, saídas e transferências são registradas pelo núcleo; a tela consulta.", note: "No ambiente das capturas, ainda sem registros." },
+      { label: "Separação", state: "consulta", img: "logistica/08-picking", route: "/logistica/picking", focus: [289, 96, 420, 200], zoom: 2.3, text: "Listas de separação geradas a partir dos pedidos confirmados.", note: "No ambiente das capturas, ainda sem registros." },
     ],
   },
   {
@@ -588,8 +588,8 @@ export const PROTAGONISTS = [
     beats: [
       { label: "Documento", state: "api", img: "comercial/21-faturamento", route: "/comercial/faturamento", focus: [289, 312, 1110, 106], text: "O documento fiscal nasce do pedido e os impostos são calculados pelas regras, no núcleo. O Faturamento lista os documentos.", api: ["POST /api/sales-orders/:id/generate-fiscal-document", "POST /api/fiscal-documents/:id/calculate"] },
       { label: "Documento calculado", state: "consulta", img: "fiscal/02b-nfe-detalhe", route: "/fiscal/nfe", focus: [770, 14, 662, 470], text: "DF-0004: cliente, emissão, total e status Calculada, com o histórico de cada alteração." },
-      { label: "Expedição", state: "consulta", img: "logistica/10-expedicao", route: "/logistica/expedicao", focus: [289, 96, 560, 165], text: "Expedições de pedidos de venda, da liberação ao despacho, com as visões expedição atrasada e prontas para expedir.", note: "No ambiente das capturas, ainda sem registros.", api: ["POST /api/sales-orders/:id/pick-lists", "POST /api/shipments/:id/ship"] },
-      { label: "Transporte", state: "consulta", img: "logistica/11-transportes", route: "/logistica/transportes", focus: [289, 96, 700, 165], text: "As mesmas expedições sob a ótica do transporte: transportadora, despacho e entrega, em trânsito e entregues.", note: "No ambiente das capturas, ainda sem registros." },
+      { label: "Expedição", state: "consulta", img: "logistica/10-expedicao", route: "/logistica/expedicao", focus: [289, 96, 420, 200], zoom: 2.3, text: "Expedições de pedidos de venda, da liberação ao despacho, com as visões expedição atrasada e prontas para expedir.", note: "No ambiente das capturas, ainda sem registros.", api: ["POST /api/sales-orders/:id/pick-lists", "POST /api/shipments/:id/ship"] },
+      { label: "Transporte", state: "consulta", img: "logistica/11-transportes", route: "/logistica/transportes", focus: [289, 96, 420, 200], zoom: 2.3, text: "As mesmas expedições sob a ótica do transporte: transportadora, despacho e entrega, em trânsito e entregues.", note: "No ambiente das capturas, ainda sem registros." },
       { label: "Entrega", state: "api", img: "inicio/04-fluxo-do-erp", route: "/", focus: [30, 70, 1115, 400], text: "O Início mostra o fluxo do período, do pedido à entrega: 12 pedidos, 7 em preparação, 1 expedido. O evento de entrega é registrado pelo núcleo.", api: ["POST /api/shipments/:id/deliver"] },
     ],
   },
@@ -741,11 +741,9 @@ export const NETWORK = {
 export const CLOSING = {
   title: "Sua operação não deveria funcionar em silos.",
   answer: "ATLAS.ERP conecta a operação.",
-  body: "Os manuais mostram cada tela, passo a passo, com as mesmas capturas desta página.",
   silos: ["Comercial", "Estoque", "Financeiro", "Fiscal", "Logística", "Gestão"],
-  actions: [
-    { label: "Entrar no ATLAS.ERP", href: META.appUrl, primary: true },
-    { label: "Manual do Usuário", href: META.manualUser },
-    { label: "Manual de Administração", href: META.manualAdmin },
-  ],
+  // Os manuais completos ficam para quem já usa o sistema (Admin e Owner);
+  // os PDFs continuam publicados em /landing/manuais (e os endereços antigos
+  // respondem 308), mas a landing não os oferece.
+  actions: [{ label: "Entrar no ATLAS.ERP", href: META.appUrl, primary: true }],
 };

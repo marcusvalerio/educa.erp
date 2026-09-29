@@ -3097,6 +3097,29 @@ html:not(.js) .viewer-tabs button[aria-selected="true"]::after {
 .btn.is-static {
   cursor: default;
 }
+/* Ponto discreto de entrada no fim do Ato 05: link de texto, não botão. */
+.levels-cta {
+  margin: clamp(72px, 9vw, 128px) 0 0;
+}
+.link-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--c-accent);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--c-ink);
+  text-decoration: none;
+}
+.link-cta span {
+  color: var(--c-accent);
+  transition: transform 0.2s var(--ease);
+}
+.link-cta:hover span,
+.link-cta:focus-visible span {
+  transform: translateX(4px);
+}
 .closing-note {
   margin: 0;
   font-size: 14px;
@@ -4347,8 +4370,9 @@ html.js .pro-beat:not(.is-on) .api-card {
 }
 .pro-beat-note {
   margin: 0;
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--c-mute);
+  opacity: 0.85;
 }
 .pro-beat .api-card {
   margin: 4px 0 0;

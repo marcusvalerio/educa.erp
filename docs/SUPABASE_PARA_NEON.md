@@ -19,7 +19,7 @@ leitura**. Nada foi alterado em produção.
 | Camada | Produção hoje | Neon hoje | Situação |
 |---|---|---|---|
 | Aplicação (código) | modo `supabase` | modos `neon` e `neon + postgres` prontos e testados | ✅ código pronto para os dois provedores |
-| Banco — esquema | Supabase, migrations até **0073** | Neon `main`: esquema até 0073; homologação: até 0073 | ⚠️ **0074 e 0075** fora dos bancos remotos |
+| Banco — esquema | Supabase, migrations até **0073** | Neon `main`: esquema até 0073; **homologação: até 0075** (29/09, com branch de segurança `homolog-antes-atlas-20260929`) | ⚠️ **0074 e 0075** fora da produção (Supabase e Neon `main`) |
 | Banco — dados | Supabase (empresa ASTRA.ERP, cadastros fictícios, 2 logins) | Neon `main` **vazio** (1 empresa, 0 usuários); homologação com cópia fictícia | ❌ carga de dados não feita |
 | Autenticação | Supabase Auth | Neon Auth: homologação ligada; produção com **login por e-mail/senha desligado** | ❌ configuração de produção pendente |
 | E-mails de autenticação | remetente do Supabase | remetente **compartilhado** da Neon (`auth@mail.myneon.app`) | ⚠️ limitado; nome da aplicação ainda é o do projeto |
@@ -57,7 +57,7 @@ do Neon Auth.
 | Item | Supabase (produção) | Neon | Observação |
 |---|---|---|---|
 | PostgreSQL | 17.6, sa-east-1 | 17, `educa-erp-prod` (aws-sa-east-1) | mesma região das funções da Vercel (`gru1`) |
-| Migrations | 84 registradas (versões próprias), última **0073** | esquema aplicado até 0073 (`poc/neon-full`, adaptador de SQL) | **0074** (reserva de estoque) e **0075** (papéis e convite da empresa) não aplicadas em nenhum banco remoto |
+| Migrations | 84 registradas (versões próprias), última **0073** | esquema aplicado até 0073 (`poc/neon-full`, adaptador de SQL) | **0074** (reserva de estoque) e **0075** (papéis e convite da empresa) aplicadas **só na homologação Neon** (29/09); fora do Supabase e do Neon `main` |
 | RLS / policies | 328 policies | as mesmas (conferidas no pré-cutover) | autoridade continua no banco |
 | Funções / triggers | SECURITY DEFINER, `has_permission`, gatilhos de papéis e auditoria | as mesmas | GUC técnico `educa.auth_link` (0071/0072) mantido |
 | Esquema `auth` | nativo do Supabase (`auth.users`, `auth.uid()`) | **réplica mínima** criada pelo adaptador (`auth.users`, `auth.uid()` lendo `request.jwt.claims`) | é o que mantém RLS e funções idênticas |
@@ -199,7 +199,7 @@ convite também entrega o **link para copiar** na tela, que funciona sem e-mail.
 
 ## 9. Antes de qualquer cutover (checklist)
 
-1. Aplicar **0074** e **0075** na homologação e validar (RBAC, convite, reserva de estoque).
+1. ~~Aplicar **0074** e **0075** na homologação~~ — feito em 29/09 (branch de segurança antes); validar no Preview (RBAC, convite, reserva de estoque).
 2. Configurar o Preview da branch para a homologação Neon e fazer o QA com a conta QA.
 3. Neon Auth de produção: login habilitado, cadastro público desligado, Application Name `ATLAS.ERP`, trusted domain de produção, conta de serviço.
 4. **Mapa de identidades**: para cada login do Supabase (hoje 2), criar a conta no Neon Auth com o mesmo e-mail e vincular ao mesmo `auth_user_id`.

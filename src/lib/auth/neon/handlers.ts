@@ -23,7 +23,7 @@ import { isTrustedAccountRequest, resetPasswordFlow, resolveNeonSession, signInF
 import { appOrigin, bridgeFor, neonConfig, withServiceSession } from "./server";
 import { resolveCurrentNeonSession } from "./request";
 
-// Rotas de conta do EDUCA com AUTH_PROVIDER=neon. O navegador fala só com
+// Rotas de conta do ATLAS.ERP com AUTH_PROVIDER=neon. O navegador fala só com
 // elas; o servidor fala com o Neon Auth. Com AUTH_PROVIDER=supabase elas
 // respondem 404 (o caminho do Supabase Auth continua no navegador).
 
@@ -90,7 +90,7 @@ export async function neonSignIn(request: NextRequest) {
       signOut: (cookie) => signOut(config, cookie, hints),
     }).catch(neonError);
     if (outcome.status !== "ok") {
-      throw new ApiError("ACCESS_NOT_READY", "Seu acesso ao EDUCA ainda não foi liberado. Use o link do convite enviado para o seu e-mail.", 403);
+      throw new ApiError("ACCESS_NOT_READY", "Seu acesso ao ATLAS.ERP ainda não foi liberado. Use o link do convite enviado para o seu e-mail.", 403);
     }
     await setNeonSessionCookie(outcome.cookie);
     return ok();
@@ -144,7 +144,7 @@ export async function neonResetPassword(request: NextRequest) {
   }
 }
 
-// GET /api/auth/session — há sessão válida (identidade que chega ao EDUCA)?
+// GET /api/auth/session — há sessão válida (identidade que chega ao ATLAS.ERP)?
 export async function neonCurrentSession() {
   try {
     neonOnly();

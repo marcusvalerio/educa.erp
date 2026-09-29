@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/Toast";
 import { TooltipProvider } from "@/components/ui/Tooltip";
 import { EnvironmentBadge } from "@/components/shell/EnvironmentBadge";
 import { isHomologation } from "@/lib/environment";
+import { PRODUCT_AUTHOR, PRODUCT_DESCRIPTION, PRODUCT_NAME } from "@/lib/brand";
 import { THEME_STORAGE_KEY } from "@/lib/theme";
 import "./globals.css";
 
@@ -42,9 +43,11 @@ const jetbrains = localFont({
 const TITLE_SUFFIX = isHomologation() ? " · HOMOLOGAÇÃO" : "";
 
 export const metadata: Metadata = {
-  title: { default: `EDUCA.ERP${TITLE_SUFFIX}`, template: `%s · EDUCA.ERP${TITLE_SUFFIX}` },
-  description: "EDUCA.ERP — gestão empresarial integrada: operação, finanças, fiscal e governança.",
-  applicationName: "EDUCA.ERP",
+  title: { default: `${PRODUCT_NAME}${TITLE_SUFFIX}`, template: `%s · ${PRODUCT_NAME}${TITLE_SUFFIX}` },
+  description: `${PRODUCT_NAME} — ${PRODUCT_DESCRIPTION}`,
+  applicationName: PRODUCT_NAME,
+  authors: [{ name: PRODUCT_AUTHOR }],
+  creator: PRODUCT_AUTHOR,
 };
 
 export const viewport: Viewport = {

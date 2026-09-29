@@ -1,4 +1,4 @@
-// Conteúdo da landing do EDUCA. Fonte de verdade da página: tudo o que está
+// Conteúdo da landing do ATLAS.ERP. Fonte de verdade da página: tudo o que está
 // aqui foi conferido em docs/landing/INVENTARIO.md (código, manuais e telas).
 //
 // Estados (selo ao lado de cada capacidade):
@@ -18,17 +18,20 @@ export const STATES = {
 };
 
 export const META = {
-  title: "EDUCA.ERP",
+  title: "ATLAS.ERP",
   description:
-    "O EDUCA conecta vendas, compras, estoque, finanças, fiscal, qualidade, projetos e manutenção em uma operação só. Conheça o produto pelas telas reais.",
+    "O ATLAS.ERP conecta vendas, compras, estoque, finanças, fiscal, qualidade, projetos e manutenção em uma operação só. Conheça o produto pelas telas reais.",
   // A landing é servida pelo próprio app (mesmo domínio): o login é relativo
   // e funciona igual em produção, no Preview e localmente.
   appUrl: "/login",
   // Endereço canônico da landing (SEO): a raiz do domínio de produção.
   siteUrl: "https://educaerp.vercel.app/",
-  manualUser: "manuais/EDUCA-Manual-do-Usuario.pdf",
-  manualAdmin: "manuais/EDUCA-Manual-de-Administracao.pdf",
+  manualUser: "manuais/ATLAS-ERP-Manual-do-Usuario.pdf",
+  manualAdmin: "manuais/ATLAS-ERP-Manual-de-Administracao.pdf",
   edition: "Telas da versão redesenhada, capturadas em 27/09/2026 com dados fictícios",
+  // Autoria: só no rodapé e nos metadados (<meta name="author">).
+  author: "Marcus Valério",
+  credit: "Criado por Marcus Valério",
 };
 
 // A página como um filme em atos. Um fio contínuo (a mesma operação)
@@ -44,12 +47,12 @@ export const ACTS = [
 ];
 
 export const HERO = {
-  eyebrow: "EDUCA.ERP · gestão integrada",
+  eyebrow: "ATLAS.ERP · gestão integrada",
   title: ["Uma operação inteira,", "conectada."],
   lead:
     "Um pedido aprovado no Comercial vira reserva no Estoque, título no Financeiro, documento no Fiscal e fluxo na Logística. Tudo na mesma base, e tudo aparece para a Gestão.",
   primary: { label: "Ver a operação acontecer", href: "#siga-um-pedido" },
-  secondary: { label: "Entrar no EDUCA", href: META.appUrl },
+  secondary: { label: "Entrar no ATLAS.ERP", href: META.appUrl },
   // Cena da abertura. Coordenadas em px da captura original.
   // O pedido real é o centro; cada marcador fica sobre o botão ou campo
   // que gera trabalho em outra área e leva à tela real daquela área.
@@ -166,7 +169,7 @@ export const SCENARIO = {
 };
 
 export const PLATFORM = {
-  kicker: "O EDUCA",
+  kicker: "O ATLAS.ERP",
   title: "Uma base só, três ambientes.",
   body: "Todas as áreas gravam na mesma base. O que muda é quem vê o quê: cada pessoa entra com papéis que definem os módulos e as ações disponíveis para ela.",
   numbers: [
@@ -176,7 +179,7 @@ export const PLATFORM = {
     { value: 352, label: "permissões no papel Administrador", note: "cada ação tem a sua" },
   ],
   environments: [
-    { name: "ERP", who: "Toda a empresa", what: "A operação: vendas, compras, estoque, finanças, fiscal, qualidade, projetos, manutenção e gestão.", img: "inicio/06-painel-executivo", route: "/gestao/dashboard", alt: "Painel executivo do EDUCA" },
+    { name: "ERP", who: "Toda a empresa", what: "A operação: vendas, compras, estoque, finanças, fiscal, qualidade, projetos, manutenção e gestão.", img: "inicio/06-painel-executivo", route: "/gestao/dashboard", alt: "Painel executivo do ATLAS.ERP" },
     { name: "Administração da Empresa", who: "Administrador da empresa", what: "Usuários, convites, papéis, setores, cargos, unidades, módulos e auditoria da própria empresa.", img: "admin/01-visao-geral", route: "/admin", alt: "Visão geral da Administração da Empresa" },
     { name: "Administração Central", who: "Owner e Admin da plataforma", what: "Empresas clientes, ciclo de vida e módulos contratados. Não enxerga dados operacionais das empresas.", img: "central/01-visao-geral", route: "/admincentral", alt: "Visão geral da Administração Central" },
   ],
@@ -189,7 +192,7 @@ export const JOURNEY = {
   thesis: "Uma venda não termina na venda.",
   origin: "Pedido",
   note: "As telas são do ambiente de demonstração e mostram pedidos diferentes em cada etapa.",
-  lead: "Uma venda atravessa seis áreas. Role para acompanhar o que cada uma recebe e onde isso aparece no EDUCA.",
+  lead: "Uma venda atravessa seis áreas. Role para acompanhar o que cada uma recebe e onde isso aparece no ATLAS.ERP.",
   steps: [
     {
       area: "Venda",
@@ -665,7 +668,7 @@ export const CENTRAL = {
   ],
 };
 
-// Ato 05: a arquitetura do EDUCA em três níveis do mesmo sistema. Cada nível
+// Ato 05: a arquitetura do ATLAS.ERP em três níveis do mesmo sistema. Cada nível
 // reúne o ambiente, os números e o conteúdo de acesso/administração já
 // validados (PLATFORM, ACCESS, CENTRAL).
 export const LEVELS = {
@@ -737,11 +740,11 @@ export const NETWORK = {
 
 export const CLOSING = {
   title: "Sua operação não deveria funcionar em silos.",
-  answer: "EDUCA conecta a operação.",
+  answer: "ATLAS.ERP conecta a operação.",
   body: "Os manuais mostram cada tela, passo a passo, com as mesmas capturas desta página.",
   silos: ["Comercial", "Estoque", "Financeiro", "Fiscal", "Logística", "Gestão"],
   actions: [
-    { label: "Entrar no EDUCA", href: META.appUrl, primary: true },
+    { label: "Entrar no ATLAS.ERP", href: META.appUrl, primary: true },
     { label: "Manual do Usuário", href: META.manualUser },
     { label: "Manual de Administração", href: META.manualAdmin },
   ],

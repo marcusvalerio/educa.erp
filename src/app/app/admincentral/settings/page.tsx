@@ -23,7 +23,7 @@ export default function PlatformPoliciesPage() {
   const platform = data?.platform;
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Políticas" description="Regras de governança da plataforma EDUCA, garantidas pelo banco de dados." />
+      <PageHeader title="Políticas" description="Regras de governança da plataforma ATLAS.ERP, garantidas pelo banco de dados." />
       <Panel>
         <PanelHeader title="Seu acesso" />
         <dl className="grid gap-x-6 gap-y-2 p-4 text-sm sm:grid-cols-[auto_1fr]">

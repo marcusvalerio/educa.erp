@@ -19,7 +19,7 @@ import { createPgDataClient } from "@/lib/database/pg/client";
  *   AUTH_PROVIDER=supabase → sessão do Supabase Auth em cookies (@supabase/ssr);
  *   AUTH_PROVIDER=neon     → token curto emitido pela ponte (sub = auth_user_id)
  *                            no cabeçalho Authorization; sem sessão, cliente anônimo.
- * Em ambos, auth.uid() no banco é o mesmo UUID do login no EDUCA.
+ * Em ambos, auth.uid() no banco é o mesmo UUID do login no ATLAS.ERP.
  */
 export async function createClient(): Promise<SupabaseClient> {
   if (dataBackend() === "postgres") {

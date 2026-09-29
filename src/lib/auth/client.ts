@@ -9,7 +9,7 @@ import { authProvider } from "./provider";
 // recuperar/redefinir senha, convite) chamam só estas funções.
 //
 //   supabase → SDK do Supabase Auth no navegador (exatamente o fluxo de antes);
-//   neon     → rotas /api/auth/* do próprio EDUCA; o navegador nunca fala
+//   neon     → rotas /api/auth/* do próprio ATLAS.ERP; o navegador nunca fala
 //              com o Neon Auth nem vê o cookie de sessão dele.
 
 const neon = () => authProvider() === "neon";

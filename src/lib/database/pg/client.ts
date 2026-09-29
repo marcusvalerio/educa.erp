@@ -5,7 +5,7 @@ import { Pool, type PoolClient } from "pg";
 import { QueryBuilder, runRpc, type Catalog, type FnInfo, type QueryExec, type Relationship, type SessionRunner } from "./postgrest-compat";
 
 // Acesso a dados em PostgreSQL direto (DATA_BACKEND=postgres): Neon em
-// produção, qualquer Postgres com o esquema do EDUCA em teste.
+// produção, qualquer Postgres com o esquema do ATLAS.ERP em teste.
 //
 // Cada chamada abre uma transação e fixa, antes de tudo:
 //   SET LOCAL ROLE anon | authenticated | service_role
@@ -131,7 +131,7 @@ export function loadCatalog(): Promise<Catalog> {
 type AdminUser = { id: string; email: string | null; email_confirmed_at: string | null; app_metadata: Record<string, unknown>; user_metadata: Record<string, unknown> };
 
 /**
- * Cliente de dados com a mesma forma de uso do supabase-js no EDUCA
+ * Cliente de dados com a mesma forma de uso do supabase-js no ATLAS.ERP
  * (from/rpc; e, só com service_role, auth.admin para o login "sombra" em
  * auth.users — que no Neon é uma tabela comum, sem senha).
  */

@@ -29,7 +29,7 @@ import {
   BarChart3,
 } from "lucide-react";
 
-// Registro único de navegação do EDUCA.ERP.
+// Registro único de navegação do ATLAS.ERP.
 //
 // Cada página declara a permissão que a API correspondente exige (a
 // mesma string usada em requireAccess/has_permission no backend). A UI
@@ -349,7 +349,7 @@ export const PLATFORM_NAV: NavSection[] = [
     icon: Landmark,
     href: "/app/admincentral",
     group: "overview",
-    description: "Governança da plataforma EDUCA.",
+    description: "Governança da plataforma ATLAS.ERP.",
     items: [
       { label: "Visão geral", href: "/app/admincentral" },
       { label: "Empresas", href: "/app/admincentral/companies", permission: "platform.companies.view", keywords: ["tenant", "cliente"] },

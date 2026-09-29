@@ -78,7 +78,7 @@ export default function AdminModulesPage() {
                           {contracted && !mod.is_core && !enabled && <Badge tone="warning">Desabilitado</Badge>}
                         </label>
                         {mod.description && <p className="mt-0.5 text-xs text-muted-foreground">{mod.description}</p>}
-                        {!contracted && <p className="mt-0.5 text-xs text-subtle-foreground">A contratação é feita pela plataforma EDUCA.</p>}
+                        {!contracted && <p className="mt-0.5 text-xs text-subtle-foreground">A contratação é feita pela plataforma ATLAS.ERP.</p>}
                         {mod.disabled_at && !enabled && <p className="mt-0.5 text-2xs text-subtle-foreground tabular-nums">Desabilitado em {formatDate(mod.disabled_at)}</p>}
                       </div>
                       <Switch

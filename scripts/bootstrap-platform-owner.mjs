@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Bootstrap do PRIMEIRO Platform Owner do EDUCA.
+// Bootstrap do PRIMEIRO Platform Owner do ATLAS.ERP.
 //
 //   node scripts/bootstrap-platform-owner.mjs --email pessoa@empresa.com --name "Nome Completo" \
 //        --app-url https://erp.exemplo.com.br [--dry-run]

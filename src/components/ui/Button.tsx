@@ -3,7 +3,7 @@ import { Slot } from "radix-ui";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-// Botão do EDUCA. Primário = Smoky Black (claro) / Chef's Hat (escuro) —
+// Botão do ATLAS.ERP. Primário = Smoky Black (claro) / Chef's Hat (escuro) —
 // nunca laranja. "danger" só para ações destrutivas confirmadas. Relevo
 // mínimo (shadow-xs) nos botões preenchidos/contornados e resposta de
 // toque curta (1px) — nada além disso.

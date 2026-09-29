@@ -125,7 +125,7 @@ export function InvitationFlow({ token }: { token: string }) {
           icon={<CheckCircle2 size={18} aria-hidden />}
           tone="success"
           title="Conta ativa"
-          description={phase.kind === "COMPANY_ADMIN" ? "Acesso liberado. Abrindo a Administração da Empresa…" : "Acesso liberado. Abrindo o EDUCA…"}
+          description={phase.kind === "COMPANY_ADMIN" ? "Acesso liberado. Abrindo a Administração da Empresa…" : "Acesso liberado. Abrindo o ATLAS.ERP…"}
         />
       )}
     </AuthFrame>
@@ -176,7 +176,7 @@ function SignInStep({ token, preview, linkError }: { token: string; preview: Pre
       <AuthHeading
         icon={<MailOpen size={18} aria-hidden />}
         title="Você recebeu um convite"
-        description={<>Para acessar <span className="font-medium text-foreground">{preview.company_name}</span> no EDUCA, confirme sua identidade.</>}
+        description={<>Para acessar <span className="font-medium text-foreground">{preview.company_name}</span> no ATLAS.ERP, confirme sua identidade.</>}
       />
       {linkError && <Alert tone="warning">{linkError}</Alert>}
       <InvitationSummary preview={preview} />

@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { EducaMark } from "@/components/shell/Brand";
+import { BrandMark, ProductName } from "@/components/shell/Brand";
 import { ThemeToggle } from "@/components/shell/ShellControls";
 import { cn } from "@/lib/cn";
+import { PRODUCT_NAME } from "@/lib/brand";
 
 // Moldura das telas de identidade (login, convite, primeiro acesso,
 // recuperação de senha, acesso pendente): marca, tema, um painel central
@@ -23,9 +24,9 @@ export function AuthFrame({ children, aside }: { children: ReactNode; aside?: Re
       <div className="flex flex-col px-4 py-6 sm:px-10">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2.5 text-foreground">
-            <EducaMark />
+            <BrandMark />
             <span className="text-sm font-semibold tracking-title">
-              EDUCA<span className="text-subtle-foreground">.ERP</span>
+              <ProductName />
             </span>
           </span>
           <ThemeToggle />
@@ -33,7 +34,7 @@ export function AuthFrame({ children, aside }: { children: ReactNode; aside?: Re
         <main id="conteudo" className="flex flex-1 items-center justify-center py-10">
           <div className="w-full max-w-sm animate-rise-in">{children}</div>
         </main>
-        <p className="text-2xs text-subtle-foreground">© EDUCA.ERP</p>
+        <p className="text-2xs text-subtle-foreground">© {PRODUCT_NAME}</p>
       </div>
       {aside}
     </div>

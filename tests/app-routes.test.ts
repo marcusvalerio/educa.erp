@@ -66,7 +66,7 @@ describe("links internos do ERP", () => {
   test("nenhum link, redirect ou destino do app aponta para um endereço antigo", () => {
     // Literais "/comercial…", '/admin…', `/gestao…`, (/crm…) fora das APIs.
     // Exceção: rotas da API do próprio Neon Auth (/admin/create-user…), que
-    // não são páginas do EDUCA.
+    // não são páginas do ATLAS.ERP.
     const legacy = new RegExp(`["'\`(]/(${LEGACY_APP_AREAS.join("|")})(?=[/"'\`?#)]|\\$)`);
     const offenders: string[] = [];
     for (const file of files(path.join(ROOT, "src"), /\.(ts|tsx)$/)) {
@@ -97,7 +97,7 @@ describe("proxy × landing", () => {
   const matcher = new RegExp(`^${source!.replace(/\\\\/g, "\\")}$`);
 
   test("arquivos da landing (CSS, JS, fontes, imagens, PDFs) ficam fora do proxy", () => {
-    for (const p of ["/landing/styles.css", "/landing/main.js", "/landing/motion.js", "/landing/vendor/gsap.min.js", "/landing/fonts/instrument-sans-latin-wght-normal.woff2", "/landing/img/x.webp", "/landing/manuais/EDUCA-Manual-do-Usuario.pdf"]) {
+    for (const p of ["/landing/styles.css", "/landing/main.js", "/landing/motion.js", "/landing/vendor/gsap.min.js", "/landing/fonts/instrument-sans-latin-wght-normal.woff2", "/landing/img/x.webp", "/landing/manuais/ATLAS-ERP-Manual-do-Usuario.pdf", "/landing/manuais/EDUCA-Manual-do-Usuario.pdf"]) {
       assert.equal(matcher.test(p), false, p);
     }
   });
@@ -136,7 +136,7 @@ describe("landing servida pelo app (public/landing)", () => {
     assert.doesNotMatch(html, /\s(?:src|href)="(?:styles\.css|main\.js|motion\.js)"/);
   });
 
-  test("'Entrar no EDUCA' leva ao /login do mesmo domínio; nenhum CTA de cadastro", () => {
+  test("'Entrar no ATLAS.ERP' leva ao /login do mesmo domínio; nenhum CTA de cadastro", () => {
     const enter = [...html.matchAll(/<a [^>]*href="([^"]*)"[^>]*>(?:(?!<\/a>)[\s\S])*Entrar(?:(?!<\/a>)[\s\S])*<\/a>/g)].map((m) => m[1]);
     assert.ok(enter.length >= 3, `CTAs: ${enter.length}`);
     assert.ok(enter.every((href) => href === "/login"), enter.join(", "));

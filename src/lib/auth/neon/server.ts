@@ -18,9 +18,9 @@ import {
 
 export type { NeonIdentity, NeonResolution } from "./flows";
 
-// Neon Auth no servidor do EDUCA (AUTH_PROVIDER=neon).
+// Neon Auth no servidor do ATLAS.ERP (AUTH_PROVIDER=neon).
 //
-//   navegador ─cookie HttpOnly do EDUCA─▶ servidor ─cookie de sessão─▶ Neon Auth
+//   navegador ─cookie HttpOnly do ATLAS.ERP─▶ servidor ─cookie de sessão─▶ Neon Auth
 //        /get-session (sessão viva? revogada = null) + JWT EdDSA
 //   ─▶ ponte: assinatura (JWKS), iss/aud, exp/iat, emailVerified, banned,
 //      sub do JWT = usuário da sessão, vínculo 0073 → auth_user_id

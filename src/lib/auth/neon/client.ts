@@ -1,9 +1,9 @@
 // Cliente HTTP do Neon Auth (Managed Better Auth) — só servidor.
 //
-// Só `fetch`, sem Next.js nem segredos embutidos: o servidor do EDUCA é
+// Só `fetch`, sem Next.js nem segredos embutidos: o servidor do ATLAS.ERP é
 // o único que fala com o Neon Auth (padrão BFF). O navegador conversa com
 // as rotas /api/auth/* do próprio app e nunca vê o cookie de sessão do
-// Neon — ele fica num cookie HttpOnly do domínio do EDUCA.
+// Neon — ele fica num cookie HttpOnly do domínio do ATLAS.ERP.
 //
 // Contrato validado contra o serviço real (docs/NEON_AUTH_MIGRATION.md
 // §10): rotas do Better Auth sob a base URL do Neon Auth, cookie de sessão

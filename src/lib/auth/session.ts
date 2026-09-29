@@ -18,7 +18,7 @@ import { createSupabaseSessionClient } from "@/lib/supabase/server";
 //   neon     → sessão do Neon Auth + ponte (src/lib/auth/neon/server.ts).
 
 export type SessionIdentity = {
-  /** UUID do login no EDUCA (auth.users.id) — o mesmo que auth.uid() vê no banco. */
+  /** UUID do login no ATLAS.ERP (auth.users.id) — o mesmo que auth.uid() vê no banco. */
   authUserId: string;
   email: string | null;
 };

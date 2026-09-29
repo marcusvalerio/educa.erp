@@ -42,10 +42,10 @@ const newCtx = () => browser.newContext({ extraHTTPHeaders: BYPASS, viewport: { 
   // Landing pública em "/"; ERP em /app. Endereços antigos passam pelo 308.
   const landing = await page.goto(`${APP}/`);
   const landingText = await page.locator("body").innerText();
-  check("Landing", "/ sem sessão → landing (200, sem redirecionar)", landing?.status() === 200 && new URL(page.url()).pathname === "/" && /EDUCA/.test(await page.title()), "funciona", `${landing?.status()} ${page.url()}`);
+  check("Landing", "/ sem sessão → landing (200, sem redirecionar)", landing?.status() === 200 && new URL(page.url()).pathname === "/" && /ATLAS\.ERP/.test(await page.title()), "funciona", `${landing?.status()} ${page.url()}`);
   check("Landing", "landing sem CTA de cadastro", !SIGNUP.test(landingText), "funciona", landingText.match(SIGNUP)?.[0]);
   const enter = await page.locator('a:has-text("Entrar")').evaluateAll((as) => as.map((a) => a.getAttribute("href")));
-  check("Landing", `'Entrar no EDUCA' → /login (${enter.length} links)`, enter.length >= 3 && enter.every((h) => h === "/login"), "funciona", enter.join(", "));
+  check("Landing", `'Entrar no ATLAS.ERP' → /login (${enter.length} links)`, enter.length >= 3 && enter.every((h) => h === "/login"), "funciona", enter.join(", "));
   for (const path of ["/app", "/app/comercial/pedidos", "/app/financeiro/contas-receber", "/app/admin", "/app/admincentral", "/comercial/pedidos", "/admin"]) {
     await page.goto(`${APP}${path}`);
     const to = new URL(page.url());

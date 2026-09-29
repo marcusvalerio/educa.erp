@@ -7,7 +7,7 @@ import { Panel, PanelHeader } from "@/components/ui/Panel";
 import { EmptyState, Skeleton } from "@/components/ui/Feedback";
 import { Segmented } from "@/components/ui/Controls";
 
-// Moldura de toda visualização do EDUCA: título que diz O QUE é medido,
+// Moldura de toda visualização do ATLAS.ERP: título que diz O QUE é medido,
 // descrição curta com o recorte, alternância gráfico/tabela (nenhum valor
 // fica preso num tooltip), e estados de carregando/vazio/erro/sem acesso.
 

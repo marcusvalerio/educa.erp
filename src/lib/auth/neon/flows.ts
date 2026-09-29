@@ -33,7 +33,7 @@ type Deps = {
 };
 
 /**
- * Sessão do Neon → identidade do EDUCA. Nada do navegador escolhe quem é
+ * Sessão do Neon → identidade do ATLAS.ERP. Nada do navegador escolhe quem é
  * o usuário: só a sessão viva no Neon e o JWT verificado.
  */
 export async function resolveNeonSession(cookie: string | null | undefined, deps: Deps): Promise<NeonResolution> {
@@ -89,7 +89,7 @@ export type SignInDeps = {
 
 export type SignInOutcome =
   | { status: "ok"; cookie: string }
-  /** Credenciais certas, mas a identidade não chega ao EDUCA (sem vínculo, e-mail não confirmado, bloqueada). */
+  /** Credenciais certas, mas a identidade não chega ao ATLAS.ERP (sem vínculo, e-mail não confirmado, bloqueada). */
   | { status: "not_allowed" };
 
 /** Login: só devolve sessão se a identidade passar pela ponte inteira. */

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Senha da conta de serviço do EDUCA num projeto Neon Auth (AUTH_PROVIDER=neon).
+// Senha da conta de serviço do ATLAS.ERP num projeto Neon Auth (AUTH_PROVIDER=neon).
 //
 // A senha é gerada NESTA máquina e gravada só no arquivo indicado (padrão
 // ./.neon-service.env, permissão 600, fora do git). O script imprime o SQL com

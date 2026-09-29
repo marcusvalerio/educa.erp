@@ -1,4 +1,4 @@
-// EDUCA.ERP — landing: interações. Melhoria progressiva: sem este script a
+// ATLAS.ERP — landing: interações. Melhoria progressiva: sem este script a
 // página já está completa (primeira etapa ativa, primeira tela de cada módulo,
 // mapa inteiro aceso). As cenas com GSAP ficam em motion.js.
 (() => {

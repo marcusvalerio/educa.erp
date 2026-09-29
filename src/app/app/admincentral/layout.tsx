@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ShellFrame } from "@/components/shell/ShellFrame";
 
-export const metadata: Metadata = { title: { default: "Administração Central", template: "%s · Administração Central · EDUCA" } };
+export const metadata: Metadata = { title: { default: "Administração Central", template: "%s · Administração Central · ATLAS.ERP" } };
 
 // Administração Central da plataforma (Platform Owner / Admin). Não dá
 // acesso a dados operacionais de nenhuma empresa.

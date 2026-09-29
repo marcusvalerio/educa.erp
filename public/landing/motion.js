@@ -1,4 +1,4 @@
-// EDUCA.ERP — landing: cenas com GSAP + ScrollTrigger (v3).
+// ATLAS.ERP — landing: cenas com GSAP + ScrollTrigger (v3).
 //
 // Direção (HyperFrames aplicado à web):
 // - uma linha do tempo por cena; entradas com .out, saídas com .in,

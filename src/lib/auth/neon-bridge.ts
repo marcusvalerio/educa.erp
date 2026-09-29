@@ -2,14 +2,14 @@ import { SignJWT, jwtVerify, type JWTVerifyGetKey } from "jose";
 
 // Ponte de identidade Neon Auth → Postgres do Supabase (Plano A).
 //
-// O banco do EDUCA reconhece o usuário por auth.uid(), que o PostgREST
+// O banco do ATLAS.ERP reconhece o usuário por auth.uid(), que o PostgREST
 // preenche a partir do `sub` de um JWT que ele mesmo valida. Toda a RLS
 // (328 policies) e o RBAC (has_permission, current_app_user_id…) partem
 // daí. Esta ponte preserva esse contrato sem tocar em nenhuma policy:
 //
 //   1. o token do Neon Auth é VERIFICADO no servidor (assinatura pelo
 //      JWKS do provedor, emissor, audiência, validade, algoritmo);
-//   2. o `sub` verificado é traduzido para o auth_user_id do EDUCA por um
+//   2. o `sub` verificado é traduzido para o auth_user_id do ATLAS.ERP por um
 //      vínculo mantido no banco (auth_identity_links, 0073) — nunca por
 //      valor vindo do navegador;
 //   3. o servidor emite um token CURTO para o PostgREST com
@@ -104,7 +104,7 @@ export async function bridgeIdentity(providerToken: string, deps: BridgeDeps): P
   if (identity.banned) throw new IdentityBridgeError("DISABLED", "Conta bloqueada no provedor de identidade.");
   if (!identity.emailVerified) throw new IdentityBridgeError("EMAIL_NOT_VERIFIED", "E-mail ainda não confirmado.");
   const authUserId = await deps.resolveLink(identity.externalUserId);
-  if (!authUserId) throw new IdentityBridgeError("UNLINKED", "Esta conta ainda não tem acesso configurado no EDUCA.");
+  if (!authUserId) throw new IdentityBridgeError("UNLINKED", "Esta conta ainda não tem acesso configurado no ATLAS.ERP.");
   if (!UUID.test(authUserId)) throw new IdentityBridgeError("INVALID_LINK", "Vínculo de identidade inválido.");
   return { authUserId, dbToken: await deps.mint(authUserId), email: identity.email, externalUserId: identity.externalUserId };
 }

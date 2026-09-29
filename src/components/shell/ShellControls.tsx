@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, Building2, Check, ChevronsUpDown, Landmark, LayoutGrid, LogOut, MapPin, Monitor, Moon, Search, Settings2, Sun } from "lucide-react";
+import { Bell, Building2, Check, ChevronsUpDown, Info, Landmark, LayoutGrid, LogOut, MapPin, Monitor, Moon, Search, Settings2, Sun } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Avatar, Segmented } from "@/components/ui/Controls";
 import { Kbd } from "@/components/ui/Feedback";
@@ -21,6 +21,7 @@ import { initials } from "@/lib/navigation/access";
 import { apiGet } from "@/lib/api-client";
 import { useSession } from "./SessionProvider";
 import { useLogout } from "@/components/auth/LogoutButton";
+import { AboutDialog } from "./AboutDialog";
 
 type Variant = "default" | "platform";
 
@@ -263,6 +264,7 @@ export function UserMenu({ variant = "default", adminHref, platformHref, erpHref
 
   // O <form> de saída fica fora do conteúdo do menu (ver useLogout).
   const { logout, form: logoutForm } = useLogout();
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   return (
     <>
@@ -344,12 +346,16 @@ export function UserMenu({ variant = "default", adminHref, platformHref, erpHref
               ]}
             />
           </div>
+          <DropdownMenuItem onSelect={() => setAboutOpen(true)}>
+            <Info size={14} /> Sobre o ATLAS.ERP
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={logout}>
             <LogOut size={14} /> Sair
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      <AboutDialog open={aboutOpen} onOpenChange={setAboutOpen} />
       {logoutForm}
     </>
   );

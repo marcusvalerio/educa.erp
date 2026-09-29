@@ -1,4 +1,4 @@
-// Onde ficam os DADOS do EDUCA:
+// Onde ficam os DADOS do ATLAS.ERP:
 //   "supabase" (padrão) → PostgREST do projeto Supabase (supabase-js);
 //   "postgres"          → PostgreSQL direto (Neon), sem PostgREST
 //                         (src/lib/database/pg).

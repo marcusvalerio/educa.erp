@@ -16,7 +16,7 @@ import { dateCol, enumFilter, statusCol, textCol } from "@/components/data-table
 import { useSession } from "@/components/shell/SessionProvider";
 import { platformSend, type PlatformMember } from "@/components/platform/data";
 
-// Membros da operação EDUCA (Owner/Admin). As regras de quem pode gerir
+// Membros da operação ATLAS.ERP (Owner/Admin). As regras de quem pode gerir
 // quem — Admin não mexe em Owner, o último Owner é protegido — estão em
 // fn_upsert_platform_member e no trigger guard_last_platform_owner.
 // Novo membro entra por e-mail (convite do Auth ou login existente) —
@@ -68,7 +68,7 @@ export default function PlatformMembersPage() {
     <>
       <ResourceListPage<PlatformMember>
         title="Membros da plataforma"
-        description="Governança da plataforma EDUCA (Owner e Admin da plataforma), com acesso à Administração Central. Não são usuários nem administradores de nenhuma empresa."
+        description="Governança da plataforma ATLAS.ERP (Owner e Admin da plataforma), com acesso à Administração Central. Não são usuários nem administradores de nenhuma empresa."
         apiPath="/api/platform/members"
         tableId="platform-members"
         refreshToken={refresh}
@@ -121,7 +121,7 @@ export default function PlatformMembersPage() {
         open={dialog !== null}
         onOpenChange={(o) => !o && !saving && setDialog(null)}
         title={dialog?.mode === "create" ? "Convidar membro da plataforma" : "Editar membro"}
-        description={dialog?.mode === "create" ? "A pessoa recebe um e-mail para criar a senha. Se já tiver conta no EDUCA, passa a ver a Administração Central no próximo acesso." : undefined}
+        description={dialog?.mode === "create" ? "A pessoa recebe um e-mail para criar a senha. Se já tiver conta no ATLAS.ERP, passa a ver a Administração Central no próximo acesso." : undefined}
         footer={
           <>
             <Button variant="secondary" onClick={() => setDialog(null)} disabled={saving}>Cancelar</Button>
@@ -133,7 +133,7 @@ export default function PlatformMembersPage() {
           <div className="flex flex-col gap-3">
             {dialog.mode === "create" && (
               <Alert tone="info" title="Administrador de uma empresa não é convidado aqui">
-                Membros da plataforma cuidam da governança do EDUCA e não operam empresas. O primeiro administrador de uma empresa é convidado em Empresas → Convidar administrador; os demais usuários (Administrador, Gerente, Operador, Vendedor…) são convidados pelo administrador da própria empresa, em Administração da Empresa → Usuários.
+                Membros da plataforma cuidam da governança do ATLAS.ERP e não operam empresas. O primeiro administrador de uma empresa é convidado em Empresas → Convidar administrador; os demais usuários (Administrador, Gerente, Operador, Vendedor…) são convidados pelo administrador da própria empresa, em Administração da Empresa → Usuários.
               </Alert>
             )}
             {myRole === "ADMIN" && <Alert tone="info" title="Regra de governança">Admins gerenciam apenas outros Admins. Owners são geridos somente por Owners.</Alert>}

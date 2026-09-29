@@ -128,7 +128,7 @@ export default function LoginPage() {
     >
       <p className="mb-2 text-2xs font-semibold tracking-label text-subtle-foreground uppercase">Acesso</p>
       <h1 className="text-2xl font-semibold tracking-title">Acesse sua conta</h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">Use o e-mail e a senha do seu acesso ao EDUCA.</p>
+      <p className="mt-1.5 text-sm text-muted-foreground">Use o e-mail e a senha do seu acesso ao ATLAS.ERP.</p>
       <div className="mt-8">
         <Suspense fallback={null}>
           <LoginForm />

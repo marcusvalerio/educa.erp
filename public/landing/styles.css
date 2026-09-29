@@ -4,7 +4,7 @@
 @font-face{font-family:"Instrument Serif";src:url(fonts/instrument-serif-latin-400-normal.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:"Instrument Serif";src:url(fonts/instrument-serif-latin-400-italic.woff2) format("woff2");font-weight:400;font-style:italic;font-display:swap}
 @font-face{font-family:"JetBrains Mono";src:url(fonts/jetbrains-mono-latin-wght-normal.woff2) format("woff2");font-weight:400 700;font-style:normal;font-display:swap}
-/* EDUCA.ERP — landing. Tokens seguem src/app/globals.css (redesign).
+/* ATLAS.ERP — landing. Tokens seguem src/app/globals.css (redesign).
    Seções "paper" acompanham o tema do visitante; seções "stage" são o palco
    escuro nos dois temas. */
 
@@ -3124,6 +3124,18 @@ html:not(.js) .viewer-tabs button[aria-selected="true"]::after {
   color: var(--stage-mute);
   max-width: 70ch;
 }
+.footer-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+/* Autoria do produto: discreta, como a ficha técnica de um software. */
+.footer-credit {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  color: var(--stage-mute);
+}
 
 /* ================================================================ v3 — direção de arte */
 
@@ -3620,8 +3632,11 @@ html:not(.js) .viewer-tabs button[aria-selected="true"]::after {
 .cv-word {
   fill: var(--stage-ink);
   font-family: var(--serif);
-  font-size: 64px;
+  font-size: 44px;
   letter-spacing: -0.02em;
+}
+.cv-word-dim {
+  fill: var(--stage-mute);
 }
 @media (max-width: 760px) {
   .cv-d {
@@ -3631,7 +3646,7 @@ html:not(.js) .viewer-tabs button[aria-selected="true"]::after {
     display: block;
   }
   .cv-word {
-    font-size: 40px;
+    font-size: 34px;
   }
 }
 

@@ -180,7 +180,7 @@ function isExistingAccount(error: { status?: number; code?: string; message?: st
 /**
  * Envia o convite do Supabase Auth (cria o login e manda o e-mail). Se o
  * e-mail já tem conta, ou se o envio falhar (SMTP, limite), NÃO é erro
- * para quem convidou: o convite do EDUCA já existe e o link pode ser
+ * para quem convidou: o convite do ATLAS.ERP já existe e o link pode ser
  * entregue por outro canal. Nunca devolve detalhe técnico do provedor.
  */
 export async function deliverAuthInvite(inviteByEmail: InviteByEmail, email: string, redirectTo: string): Promise<Delivery> {

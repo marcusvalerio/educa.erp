@@ -1,4 +1,4 @@
-// Onde cada parte do EDUCA mora (uma aplicação, um domínio):
+// Onde cada parte do ATLAS.ERP mora (uma aplicação, um domínio):
 //
 //   /                      Landing pública (HTML estático em public/landing/)
 //   /login, /recuperar-senha, /redefinir-senha, /convite/…, /acesso, /auth/callback

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Gera a landing do EDUCA (site estático em public/landing/) a partir de
+// Gera a landing do ATLAS.ERP (site estático em public/landing/) a partir de
 // landing/src/content.mjs. O próprio app Next a serve em "/" (rewrite no
 // next.config.ts); os arquivos ficam em /landing/… (fora do proxy).
 //
@@ -49,9 +49,12 @@ const moduleById = Object.fromEntries(C.MODULES.map((m) => [m.id, m]));
 const moduleName = (id) => (id === "cadastros" ? "Cadastros" : moduleById[id]?.name ?? id);
 const pad = (n) => String(n).padStart(2, "0");
 
-// Marca EDUCA (mesmo desenho de src/components/brand/Brand.tsx).
+// Símbolo do produto (mesmo desenho de src/components/shell/Brand.tsx).
 const mark = (size = 22, cls = "mark") =>
   `<svg class="${cls}" viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="5" fill="currentColor"/><rect x="7" y="6.5" width="11" height="2.5" rx="1" class="mark-bar"/><rect x="7" y="10.75" width="8" height="2.5" rx="1" class="mark-fire"/><rect x="7" y="15" width="11" height="2.5" rx="1" class="mark-bar"/></svg>`;
+
+// Nome do produto no cabeçalho e no rodapé: "ATLAS" + ".ERP" em tom menor.
+const BRAND_WORD = `${esc(C.META.title.replace(/\.ERP$/, ""))}<span class="brand-dim">.ERP</span>`;
 
 const chip = (state, extra = "") =>
   `<span class="chip chip-${state}${extra}" title="${esc(C.STATES[state].hint)}">${esc(C.STATES[state].label)}</span>`;
@@ -201,9 +204,9 @@ function header() {
   ];
   return `<header class="topbar">
   <div class="wrap topbar-in">
-    <a class="brand" href="#inicio" aria-label="EDUCA.ERP, início da página">${mark(24)}<span>EDUCA<span class="brand-dim">.ERP</span></span></a>
+    <a class="brand" href="#inicio" aria-label="${esc(C.META.title)}, início da página">${mark(24)}<span>${BRAND_WORD}</span></a>
     <nav aria-label="Seções" class="topnav">${links.map(([h, l]) => `<a href="${h}" data-spy="${h.slice(1)}">${l}</a>`).join("")}<span class="topnav-ink" aria-hidden="true"></span></nav>
-    <a class="btn btn-enter btn-sm" href="${esc(C.META.appUrl)}" aria-label="Entrar no EDUCA"><span class="be-long">Entrar no EDUCA</span><span class="be-short">Entrar</span><span aria-hidden="true">→</span></a>
+    <a class="btn btn-enter btn-sm" href="${esc(C.META.appUrl)}" aria-label="Entrar no ATLAS.ERP"><span class="be-long">Entrar no ATLAS.ERP</span><span class="be-short">Entrar</span><span aria-hidden="true">→</span></a>
   </div>
 </header>`;
 }
@@ -326,7 +329,7 @@ function hero() {
         </div>
       </div>
     </div>
-    <div class="hs" role="group" aria-label="Um pedido aprovado e o que ele gera em cada área, nas telas reais do EDUCA">
+    <div class="hs" role="group" aria-label="Um pedido aprovado e o que ele gera em cada área, nas telas reais do ATLAS.ERP">
       <div class="hs-box">
         ${svg}
         <figure class="hs-frag hs-order" style="${posStyle(order)}" data-depth="0.5">
@@ -353,7 +356,7 @@ function hero() {
         </figure>
         <div class="hs-signals" aria-hidden="true">${signals}</div>
       </div>
-      <p class="hs-legend" data-intro><span class="lg-solid" aria-hidden="true"></span>Ação na tela <span class="lg-dash" aria-hidden="true"></span>Pela API, sem botão na tela <span class="hs-legend-note">Telas reais do EDUCA, com dados fictícios. Toque numa tela para ampliar.</span></p>
+      <p class="hs-legend" data-intro><span class="lg-solid" aria-hidden="true"></span>Ação na tela <span class="lg-dash" aria-hidden="true"></span>Pela API, sem botão na tela <span class="hs-legend-note">Telas reais do ATLAS.ERP, com dados fictícios. Toque numa tela para ampliar.</span></p>
     </div>
   </div>
 </section>`;
@@ -528,7 +531,7 @@ function heroWorld() {
   const popHtml = pop.replace(/(data-part="estoque"[^>]*>)/, `$1${anchor("estoque-b", 0.5, 1)}${anchor("g-estoque-a", 1, 0.5)}`);
   const destHtml = (id, list) => D[id].html.replace(/(<figure[^>]*>)/, `$1${list}`);
 
-  return `<div class="hx" role="group" aria-label="O pedido PV-001013 aprovado no Comercial e o que ele gera no Estoque, no Financeiro, no Fiscal e na Logística, até a Gestão, nas telas reais do EDUCA">
+  return `<div class="hx" role="group" aria-label="O pedido PV-001013 aprovado no Comercial e o que ele gera no Estoque, no Financeiro, no Fiscal e na Logística, até a Gestão, nas telas reais do ATLAS.ERP">
     <div class="hx-world">
       <div class="hx-cam">
         <div class="hx-order" style="left:${u(o.x)};top:${u(o.y)};width:${u(o.w)};height:${u(oh)};--ry:${o.ry}deg;--rx:${o.rx}deg">
@@ -542,7 +545,7 @@ function heroWorld() {
       </div>
     </div>
     ${lines}
-    <p class="hx-legend"><span class="lg-solid" aria-hidden="true"></span>Ação na tela <span class="lg-dash" aria-hidden="true"></span>Pela API, sem botão na tela <span class="hs-legend-note">Telas reais do EDUCA, com dados fictícios.</span></p>
+    <p class="hx-legend"><span class="lg-solid" aria-hidden="true"></span>Ação na tela <span class="lg-dash" aria-hidden="true"></span>Pela API, sem botão na tela <span class="hs-legend-note">Telas reais do ATLAS.ERP, com dados fictícios.</span></p>
   </div>`;
 }
 
@@ -784,7 +787,7 @@ function protagonist(pr, i) {
     <div class="pro-intro">
       <p class="m-label">O problema</p>
       ${d.problems.map((t) => `<p class="pro-problem">${esc(t)}</p>`).join("")}
-      <p class="m-label">Como o EDUCA resolve</p>
+      <p class="m-label">Como o ATLAS.ERP resolve</p>
       ${d.serves.map((t) => `<p class="pro-serves">${esc(t)}</p>`).join("")}
       <p class="who">Para ${esc(d.who.map((w) => w.charAt(0).toLowerCase() + w.slice(1).replace(/\.$/, "")).join("; "))}.</p>
       ${stateSummary(d.does, "pro-ssum")}
@@ -886,7 +889,7 @@ function scenario() {
       <ol>
         ${S.records.map((r, i) => `<li style="--i:${i}"><span class="lg-area">${esc(r.area)}</span><span class="lg-record">${esc(r.record)}</span><code class="lg-code">${esc(r.code)}</code></li>`).join("")}
       </ol>
-      <figcaption>Um registro típico de cada área, com os códigos que aparecem nas telas do EDUCA (dados fictícios). No EDUCA, todos ficam na mesma base.</figcaption>
+      <figcaption>Um registro típico de cada área, com os códigos que aparecem nas telas do ATLAS.ERP (dados fictícios). No ATLAS.ERP, todos ficam na mesma base.</figcaption>
     </figure>
   </div>
 </section>`;
@@ -1001,7 +1004,7 @@ function netSvg({ W, H, key, px, py, fs, nodeH, minW, charW, id }) {
   return {
     edges,
     svg: `<svg class="net-svg net-${key}" viewBox="0 0 ${W} ${H}" role="group" aria-labelledby="${id}-title">
-    <title id="${id}-title">Mapa das ligações entre as áreas do EDUCA</title>
+    <title id="${id}-title">Mapa das ligações entre as áreas do ATLAS.ERP</title>
     <defs><marker id="${id}-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="#a9a29a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
     <g class="net-edges">
       ${edges
@@ -1092,7 +1095,7 @@ function converge(labels) {
     ${dPaths.map((d, i) => `<path id="cvd${i}" class="cv-path" d="${d}"/><circle class="cv-sig" r="3.4" cx="-20" cy="-20"><animateMotion dur="${(2.4 + i * 0.22).toFixed(2)}s" repeatCount="indefinite" begin="indefinite"><mpath href="#cvd${i}"/></animateMotion></circle>`).join("")}
     ${labels.map((l, i) => pill(0, 28 + i * 62, 200, 44, l, i)).join("")}
     ${markSvg(745, 190, 110)}
-    <text class="cv-word" x="815" y="206">EDUCA</text>
+    <text class="cv-word" x="812" y="204">ATLAS<tspan class="cv-word-dim">.ERP</tspan></text>
   </svg>`;
   // celular 360 × 470
   const cols = [15, 195];
@@ -1102,7 +1105,7 @@ function converge(labels) {
     ${mPaths.map((d, i) => `<path id="cvm${i}" class="cv-path" d="${d}"/><circle class="cv-sig" r="3" cx="-20" cy="-20"><animateMotion dur="${(2.2 + i * 0.2).toFixed(2)}s" repeatCount="indefinite" begin="indefinite"><mpath href="#cvm${i}"/></animateMotion></circle>`).join("")}
     ${labels.map((l, i) => pill(mPill[i].x, mPill[i].y, 150, 36, l, i)).join("")}
     ${markSvg(180, 335, 100)}
-    <text class="cv-word" x="180" y="440" text-anchor="middle">EDUCA</text>
+    <text class="cv-word" x="180" y="436" text-anchor="middle">ATLAS<tspan class="cv-word-dim">.ERP</tspan></text>
   </svg>`;
   return `<div class="converge"><span class="thread-end" aria-hidden="true"></span>${desk}${mob}</div>`;
 }
@@ -1127,7 +1130,7 @@ function closing(sizes, { preview = false } = {}) {
         })
         .join("")}
     </div>
-    <p class="closing-note">O acesso ao EDUCA é por convite do administrador da sua empresa.</p>
+    <p class="closing-note">O acesso ao ATLAS.ERP é por convite do administrador da sua empresa.</p>
   </div>
 </section>`;
 }
@@ -1244,8 +1247,11 @@ function areas(list) {
 function footer() {
   return `<footer class="footer stage">
   <div class="wrap footer-in">
-    <a class="brand" href="#inicio">${mark(22)}<span>EDUCA<span class="brand-dim">.ERP</span></span></a>
-    <p class="footer-note">${esc(C.META.edition)}. Os selos seguem o inventário em <code>docs/landing/INVENTARIO.md</code>.</p>
+    <a class="brand" href="#inicio" aria-label="${esc(C.META.title)}, início da página">${mark(22)}<span>${BRAND_WORD}</span></a>
+    <div class="footer-text">
+      <p class="footer-note">${esc(C.META.edition)}.</p>
+      <p class="footer-credit">${esc(C.META.title)} · ${esc(C.META.credit)}</p>
+    </div>
   </div>
 </footer>`;
 }
@@ -1364,6 +1370,7 @@ ${AUTH_HASH_FORWARD}
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(C.META.title)} · Uma operação inteira, conectada</title>
 <meta name="description" content="${esc(C.META.description)}">
+<meta name="author" content="${esc(C.META.author)}">
 <link rel="canonical" href="${esc(C.META.siteUrl)}">
 <meta name="color-scheme" content="light dark">
 <meta property="og:title" content="${esc(C.META.title)}">
@@ -1383,7 +1390,7 @@ ${heroPreload()}
     // Página única para a prévia: sem doctype/html/head/body (o publicador envolve),
     // CSS e JS embutidos, fontes do Google Fonts; imagens publicadas ao lado.
     const previewHtml = body(sectionsList(sizes, { preview: true }));
-    const preview = `<title>EDUCA.ERP</title>
+    const preview = `<title>${esc(C.META.title)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400..700&display=swap">

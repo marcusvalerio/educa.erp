@@ -37,9 +37,9 @@ if (process.env.WAIT_FOR_LANDING === "1") {
 const home = await hit("/");
 const landing = home.status === 200 ? await home.text() : "";
 check("GET / responde 200 (landing, sem redirecionar)", home.status === 200, `status ${home.status}; location ${home.headers.get("location") ?? "—"}; borda ${region(home)}`);
-check("/ é a landing do EDUCA", /<title>EDUCA\.ERP · /.test(landing));
+check("/ é a landing do ATLAS.ERP", /<title>ATLAS\.ERP · /.test(landing));
 const enter = [...landing.matchAll(/<a [^>]*href="([^"]*)"[^>]*>(?:(?!<\/a>)[\s\S])*Entrar(?:(?!<\/a>)[\s\S])*<\/a>/g)].map((m) => m[1]);
-check(`'Entrar no EDUCA' → /login (${enter.length} links)`, enter.length >= 3 && enter.every((h) => h === "/login"), enter.join(", "));
+check(`'Entrar no ATLAS.ERP' → /login (${enter.length} links)`, enter.length >= 3 && enter.every((h) => h === "/login"), enter.join(", "));
 check("landing sem CTA de cadastro", landing !== "" && !SIGNUP.test(landing));
 
 // 2. Arquivos da landing, sem sessão (não passam pelo proxy)
@@ -50,16 +50,20 @@ for (const f of files) {
   const r = await hit(f);
   check(`arquivo da landing ${f.split("/").slice(2).join("/")} → 200`, r.status === 200, `status ${r.status}; ${r.headers.get("content-type") ?? ""}`);
 }
-for (const pdf of ["/landing/manuais/EDUCA-Manual-do-Usuario.pdf", "/landing/manuais/EDUCA-Manual-de-Administracao.pdf"]) {
+for (const name of ["Manual-do-Usuario", "Manual-de-Administracao"]) {
+  const pdf = `/landing/manuais/ATLAS-ERP-${name}.pdf`;
   const r = await hit(pdf, { method: "HEAD" });
   check(`manual ${pdf.split("/").pop()} → 200 PDF`, r.status === 200 && /pdf/.test(r.headers.get("content-type") ?? ""), `status ${r.status}; ${r.headers.get("content-type") ?? ""}`);
+  // Links já distribuídos com o nome anterior: 308 para o PDF novo.
+  const old = await hit(`/landing/manuais/EDUCA-${name}.pdf`, { method: "HEAD" });
+  check(`manual com o nome anterior (EDUCA-${name}.pdf) → 308`, old.status === 308 && old.headers.get("location")?.endsWith(pdf), `status ${old.status}; location ${old.headers.get("location") ?? "—"}`);
 }
 
 // 3. Tela de login
 const login = await hit("/login");
 const html = login.status === 200 ? await login.text() : "";
 check("GET /login responde 200", login.status === 200, `status ${login.status}; borda ${region(login)}`);
-check("/login é a tela do EDUCA (formulário de entrada)", /EDUCA/.test(html) && /type="password"|Senha/i.test(html));
+check("/login é a tela do ATLAS.ERP (formulário de entrada)", /ATLAS/.test(html) && /type="password"|Senha/i.test(html));
 if (process.env.ALLOW_HOMOLOG_SEAL !== "1") check("produção SEM o selo de homologação", !HOMOLOG_SEAL.test(html) && !HOMOLOG_SEAL.test(landing));
 check("login sem CTA de cadastro", !SIGNUP.test(html));
 const asset = html.match(/\/_next\/static\/[^"']+\.(?:js|css)/)?.[0];

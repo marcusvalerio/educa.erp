@@ -34,9 +34,9 @@ export default function PlatformOverviewPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        eyebrow="Plataforma EDUCA"
+        eyebrow="Plataforma ATLAS.ERP"
         title="Administração Central"
-        description="Governança da plataforma: empresas como clientes, contratação de módulos e membros da operação EDUCA."
+        description="Governança da plataforma: empresas como clientes, contratação de módulos e membros da operação ATLAS.ERP."
         meta={data?.platform ? <StatusBadge entity="platform_role" status={data.platform.role} /> : undefined}
       />
 

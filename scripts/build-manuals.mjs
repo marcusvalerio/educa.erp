@@ -30,8 +30,8 @@ const MANUAL_DIR = path.join(ROOT, "docs/manual");
 const OUT_DIR = path.join(MANUAL_DIR, "pdf");
 
 const MANUALS = [
-  { key: "usuario", source: "MANUAL_DO_USUARIO.md", output: "EDUCA-Manual-do-Usuario.pdf", title: "Manual do Usuário", audience: "Para quem usa o EDUCA.ERP no dia a dia" },
-  { key: "administracao", source: "MANUAL_DE_ADMINISTRACAO.md", output: "EDUCA-Manual-de-Administracao.pdf", title: "Manual de Administração", audience: "Administrador da Empresa e Administração Central" },
+  { key: "usuario", source: "MANUAL_DO_USUARIO.md", output: "ATLAS-ERP-Manual-do-Usuario.pdf", title: "Manual do Usuário", audience: "Para quem usa o EDUCA.ERP no dia a dia" },
+  { key: "administracao", source: "MANUAL_DE_ADMINISTRACAO.md", output: "ATLAS-ERP-Manual-de-Administracao.pdf", title: "Manual de Administração", audience: "Administrador da Empresa e Administração Central" },
 ];
 // Referências entre manuais citam o PDF irmão pelo nome do arquivo.
 const LINK_MAP = Object.fromEntries(MANUALS.map((m) => [m.source, m.output]));

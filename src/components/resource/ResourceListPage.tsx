@@ -29,7 +29,7 @@ import type { ColumnDef, FilterDef } from "@/components/data-table/types";
 import { applyClientQuery, toCsv } from "@/lib/list/query";
 import { RecordHistory } from "./RecordHistory";
 
-// Padrão de LISTA do EDUCA (List Report): cabeçalho, visões de trabalho,
+// Padrão de LISTA do ATLAS.ERP (List Report): cabeçalho, visões de trabalho,
 // busca, filtros, tabela densa, seleção + ações em lote, colunas
 // configuráveis, densidade, exportação e detalhe — com estado na URL
 // (o drill-down do dashboard chega aqui já filtrado).

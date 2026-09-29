@@ -16,13 +16,14 @@ import { Sidebar } from "./Sidebar";
 import { BreadcrumbTailProvider, Breadcrumbs, ShellSectionProvider, useBreadcrumbTailValue } from "./Breadcrumbs";
 import { CommandMenu } from "./CommandMenu";
 import { NotificationsButton, SearchTrigger, SidebarSearch, ThemeToggle, UnitSwitcher, UserMenu } from "./ShellControls";
-import { EducaMark, EducaWordmark } from "./Brand";
+import { BrandMark, BrandWordmark } from "./Brand";
+import { PRODUCT_NAME } from "@/lib/brand";
 import { BranchPrompt } from "./BranchPrompt";
 import { AuthFrame } from "@/components/auth/AuthFrame";
 import { AccessStateCard } from "@/components/auth/AccessStateCard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 
-// Moldura comum dos três ambientes do EDUCA:
+// Moldura comum dos três ambientes do ATLAS.ERP:
 //   erp      — operação da empresa (/app)
 //   admin    — Administração da Empresa (/app/admin)
 //   platform — Administração Central da plataforma (/app/admincentral)
@@ -130,10 +131,10 @@ function ShellInner({ environment, children }: { environment: Environment; child
     return trail[trail.length - 1]?.label ?? env.rootLabel;
   }, [env, pathname, tail]);
   useEffect(() => {
-    const suffix = environment === "erp" ? "EDUCA.ERP" : environment === "admin" ? "Administração · EDUCA.ERP" : "Administração Central · EDUCA.ERP";
-    const desired = titleLabel === env.rootLabel ? `${env.rootLabel} · EDUCA.ERP` : `${titleLabel} · ${suffix}`;
+    const suffix = environment === "erp" ? PRODUCT_NAME : environment === "admin" ? `Administração · ${PRODUCT_NAME}` : `Administração Central · ${PRODUCT_NAME}`;
+    const desired = titleLabel === env.rootLabel ? `${env.rootLabel} · ${PRODUCT_NAME}` : `${titleLabel} · ${suffix}`;
     // Só substitui títulos genéricos: páginas com metadata própria mantêm o seu.
-    const generic = new Set(["EDUCA.ERP", "Administração da Empresa · EDUCA.ERP", "Administração Central · EDUCA.ERP", ""]);
+    const generic = new Set([PRODUCT_NAME, `Administração da Empresa · ${PRODUCT_NAME}`, `Administração Central · ${PRODUCT_NAME}`, ""]);
     const apply = () => {
       if (document.title !== desired && (generic.has(document.title) || document.title === lastShellTitle)) {
         document.title = desired;
@@ -216,7 +217,7 @@ function ShellInner({ environment, children }: { environment: Environment; child
             title={platformDenied ? "Acesso restrito à Administração Central" : "Acesso restrito à Administração da Empresa"}
             description={
               platformDenied
-                ? "Este ambiente é exclusivo dos membros da plataforma EDUCA (Owner e Admin)."
+                ? `Este ambiente é exclusivo dos membros da plataforma ${PRODUCT_NAME} (Owner e Admin).`
                 : "Seu perfil não tem permissões administrativas nesta empresa."
             }
             backHref={erpHref ?? undefined}
@@ -241,16 +242,16 @@ function ShellInner({ environment, children }: { environment: Environment; child
   const sidebarHeader =
     environment === "platform" ? (
       <Link href="/app/admincentral" className="flex min-w-0 items-center gap-2.5 text-platform-foreground" style={{ ["--mark-bar" as string]: "var(--color-platform)" }}>
-        <EducaMark className="text-platform-foreground" />
+        <BrandMark className="text-platform-foreground" />
         <span className={cn("min-w-0", collapsed && "lg:hidden")}>
-          <EducaWordmark context="Administração Central" />
+          <BrandWordmark context="Administração Central" />
         </span>
       </Link>
     ) : (
       <Link href={environment === "admin" ? "/app/admin" : "/app"} className="flex min-w-0 items-center gap-2.5 text-sidebar-foreground">
-        <EducaMark />
+        <BrandMark />
         <span className={cn("min-w-0", collapsed && "lg:hidden")}>
-          <EducaWordmark context={environment === "admin" ? "Administração da Empresa" : tenant?.company.name} />
+          <BrandWordmark context={environment === "admin" ? "Administração da Empresa" : tenant?.company.name} />
         </span>
       </Link>
     );
@@ -343,7 +344,7 @@ function ShellInner({ environment, children }: { environment: Environment; child
             <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
               {environment === "platform" && (
                 <Badge tone="critical" className="hidden sm:inline-flex">
-                  Plataforma EDUCA
+                  Plataforma {PRODUCT_NAME}
                 </Badge>
               )}
               {environment !== "platform" && lifecycle && tenant && tenant.company.lifecycle_status !== "ACTIVE" && (

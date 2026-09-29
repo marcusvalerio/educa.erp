@@ -37,7 +37,7 @@ export default function AparenciaPage() {
 
   return (
     <div className="flex max-w-4xl flex-col gap-4">
-      <PageHeader title="Aparência" description="Como o EDUCA.ERP é exibido neste navegador. A escolha é salva localmente e aplicada na hora." />
+      <PageHeader title="Aparência" description="Como o ATLAS.ERP é exibido neste navegador. A escolha é salva localmente e aplicada na hora." />
       <Panel>
         <PanelHeader title="Tema" description={`Aplicado agora: ${resolved === "dark" ? "escuro" : "claro"}${preference === "system" ? " (pelo sistema operacional)" : ""}.`} />
         <div role="radiogroup" aria-label="Tema" className="grid gap-3 p-4 sm:grid-cols-3">

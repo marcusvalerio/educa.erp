@@ -10,7 +10,7 @@ import { neonConfig, withServiceSession } from "./neon/server";
 
 // Identidade de quem foi convidado, com AUTH_PROVIDER=neon (Fase 6).
 //
-// O banco do EDUCA continua reconhecendo pessoas pelo UUID de auth.users:
+// O banco do ATLAS.ERP continua reconhecendo pessoas pelo UUID de auth.users:
 // users.auth_user_id, platform_members.auth_user_id e o aceite de convite
 // (0071, que exige e-mail confirmado em auth.users) dependem dele. Para cada
 // convidado, o SERVIDOR (nunca o navegador) garante, nesta ordem:
@@ -82,7 +82,7 @@ function realDeps(config: NeonAuthConfig, redirectTo: string): ProvisionDeps {
  * Convite com AUTH_PROVIDER=neon. `redirectTo` é o destino que o convite
  * pediria ao Supabase Auth (ex.: /convite/<token>); vira o destino depois
  * de criar a senha. Falhas do provedor não vazam detalhe: o convite do
- * EDUCA já existe e o link pode ser entregue manualmente.
+ * ATLAS.ERP já existe e o link pode ser entregue manualmente.
  */
 export async function inviteWithNeon(input: { email: string; name: string; redirectTo: string }): Promise<Delivery> {
   try {

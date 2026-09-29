@@ -1,5 +1,5 @@
 // Camada de compatibilidade: o subconjunto da API do supabase-js
-// (postgrest-js) que o EDUCA usa — from/select/insert/update/upsert/delete,
+// (postgrest-js) que o ATLAS.ERP usa — from/select/insert/update/upsert/delete,
 // filtros eq/neq/gt/gte/lt/lte/like/ilike/is/in/not/or, order/range/limit,
 // single/maybeSingle, count e rpc — executado em PostgreSQL DIRETO, sem
 // PostgREST (DATA_BACKEND=postgres).

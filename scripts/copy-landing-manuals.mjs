@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Copia os PDFs dos manuais (versionados em docs/manual/pdf) para
-// public/landing/manuais/, de onde a landing os oferece para download.
+// public/landing/manuais/, de onde o app os oferece (Configurações →
+// Documentação e Administração Central → Políticas; src/lib/manuals.ts).
+// A landing não oferece os manuais.
 // A pasta de destino fica fora do Git (os PDFs já estão no repositório).
 // Roda antes do `next build` (package.json e vercel.json): leve, sem
 // dependências, sem rede. Falha o build se um manual faltar — a landing

@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel, PanelHeader } from "@/components/ui/Panel";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useSession } from "@/components/shell/SessionProvider";
+import { ManualsPanel } from "@/components/settings/ManualsPanel";
+import { manualsFor } from "@/lib/manuals";
 
 // Políticas de governança da plataforma. São regras garantidas pelo
 // banco (RLS, has_permission sem bypass de plataforma, triggers de
@@ -51,6 +53,7 @@ export default function PlatformPoliciesPage() {
           })}
         </ul>
       </div>
+      <ManualsPanel manuals={manualsFor({ governsCompany: false, platformMember: !!platform })} description="Documentação oficial do ATLAS.ERP, a mesma oferecida às empresas." />
     </div>
   );
 }

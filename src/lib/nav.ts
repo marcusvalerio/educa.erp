@@ -286,6 +286,7 @@ export const ERP_NAV: NavSection[] = [
       { label: "Parâmetros", href: "/app/configuracoes/parametros", permission: "settings.view" },
       { label: "Dados da empresa", href: "/app/configuracoes/empresa", permission: "companies.read" },
       { label: "Aparência", href: "/app/configuracoes/aparencia" },
+      { label: "Documentação", href: "/app/configuracoes/documentacao" },
     ],
   },
 ];

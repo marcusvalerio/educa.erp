@@ -390,7 +390,7 @@ export function ShellFrame({ environment, children }: { environment: Environment
   return (
     <SessionProvider>
       <BreadcrumbTailProvider>
-        <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[90] focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:shadow-popover">
+        <a href="#conteudo" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[90] focus:rounded-md focus:bg-surface focus:px-3 focus:py-2 focus:text-sm focus:shadow-overlay">
           Pular para o conteúdo
         </a>
         <ShellInner environment={environment}>{children}</ShellInner>

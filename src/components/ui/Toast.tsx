@@ -62,7 +62,7 @@ export function Toaster() {
             type={item.tone === "danger" ? "foreground" : "background"}
             onOpenChange={(open) => !open && dismiss(item.id)}
             className={cn(
-              "flex items-start gap-2.5 rounded-lg border border-border bg-surface-raised px-3.5 py-3 shadow-popover animate-slide-in-right",
+              "flex items-start gap-2.5 rounded-lg border border-border bg-surface-raised px-3.5 py-3 shadow-overlay animate-slide-in-right",
               "data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=end]:animate-fade-in"
             )}
           >

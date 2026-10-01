@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Columns3, Download, ExternalLink, Eye, Filter, MoreHorizontal, Rows3, Rows4, Search, X } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { Button } from "@/components/ui/Button";
+import { Button, ButtonGroup } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Controls";
 import { Drawer } from "@/components/ui/Drawer";
@@ -262,7 +262,7 @@ function ResourceListInner<T>({
               <X size={14} /> Limpar
             </Button>
           )}
-          <div className="ml-auto flex items-center gap-1">
+          <ButtonGroup className="ml-auto" aria-label="Utilitários da lista">
             <Tooltip content={prefs.density === "compact" ? "Linhas confortáveis" : "Linhas compactas"}>
               <Button
                 variant="ghost"
@@ -308,7 +308,7 @@ function ResourceListInner<T>({
                 <Download size={15} />
               </Button>
             </Tooltip>
-          </div>
+          </ButtonGroup>
         </div>
 
         {selectedRows.length > 0 && (

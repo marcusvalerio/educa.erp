@@ -1,12 +1,27 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-// Superfície padrão (antigo Card): borda, radius de superfície (10px), sem
-// sombra — a folha do workspace já dá a separação. Cabeçalho com título,
+// Superfície padrão (antigo Card): classe .surface — borda de 1px, raio de
+// superfície, shadow-sm (docs/design/SUPERFICIES.md). Dentro de outra
+// superfície (Surface), perde a própria caixa e vira seção: a composição
+// fica uma peça só, sem "card dentro de card". Cabeçalho com título,
 // descrição curta e ações à direita; divisória interna em border-subtle.
 
 export function Panel({ className, ...props }: HTMLAttributes<HTMLElement>) {
-  return <section className={cn("min-w-0 rounded-lg border border-border bg-surface", className)} {...props} />;
+  return <section className={cn("surface", className)} {...props} />;
+}
+
+/** Superfície composta: agrupa seções (Panels, faixas, listas) numa peça só. */
+export function Surface({ className, ...props }: HTMLAttributes<HTMLElement>) {
+  return <section className={cn("surface overflow-hidden", className)} {...props} />;
+}
+
+/**
+ * Divide uma Surface em seções com linhas de 1px. As colunas vêm por
+ * className (ex.: "lg:grid-cols-[3fr_2fr]"); em telas estreitas empilha.
+ */
+export function SurfaceSplit({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("surface-split", className)} {...props} />;
 }
 
 type PanelHeaderProps = {

@@ -29,7 +29,7 @@ export function Dialog({ open, onOpenChange, title, description, children, foote
         <D.Content
           className={cn(
             "fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-32px)] w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 flex-col",
-            "rounded-xl border border-border bg-surface-raised shadow-dialog outline-none animate-pop-in",
+            "rounded-xl border border-border bg-surface-raised shadow-overlay outline-none animate-pop-in",
             SIZES[size]
           )}
         >
@@ -84,7 +84,7 @@ export function ConfirmDialog({
     <AD.Root open={open} onOpenChange={(next) => !next && !loading && onCancel()}>
       <AD.Portal>
         <AD.Overlay className="fixed inset-0 z-50 bg-overlay animate-fade-in" />
-        <AD.Content className="fixed top-1/2 left-1/2 z-50 w-[calc(100vw-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-surface-raised p-5 shadow-dialog outline-none animate-pop-in">
+        <AD.Content className="fixed top-1/2 left-1/2 z-50 w-[calc(100vw-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-surface-raised p-5 shadow-overlay outline-none animate-pop-in">
           <AD.Title className="text-md font-semibold tracking-title text-foreground">{title}</AD.Title>
           <AD.Description className="mt-2 text-sm text-muted-foreground">{description}</AD.Description>
           <div className="mt-5 flex flex-wrap justify-end gap-2">

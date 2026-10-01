@@ -54,7 +54,7 @@ export function CommandMenu({ open, onOpenChange, sections, environmentLinks = [
     <D.Root open={open} onOpenChange={onOpenChange}>
       <D.Portal>
         <D.Overlay className="fixed inset-0 z-[70] bg-overlay animate-fade-in" />
-        <D.Content className="fixed top-[12dvh] left-1/2 z-[70] w-[calc(100vw-32px)] max-w-xl -translate-x-1/2 overflow-hidden rounded-lg border border-border bg-surface shadow-dialog outline-none animate-pop-in">
+        <D.Content className="fixed top-[12dvh] left-1/2 z-[70] w-[calc(100vw-32px)] max-w-xl -translate-x-1/2 overflow-hidden rounded-lg border border-border bg-surface shadow-overlay outline-none animate-pop-in">
           <D.Title className="sr-only">Ir para</D.Title>
           <D.Description className="sr-only">Busque uma página ou ação pelo nome.</D.Description>
           <Command loop>

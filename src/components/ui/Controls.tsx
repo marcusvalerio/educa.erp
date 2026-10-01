@@ -49,7 +49,7 @@ export function Select({ value, onValueChange, options, placeholder = "Selecione
         <S.Content
           position="popper"
           sideOffset={4}
-          className="z-[60] max-h-[min(360px,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-border bg-surface-raised shadow-popover animate-pop-in"
+          className="z-[60] max-h-[min(360px,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-border bg-surface-raised shadow-overlay animate-pop-in"
         >
           <S.Viewport className="p-1">
             {options.map((option) => (
@@ -110,7 +110,7 @@ export const Switch = forwardRef<HTMLButtonElement, ComponentPropsWithoutRef<typ
       )}
       {...props}
     >
-      <Sw.Thumb className="block h-4 w-4 translate-x-0.5 rounded-full bg-surface shadow-popover transition-transform data-[state=checked]:translate-x-[18px]" />
+      <Sw.Thumb className="block h-4 w-4 translate-x-0.5 rounded-full bg-surface shadow-overlay transition-transform data-[state=checked]:translate-x-[18px]" />
     </Sw.Root>
   );
 });

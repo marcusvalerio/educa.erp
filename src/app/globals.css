@@ -153,13 +153,17 @@
   --color-platform-accent-fg: var(--platform-accent-fg);
 
   /*
-    Elevação com parcimônia: xs só no relevo de controles (botão
-    secundário, campo, item ativo da navegação); popover/diálogo nos
-    overlays. Superfícies normais usam borda, nunca sombra.
+    Micro-profundidade (docs/design/SUPERFICIES.md). A borda define a
+    geometria; a sombra só separa camadas, sempre curta:
+      xs       relevo de controles (botão secundário, campo, item ativo)
+      sm       superfície em repouso (painel, tabela, faixa de métricas)
+      md       superfície clicável em hover; elemento fixo sobre conteúdo
+      overlay  menu, popover, toast, tooltip, diálogo, drawer
   */
   --shadow-xs: var(--elevation-xs);
-  --shadow-popover: var(--elevation-popover);
-  --shadow-dialog: var(--elevation-dialog);
+  --shadow-sm: var(--elevation-sm);
+  --shadow-md: var(--elevation-md);
+  --shadow-overlay: var(--elevation-overlay);
 
   /* Movimento: curto, sem exagero. Tudo cai para ~0 com reduced-motion. */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
@@ -248,8 +252,9 @@
   --platform-accent-fg: #e0798d;
 
   --elevation-xs: 0 1px 0 rgb(16 12 8 / 0.04), 0 1px 2px -1px rgb(16 12 8 / 0.08);
-  --elevation-popover: 0 10px 28px -8px rgb(16 12 8 / 0.16), 0 2px 6px -2px rgb(16 12 8 / 0.08), 0 0 0 1px rgb(16 12 8 / 0.04);
-  --elevation-dialog: 0 28px 60px -16px rgb(16 12 8 / 0.3), 0 6px 16px -6px rgb(16 12 8 / 0.12);
+  --elevation-sm: 0 1px 2px 0 rgb(16 12 8 / 0.04), 0 1px 1px 0 rgb(16 12 8 / 0.02);
+  --elevation-md: 0 1px 2px 0 rgb(16 12 8 / 0.05), 0 4px 12px -6px rgb(16 12 8 / 0.1);
+  --elevation-overlay: 0 0 0 1px rgb(16 12 8 / 0.04), 0 12px 32px -12px rgb(16 12 8 / 0.2), 0 3px 8px -3px rgb(16 12 8 / 0.08);
 }
 
 /*
@@ -326,8 +331,9 @@
     --platform-border: #221e1a;
 
     --elevation-xs: 0 1px 0 rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.03);
-    --elevation-popover: 0 12px 32px -8px rgb(0 0 0 / 0.7), 0 2px 6px -2px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.04);
-    --elevation-dialog: 0 28px 64px -12px rgb(0 0 0 / 0.8), 0 6px 16px -6px rgb(0 0 0 / 0.55);
+    --elevation-sm: 0 1px 2px 0 rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.03);
+    --elevation-md: 0 4px 12px -6px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.04);
+    --elevation-overlay: 0 0 0 1px rgb(255 255 255 / 0.05), 0 16px 40px -12px rgb(0 0 0 / 0.75), 0 4px 10px -4px rgb(0 0 0 / 0.5);
   }
 }
 
@@ -396,8 +402,9 @@
   --platform-border: #221e1a;
 
   --elevation-xs: 0 1px 0 rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.03);
-  --elevation-popover: 0 12px 32px -8px rgb(0 0 0 / 0.7), 0 2px 6px -2px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.04);
-  --elevation-dialog: 0 28px 64px -12px rgb(0 0 0 / 0.8), 0 6px 16px -6px rgb(0 0 0 / 0.55);
+  --elevation-sm: 0 1px 2px 0 rgb(0 0 0 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.03);
+  --elevation-md: 0 4px 12px -6px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.04);
+  --elevation-overlay: 0 0 0 1px rgb(255 255 255 / 0.05), 0 16px 40px -12px rgb(0 0 0 / 0.75), 0 4px 10px -4px rgb(0 0 0 / 0.5);
 }
 
 /* ----------------------------------------------------------------- BASE */
@@ -436,6 +443,42 @@
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]) {
     cursor: pointer;
+  }
+}
+
+/*
+  Superfícies (docs/design/SUPERFICIES.md). .surface é a ÚNICA caixa:
+  borda de 1px, raio de superfície, fundo surface e shadow-sm. Uma
+  superfície dentro de outra perde a própria caixa e vira seção — assim
+  um Panel dentro de uma composição (Surface) se encaixa sem "card dentro
+  de card". .surface-split divide seções com linhas de 1px (gap-px sobre
+  a cor da divisória).
+*/
+@layer components {
+  .surface {
+    min-width: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+  }
+  .surface .surface {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .surface-split {
+    display: grid;
+    gap: 1px;
+    background: var(--color-border-subtle);
+  }
+  /* Célula de seção: vence o "transparent" do aninhamento acima (mesma
+     especificidade, declarada depois) — senão aparece o cinza das linhas. */
+  .surface-split > *,
+  .surface .surface-split > * {
+    min-width: 0;
+    background: var(--color-surface);
   }
 }
 

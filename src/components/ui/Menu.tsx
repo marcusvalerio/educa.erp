@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 // DropdownMenu e ContextMenu com a mesma pele (um único visual de menu).
 
 const contentClass =
-  "z-[60] min-w-44 overflow-hidden rounded-lg border border-border bg-surface-raised p-1 text-sm text-foreground shadow-popover animate-pop-in";
+  "z-[60] min-w-44 overflow-hidden rounded-lg border border-border bg-surface-raised p-1 text-sm text-foreground shadow-overlay animate-pop-in";
 const itemClass =
   "relative flex h-8 cursor-default items-center gap-2 rounded-sm px-2 outline-none select-none " +
   "data-[highlighted]:bg-surface-hover data-[disabled]:pointer-events-none data-[disabled]:opacity-45 [&_svg]:shrink-0 [&_svg]:text-subtle-foreground";

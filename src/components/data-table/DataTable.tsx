@@ -118,7 +118,7 @@ export function DataTable<T>({
     <div className={cn("relative", loading && "opacity-60 transition-opacity")} aria-busy={loading || undefined}>
       {/* Desktop / tablet */}
       <div className="hidden overflow-auto md:block" style={{ maxHeight }}>
-        <table className="w-full border-separate border-spacing-0 text-sm">
+        <table className="w-full border-separate border-spacing-0 text-sm [&>tbody>tr:last-child>td]:border-b-0">
           {caption && <caption className="sr-only">{caption}</caption>}
           <thead>
             <tr>

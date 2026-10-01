@@ -41,14 +41,14 @@ const SKIN = {
     root: "bg-sidebar text-sidebar-foreground border-sidebar-border",
     muted: "text-sidebar-muted",
     item: "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground",
-    active: "bg-sidebar-active text-sidebar-foreground font-medium shadow-xs",
+    active: "bg-sidebar-active text-sidebar-foreground font-medium shadow-xs ring-1 ring-border",
     rule: "border-sidebar-border",
   },
   admin: {
     root: "bg-sidebar text-sidebar-foreground border-sidebar-border",
     muted: "text-sidebar-muted",
     item: "text-sidebar-muted hover:bg-sidebar-hover hover:text-sidebar-foreground",
-    active: "bg-sidebar-active text-sidebar-foreground font-medium shadow-xs",
+    active: "bg-sidebar-active text-sidebar-foreground font-medium shadow-xs ring-1 ring-border",
     rule: "border-sidebar-border",
   },
   platform: {
@@ -263,7 +263,7 @@ export function Sidebar({ variant, sections, header, search, footer, icons, coll
       <D.Root open={mobileOpen} onOpenChange={onMobileOpenChange}>
         <D.Portal>
           <D.Overlay className="fixed inset-0 z-50 bg-overlay animate-fade-in lg:hidden" />
-          <D.Content className={cn("fixed inset-y-0 left-0 z-50 flex w-[min(19rem,86vw)] flex-col border-r shadow-dialog outline-none animate-slide-in-left lg:hidden", skin.root)}>
+          <D.Content className={cn("fixed inset-y-0 left-0 z-50 flex w-[min(19rem,86vw)] flex-col border-r shadow-overlay outline-none animate-slide-in-left lg:hidden", skin.root)}>
             <D.Title className="sr-only">Menu</D.Title>
             <D.Description className="sr-only">Navegação do sistema</D.Description>
             <D.Close className={cn("absolute top-3.5 right-3 rounded-md p-1", skin.item)} aria-label="Fechar menu">

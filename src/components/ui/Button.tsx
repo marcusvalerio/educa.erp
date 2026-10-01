@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { forwardRef, type ButtonHTMLAttributes, type HTMLAttributes } from "react";
 import { Slot } from "radix-ui";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -77,3 +77,19 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     </button>
   );
 });
+
+/**
+ * Grupo de ações utilitárias (densidade, colunas, exportar…): uma borda só,
+ * botões fantasmas dentro — o grupo se lê como uma peça da barra, não como
+ * ícones soltos. Hierarquia da barra: primária (cabeçalho da página) →
+ * secundária → filtros → utilitários (este grupo).
+ */
+export function ButtonGroup({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      role="group"
+      className={cn("inline-flex items-center gap-0.5 rounded-md border border-border bg-surface p-0.5 shadow-xs [&_button]:rounded-sm", className)}
+      {...props}
+    />
+  );
+}

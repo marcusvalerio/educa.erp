@@ -30,7 +30,7 @@ export function Drawer({ open, onClose, title, subtitle, meta, children, footer,
         <D.Overlay className="fixed inset-0 z-50 bg-overlay animate-fade-in" />
         <D.Content
           className={cn(
-            "fixed inset-y-0 z-50 flex w-full flex-col border-border bg-surface-raised shadow-dialog outline-none sm:inset-y-2 sm:rounded-xl sm:border",
+            "fixed inset-y-0 z-50 flex w-full flex-col border-border bg-surface-raised shadow-overlay outline-none sm:inset-y-2 sm:rounded-xl sm:border",
             side === "right" ? "right-0 border-l animate-slide-in-right sm:right-2" : "left-0 border-r animate-slide-in-left sm:left-2",
             SIZES[size]
           )}

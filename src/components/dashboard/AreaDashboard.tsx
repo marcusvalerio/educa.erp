@@ -3,7 +3,8 @@
 import { useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { Panel, PanelHeader } from "@/components/ui/Panel";
+import { Panel, PanelHeader, Surface, SurfaceSplit } from "@/components/ui/Panel";
+import { cn } from "@/lib/cn";
 import { SectionTitle } from "@/components/ui/PageHeader";
 import { Stat, StatStrip } from "@/components/ui/Stat";
 import { EmptyState } from "@/components/ui/Feedback";
@@ -511,39 +512,46 @@ export function OperationalCenter() {
   const execOk = can(REPORTS.executive.permission);
   const firstName = data?.tenant?.user.name?.split(" ")[0];
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <DashboardHeader
         hero
         title={firstName ? `Olá, ${firstName}.` : "Centro operacional"}
         description="O que mudou, o que precisa de atenção e onde agir — com os dados que o seu perfil pode ver."
       />
 
-      {execOk && (
-        <section aria-label="Resumo" className="flex flex-col gap-2">
-          <SectionTitle title="Resumo" description="Indicadores consolidados no período selecionado." actions={<Link href="/app/gestao/dashboard" className="text-xs font-medium text-muted-foreground hover:text-foreground">Painel executivo →</Link>} />
-          <SummaryStrip report={REPORTS.executive} range={range} previous={previous} enabled keys={["net_revenue", "gross_margin_pct", "cash_balance", "open_sales_orders"]} lead />
-        </section>
-      )}
-
-      <div className="grid gap-4 lg:grid-cols-5">
-        <div className="min-w-0 lg:col-span-3">
-          <ProblemsPanel limit={10} />
-        </div>
-        <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
-          {execOk && <ChangesPanel report={REPORTS.executive} range={range} previous={previous} enabled />}
-          <FocusPanel />
-        </div>
-      </div>
+      {/* Visão operacional: resumo, pendências e variações numa peça só
+          (docs/design/SUPERFICIES.md). Os painéis internos viram seções. */}
+      <Surface aria-label="Visão operacional">
+        {execOk && (
+          <>
+            <PanelHeader
+              title="Resumo"
+              description="Indicadores consolidados no período selecionado."
+              actions={<Link href="/app/gestao/dashboard" className="rounded-sm px-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground">Painel executivo →</Link>}
+            />
+            <SummaryStrip report={REPORTS.executive} range={range} previous={previous} enabled keys={["net_revenue", "gross_margin_pct", "cash_balance", "open_sales_orders"]} lead />
+          </>
+        )}
+        <SurfaceSplit className={cn("lg:grid-cols-5", execOk && "border-t border-border-subtle")}>
+          <div className="lg:col-span-3">
+            <ProblemsPanel limit={10} />
+          </div>
+          <div className="flex flex-col divide-y divide-border-subtle lg:col-span-2 [&>*:last-child]:flex-1">
+            {execOk && <ChangesPanel report={REPORTS.executive} range={range} previous={previous} enabled />}
+            <FocusPanel />
+          </div>
+        </SurfaceSplit>
+      </Surface>
 
       <ErpFlows range={range} />
 
-      <section aria-label="Investigação" className="flex flex-col gap-2">
-        <SectionTitle title="Investigação" description="Tendências dos seus módulos. Painéis por área em Dashboards." />
-        <div className="grid gap-4 lg:grid-cols-2">
+      <Surface aria-label="Investigação">
+        <PanelHeader title="Investigação" description="Tendências dos seus módulos. Painéis por área em Dashboards." />
+        <SurfaceSplit className="lg:grid-cols-2">
           <MonthlyTrend report={REPORTS.executive} metricKey="net_revenue" title="Receita líquida por mês" />
           <AgingBuckets title="A receber por vencimento" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/app/financeiro/contas-receber" />
-        </div>
-      </section>
+        </SurfaceSplit>
+      </Surface>
     </div>
   );
 }

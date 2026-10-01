@@ -62,9 +62,12 @@ rótulos de campo são sentence case (`text-xs`, `text-muted-foreground`).
 
 - Raios por função: `xs 3` indicadores · `sm 5` badges/itens de menu ·
   `md 7` controles · `lg 10` superfícies · `xl 12` overlays e a folha.
-- Sombra com parcimônia: `shadow-xs` só em controles (botão, campo, item
-  ativo da navegação); `shadow-popover`/`shadow-dialog` só em overlays.
-  Superfícies usam borda.
+- Micro-profundidade (ver `docs/design/SUPERFICIES.md`): `shadow-xs` em
+  controles; `shadow-sm` em superfícies (`.surface`); `shadow-md` em hover
+  de superfície clicável; `shadow-overlay` em menu, popover, toast,
+  tooltip, diálogo e drawer. A borda define a geometria; a sombra só separa
+  camadas. Superfície dentro de superfície vira seção (`Surface`,
+  `SurfaceSplit`) — sem card dentro de card.
 - Movimento: 150ms `ease-standard` por padrão; entradas `pop-in`,
   `rise-in`, `slide-in-*`; tudo cai para ~0 com `prefers-reduced-motion`.
 

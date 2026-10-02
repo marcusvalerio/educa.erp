@@ -11,7 +11,7 @@ import { NoAccess } from "@/components/shell/ShellFrame";
 import { useSession } from "@/components/shell/SessionProvider";
 import { ERP_NAV } from "@/lib/nav";
 import { canAccess } from "@/lib/navigation/access";
-import { REPORTS, type ReportDef } from "@/lib/dashboard/metrics";
+import { REPORTS, reportAllowed, type ReportDef } from "@/lib/dashboard/metrics";
 import { useCached } from "@/lib/dashboard/client";
 import type { DateRange } from "@/lib/dashboard/periods";
 import { formatInteger } from "@/lib/format";
@@ -465,7 +465,7 @@ export function AreaDashboard({ area }: { area: AreaId }) {
   const { can } = useSession();
   const { range, previous } = usePeriod();
   if (!canAccess(def.permission, can)) return <NoAccess />;
-  const reportOk = !!def.report && can(def.report.permission);
+  const reportOk = !!def.report && reportAllowed(def.report, can);
   const problemModules = def.problemModules;
 
   return (
@@ -508,7 +508,9 @@ export function AreaDashboard({ area }: { area: AreaId }) {
 export function OperationalCenter() {
   const { data, can } = useSession();
   const { range, previous } = usePeriod();
-  const execOk = can(REPORTS.executive.permission);
+  // reportAllowed inclui o que o banco também exige (controlling.view): sem
+  // isso o bloco só mostrava erro para Compras, Financeiro, Fiscal e Logística.
+  const execOk = reportAllowed(REPORTS.executive, can);
   const firstName = data?.tenant?.user.name?.split(" ")[0];
   return (
     <div className="flex flex-col gap-8">
@@ -540,7 +542,7 @@ export function OperationalCenter() {
       <section aria-label="Investigação" className="flex flex-col gap-2">
         <SectionTitle title="Investigação" description="Tendências dos seus módulos. Painéis por área em Dashboards." />
         <div className="grid gap-4 lg:grid-cols-2">
-          <MonthlyTrend report={REPORTS.executive} metricKey="net_revenue" title="Receita líquida por mês" />
+          {execOk && <MonthlyTrend report={REPORTS.executive} metricKey="net_revenue" title="Receita líquida por mês" />}
           <AgingBuckets title="A receber por vencimento" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/app/financeiro/contas-receber" />
         </div>
       </section>

@@ -30,6 +30,9 @@ const LABELS: Record<string, string> = {
   purchase_orders: "Pedido de compra",
   purchase_receipts: "Recebimento de compra",
   pick_lists: "Separação",
+  stock_transfers: "Transferência entre locais",
+  stock_reservations: "Reserva de estoque",
+  stock_movements: "Movimento de estoque",
   shipments: "Expedição",
   // Financeiro
   accounts_receivable: "Conta a receber",

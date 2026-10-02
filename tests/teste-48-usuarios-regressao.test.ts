@@ -172,3 +172,55 @@ describe("R48 — 404 do cadastro em português", () => {
     assert.match(read("src/lib/database/table.ts"), /entityLabel: config\.entityLabel \}/);
   });
 });
+
+describe("R48 — Papéis e Usuários não varrem os vínculos de todas as empresas", () => {
+  it("papéis: role_permissions e user_roles filtrados pelos papéis da empresa", () => {
+    const src = read("src/lib/api/admin-handlers.ts");
+    assert.match(src, /from\("role_permissions"\)\.select\("role_id, permissions\(code\)"\)\.in\("role_id", roleIds\)/);
+    assert.match(src, /from\("user_roles"\)\.select\("role_id"\)\.in\("role_id", roleIds\)/);
+    assert.match(src, /from\("user_roles"\)\.select\("user_id, role_id"\)\.in\("user_id", userIds\)/);
+    assert.doesNotMatch(src, /from\("role_permissions"\)\.select\("role_id, permissions\(code\)"\),/);
+  });
+});
+
+describe("R48 — telas em português (papéis, CFOP, auditoria, início)", () => {
+  it("matriz de permissões: recursos e ações em português", async () => {
+    const { resourceLabel, actionLabel } = await import("@/lib/permission-labels");
+    assert.equal(resourceLabel("company_modules"), "Módulos da empresa");
+    assert.equal(resourceLabel("rbac"), "Papéis e permissões");
+    assert.equal(resourceLabel("audit"), "Auditoria");
+    assert.equal(actionLabel("configure", "Configure"), "Configurar");
+    assert.equal(actionLabel("view", "Consultar"), "Consultar");
+    assert.doesNotMatch(read("src/app/app/admin/roles/page.tsx"), /humanize\(resource\)/);
+  });
+  it("todo recurso do catálogo usado nas migrações tem rótulo em português", async () => {
+    const { RESOURCE_LABELS } = await import("@/lib/permission-labels");
+    for (const r of ["accounts_payable", "fiscal_ncms", "stock", "users", "warehouse_locations", "purchase_requests", "reports"]) assert.ok(RESOURCE_LABELS[r], r);
+  });
+  it("CFOP mostra Entrada/Saída e a abrangência por extenso", () => {
+    const src = read("src/app/app/(erp)/fiscal/cfop/page.tsx");
+    assert.match(src, /SAIDA: "Saída"/);
+    assert.match(src, /INTERNAL: "Dentro do estado"/);
+  });
+  it("auditoria traduz transferências de estoque", async () => {
+    assert.match(read("src/lib/audit-labels.ts"), /stock_transfers: "Transferência entre locais"/);
+  });
+  it("início: bloco executivo só para quem tem reports.view e controlling.view; 403 sem botão de tentar de novo", () => {
+    assert.match(read("src/lib/dashboard/metrics.ts"), /alsoRequires: \["controlling\.view"\]/);
+    assert.match(read("src/components/dashboard/AreaDashboard.tsx"), /const execOk = reportAllowed\(REPORTS\.executive, can\)/);
+    assert.match(read("src/components/dashboard/AreaDashboard.tsx"), /\{execOk && <MonthlyTrend/);
+    const blocks = read("src/components/dashboard/ReportBlocks.tsx");
+    assert.match(blocks, /current\.error === FORBIDDEN_MESSAGE/);
+    assert.match(blocks, /kind="no-permission"/);
+  });
+});
+
+describe("R48 — reportAllowed considera o que o banco também exige", () => {
+  it("executivo exige reports.view e controlling.view", async () => {
+    const { REPORTS, reportAllowed } = await import("@/lib/dashboard/metrics");
+    const perms = new Set(["reports.view", "purchase_reports.view"]);
+    assert.equal(reportAllowed(REPORTS.executive, (c) => perms.has(c)), false);
+    perms.add("controlling.view");
+    assert.equal(reportAllowed(REPORTS.executive, (c) => perms.has(c)), true);
+  });
+});

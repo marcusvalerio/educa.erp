@@ -3,6 +3,7 @@
 @font-face{font-family:"DM Sans";src:url(fonts/dm-sans-latin-ext-wght-normal.woff2) format("woff2");font-weight:100 1000;font-style:normal;font-display:swap;unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:"Instrument Serif";src:url(fonts/instrument-serif-latin-400-normal.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:"Instrument Serif";src:url(fonts/instrument-serif-latin-400-italic.woff2) format("woff2");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"Faculty Glyphic";src:url(fonts/faculty-glyphic-latin-400-normal.woff2) format("woff2");font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:"JetBrains Mono";src:url(fonts/jetbrains-mono-latin-wght-normal.woff2) format("woff2");font-weight:400 700;font-style:normal;font-display:swap}
 /* ATLAS.ERP — landing. Tokens seguem src/app/globals.css (redesign).
    Seções "paper" acompanham o tema do visitante; seções "stage" são o palco
@@ -37,7 +38,13 @@
   /* Rótulos, metadados e selos: a mesma DM Sans do corpo (a mono fica só
      para código, rotas de tela, códigos de registro e a marca-d'água). */
   --label: var(--sans);
-  --serif: "Instrument Serif", ui-serif, Georgia, "Times New Roman", serif;
+  /* EXPERIMENTO TIPOGRÁFICO (branch claude/landing-faculty-glyphic): a
+     única variável testada é a fonte dos títulos editoriais.
+     A = Instrument Serif (atual) · B = Faculty Glyphic (em teste).
+     Para voltar a A: <html data-serif="instrument"> (ou troque abaixo). */
+  --serif-instrument: "Instrument Serif", ui-serif, Georgia, "Times New Roman", serif;
+  --serif-faculty: "Faculty Glyphic", ui-serif, Georgia, "Times New Roman", serif;
+  --serif: var(--serif-faculty);
   --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
   --gutter: clamp(16px, 4vw, 48px);
@@ -4744,5 +4751,21 @@ main {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* EXPERIMENTO TIPOGRÁFICO — variante A (Instrument Serif) para comparação. */
+:root[data-serif="instrument"] { --serif: var(--serif-instrument); }
+/* Ajuste mínimo da variante B (só quando necessário): a Faculty Glyphic é ~39%
+   mais larga que a Instrument Serif no mesmo corpo, e a 1ª linha do hero
+   ("Uma operação inteira,", ~9,5em, sem quebra) passava da coluna — cortada no
+   celular, invadindo a cena no desktop. O tamanho original continua valendo
+   onde a linha cabe; onde não cabe, o corpo é o que faz ela caber (~9,8em). */
+:root:not([data-serif="instrument"]) .hero .display {
+  font-size: min(clamp(2.9rem, 6vw, 6.6rem), calc((100vw - 2 * var(--gutter)) / 9.8));
+}
+@media (min-width: 1100px) {
+  :root:not([data-serif="instrument"]) .hero .display {
+    font-size: min(clamp(3.2rem, 4.7vw, 6rem), calc(min(38vw, 560px) / 9.8));
   }
 }

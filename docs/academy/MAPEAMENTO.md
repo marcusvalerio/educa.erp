@@ -4,7 +4,7 @@ Este é o levantamento que fundamenta o plano das aulas. Ele foi feito no códig
 
 As fontes de bugs são o [relatório do teste com 7 empresas](../homologacao/evidencias/e2e-7-empresas.md) e os [manuais](../manual/).
 
-**Data:** 02/10/2026 · **código:** `a33842b`, revalidado em `2b9112b` para as aulas 01–05 (branch `claude/e2e-empresa-nova-correcoes`).
+**Data:** 02/10/2026 (correções de interface aplicadas na `main` em `48775f5`) · **código:** `a33842b`, revalidado em `2b9112b` para as aulas 01–05 (branch `claude/e2e-empresa-nova-correcoes`).
 
 **Legenda** (a mesma dos manuais):
 
@@ -202,7 +202,7 @@ Tudo ─────► Auditoria 🔎 (⚠️ B7: criações de pedido, movimen
 - Movimentos de estoque, separações e expedições: não aparecem como ação de usuário (⚠️ B7).
 - O "Histórico" do registro exige `audit_logs.read` (Administrador, Gerente, Operador e Somente leitura); os demais papéis veem "O histórico de alterações exige a permissão de auditoria."
 
-**Movimentações — tipos e origens reais:** Entrada (`RECEIPT`), Saída (`ISSUE`), Transferência (saída/entrada), Ajuste (+/−), Devolução (entrada/saída) têm rótulo. `RESERVATION` e `RELEASE` aparecem sem tradução (D5). A coluna Origem mostra o valor técnico: `PURCHASE_RECEIPT` (recebimento de compra), `stock_reservation` (reserva/liberação do pedido), `stock_transfer` (transferência), `SHIPMENT` (expedição), `manual` (entrada avulsa pela API).
+**Movimentações — tipos e origens** (desde `48775f5`): todos os tipos têm rótulo, inclusive **Reserva** (`RESERVATION`) e **Liberação de reserva** (`RELEASE`). A coluna Origem mostra **Recebimento de compra** (`PURCHASE_RECEIPT`), **Reserva de pedido** (`stock_reservation`), **Transferência entre locais** (`stock_transfer`), **Expedição** (`SHIPMENT`), **Lançamento avulso** (`manual`) e outros; um código sem rótulo aparece como está.
 
 ---
 
@@ -216,7 +216,7 @@ Do relatório de 7 empresas: **nenhum foi corrigido desde então**, conferido no
 | B2 | ALTO | NF-e não é gerada, calculada nem marcada "pronta" pela interface | 07 Fiscal |
 | B3 | ALTO | Numeração de documentos global entre empresas | 03, 06 (o número "pula") |
 | B4 | ALTO | Datas dos documentos em UTC (à noite, caem no dia seguinte) | 03, 06, 07 |
-| B5 | ALTO | Toast "Estoque reservado." mesmo sem saldo | 03, 05 — **erro a ensinar a conferir** |
+| B5 | ~~ALTO~~ | ~~Toast "Estoque reservado." mesmo sem saldo~~ — **corrigido na `main` (`48775f5`)**: agora "Reserva parcial." ou "Nenhuma unidade reservada." com as quantidades | 03, 05 |
 | B6 | ALTO | Início dos papéis personalizados com cartões de erro | 06, 07, 08 (primeira tela do personagem) |
 | B7 | ALTO | Auditoria não registra criação de pedidos, movimentos, separações e expedições | 09 Auditoria |
 | B8 | ALTO | Categoria de produto não pode ser criada | 02 Cadastros |
@@ -234,10 +234,10 @@ Do relatório de 7 empresas: **nenhum foi corrigido desde então**, conferido no
 | D2 | **novo** | Categoria/marca/unidade sem tela; o produto usa lista fixa de categorias | 02 |
 | D3 | **novo** | Perfil fiscal do produto sem tela (a NF-e depende dele) | 02, 07 |
 | D4 | **novo** | Gaveta do cliente: "Pedidos de venda" sempre vazia; do fornecedor: "Pedidos de compra" sempre vazia (listas fixas no código) | 02 |
-| D5 | **novo** | Movimentações `RESERVATION`/`RELEASE` sem rótulo; coluna Origem com valores técnicos | 03, 05 |
+| D5 | ~~novo~~ | ~~Movimentações `RESERVATION`/`RELEASE` sem rótulo; Origem técnica~~ — **corrigido (`48775f5`)**: "Reserva", "Liberação de reserva" e origens traduzidas | 03, 05 |
 | D6 | **novo** | Nenhum alerta de estoque abaixo do mínimo (a comparação é manual) | 04, 05 |
 | D7 | **novo** | "Agendamentos" lista os mesmos recebimentos da tela "Recebimento" | 04 |
-| D8 | **novo** | Local de estoque sem Descrição não aparece na janela "Reservar estoque" e aparece como id curto no Saldo (a tela resolve o nome pela descrição; derivado do código, confirmar ao vivo) | 02, 05 |
+| D8 | ~~novo~~ | ~~Local de estoque sem Descrição some da janela "Reservar estoque"~~ — **corrigido (`48775f5`)**: aparece pelo código | 02, 05 |
 
 **Erros com mensagem clara** (bons para "ERRO → POR QUÊ → COMO RESOLVER"):
 
@@ -245,7 +245,7 @@ Do relatório de 7 empresas: **nenhum foi corrigido desde então**, conferido no
 - "Informe o CPF/CNPJ." · "CNPJ inválido: confira os dígitos verificadores." · "Já existe um cliente com este documento."
 - "Já existe um produto com este código." · "O estoque máximo deve ser maior ou igual ao mínimo."
 - "Exclusão não permitida… Utilize a inativação." (registro em uso)
-- "Selecione o local de onde reservar."
+- "Selecione o local de onde reservar." · "Reserva parcial." · "Nenhuma unidade reservada."
 - "Este fornecedor está vinculado a produtos cadastrados. Utilize a inativação." / "Este local está definido como localização padrão de produtos cadastrados. Utilize a inativação."
 - "Só é possível receber um pedido enviado ao fornecedor e ainda não totalmente recebido (status atual: …)." (API)
 - "Saldo insuficiente: disponível …, solicitado …"

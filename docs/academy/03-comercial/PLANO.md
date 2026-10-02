@@ -148,8 +148,8 @@ PERSONAGEM: Rafael — Operador
     Resultado: Balde plástico 8 L · Picking — rua A, módulo 01 · Em estoque 12 ·
     Reservado 10 · Disponível 2. Aba "Com reserva" mostra a linha.
     Rota: /app/logistica/movimentacoes
-    Resultado: nova linha · Tipo "RESERVATION" · Balde plástico 8 L · Picking — rua A,
-    módulo 01 · 10 · Origem "stock_reservation" (rótulos técnicos — ver seção 9).
+    Resultado: nova linha · Tipo "Reserva" · Balde plástico 8 L · Picking — rua A,
+    módulo 01 · 10 · Origem "Reserva de pedido".
 
 PERSONAGEM: Carlos — Gerente
 
@@ -161,7 +161,7 @@ PERSONAGEM: Carlos — Gerente
 13. Caso realista: o cliente quer mudar a quantidade
     Situação: às 11h, o Granito pede 12 em vez de 10.
     Ação: Cancelar pedido → mostrar a confirmação "O cancelamento libera reservas e não
-    pode ser desfeito." → fechar com "Cancelar" (sem executar).
+    pode ser desfeito." → fechar com "Voltar" (sem executar).
     Explicação: não há edição de pedido pela tela; o caminho é um pedido complementar
     ou cancelar e gerar um novo, e os dois exigem criar pedido (⛔). Nesta aula, o
     PV-0001 segue com 10 unidades.
@@ -187,9 +187,9 @@ PERSONAGEM: Carlos — Gerente
 | Reservar | Diálogo centralizado; lista de locais aberta | Callout no texto "Itens sem saldo ficam com reserva pendente" | 2 s no texto; toast 2,5 s |
 | Resultado da reserva | Zoom no indicador Reservado 100% e na coluna Reservada | Stepper avança para **Reservado** | 2 s |
 | Saldo depois | Lado a lado (motion): antes 12/0/12 → depois 12/10/2 | Fórmula "em estoque − reservado = disponível" | 3 s |
-| Movimentações | Zoom na nova linha | Selo ⚠️ "rótulo técnico" | 2 s |
+| Movimentações | Zoom na nova linha | Callout "Tipo Reserva · Origem Reserva de pedido" | 2 s |
 | Histórico | Zoom nas duas linhas | Anel no autor | 2 s |
-| Cancelar (sem executar) | Diálogo vermelho | Callout "Cancelar fecha a janela · Cancelar pedido executa" | 2,5 s |
+| Cancelar (sem executar) | Diálogo vermelho | Callout "Voltar fecha a janela · Cancelar pedido executa" | 2,5 s |
 
 Transições: o stepper do pedido (Rascunho → Aguardando aprovação → Aprovado → Reservado) fica no topo da tela, discreto, durante toda a demonstração e avança a cada etapa.
 
@@ -226,7 +226,7 @@ Quem reserva é o Rafael, do armazém. Ele clica em Reservar estoque e escolhe o
 O que mudou no estoque? Os doze baldes continuam no armazém: o em estoque não muda. Mas dez estão reservados para o Granito. Por isso, o disponível caiu para dois. Nas movimentações, a reserva aparece como uma nova linha. E, no histórico do pedido, o Carlos encontra quem aprovou e quem reservou.
 
 **[F — Erros e exceções]**
-Alguns cuidados. Se você reservar sem escolher o local, o sistema pede: selecione o local de onde reservar. Escolha o local onde o produto está, porque o saldo é por local. Atenção a um comportamento desta versão: quando falta saldo, a mensagem também diz "estoque reservado", mesmo que a reserva tenha sido parcial. Por isso, confira sempre o indicador Reservado e o status do pedido. Pedidos feitos à noite podem aparecer com a data do dia seguinte. E, se o cliente mudar a quantidade, não há edição de pedido pela tela. Repare na janela de cancelamento: o botão Cancelar só fecha a janela; Cancelar pedido executa, e não pode ser desfeito.
+Alguns cuidados. Se você reservar sem escolher o local, o sistema pede: selecione o local de onde reservar. Escolha o local onde o produto está, porque o saldo é por local. Se o local não tiver saldo para tudo, o sistema avisa: reserva parcial, com quantas unidades foram reservadas e quantas ficaram pendentes. Mesmo assim, crie o hábito de conferir o indicador Reservado e o status do pedido. Pedidos feitos à noite podem aparecer com a data do dia seguinte. E, se o cliente mudar a quantidade, não há edição de pedido pela tela. Repare na janela de cancelamento: Voltar só fecha a janela; Cancelar pedido executa, e não pode ser desfeito.
 
 **[G — Exercício]**
 Sua vez. Encontre um pedido aguardando aprovação, leia os indicadores e diga, só olhando a tela: quem pode aprovar, quem pode reservar e quanto do pedido já foi reservado.
@@ -274,16 +274,15 @@ COMERCIAL (pedido aprovado)
 | Vendedor procura "Aprovar" | — (botão ausente) | Sem `sales_orders.approve` (segregação) | — | Cabeçalho só com "Enviar para aprovação" | O Gerente aprova | não (regra) |
 | Vendedor abre Contas a pagar | "Sem acesso a este recurso" | Fora do papel | — | Tela de acesso negado | Pedir ao administrador, se fizer sentido | não |
 | Reservar sem local | "Selecione o local de onde reservar." | Campo obrigatório | Não reserva | Mensagem sob o campo | Escolher o local | não |
-| Reservar num local sem o produto | Toast "Estoque reservado.", mas Reservado fica abaixo de 100% e o status vira "Reserva pendente" | O saldo é por local; a mensagem não confere o resultado | Pedido não totalmente reservado | Indicador **Reservado** e selo **Reserva pendente** | Ver no Saldo onde o produto está e reservar de novo (o botão continua disponível) | ⚠️ **B5** |
+| Reservar num local sem saldo suficiente | Aviso "Reserva parcial." — "N unidades reservadas neste local; M ficaram pendentes…" ou "Nenhuma unidade reservada." | O saldo é por local | Pedido em "Reserva pendente" | Aviso, selo e indicador **Reservado** | Ver no Saldo onde o produto está e reservar de novo (o botão continua disponível) | não (B5 corrigido em `48775f5`) |
 | Histórico do pedido para o Vendedor | "O histórico de alterações exige a permissão de auditoria." | Sem `audit_logs.read` | Não vê quem aprovou | Mensagem no bloco | Perguntar ao Gerente | não (regra) |
 | Histórico sem criação e envio | — (só Aprovação, Reserva, Liberação, Cancelamento) | A auditoria não registra criação nem envio | Lacuna de rastreio | Comparar com a linha do tempo do pedido | Débito registrado (aula 09) | ⚠️ **B7** |
-| Movimentação da reserva com rótulo técnico | Tipo "RESERVATION", Origem "stock_reservation" | Tipos de reserva sem tradução na tela | Leitura difícil | Coluna Tipo | Ler como "Reserva" | ⚠️ D5 (novo) |
 | Item com "Un." vazio ou "—" | — | O item do pedido não herda a unidade do produto | Leitura da unidade | Coluna Un. | Débito registrado | ⚠️ **B18** (confirmar na preparação) |
 | Pedido criado à noite | Data do dia seguinte | Datas gravadas em UTC | Relatórios do dia | Coluna Data | Gravar antes das 21h | ⚠️ **B4** |
 | Número do documento "pula" | Ex.: PV-0224 em vez de PV-0001 | Numeração global entre empresas | Estética | Coluna Pedido | Ambiente limpo para a gravação | ⚠️ **B3** |
 | Cliente quer mudar a quantidade | — | Não há edição de pedido pela tela | Precisa de um novo pedido | — | Pedido complementar ou cancelar e recriar (⛔ criação) | ⛔ |
 | Limite de crédito ultrapassado | — (nenhum aviso) | O limite é informativo: o pedido não o verifica | Risco de crédito | Comparar total × limite no cadastro | Conferência manual do Gerente | ⚠️ limitação |
-| Diálogo de cancelamento | Botões "Cancelar" e "Cancelar pedido" | "Cancelar" fecha; "Cancelar pedido" executa | Risco de confusão | Diálogo vermelho | Ler o botão antes de clicar | ⚠️ usabilidade |
+| Diálogo de cancelamento | Botões "Voltar" e "Cancelar pedido" | "Voltar" fecha; "Cancelar pedido" executa e não pode ser desfeito | — | Diálogo vermelho | Ler o botão antes de clicar | não (antes "Cancelar" × "Cancelar pedido"; corrigido em `48775f5`) |
 | Vendedor pode liberar reserva | Botão "Liberar reserva" visível para a Juliana | `sales_orders.update` cobre a liberação | Segregação fraca | Cabeçalho do pedido reservado | Avaliar o papel (aula 10) | ⚠️ observação |
 | Funil do CRM | — | Nenhum pipeline/estágio configurado na empresa nova; não há tela para criá-los | Pipeline vazio | `/app/crm/pipeline` sem colunas | Fora do escopo desta aula | ⛔ |
 
@@ -324,7 +323,7 @@ Salvar em `docs/academy/03-comercial/evidencias/`:
 | 10 | `10-reservar-dialogo.png` | Janela "Reservar estoque" |
 | 11 | `11-reservado-100.png` | Reservado 100% (10 de 10) |
 | 12 | `12-saldo-depois.png` | 12 / 10 / 2 |
-| 13 | `13-movimentacao-reserva.png` | RESERVATION · stock_reservation |
+| 13 | `13-movimentacao-reserva.png` | Reserva · Reserva de pedido |
 | 14 | `14-historico-carlos.png` | Aprovação e Reserva com autores |
 | 15 | `15-cancelar-dialogo.png` | Confirmação de cancelamento |
 
@@ -360,6 +359,6 @@ Todas as etapas ⛔ são feitas **fora da gravação**, cada uma com a conta do 
 | D5 | Aprovar | 6:10–7:30 | Carlos: aba Aguardando aprovação, conferência, aprovação |
 | D6 | Reservar | 7:30–8:50 | Rafael: diálogo, local, Reservado 100% |
 | E | Resultado | 8:50–10:20 | Saldo antes/depois, movimentação, histórico |
-| F | Erros | 10:20–13:30 | Sem local, B5, B4, B7, rótulos técnicos, sem edição de pedido, diálogo de cancelamento |
+| F | Erros | 10:20–13:30 | Sem local, reserva parcial, B4, B7, sem edição de pedido, diálogo de cancelamento |
 | G | Exercício | 13:30–13:55 | Tela de exercício |
 | H | Fechamento | 13:55–14:15 | 3 linhas de resumo → "Próxima aula: Compras" → lockup |

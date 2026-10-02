@@ -128,7 +128,7 @@ PERSONAGEM: Bruno — Logística
 8. Ver a entrada no estoque
    Rota: /app/logistica/movimentacoes
    Resultado: Tipo "Entrada" · Balde plástico 8 L · Doca de recebimento · 50 ·
-   Origem "PURCHASE_RECEIPT".
+   Origem "Recebimento de compra".
    Rota: /app/logistica/estoque
    Resultado: duas linhas do balde:
      Doca de recebimento          Em estoque 50 · Reservado 0  · Disponível 50
@@ -167,7 +167,7 @@ PERSONAGEM: Carlos — Gerente
 | Corte de tempo | Cartão de capítulo "Quinta, 7h30" | Ilustração mínima do caminhão na doca | 2,5 s |
 | Recebimento | Aba "Em conferência" → REC-0001 Rascunho | Callout "Rafael lança · Bruno confere" | 2 s |
 | Confirmação ⛔ | Pílula Bruno; selo "Confirmado" | — | 1,5 s |
-| Movimentações | Zoom na nova linha "Entrada" | Anel em Origem `PURCHASE_RECEIPT` | 2,5 s |
+| Movimentações | Zoom na nova linha "Entrada" | Anel em Origem "Recebimento de compra" | 2,5 s |
 | Saldo depois | Duas linhas lado a lado | Callout "A mercadoria está na Doca, ainda não no Picking" | **3 s** |
 | Fechamento do ciclo | PC "Recebido", SC "Concluída" | Quadro de conferência com ✓ animados | 2 s |
 | Conta a pagar | Zoom na linha do título | Callout "Nasce do que foi recebido" | 2 s |
@@ -234,7 +234,7 @@ Rascunho (aba "Em conferência") ──► Confirmado
 ```
 ESTOQUE (disponível < mínimo, conferência manual)
   └──► COMPRAS: SC ⛔ ──► PC ⛔ ──► Recebimento ⛔
-                                     ├──► ESTOQUE: Entrada PURCHASE_RECEIPT na Doca (aula 05)
+                                     ├──► ESTOQUE: Entrada "Recebimento de compra" na Doca (aula 05)
                                      ├──► FINANCEIRO: conta a pagar ⛔ (aula 06)
                                      └──► FISCAL: nota de entrada ⛔ (aula 07)
 ```
@@ -269,7 +269,7 @@ As mensagens abaixo vêm das regras do banco e só aparecem pela API nesta vers�
 2. Em Solicitações de compra, encontre a SC-0001 e diga o status e por que ele mudou sozinho.
 3. Em Pedidos de compra, diga quem pode tirar um pedido da aba **Aguardando aprovação**.
 4. Em Recebimento, encontre o REC-0001 e diga quem lançou e quem confirmou.
-5. Nas Movimentações, filtre o Tipo **Entrada** e encontre a origem `PURCHASE_RECEIPT`.
+5. Nas Movimentações, filtre o Tipo **Entrada** e encontre a origem **Recebimento de compra**.
 6. **Pergunta:** por que o Picking continua com 2 disponíveis, se chegaram 50 baldes?
 
 ## 11. Checklist de conclusão
@@ -298,7 +298,7 @@ Salvar em `docs/academy/04-compras/evidencias/`:
 | 07 | `07-pc-enviado.png` | PC-0001 Enviado |
 | 08 | `08-rec-em-conferencia.png` | REC-0001 Rascunho na aba Em conferência |
 | 09 | `09-rec-confirmado.png` | REC-0001 Confirmado |
-| 10 | `10-movimentacao-entrada.png` | Entrada · Doca · 50 · PURCHASE_RECEIPT |
+| 10 | `10-movimentacao-entrada.png` | Entrada · Doca · 50 · Recebimento de compra |
 | 11 | `11-saldo-doca-picking.png` | Doca 50 e Picking 12/10/2 |
 | 12 | `12-pc-recebido-sc-concluida.png` | Ciclo fechado |
 | 13 | `13-conta-a-pagar.png` | "Recebimento REC-0001" R$ 490,00 Em aberto |

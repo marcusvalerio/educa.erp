@@ -13,7 +13,7 @@
 | **Papéis reais** | Bruno — **Logística** (personalizado) · Rafael — **Operador** |
 | **Duração estimada** | 15–17 min (a aula com mais peso em **conceito**) |
 | **Nível** | Intermediário |
-| **Cobertura** | ✅ reservar e liberar reserva (no pedido) · 🔎 Saldo, Movimentações, Transferências, Inventário, Endereçamento, Almoxarifado, Picking, Packing, Expedição, Devoluções · ⛔ transferência, entrada e saída avulsas, ajuste, contagem, separação e expedição · ⚠️ B5 (mensagem da reserva parcial) |
+| **Cobertura** | ✅ reservar e liberar reserva (no pedido) · 🔎 Saldo, Movimentações, Transferências, Inventário, Endereçamento, Almoxarifado, Picking, Packing, Expedição, Devoluções · ⛔ transferência, entrada e saída avulsas, ajuste, contagem, separação e expedição · aviso de reserva parcial (B5 corrigido) |
 | **Objetivo principal** | Entender o estoque como um livro de movimentações por local, ler **em estoque × reservado × disponível**, reservar um pedido, reconhecer uma reserva parcial e resolvê-la levando a mercadoria da doca para o picking. |
 
 ## 2. Contexto de negócio
@@ -31,7 +31,7 @@
 - Por que o saldo é **por local** (doca, picking, expedição) e como isso afeta a reserva.
 - Ler as telas **Saldo de estoque** e **Movimentações**, com tipos e origens.
 - **Reservar** um pedido e reconhecer uma **reserva parcial** (status "Reserva pendente").
-- Por que a mensagem "Estoque reservado." **não basta** (B5) e o que conferir.
+- Ler o aviso de **reserva parcial** e conferir o resultado no selo e no indicador.
 - O que é a **armazenagem** (doca → picking) e como a **transferência** move o saldo.
 - **Liberar reserva** e o efeito no disponível.
 - As demais telas do WMS e para que serve cada uma.
@@ -83,9 +83,9 @@ PERSONAGEM: Rafael — Operador · quinta, 7h45
    Tela: "Movimentações de estoque — Ledger de estoque — imutável, nunca editado por
    esta tela." Colunas: Data, Tipo, Produto, Local, Quantidade, Origem. Filtro Tipo.
    Resultado (de cima para baixo):
-     Entrada · Balde plástico 8 L · Doca de recebimento · 50 · PURCHASE_RECEIPT   (aula 04)
-     RESERVATION · Balde plástico 8 L · Picking — rua A, módulo 01 · 10 · stock_reservation (aula 03)
-     Entrada · Balde plástico 8 L · Picking — rua A, módulo 01 · 12 · manual       (implantação, aula 02)
+     Entrada · Balde plástico 8 L · Doca de recebimento · 50 · Recebimento de compra   (aula 04)
+     Reserva · Balde plástico 8 L · Picking — rua A, módulo 01 · 10 · Reserva de pedido   (aula 03)
+     Entrada · Balde plástico 8 L · Picking — rua A, módulo 01 · 12 · Lançamento avulso   (implantação, aula 02)
    Ação: filtro Tipo = "Entrada" → só as duas entradas.
 
 2. Ler o saldo por local
@@ -112,7 +112,8 @@ PERSONAGEM: Bruno — Logística · quinta, 10h
    Dados: Local de estoque* → "Picking — rua A, módulo 01"
    Ação: Reservar
    Resultado na tela:
-     toast "Estoque reservado."        ← ⚠️ B5: a mensagem é a mesma de uma reserva completa
+     aviso "Reserva parcial." — "2 unidades reservadas neste local; 3 unidades ficaram
+     pendentes. Reserve o restante em outro local ou depois de abastecer este."
      selo "Reserva pendente"
      indicador Reservado 40% (2 de 5)
      Andamento: Reserva 40%
@@ -137,8 +138,8 @@ PERSONAGEM: Bruno — Logística · quinta, 10h
    Concluída.
    Rota: /app/logistica/movimentacoes
    Resultado: duas linhas novas:
-     Transferência (saída)   · Doca de recebimento        · 50 · stock_transfer
-     Transferência (entrada) · Picking — rua A, módulo 01 · 50 · stock_transfer
+     Transferência (saída)   · Doca de recebimento        · 50 · Transferência entre locais
+     Transferência (entrada) · Picking — rua A, módulo 01 · 50 · Transferência entre locais
 
 7. Reservar o restante
    Rota: PV-0002 → Reservar estoque → "Picking — rua A, módulo 01" → Reservar
@@ -156,7 +157,7 @@ PERSONAGEM: Rafael — Operador
 9. Caso realista: liberar uma reserva
    Situação: e se a Ferrovia desistisse?
    Ação: PV-0002 → Liberar reserva → mostrar a confirmação "As quantidades reservadas
-   voltam a ficar disponíveis no estoque." → fechar com "Cancelar" (sem executar).
+   voltam a ficar disponíveis no estoque." → fechar com "Voltar" (sem executar).
    Explicação: liberar devolve o pedido para "Aprovado" e o disponível sobe; o em
    estoque não muda. Repare: o Bruno reserva, mas não vê "Liberar reserva" (o papel
    Logística não tem essa permissão); o Rafael vê.
@@ -176,13 +177,13 @@ PERSONAGEM: Rafael — Operador
 |---|---|---|---|
 | Fórmula | Fundo escuro; três barras (em estoque, reservado, disponível) animadas com o balde | Fórmula em DM Sans; números em mono | 6 s |
 | Planta do armazém | Motion: Doca → Picking → Expedição; caixas de baldes em cada local | Contadores por local | 4 s |
-| Movimentações | Tela cheia → zoom 1,3× na coluna Origem | Callouts: `PURCHASE_RECEIPT` = compra, `stock_reservation` = reserva, `manual` = entrada avulsa | 2 s por linha |
+| Movimentações | Tela cheia → zoom 1,3× na coluna Origem | Callouts: Recebimento de compra, Reserva de pedido, Lançamento avulso | 2 s por linha |
 | Ledger imutável | Zoom na descrição da tela | Callout "Nenhuma linha é editada: correções viram novas linhas" | 2,5 s |
 | Saldo por local | Zoom nas duas linhas | Anel na coluna Local | 2 s |
 | Visão "Com reserva" | Clique na visão | — | 1,5 s |
 | Quadro ⛔ PV-0002 | Translúcido | — | 3 s |
 | Reservar | Diálogo; lista de locais aberta | Callout no texto "Itens sem saldo ficam com reserva pendente" | 2,5 s |
-| **Reserva parcial** | Toast "Estoque reservado." em destaque → câmera desce para o selo e o indicador | Quadro de erro ⚠️ B5: Mensagem · Por que · Como conferir | **4 s** |
+| **Reserva parcial** | Aviso "Reserva parcial." em destaque → câmera desce para o selo e o indicador | Quadro de exceção: Mensagem · Por que · Como resolver | **4 s** |
 | Indicador 40% | Zoom 1,6× em "Reservado 40% · 2 de 5" | Anel laranja | 2 s |
 | Diagnóstico | Saldo: Picking 0 disponível, Doca 50 | Seta da Doca para o Picking (motion) | 3 s |
 | Quadro ⛔ transferência | Translúcido | Stepper Rascunho → Em trânsito → Concluída | 3 s |
@@ -190,7 +191,7 @@ PERSONAGEM: Rafael — Operador
 | Movimentações da transferência | Zoom nas duas linhas novas | Callout "Sai de um local, entra no outro: o total não muda" | 2,5 s |
 | Reservar de novo | Mesmo diálogo → selo "Reservado" → 100% | Stepper avança | toast 2,5 s · selo 1,5 s |
 | Saldo final | Duas linhas; motion soma 12 + 50 = 62 | Fórmula com os números: 62 − 15 = 47 | 4 s |
-| Liberar reserva (sem executar) | Diálogo | Callout "Cancelar fecha · Liberar reserva executa" | 2,5 s |
+| Liberar reserva (sem executar) | Diálogo | Callout "Voltar fecha · Liberar reserva executa" | 2,5 s |
 | Mapa das telas | Pan pelo menu Logística | Selo 🔎 em cada item | 4 s |
 
 ## 7. Narração
@@ -214,7 +215,7 @@ No saldo, o balde aparece duas vezes, uma por local. Na doca, cinquenta em estoq
 Dez horas. O pedido da Ferrovia já está aprovado. O Bruno clica em Reservar estoque e escolhe o picking, de onde os pedidos saem. Reservar.
 
 **[D4 — A reserva parcial]**
-Atenção a este momento. A mensagem diz "estoque reservado". Mas olhe o status: reserva pendente. E o indicador: quarenta por cento, dois de cinco. O picking só tinha dois baldes livres. A reserva foi parcial, e a mensagem, nesta versão, não faz essa diferença. Por isso, a regra é: depois de reservar, confira sempre o indicador Reservado e o status do pedido.
+Atenção a este momento. O sistema avisa: reserva parcial. Duas unidades reservadas, três pendentes. O status confirma: reserva pendente. E o indicador: quarenta por cento, dois de cinco. O picking só tinha dois baldes livres. A regra é: depois de reservar, leia o aviso e confira o indicador Reservado.
 
 **[D5 — Armazenagem]**
 Os baldes existem, mas estão na doca. O trabalho certo é a armazenagem: levar a mercadoria da doca para o picking. Nesta versão, a transferência entre locais ainda não tem tela. Ela foi registrada por integração pelo Bruno. Veja o resultado: a transferência TRF zero zero zero um está concluída. Nas movimentações, cinquenta saíram da doca e cinquenta entraram no picking. O total da empresa não mudou: só o lugar.
@@ -226,7 +227,7 @@ Agora, o Bruno reserva de novo no picking. A reserva vale só para o que estava 
 O saldo final conta a história da semana. No picking, sessenta e dois baldes em estoque: os doze iniciais mais os cinquenta da compra. Quinze reservados: dez do Granito e cinco da Ferrovia. Quarenta e sete disponíveis. E a doca está vazia, pronta para o próximo caminhão.
 
 **[F — Erros e exceções]**
-Alguns cuidados. Reservar sem escolher o local não é possível: o sistema pede o local. Reservar num local onde o produto não está gera uma reserva pendente, com a mesma mensagem de sucesso. E, se o cliente desistir, o pedido pode ter a reserva liberada: as quantidades voltam a ficar disponíveis, e o em estoque não muda. Repare que a liberação é feita pelo Rafael. O papel de logística do Bruno reserva, mas não libera. Por fim, nenhuma movimentação é editada nesta tela. Correções entram como ajuste, que exige aprovação do gerente e, nesta versão, é feito por integração.
+Alguns cuidados. Reservar sem escolher o local não é possível: o sistema pede o local. Reservar num local onde o produto não está não reserva nada, e o sistema avisa: nenhuma unidade reservada. E, se o cliente desistir, o pedido pode ter a reserva liberada: as quantidades voltam a ficar disponíveis, e o em estoque não muda. Repare que a liberação é feita pelo Rafael. O papel de logística do Bruno reserva, mas não libera. Por fim, nenhuma movimentação é editada nesta tela. Correções entram como ajuste, que exige aprovação do gerente e, nesta versão, é feito por integração.
 
 **[G — Exercício]**
 Sua vez. Encontre no saldo um produto com reserva. Calcule o disponível com a fórmula e confira com a coluna. Depois, nas movimentações, encontre a origem de cada linha desse produto.
@@ -251,8 +252,8 @@ Entrada (RECEIPT) ................. em estoque +
 Saída (ISSUE) ..................... em estoque −
 Transferência (saída / entrada) ... em estoque − na origem / + no destino
 Ajuste (+ / −) .................... em estoque ±
-RESERVATION ....................... reservado +   (rótulo técnico, D5)
-RELEASE ........................... reservado −   (rótulo técnico, D5)
+Reserva .......................... reservado +
+Liberação de reserva ............. reservado −
 ```
 
 **Fluxo entre módulos:**
@@ -272,11 +273,10 @@ COMERCIAL (pedido aprovado) ──► ESTOQUE: reserva (disponível −) ──�
 
 | Situação | Mensagem apresentada | Causa | Impacto | Como identificar | Solução | Bug? |
 |---|---|---|---|---|---|---|
-| **Reserva parcial** | Toast "Estoque reservado." | O local não tinha saldo para tudo; a mensagem não confere o resultado | Pedido não totalmente reservado; risco de prometer o que não está separado | Selo **Reserva pendente**; indicador **Reservado** < 100%; coluna Reservada | Levar saldo ao local (transferência) ou reservar em outro local; depois **Reservar estoque** de novo | ⚠️ **B5** |
+| **Reserva parcial** | Aviso "Reserva parcial." — "2 unidades reservadas neste local; 3 unidades ficaram pendentes…" | O local não tinha saldo para tudo | Pedido não totalmente reservado | Aviso, selo **Reserva pendente**, indicador **Reservado** < 100% | Levar saldo ao local (transferência) ou reservar em outro local; depois **Reservar estoque** de novo | não (antes a mensagem era sempre "Estoque reservado.", B5, corrigido em `48775f5`) |
+| Nenhuma unidade reservada | Aviso "Nenhuma unidade reservada." — "O local escolhido não tem saldo disponível…" | Local sem saldo do produto | Nada muda | Aviso; indicador igual | Escolher o local onde o produto está | não |
 | Reservar sem local | "Selecione o local de onde reservar." | Campo obrigatório | Não reserva | Mensagem sob o campo | Escolher o local | não |
-| Local ausente da lista da reserva | — | O local foi cadastrado sem Descrição | Não dá para reservar nele pela tela | Lista da janela | Editar o local e preencher a Descrição | ⚠️ D8 (novo; confirmar na preparação) |
 | Logística procura "Liberar reserva" | — (botão ausente) | O papel Logística não tem `sales_orders.update` | Precisa de outra pessoa para liberar | Cabeçalho do pedido | Operador ou Gerente libera | ⚠️ observação de modelo de papel |
-| Tipos com rótulo técnico | "RESERVATION", "RELEASE"; origens `stock_reservation`, `stock_transfer`, `PURCHASE_RECEIPT`, `manual` | Tipos de reserva e origens sem tradução | Leitura difícil | Colunas Tipo e Origem | Usar a tabela da seção 8 | ⚠️ D5 (novo) |
 | Saída ou transferência maior que o disponível (API) | "Saldo insuficiente: disponível 2.0000, solicitado 5" (exemplo) | Quantidade acima do disponível do local | Operação recusada | Mensagem da integração | Conferir reservas e saldo do local | não; ⚠️ **B15** (casas decimais) |
 | Editar uma movimentação | — (não existe) | Por desenho: ledger imutável | — | Tela só de consulta | Corrigir com ajuste (Gerente, ⛔) ou estorno | não |
 | Transferir, contar, ajustar, separar pela tela | — (sem botões) | ⛔ só pela API nesta versão | Depende de integração | Telas só de consulta | Integração; aulas 08 e futuras | ⛔ |
@@ -297,7 +297,7 @@ COMERCIAL (pedido aprovado) ──► ESTOQUE: reserva (disponível −) ──�
 - [ ] Sei que o saldo é por local e escolho o local certo na reserva.
 - [ ] Leio as colunas Tipo e Origem das movimentações.
 - [ ] Reservei um pedido e reconheci uma reserva parcial pelo selo e pelo indicador.
-- [ ] Sei que a mensagem "Estoque reservado." não basta (B5).
+- [ ] Sei ler o aviso de reserva parcial e conferir o indicador.
 - [ ] Entendi a armazenagem (Doca → Picking) e o efeito da transferência.
 - [ ] Sei o que a liberação de reserva faz e quem pode liberá-la.
 - [ ] Conheço as demais telas do WMS e o que ainda não tem tela.
@@ -308,7 +308,7 @@ Salvar em `docs/academy/05-estoque-wms/evidencias/`:
 
 | # | Captura | Comprova |
 |---|---|---|
-| 01 | `01-movimentacoes-inicio.png` | Entrada 50 (PURCHASE_RECEIPT), reserva 10, entrada 12 (manual) |
+| 01 | `01-movimentacoes-inicio.png` | Entrada 50 (Recebimento de compra), Reserva 10, Entrada 12 (Lançamento avulso) |
 | 02 | `02-saldo-doca-picking.png` | Doca 50/0/50 · Picking 12/10/2 |
 | 03 | `03-pv0002-aprovado.png` | PV-0002 Aprovado (preparado ⛔) |
 | 04 | `04-reservar-dialogo.png` | Janela de reserva com o Picking |
@@ -349,11 +349,11 @@ Salvar em `docs/academy/05-estoque-wms/evidencias/`:
 | D1 | Movimentações | 2:45–4:00 | Tipos, origens, filtro Entrada |
 | D2 | Saldo | 4:00–4:50 | Duas linhas; visão Com reserva |
 | D3 | Reservar | 4:50–5:40 | Quadro ⛔ PV-0002; diálogo |
-| D4 | Reserva parcial | 5:40–7:20 | Toast × selo × indicador; quadro ⚠️ B5; diagnóstico no Saldo |
+| D4 | Reserva parcial | 5:40–7:20 | Aviso × selo × indicador; diagnóstico no Saldo |
 | D5 | Armazenagem | 7:20–9:00 | Quadro ⛔; Transferências; movimentações de saída e entrada |
 | D6 | Completar | 9:00–9:50 | Nova reserva; 100% |
 | E | Resultado | 9:50–11:10 | Saldo final 62/15/47 com a conta animada |
-| F | Erros | 11:10–14:00 | B5, local sem descrição, Logística sem "Liberar", rótulos técnicos, saldo insuficiente, ledger imutável; liberar reserva (sem executar) |
+| F | Erros | 11:10–14:00 | Nenhuma unidade reservada, Logística sem "Liberar", saldo insuficiente, ledger imutável; liberar reserva (sem executar) |
 | — | Mapa do WMS | 14:00–14:40 | Pan pelas telas de consulta |
 | G | Exercício | 14:40–15:05 | Tela de exercício |
 | H | Fechamento | 15:05–15:25 | 3 linhas → "Próxima aula: Financeiro" → lockup |

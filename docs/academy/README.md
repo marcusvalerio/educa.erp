@@ -166,4 +166,10 @@ O nível visual é o do vídeo institucional (marca, Núcleo, `#FF9408`, tipogra
    - **(B)** **Locutor humano** gravando a partir do `narracao.md`. É a melhor qualidade; a edição se ajusta ao áudio.
    - **(C)** Liberar o Hugging Face na política de rede para usar o **Piper** (voz pt-BR offline). É gratuito, mas soa claramente sintético.
 4. **Aula piloto.** Sugestão: **02 — Cadastros**. Ela é quase toda feita na interface real (só o saldo de implantação é preparado fora), tem erros reais claros e exercita todo o formato: digitação, validação, conferência, relação com outros módulos. Ela valida voz, ritmo e visual antes da série.
-5. **Correções baratas antes de gravar** (opcional). Corrigir **B5** (toast de reserva), **B14** e **B15** (mensagens técnicas) e **D1** (Dados da empresa) deixa as aulas mais limpas. São mudanças pequenas no app, fora do escopo de vídeo; só com a sua autorização.
+5. **Correções baratas antes de gravar.** ✅ **Feito** (sua autorização de 02/10): na `main`, commit `48775f5`, só interface:
+   - **B5:** a reserva parcial agora avisa "Reserva parcial." com o reservado e o pendente; sem saldo, "Nenhuma unidade reservada.";
+   - **D5:** Movimentações com "Reserva", "Liberação de reserva" e origens traduzidas;
+   - **D8:** local sem descrição aparece pelo código na reserva e no saldo;
+   - diálogos de ação do pedido com "Voltar" (em vez de "Cancelar" ao lado de "Cancelar pedido").
+
+   Ficaram de fora por exigirem migration no banco de produção: **D1** (Dados da empresa), **B15** (casas decimais em mensagens do banco), **B18** (unidade do item). B14 não aparece no fluxo das aulas.

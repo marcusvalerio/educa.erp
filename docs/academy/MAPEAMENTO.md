@@ -217,18 +217,18 @@ Do relatório de 7 empresas: **nenhum foi corrigido desde então**, conferido no
 | B3 | ALTO | Numeração de documentos global entre empresas | 03, 06 (o número "pula") |
 | B4 | ALTO | Datas dos documentos em UTC (à noite, caem no dia seguinte) | 03, 06, 07 |
 | B5 | ~~ALTO~~ | ~~Toast "Estoque reservado." mesmo sem saldo~~ — **corrigido na `main` (`48775f5`)**: agora "Reserva parcial." ou "Nenhuma unidade reservada." com as quantidades | 03, 05 |
-| B6 | ALTO | Início dos papéis personalizados com cartões de erro | 06, 07, 08 (primeira tela do personagem) |
+| B6 | ~~ALTO~~ | ~~Início dos papéis personalizados com cartões de erro~~ — **corrigido na rodada 48** (branch): o bloco executivo só aparece com `reports.view` + `controlling.view` | 06, 07, 08 |
 | B7 | ALTO | Auditoria não registra criação de pedidos, movimentos, separações e expedições | 09 Auditoria |
-| B8 | ALTO | Categoria de produto não pode ser criada | 02 Cadastros |
-| B9 | MÉDIO | Operador padrão cria conta a pagar e NCM | 10 Configurações (segregação) |
+| B8 | ~~ALTO~~ | ~~Categoria de produto não pode ser criada~~ — **corrigido na rodada 48** (branch): código gerado do nome; continua sem tela (D2) | 02 Cadastros |
+| B9 | **ALTO** | Operador padrão cria conta a pagar, **baixa recebimento** e cria NCM — reconfirmado em 6 empresas (R48-04, aberto: decisão de negócio + *migration*) | 10 Configurações (segregação) |
 | B10 | MÉDIO | Somente leitura abre a Administração da Empresa | 10 Configurações |
 | B11 | MÉDIO | Pedido entregue continua "Expedido" | 08 Logística |
 | B12 | MÉDIO | Margem bruta 100% no painel | (evitar destacar) |
-| B13 | MÉDIO | Valor fora da lista gera erro 500 genérico | 02 Cadastros (API) |
-| B14 | BAIXO | Mensagens técnicas em inglês ("Invalid input…") | 02 |
-| B15 | BAIXO | Termos técnicos ("customers não encontrado", "(customers.create)", "127.0000") | 03, 05, 10 |
-| B16 | BAIXO | Matriz de permissões com rótulos em inglês | 10 |
-| B17 | BAIXO | Filtro por registro ignorado na API de auditoria | 09 |
+| B13 | ~~MÉDIO~~ | ~~Valor fora da lista gera erro 500~~ — **corrigido na rodada 48**: formato/faixa inválidos viram 4xx com instrução | 02 Cadastros (API) |
+| B14 | ~~BAIXO~~ | ~~Mensagens técnicas em inglês~~ — **corrigido na rodada 48**: "Informe o nome.", "Informe o cliente."… | 02 |
+| B15 | BAIXO | Termos técnicos: "customers não encontrado" ✅ corrigido na rodada 48 ("Cliente não encontrado."); continuam "(customers.create)" e números com 4 casas ("127.0000", R48-22) | 03, 05, 10 |
+| B16 | ~~BAIXO~~ | ~~Matriz de permissões com rótulos em inglês~~ — **corrigido na rodada 48** | 10 |
+| B17 | ~~BAIXO~~ | ~~Filtro por registro ignorado na API de auditoria~~ — **corrigido na rodada 48** | 09 |
 | B18 | BAIXO | Item do pedido sem unidade | 03 |
 | D1 | **novo** | "Configurações → Dados da empresa" não abre para nenhum papel | 10 |
 | D2 | **novo** | Categoria/marca/unidade sem tela; o produto usa lista fixa de categorias | 02 |
@@ -239,9 +239,25 @@ Do relatório de 7 empresas: **nenhum foi corrigido desde então**, conferido no
 | D7 | **novo** | "Agendamentos" lista os mesmos recebimentos da tela "Recebimento" | 04 |
 | D8 | ~~novo~~ | ~~Local de estoque sem Descrição some da janela "Reservar estoque"~~ — **corrigido (`48775f5`)**: aparece pelo código | 02, 05 |
 | D9 | **novo** | "Condição de pagamento" do cliente é texto livre: o pedido e o título usam a condição **relacional** (`payment_terms`), sem tela. Sem ela, "Gerar conta a receber" cria parcela única vencendo no dia | 02, 03, 06 |
-| D10 | **novo** | Rótulos técnicos remanescentes: CFOP com Direção "SAIDA" e Abrangência "INTERNAL"; Auditoria com entidade "stock_reservations"; Devoluções cita "RETURN_IN/RETURN_OUT" | 07, 08, 09 |
-| D11 | **novo** | Início dos papéis personalizados: "Painéis → Executivo" no menu, mas o cartão "Resumo" mostra "Não foi possível carregar o relatório executivo — Sem permissão para estes dados." (é o B6, reconfirmado em 02/10) | 06, 07, 08 |
+| D10 | parcial | Rótulos técnicos: CFOP e auditoria ✅ corrigidos na rodada 48; continua Devoluções citando "RETURN_IN/RETURN_OUT" e Notas com Tipo "NFE" | 07, 08, 09 |
+| D11 | ~~novo~~ | ~~Início dos papéis personalizados com erro do relatório executivo~~ — **corrigido na rodada 48** (mesma causa do B6: a função também exige `controlling.view`) | 06, 07, 08 |
 | D12 | **novo** | Ocorrências e eventos de entrega (saída para entrega, ausente, recusada…) só pela API e **sem tela** de consulta; "Nenhum transportadora cadastrado" (concordância) e toasts "Transportadora criado." | 08 |
+
+### Rodada de teste com 48 usuários em 7 empresas (02/10/2026)
+
+Correções na branch `claude/e2e-empresa-nova-correcoes` (sem *migration*; **produção só depois do merge**) e problemas novos que afetam a gravação. Relatório: [`RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md`](../homologacao/RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md).
+
+| Id | Sev. | Situação | Onde aparece na Academy |
+|---|---|---|---|
+| R48-01 | 🔴 | Conta a receber gerada 2× **ao mesmo tempo** cria dois títulos — **aberto** (exige *migration*). Na gravação: um clique só | 06 |
+| R48-02 | 🟠 ✅ | Duas pessoas editando o mesmo cadastro: agora o 2º recebe aviso em vez de apagar a alteração do 1º | 02 (bom para mostrar) |
+| R48-03 | 🟠 ✅ | Desconto maior que o valor do item/pedido é recusado (antes: pedido com total negativo e aprovado) | 03 |
+| R48-04 | 🟠 | = B9 (Operador com poderes financeiros) — **aberto** | 10 |
+| R48-05 | 🟠 ✅ | Papéis e permissões abre em ~0,6 s (antes 7,8 s; *timeout* com 48 usuários) | 10 |
+| R48-06 | 🟡 | Separação/expedição criada 2× ao mesmo tempo — **aberto** (estoque protegido) | 08 |
+| R48-11 | 🟡 | Reservas de pedidos expedidos ficam "ativas" no banco — **aberto** (saldo correto) | 05 |
+| R48-15 | 🟡 | Na disputa de dois pedidos pelo mesmo saldo, o segundo recebe erro em vez de reserva parcial — **aberto** | 03, 05 |
+| R48-22 | 🟢 | Números com 4 casas nas mensagens do banco ("4.0000") — **aberto** | 05, 06 |
 
 **Erros com mensagem clara** (bons para "ERRO → POR QUÊ → COMO RESOLVER"):
 

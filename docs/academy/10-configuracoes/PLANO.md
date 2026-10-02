@@ -17,6 +17,9 @@
 | **Cobertura** | ✅ quase completa: usuários, convites, papéis, matriz de permissões, setores, cargos, unidades, módulos, foco dos painéis, aparência, documentação · 🔎 parâmetros · ⚠️ "Dados da empresa" não abre para nenhum papel (D1) · ⚠️ B10, B16 · ⛔ configuração fiscal (aula 07) |
 | **Objetivo principal** | Deixar a Órbita pronta para operar: primeiro acesso, estrutura (unidade, setores, cargos), papéis personalizados, convites com o papel certo, contexto de cada pessoa, módulos habilitados e foco dos painéis, entendendo a diferença entre **papel** e **cargo**. |
 
+> **Atualização pós-estabilização — rodada de teste com 48 usuários em 7 empresas (02/10/2026).** (1) **B16 corrigido:** a matriz de permissões está em português (recursos como "Módulos da empresa", "Papéis e permissões", "Auditoria"; ação "Configurar"). (2) A tela **Papéis e permissões abre em ~0,6 s** (antes 7,8 s, e *timeout* com muitos usuários — R48-05). (3) **B6 corrigido** no Início dos papéis criados aqui. (4) **B9 reconfirmado como R48-04:** o papel padrão Operador cria conta a pagar, baixa recebimentos e cria NCM — continua aberto; a aula deve mostrar como criar um papel mais restrito.
+> Vale para a build da branch `claude/e2e-empresa-nova-correcoes` (commits `3ca2878`, `081edc1` e seguinte); **enquanto não houver merge, produção continua com o comportamento anterior** — grave na build corrigida. Detalhes em [`RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md`](../../homologacao/RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md).
+
 ## 2. Contexto de negócio
 
 > Segunda-feira, 8h40. Meia hora depois de o Marcus criar a Órbita (aula 01), a Ana abre o e-mail com o convite e entra pela primeira vez.
@@ -104,7 +107,8 @@ PERSONAGEM: Ana — Administrador · segunda, 8h40
    ex.: COMPRADOR."), Nome "Financeiro", Descrição → salvar → toast "Papel Financeiro
    criado."
    Matriz: módulos com contagem (ex.: "Núcleo 31/31") e a grade Recurso × Consultar,
-   Ler, Criar, Editar, Excluir, Administrar, Atribuir, Configure.
+   Ler, Criar, Editar, Excluir, Administrar, Atribuir, Configurar (recursos em português
+   desde a rodada 48: "Auditoria", "Unidades", "Módulos da empresa", "Papéis e permissões").
    Ação: marcar as permissões do anexo (contas a pagar e a receber, pagamentos, contas e
    categorias financeiras, relatórios financeiros, pedidos de venda em consulta…) →
    rodapé "N adicionada(s) · 0 removida(s)" → Salvar permissões → toast "Permissões de
@@ -253,10 +257,10 @@ Novo papel ──► matriz (adicionar/remover) ──► Salvar permissões · 
 | Gerente procura "Convidar usuário" | — (botão ausente) | Sem `users.create` | — | Lista sem botão | Administrador convida | não (regra) |
 | Dados da empresa | "Sem acesso a este recurso" | Nenhum papel tem `companies.read` | Tela inacessível | Acesso negado até para o Administrador | Débito registrado | ⚠️ **D1** |
 | Somente leitura abre a Administração | — | Modelo do papel | Exposição | Matriz | Rever o papel | ⚠️ **B10** |
-| Rótulos em inglês na matriz | "Audit", "Rbac", "Company modules"… | Rótulos técnicos | Leitura | Coluna Recurso | Usar o filtro e a descrição | ⚠️ **B16** |
-| Operador com permissões amplas | — | Papel padrão inclui contas a pagar e NCM | Segregação fraca | Matriz | Criar papel mais restrito | ⚠️ **B9** |
+| Rótulos em inglês na matriz | antes "Audit", "Rbac", "Company modules"… | — | — | — | — | B16 ✅ (rodada 48) |
+| Operador com permissões amplas | — | Papel padrão inclui contas a pagar, baixa de recebimento e NCM (reconfirmado em 6 empresas) | Segregação fraca | Matriz | Criar papel mais restrito | ⚠️ **B9 / R48-04 (aberto)** |
 | Texto "Novo(a) setor" | — | Rótulo genérico | Estética | Botões de Setores, Cargos, Unidades | — | ⚠️ observação |
-| Início dos papéis personalizados | "Não foi possível carregar o relatório executivo…" | Os papéis criados aqui não têm o painel executivo | Visual | Início da Fernanda, do Lucas e do Bruno | Débito registrado (aula 06) | ⚠️ **B6** |
+| Início dos papéis personalizados | — (antes: "Não foi possível carregar o relatório executivo…") | O bloco executivo só aparece para quem tem reports.view e controlling.view | — | — | — | B6 ✅ (rodada 48) |
 
 ## 10. Exercício prático
 

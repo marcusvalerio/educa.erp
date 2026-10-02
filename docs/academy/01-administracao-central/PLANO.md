@@ -17,6 +17,9 @@
 | **Cobertura** | ✅ completa pela interface |
 | **Objetivo principal** | Colocar uma empresa cliente para operar com segurança: criar, entregar o acesso ao primeiro administrador, ajustar o contrato de módulos e controlar o ciclo de vida, entendendo o que a plataforma **pode** e **não pode** ver. |
 
+> **Atualização pós-estabilização — rodada de teste com 48 usuários em 7 empresas (02/10/2026).** Criação de empresa, convite do administrador e primeiro acesso refeitos para **7 empresas e 48 usuários sem nenhuma falha** (166 verificações). Isolamento entre empresas: 3.395 tentativas, 0 vazamentos — a frase da aula "cada empresa só enxerga os próprios dados" está comprovada. Nenhuma cena muda.
+> Vale para a build da branch `claude/e2e-empresa-nova-correcoes` (commits `3ca2878`, `081edc1` e seguinte); **enquanto não houver merge, produção continua com o comportamento anterior** — grave na build corrigida. Detalhes em [`RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md`](../../homologacao/RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md).
+
 ## 2. Contexto de negócio
 
 > Segunda-feira, 8h10. A Órbita Distribuidora, uma distribuidora de utilidades plásticas de São Paulo, assinou o contrato com o ATLAS.ERP na sexta-feira. O plano contratado é o de **distribuição**: vender, comprar, estocar, expedir, faturar e controlar o financeiro. A Órbita não fabrica nada, então os módulos de produção, manutenção de ativos, qualidade e projetos não fazem parte do contrato.

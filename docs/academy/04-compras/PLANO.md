@@ -16,6 +16,9 @@
 | **Cobertura** | 🔎 **consulta**: as telas de Suprimentos e Recebimento são listas com filtros, abas e detalhe · ⛔ solicitação, aprovação, pedido de compra, envio, recebimento, confirmação e conta a pagar são feitos pela API · ⚠️ sem alerta de estoque mínimo (D6) |
 | **Objetivo principal** | Entender o ciclo de compra do ATLAS.ERP, quem age em cada etapa, o que cada status significa e onde conferir que a mercadoria **de fato** entrou no estoque e gerou a obrigação de pagar. |
 
+> **Atualização pós-estabilização — rodada de teste com 48 usuários em 7 empresas (02/10/2026).** Ciclo completo (solicitação → aprovação → pedido → envio → recebimento → conferência → conta a pagar) executado pelo papel **Compras** em 7 empresas sem falha. Mensagens de validação agora em português. Nenhuma cena muda.
+> Vale para a build da branch `claude/e2e-empresa-nova-correcoes` (commits `3ca2878`, `081edc1` e seguinte); **enquanto não houver merge, produção continua com o comportamento anterior** — grave na build corrigida. Detalhes em [`RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md`](../../homologacao/RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md).
+
 > **Decisão registrada (README, decisão 1):** como nenhuma etapa de compra tem tela de ação nesta versão, a aula é de **acompanhamento**. Cada etapa ⛔ é anunciada pelo quadro "Preparado fora da interface" e seguida do resultado real nas telas. Quando houver telas de ação, a seção 5 vira preenchimento completo sem mudar a estrutura.
 
 ## 2. Contexto de negócio

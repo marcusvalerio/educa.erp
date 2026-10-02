@@ -16,6 +16,9 @@
 | **Cobertura** | ✅ cadastro de transportadora (Carlos) · 🔎 Separação (picking), Embalagem (packing), Expedições, Transportes, Devoluções e o andamento do pedido · ⛔ criar e executar a separação, criar a expedição, volumes, liberar, embalar, aprovar, expedir, transporte, ocorrências e entrega · ⚠️ B11 (pedido entregue continua "Expedido") |
 | **Objetivo principal** | Acompanhar o caminho físico do pedido (separação → embalagem → aprovação → expedição → entrega), saber quem faz cada etapa, ler os status e conferir o efeito no estoque e no pedido. |
 
+> **Atualização pós-estabilização — rodada de teste com 48 usuários em 7 empresas (02/10/2026).** (1) Início do papel Logística sem a caixa de erro do relatório executivo (B6 corrigido). (2) ⚠️ **R48-06 aberto:** criar a separação ou a expedição do mesmo pedido duas vezes ao mesmo tempo gera **duas** (o estoque é protegido: a segunda expedição é barrada no envio, com mensagem técnica). Na gravação, uma pessoa por pedido e um clique por ação.
+> Vale para a build da branch `claude/e2e-empresa-nova-correcoes` (commits `3ca2878`, `081edc1` e seguinte); **enquanto não houver merge, produção continua com o comportamento anterior** — grave na build corrigida. Detalhes em [`RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md`](../../homologacao/RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md).
+
 ## 2. Contexto de negócio
 
 > Sexta-feira, 10h. A nota do Granito está pronta (aula 07). Os 10 baldes estão reservados no Picking desde terça (aula 03), e o cliente espera a entrega em Santos ainda hoje.
@@ -232,7 +235,8 @@ Reservado ──(separação criada)──► Em separação ──(separação 
 | Logística abre Contas a receber ou NF-e | "Sem acesso a este recurso" | Fora do papel | — | Tela de acesso negado | — | não |
 | Texto técnico em Devoluções | "(RETURN_IN/RETURN_OUT)" na descrição da tela | Texto não traduzido | Leitura | Subtítulo da tela | Ler como "devoluções de entrada e saída" | ⚠️ D10 |
 | Concordância no estado vazio | "Nenhum transportadora cadastrado" | Texto genérico | Estética | Lista vazia | — | ⚠️ observação |
-| Início do papel personalizado | "Não foi possível carregar o relatório executivo…" | Ver aula 06 | Visual | Cartão "Resumo" | — | ⚠️ **B6** |
+| Início do papel personalizado | — (antes: "Não foi possível carregar o relatório executivo…") | Ver aula 06 | — | — | — | B6 ✅ (rodada 48) |
+| Separação ou expedição criada 2× ao mesmo tempo | nenhuma (as duas são criadas) | Sem trava no pedido | Tarefa em dobro; a 2ª expedição é barrada só no envio com "Item …: quantidade a expedir … excede o saldo reservado disponível" | Lista de Separação/Expedição com dois registros do mesmo pedido | Cancelar a duplicada | ⚠️ **R48-06 (aberto)** — não provocar |
 
 ## 10. Exercício prático
 

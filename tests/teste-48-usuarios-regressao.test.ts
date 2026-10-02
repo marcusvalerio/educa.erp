@@ -224,3 +224,11 @@ describe("R48 — reportAllowed considera o que o banco também exige", () => {
     assert.equal(reportAllowed(REPORTS.executive, (c) => perms.has(c)), true);
   });
 });
+
+describe("R48/B17 — trilha administrativa filtra pelo registro pedido", () => {
+  it("listAdminAudit aplica entityId (UUID) e não devolve a empresa inteira", () => {
+    const src = read("src/lib/api/admin-handlers.ts");
+    assert.match(src, /const entityId = params\.get\("entityId"\)/);
+    assert.match(src, /query = query\.eq\("entity_id", entityId\)/);
+  });
+});

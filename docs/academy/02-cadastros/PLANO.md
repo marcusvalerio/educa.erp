@@ -13,8 +13,11 @@
 | **Papéis reais** | Carlos — **Gerente** · Rafael — **Operador** · Juliana — **Vendedor** (todos papéis de sistema) |
 | **Duração estimada** | 15–17 min |
 | **Nível** | Introdutório (operação) |
-| **Cobertura** | ✅ completa pela interface para fornecedor, local, produto e cliente · ⚠️ categoria, marca e unidade sem tela (D2, B8) · ⛔ perfil fiscal do produto (D3) · ⛔ saldo de implantação (preparação para a aula 03) |
+| **Cobertura** | ✅ completa pela interface para fornecedor, local, produto e cliente · ⚠️ categoria, marca e unidade sem tela (D2; a criação por integração voltou a funcionar — B8 ✅ rodada 48) · ⛔ perfil fiscal do produto (D3) · ⛔ saldo de implantação (preparação para a aula 03) |
 | **Objetivo principal** | Montar, na ordem certa, a base mínima para a primeira compra e a primeira venda: fornecedor, locais, produtos e clientes. Ao final, o aluno sabe criar, consultar, editar, inativar e entender por que um registro em uso não pode ser excluído. |
+
+> **Atualização pós-estabilização — rodada de teste com 48 usuários em 7 empresas (02/10/2026).** (1) **Categoria e marca** agora são criadas (o código é gerado a partir do nome — B8 corrigido); continuam **sem tela** (D2). (2) Mensagens em português com o nome do campo ("Informe o nome.", "Informe o preço de venda como número…") — fim do "Invalid input…" (B14). (3) Preço, custo e estoque mínimo não aceitam valor negativo; nome/razão social até 200 caracteres. (4) **Novo comportamento que vale mostrar:** se duas pessoas editam o mesmo cadastro, quem salvar por último recebe "Não foi possível salvar… Este registro foi alterado por outra pessoa enquanto você editava…" em vez de apagar a alteração do colega.
+> Vale para a build da branch `claude/e2e-empresa-nova-correcoes` (commits `3ca2878`, `081edc1` e seguinte); **enquanto não houver merge, produção continua com o comportamento anterior** — grave na build corrigida. Detalhes em [`RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md`](../../homologacao/RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md).
 
 ## 2. Contexto de negócio
 
@@ -317,12 +320,13 @@ Cliente    ──► Comercial (orçamento, pedido) ──► Financeiro (contas
 | Operador ou Vendedor procura "Excluir" | — (opção ausente) | O papel não tem a permissão de excluir | — | Menu da linha sem "Excluir" | Pedir ao Gerente ou Administrador | não |
 | Vendedor procura "Novo produto" | — (botão ausente) | O Vendedor só consulta produtos | — | Lista sem botão | Pedir ao Gerente ou Operador | não |
 | Gaveta do cliente: "Pedidos de venda (0)" mesmo com pedidos | "Nenhum registro vinculado." | A lista de pedidos do cliente ainda não é carregada (sempre vazia); o mesmo vale para "Pedidos de compra" no fornecedor | Pode sugerir que o cliente não tem pedidos | Comparar com Pedidos de venda filtrados pelo cliente | Consultar em Comercial → Pedidos de venda | ⚠️ D4 (novo) |
-| Categoria (catálogo), Marca: listas vazias | — | Não há tela para criar categoria, marca ou unidade; criar categoria pela API falha | Produto fica sem categoria relacional | Listas vazias no bloco "Catálogo…" | Usar a **Categoria** da lista fixa (obrigatória) | ⚠️ D2 · B8 |
+| Categoria (catálogo), Marca: listas vazias | — | Não há tela para criar categoria, marca ou unidade (a criação por integração funciona desde a rodada 48) | Produto fica sem categoria relacional se ninguém cadastrar | Listas vazias no bloco "Catálogo…" | Usar a **Categoria** da lista fixa (obrigatória) ou cadastrar por integração | ⚠️ D2 · B8 ✅ |
 | Local sem descrição | — (o local aparece pelo código, ex.: "PCK-A01", na reserva e no saldo) | A tela usa a descrição como nome e, sem ela, o código | Nome menos claro para quem reserva | Lista de locais da reserva | **Preencher sempre a Descrição** | corrigido em `48775f5` (antes o local sumia da lista, D8) |
 | Condição de pagamento do cliente | — | O campo é texto livre; o pedido usa a condição de pagamento **relacional** (cadastro sem tela) | O título a receber vence no dia da geração se o pedido não tiver condição | Vencimento do título (aula 06) | Preparação da aula 03 cria a condição "28 dias" por integração | ⚠️ D9 (novo) |
 | Perfil fiscal do produto | — | ⛔ não há tela; a NF-e depende dele | A NF-e não sai só com o NCM do cadastro | Aula 07 | Fora do escopo desta aula | ⛔ D3 |
-| Valor fora da lista enviado pela API | Erro 500 genérico | Validação incompleta no servidor | — | — | Não ocorre pela tela | ⚠️ B13 (não provocar) |
-| Mensagens técnicas em inglês | "Invalid input…" | Casos de borda da API | — | — | Não ocorre no fluxo da aula | ⚠️ B14 (não provocar) |
+| Valor fora da lista enviado pela API | "Escolha uma opção válida para…" | Validação no servidor | — | — | Não ocorre pela tela | B13 ✅ (rodada 48: preço negativo, data inválida e ID malformado deixaram de dar erro 500) |
+| Mensagens técnicas em inglês | antes "Invalid input…"; agora "Informe o nome.", "Informe o preço de venda como número…" | Casos de borda da API | — | — | Não ocorre no fluxo da aula | B14 ✅ (rodada 48) |
+| Duas pessoas editando o mesmo cadastro | "Não foi possível salvar… Este registro foi alterado por outra pessoa enquanto você editava. Feche o formulário, abra de novo…" | Bloqueio otimista (rodada 48) | Nenhuma alteração se perde | Toast ao salvar | Fechar, abrir de novo e refazer | não (proteção) |
 
 ## 10. Exercício prático
 

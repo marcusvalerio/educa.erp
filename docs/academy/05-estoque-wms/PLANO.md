@@ -16,6 +16,9 @@
 | **Cobertura** | ✅ reservar e liberar reserva (no pedido) · 🔎 Saldo, Movimentações, Transferências, Inventário, Endereçamento, Almoxarifado, Picking, Packing, Expedição, Devoluções · ⛔ transferência, entrada e saída avulsas, ajuste, contagem, separação e expedição · aviso de reserva parcial (B5 corrigido) |
 | **Objetivo principal** | Entender o estoque como um livro de movimentações por local, ler **em estoque × reservado × disponível**, reservar um pedido, reconhecer uma reserva parcial e resolvê-la levando a mercadoria da doca para o picking. |
 
+> **Atualização pós-estabilização — rodada de teste com 48 usuários em 7 empresas (02/10/2026).** (1) Concorrência testada: entrada, consulta, reserva, separação e saída simultâneas mantêm **saldo = soma do razão** e reservado ≤ saldo. (2) Na disputa de dois pedidos pelo mesmo saldo, o segundo recebe erro em vez de reserva parcial (R48-15, aberto) — na gravação, reserve um pedido por vez. (3) Transferência para o mesmo local agora é recusada com "O local de origem e o de destino precisam ser diferentes." (antes: erro 500). (4) Reservas de pedidos já expedidos continuam com status "ativa" no banco (R48-11) — não mostrar a lista de reservas como prova de saldo; use **em estoque × reservado × disponível**.
+> Vale para a build da branch `claude/e2e-empresa-nova-correcoes` (commits `3ca2878`, `081edc1` e seguinte); **enquanto não houver merge, produção continua com o comportamento anterior** — grave na build corrigida. Detalhes em [`RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md`](../../homologacao/RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md).
+
 ## 2. Contexto de negócio
 
 > Quinta-feira, 7h30. Os 50 baldes da Polar chegaram e o Bruno confirmou o recebimento (aula 04). Eles estão na **doca**, ainda paletizados.

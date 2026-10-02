@@ -58,13 +58,15 @@ Os nomes são os propostos; os papéis são os **que existem** no sistema.
 | **Ana** | **Administrador** | Papel de sistema | Tudo na empresa: convida usuários, cria papéis, habilita módulos, configura painéis, lê auditoria. |
 | **Carlos** | **Gerente** | Papel de sistema | Aprova pedidos, compras e expedições, cancela pedidos, ajusta estoque. **Não** convida usuários nem cria papéis. |
 | **Juliana** | **Vendedor** | Papel de sistema | Clientes, orçamentos e pedidos (criar pela API, enviar pela tela). **Não** aprova e não vê Financeiro nem Fiscal. |
-| **Rafael** | **Operador** | Papel de sistema | Reserva estoque, recebimentos, separação e expedição, contagem e transferência. **Não** aprova. ⚠️ B9: também cria conta a pagar e NCM. |
+| **Rafael** | **Operador** | Papel de sistema | Reserva estoque, recebimentos, separação e expedição, contagem e transferência. **Não** aprova. ⚠️ B9/R48-04: também cria conta a pagar, baixa recebimento e cria NCM. |
 | **Fernanda** | **Financeiro** | **Papel personalizado** (criado pela Ana na aula 10) | Gera conta a receber, contas a pagar, recebimentos e pagamentos. |
 | **Lucas** | **Fiscal** | **Papel personalizado** | Documentos fiscais, NCM, CFOP e regras tributárias. |
 | **Bruno** | **Logística** | **Papel personalizado** | Reserva, separação, expedição, aprovação de expedição, locais e contagem. Confirma recebimento, mas **não lança**: o lançamento é do Rafael. |
 | *(opcional)* **Tiago** | **Somente leitura** | Papel de sistema | Consulta. Útil na aula 09 e para mostrar o débito B10. |
 
 > "Administradora", "Gerente Comercial" e outros títulos são **cargos** (texto livre em Administração → Cargos). As permissões vêm só do **papel**. As aulas deixam essa diferença explícita.
+
+> **Atualização pós-estabilização (02/10/2026).** Os 10 planos foram revisados depois da rodada de teste com 48 usuários em 7 empresas: cada `PLANO.md` traz no topo o que mudou para aquela aula e o [MAPEAMENTO](MAPEAMENTO.md) marca o que foi corrigido (B6, B8, B13, B14, B16, B17, D10 parcial, D11) e o que continua aberto (R48-01 🔴, B9/R48-04, R48-06, R48-11, R48-15). As correções estão na branch `claude/e2e-empresa-nova-correcoes`: **grave na build corrigida** ou espere o merge.
 
 ## As 10 aulas
 

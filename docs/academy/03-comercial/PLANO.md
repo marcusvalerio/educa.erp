@@ -16,6 +16,9 @@
 | **Cobertura** | 🟡 mista: enviar para aprovação, aprovar e reservar ✅ · consultar orçamentos, pedidos e saldo 🔎 · **criar orçamento e pedido ⛔ (B1)** · pipeline do CRM ⛔ (sem configuração de funil) |
 | **Objetivo principal** | Acompanhar um pedido de venda do rascunho até a reserva, entendendo cada status, quem age em cada etapa e por que quem vende não aprova. |
 
+> **Atualização pós-estabilização — rodada de teste com 48 usuários em 7 empresas (02/10/2026).** (1) O pedido **recusa desconto maior que o valor do item** ("O desconto do item não pode ser maior que o valor do item (quantidade × preço unitário).") e desconto do pedido maior que o total. (2) Corrida de reserva testada: dois pedidos disputando o mesmo saldo **nunca reservam mais que o estoque**; o segundo recebe "Reserva de N excede o saldo disponível." (sem reserva parcial — R48-15, aberto). (3) ⚠️ **Não dê duplo clique em "Gerar conta a receber"** (aula 06): R48-01 🔴 ainda aberto.
+> Vale para a build da branch `claude/e2e-empresa-nova-correcoes` (commits `3ca2878`, `081edc1` e seguinte); **enquanto não houver merge, produção continua com o comportamento anterior** — grave na build corrigida. Detalhes em [`RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md`](../../homologacao/RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md).
+
 ## 2. Contexto de negócio
 
 > Terça-feira, 8h30. A Juliana chega e encontra um e-mail do Granito: o cliente precisa de **10 baldes plásticos de 8 litros** até quinta-feira, para repor o estoque de uma obra no porto de Santos.

@@ -16,6 +16,9 @@
 | **Cobertura** | 🔎 painel com a checklist "Preparação para a primeira NF-e" e listas (Notas fiscais, NF-e, NCM, CFOP, Regras tributárias, Faturamento) · ⛔ estabelecimento, CFOP, natureza de operação, NCM, perfil fiscal do produto, gerar, calcular e marcar "Pronta" (B2, D3) · **autorização na SEFAZ: indisponível neste ambiente** (sem provedor nem certificado) |
 | **Objetivo principal** | Entender o que a empresa precisa ter para emitir a primeira NF-e, ler a checklist do painel Fiscal, acompanhar o documento de Rascunho até Pronta e saber exatamente onde esta versão para. |
 
+> **Atualização pós-estabilização — rodada de teste com 48 usuários em 7 empresas (02/10/2026).** (1) **D10 corrigido no CFOP:** a tela mostra Direção "Saída" e Abrangência "Dentro do estado" (antes "SAIDA"/"INTERNAL"). (2) Início do papel Fiscal sem a caixa de erro do relatório executivo (B6 corrigido). (3) NF-e gerada duas vezes ao mesmo tempo continua única; a mensagem do segundo agora é "Este documento já foi gerado a partir desta origem…" (antes falava em CPF/CNPJ).
+> Vale para a build da branch `claude/e2e-empresa-nova-correcoes` (commits `3ca2878`, `081edc1` e seguinte); **enquanto não houver merge, produção continua com o comportamento anterior** — grave na build corrigida. Detalhes em [`RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md`](../../homologacao/RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md).
+
 ## 2. Contexto de negócio
 
 > Sexta-feira, 8h30. O pedido do Granito sai hoje para Santos. Antes do caminhão, precisa existir a nota fiscal.
@@ -81,8 +84,8 @@ PERSONAGEM: Lucas — Fiscal · sexta, 8h30
    Quadro: "Nesta versão, os cadastros fiscais não têm tela. Foram registrados por
    integração pelo Lucas (Fiscal)."
    Rotas de conferência:
-     /app/fiscal/cfop → 5102 · Venda de mercadoria… · Direção "SAIDA" · Abrangência
-                        "INTERNAL" · Ativo   (⚠️ D10: rótulos técnicos)
+     /app/fiscal/cfop → 5102 · Venda de mercadoria… · Direção "Saída" · Abrangência
+                        "Dentro do estado" · Ativo   (D10 ✅ rodada 48)
      /app/fiscal/ncm  → 39249000 · Utilidades plásticas de uso doméstico · Ativo
    Painel: os quatro primeiros itens "— pronto"; o quinto "— pendente": "0 de 2
    produto(s) com NCM no perfil fiscal. A NF-e usa o NCM do perfil fiscal do produto
@@ -207,9 +210,9 @@ COMERCIAL (pedido aprovado) ─────────────────�
 | NF-e para em "Pronta" | — | Sem provedor de transmissão e certificado neste ambiente | Sem número e chave de acesso | Stepper; "Documento fiscal —" no pedido | Não é erro do usuário | limitação do ambiente |
 | Gerar, calcular e marcar pronta pela tela | — (sem botões) | ⛔ só pela API | Depende de integração | Listas só de consulta | Integração | ⚠️ **B2** |
 | Fiscal tenta criar regra tributária | "Você não tem permissão para esta operação (tax_rules.create)." (API) | O papel só consulta | — | — | Gerente cadastra | não (regra) |
-| Rótulos em código | CFOP: Direção "SAIDA", Abrangência "INTERNAL"; Notas: Tipo "NFE" | Valores técnicos sem tradução | Leitura | Colunas | Ler como Saída, Interna, NF-e | ⚠️ D10 (novo) |
+| Rótulos em código | Notas: Tipo "NFE" (o CFOP já mostra "Saída" e "Dentro do estado") | Valor técnico sem tradução | Leitura | Coluna Tipo | Ler como NF-e | ⚠️ D10 (parcial; CFOP ✅ rodada 48) |
 | Operador cria NF-e e NCM | — | Papel padrão amplo | Segregação fraca | Matriz | Ajustar o papel (aula 10) | ⚠️ **B9** |
-| Início do papel personalizado | "Não foi possível carregar o relatório executivo…" | Ver aula 06 | Visual | Cartão "Resumo" | — | ⚠️ **B6** |
+| Início do papel personalizado | — (antes: "Não foi possível carregar o relatório executivo…") | Ver aula 06 | — | — | — | B6 ✅ (rodada 48) |
 
 ## 10. Exercício prático
 

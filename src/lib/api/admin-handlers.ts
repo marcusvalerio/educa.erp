@@ -569,6 +569,15 @@ export async function listAdminAudit(request: NextRequest) {
     const entity = params.get("entity");
     const action = params.get("action");
     const search = params.get("search");
+    // Histórico de um registro (B17): antes o entityId era ignorado e a
+    // trilha devolvia a empresa inteira. Só aceita um UUID válido.
+    const entityId = params.get("entityId");
+    if (entityId) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entityId)) {
+        return NextResponse.json({ success: true, data: [], meta: { total: 0, page, pageSize } });
+      }
+      query = query.eq("entity_id", entityId);
+    }
     if (entity) query = query.eq("entity", entity);
     if (action) query = query.eq("action", action);
     if (search) query = query.ilike("actor_label", `%${search}%`);

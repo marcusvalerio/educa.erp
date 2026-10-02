@@ -17,6 +17,9 @@
 | **Cobertura** | 🟡 mista: **Gerar conta a receber** ✅ (no pedido) · contas a receber, contas a pagar, fluxo de caixa e centros de custo 🔎 · baixa, pagamento, contas financeiras e títulos avulsos ⛔ · ⚠️ D9 (o vencimento depende da condição de pagamento do pedido) · ⚠️ B6/D11 (cartão de erro no Início) |
 | **Objetivo principal** | Transformar as vendas aprovadas em contas a receber, acompanhar o que entra e o que sai, ler o fluxo de caixa e saber o que esta versão ainda faz só por integração (baixa e pagamento). |
 
+> **Atualização pós-estabilização — rodada de teste com 48 usuários em 7 empresas (02/10/2026).** (1) **B6/D11 corrigido:** o Início dos papéis personalizados não mostra mais "Não foi possível carregar o relatório executivo"; o bloco executivo só aparece para quem tem `reports.view` **e** `controlling.view`. (2) 🔴 **R48-01 aberto:** gerar a conta a receber do mesmo pedido **duas vezes ao mesmo tempo** (duplo clique ou duas pessoas) cria **dois títulos**. Na gravação: clicar **uma vez** e aguardar o toast. Em sequência continua seguro ("devolve o título existente"). (3) Baixa duplicada de parcela (duas pessoas ou duplo clique) **não** duplica: o segundo recebe "Parcela no status PAID não pode receber pagamentos."
+> Vale para a build da branch `claude/e2e-empresa-nova-correcoes` (commits `3ca2878`, `081edc1` e seguinte); **enquanto não houver merge, produção continua com o comportamento anterior** — grave na build corrigida. Detalhes em [`RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md`](../../homologacao/RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md).
+
 ## 2. Contexto de negócio
 
 > Quinta-feira, 14h. A semana da Órbita já tem movimento: o Granito e a Ferrovia têm pedidos aprovados e reservados, e a compra da Polar chegou de manhã.
@@ -74,9 +77,9 @@ PERSONAGEM: Fernanda — Financeiro · quinta, 14h
    Resultado: Início com o menu do papel: Painéis (Executivo, Financeiro), Pedidos de
    venda, Financeiro (Contas a pagar, Contas a receber, Fluxo de caixa, Centros de custo),
    Relatórios e cadastros em consulta.
-   ⚠️ B6/D11: o cartão "Resumo" mostra "Não foi possível carregar o relatório executivo —
-   Sem permissão para estes dados." e "O que mudou" mostra "Comparação indisponível".
-   O bloco "Precisa de atenção" funciona.
+   ✅ B6/D11 (corrigido na rodada 48): o Início do papel Financeiro não mostra mais os
+   cartões "Resumo" e "O que mudou" do relatório executivo (o papel não tem a
+   controladoria); "Precisa de atenção", "Seu foco" e "Fluxo do ERP" aparecem normalmente.
 
 2. Painel do Financeiro
    Rota: /app/financeiro
@@ -221,9 +224,10 @@ FINANCEIRO ──► CONTROLADORIA (relatórios) · PAINÉIS
 
 | Situação | Mensagem apresentada | Causa | Impacto | Como identificar | Solução | Bug? |
 |---|---|---|---|---|---|---|
-| Início do papel personalizado | "Não foi possível carregar o relatório executivo — Sem permissão para estes dados." · "Comparação indisponível" | O cartão usa o painel executivo, que o papel não acessa | Visual; o resto funciona | Cartão "Resumo" | Usar o painel do Financeiro | ⚠️ **B6** / D11 |
+| Início do papel personalizado | — (antes: "Não foi possível carregar o relatório executivo…") | O bloco executivo agora só aparece para quem tem reports.view e controlling.view | — | — | — | B6/D11 ✅ (rodada 48) |
 | Título vencendo no mesmo dia | — | Pedido sem condição de pagamento relacional | Título "vencido" cedo demais | Coluna Vencimento | Garantir a condição no pedido (integração, D9) | ⚠️ D9 |
-| Gerar duas vezes | "Conta a receber gerada." (de novo) | A função devolve o título existente | Nenhum (não duplica) | O bloco Financeiro continua com 1 título | — | não |
+| Gerar duas vezes, uma depois da outra | "Conta a receber gerada." (de novo) | A função devolve o título existente | Nenhum (não duplica) | O bloco Financeiro continua com 1 título | — | não |
+| Gerar duas vezes **ao mesmo tempo** (duplo clique ou duas pessoas no mesmo segundo) | "Conta a receber gerada." nas duas | A função confere e grava sem travar o pedido | **Dois títulos para o mesmo pedido** (cobrança dobrada) | Contas a receber filtradas pelo pedido | Cancelar o título excedente; na gravação, clicar uma vez | 🔴 **R48-01 (aberto)** — não provocar |
 | Pedido não aprovado | — (botão ausente) · pela API: "Só é possível gerar título a receber a partir de um pedido aprovado (status atual: …)." | Regra | — | Status do pedido | Aprovar antes | não |
 | Vendedor abre o Financeiro | "Sem acesso a este recurso" | Segregação | — | Tela de acesso negado | — | não (regra) |
 | Baixa e pagamento pela tela | — (sem botões) | ⛔ só pela API | Depende de integração | Listas só de consulta | Integração | ⛔ |

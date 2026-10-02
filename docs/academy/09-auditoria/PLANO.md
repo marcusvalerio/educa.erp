@@ -14,8 +14,11 @@
 | **Coadjuvantes** | **Carlos** (Gerente, também lê a auditoria) · **Juliana** (Vendedor, para mostrar o limite) · **Marcus** (Owner, citado: auditoria da plataforma) |
 | **Duração estimada** | 8–10 min |
 | **Nível** | Intermediário |
-| **Cobertura** | ✅ completa pela interface (a auditoria é consulta por natureza) · ⚠️ B7 (criação e envio do pedido e movimentos de estoque não aparecem) · ⚠️ B17 (a lista não filtra por registro) · ⚠️ D10 (entidade "stock_reservations" sem tradução) |
+| **Cobertura** | ✅ completa pela interface (a auditoria é consulta por natureza) · ⚠️ B7 (criação e envio do pedido e movimentos de estoque não aparecem) · B17 ✅ e D10 ✅ (corrigidos na rodada 48) |
 | **Objetivo principal** | Reconstruir a história de um pedido pela trilha de auditoria, ler cada linha (data, usuário, entidade, ação), usar os filtros certos e saber, com honestidade, o que a trilha ainda não registra. |
+
+> **Atualização pós-estabilização — rodada de teste com 48 usuários em 7 empresas (02/10/2026).** (1) **B17 corrigido:** a trilha administrativa agora filtra pelo registro (`entityId`). (2) **D10 corrigido na trilha:** "stock_reservations", "stock_transfers" e movimentos de estoque aparecem em português. (3) Verificado em 7 empresas: **nenhum autor "system"**, nenhuma ação gravada por usuário de outra empresa, 100% das ações críticas auditadas. Os únicos registros sem usuário são os convites do Owner, com o rótulo técnico "platform:OWNER:…" (R48-23, aberto).
+> Vale para a build da branch `claude/e2e-empresa-nova-correcoes` (commits `3ca2878`, `081edc1` e seguinte); **enquanto não houver merge, produção continua com o comportamento anterior** — grave na build corrigida. Detalhes em [`RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md`](../../homologacao/RELATORIO-TESTE-48-USUARIOS-7-EMPRESAS.md).
 
 ## 2. Contexto de negócio
 
@@ -187,8 +190,8 @@ AÇÃO DE GOVERNANÇA (Owner/Admin da plataforma) ──► Auditoria da platafo
 |---|---|---|---|---|---|---|
 | Criação e envio do pedido não aparecem | — | A trilha não registra essas ações | Lacuna de rastreio | Histórico começa na aprovação | Usar documentos ligados (orçamento) e o Histórico | ⚠️ **B7** |
 | Movimentos de estoque não aparecem como ação de usuário | — | Gravados só no ledger | — | Auditoria × Movimentações | Conferir em Movimentações (aula 05) | ⚠️ **B7** |
-| Filtrar a lista por um registro | — (não existe; a API ignora o registro) | Lista só filtra por entidade, ação e usuário | Busca manual | — | Usar o Histórico dentro do registro | ⚠️ **B17** |
-| Entidade em código | "stock_reservations" | Tabela sem rótulo | Leitura | Coluna Entidade | Ler como "Reserva de estoque" | ⚠️ D10 |
+| Filtrar a lista por um registro | — | A tela filtra por entidade, ação e usuário; a API agora aceita o registro (`entityId`) | — | — | Usar o Histórico dentro do registro | B17 ✅ (rodada 48, API) |
+| Entidade em código | antes "stock_reservations"; agora "Reserva de estoque" | — | — | — | — | D10 ✅ (rodada 48) |
 | Vendedor abre o Histórico | "O histórico de alterações exige a permissão de auditoria." | Sem `audit_logs.read` | — | Bloco Histórico | Pedir a quem tem acesso | não (regra) |
 | Somente leitura lê a auditoria e a Administração | — | Modelo do papel | Exposição maior que o necessário | Matriz | Rever o papel (aula 10) | ⚠️ **B10** |
 | Horários | Fuso do navegador; documentos em UTC | ⚠️ B4 | Diferença à noite | Comparar data do documento e da linha | Atenção a operações noturnas | ⚠️ **B4** |
@@ -208,7 +211,7 @@ AÇÃO DE GOVERNANÇA (Owner/Admin da plataforma) ──► Auditoria da platafo
 - [ ] Uso a busca por usuário e o filtro Ação.
 - [ ] Uso o Histórico para ver a vida de um registro.
 - [ ] Reconstruí a linha do tempo de um pedido entre várias entidades.
-- [ ] Conheço as lacunas (B7, B17) e sei contorná-las.
+- [ ] Conheço a lacuna B7 e sei contorná-la.
 - [ ] Sei quem pode ler a auditoria e a diferença para a auditoria da plataforma.
 
 ## 12. Evidências
@@ -244,6 +247,6 @@ Salvar em `docs/academy/09-auditoria/evidencias/`:
 | D3 | Histórico | 3:20–4:10 | Bloco do pedido |
 | D4 | Quando saiu | 4:10–5:30 | Bruno, Fernanda, Lucas; linha do tempo |
 | E | Resultado | 5:30–6:20 | A resposta ao cliente |
-| F | Erros | 6:20–8:10 | B7, B17, D10, permissão, B10, B4 |
+| F | Erros | 6:20–8:10 | B7, permissão, B10, B4 |
 | G | Exercício | 8:10–8:35 | Tela de exercício |
 | H | Fechamento | 8:35–8:55 | 3 linhas → "Próxima aula: Configurações" → lockup |

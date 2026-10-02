@@ -17,7 +17,8 @@ import { useBreadcrumbTail } from "@/components/shell/Breadcrumbs";
 import { RecordHistory } from "@/components/resource/RecordHistory";
 import { DetailError, DetailHeader, DetailSection, DetailSkeleton, InfoGrid, MiniTable } from "@/components/resource/DetailLayout";
 import { useCached, invalidateCache } from "@/lib/dashboard/client";
-import { apiSend } from "@/lib/api-client";
+import { apiGet, apiSend } from "@/lib/api-client";
+import { reservationFeedback } from "@/lib/reservation-feedback";
 import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import { dbStatusCode } from "@/lib/status";
 import { formatCurrencyBRL, formatDate } from "@/lib/format";
@@ -92,8 +93,19 @@ export default function PedidoVendaDetailPage() {
     }
     setBusy(true);
     try {
+      const reservedOf = (o: Order | null | undefined) => (o?.items ?? []).reduce((a, i) => a + Number(i.reserved_quantity || 0), 0);
+      const before = reservedOf(order.data);
       await apiSend(`/api/sales-orders/${id}/reserve`, "POST", { locationId });
-      toast.success("Estoque reservado.");
+      // A reserva pode ser parcial (o local só tinha parte do saldo): a
+      // mensagem vem do pedido recarregado, nunca de um texto fixo.
+      const fresh = await apiGet<Order>(`/api/sales-orders/${id}`).catch(() => null);
+      if (fresh) {
+        const ordered = (fresh.items ?? []).reduce((a, i) => a + Number(i.ordered_quantity || 0), 0);
+        const feedback = reservationFeedback(before, reservedOf(fresh), ordered);
+        toast[feedback.tone](feedback.title, feedback.description);
+      } else {
+        toast.info("Reserva enviada.", "Confira o indicador Reservado do pedido.");
+      }
       setReserveOpen(false);
       refresh();
     } catch (error) {
@@ -249,6 +261,7 @@ export default function PedidoVendaDetailPage() {
           title={`${ACTIONS[pending].label}?`}
           description={ACTIONS[pending].confirm}
           confirmLabel={ACTIONS[pending].label}
+          cancelLabel="Voltar"
           tone={ACTIONS[pending].tone === "danger" ? "danger" : "default"}
           loading={busy}
           onConfirm={() => run(pending)}

@@ -4,8 +4,8 @@ import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { textCol, dateTimeCol, numberCol, refCol, enumFilter } from "@/components/data-table/columns";
 import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import type { StockMovementRow } from "@/lib/database/schema";
+import { MOVEMENT_TYPE_OPTIONS, movementTypeLabel, referenceTypeLabel } from "@/lib/stock-labels";
 
-const MOVEMENT_LABEL: Record<string, string> = Object.fromEntries([["RECEIPT", "Entrada"], ["ISSUE", "Saída"], ["TRANSFER_IN", "Transferência (entrada)"], ["TRANSFER_OUT", "Transferência (saída)"], ["ADJUSTMENT_IN", "Ajuste (+)"], ["ADJUSTMENT_OUT", "Ajuste (−)"], ["RETURN_IN", "Devolução (entrada)"], ["RETURN_OUT", "Devolução (saída)"]]);
 
 export default function MovimentacoesPage() {
   const products = useIdNameLookup("/api/products");
@@ -19,15 +19,15 @@ export default function MovimentacoesPage() {
       searchPlaceholder="Buscar produto, local ou origem..."
       columns={[
         dateTimeCol<StockMovementRow>("created_at", "Data", { mobile: "meta" }),
-        textCol<StockMovementRow>("movement_type", "Tipo", { cell: (row) => MOVEMENT_LABEL[row.movement_type] ?? row.movement_type, value: (row) => MOVEMENT_LABEL[row.movement_type] ?? row.movement_type, mobile: "title" }),
+        textCol<StockMovementRow>("movement_type", "Tipo", { cell: (row) => movementTypeLabel(row.movement_type), value: (row) => movementTypeLabel(row.movement_type), mobile: "title" }),
         refCol<StockMovementRow>("product_id", "Produto", products, { mobile: "meta" }),
         refCol<StockMovementRow>("location_id", "Local", locations),
         numberCol<StockMovementRow>("quantity", "Quantidade", { mobile: "meta" }),
-        textCol<StockMovementRow>("reference_type", "Origem"),
+        textCol<StockMovementRow>("reference_type", "Origem", { cell: (row) => referenceTypeLabel(row.reference_type), value: (row) => referenceTypeLabel(row.reference_type) }),
       ]}
-      filters={[enumFilter<StockMovementRow>("movement_type", "Tipo", [["RECEIPT", "Entrada"], ["ISSUE", "Saída"], ["TRANSFER_IN", "Transferência (entrada)"], ["TRANSFER_OUT", "Transferência (saída)"], ["ADJUSTMENT_IN", "Ajuste (+)"], ["ADJUSTMENT_OUT", "Ajuste (−)"], ["RETURN_IN", "Devolução (entrada)"], ["RETURN_OUT", "Devolução (saída)"]])]}
+      filters={[enumFilter<StockMovementRow>("movement_type", "Tipo", MOVEMENT_TYPE_OPTIONS)]}
       detail={{
-        title: (row) => MOVEMENT_LABEL[row.movement_type] ?? "Movimentação",
+        title: (row) => movementTypeLabel(row.movement_type),
         subtitle: (row) => products.get(row.product_id) ?? undefined,
       }}
       emptyDescription="Quando houver registros, eles aparecem aqui."

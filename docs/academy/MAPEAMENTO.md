@@ -4,7 +4,7 @@ Este é o levantamento que fundamenta o plano das aulas. Ele foi feito no códig
 
 As fontes de bugs são o [relatório do teste com 7 empresas](../homologacao/evidencias/e2e-7-empresas.md) e os [manuais](../manual/).
 
-**Data:** 02/10/2026 · **código:** `a33842b` (branch `claude/e2e-empresa-nova-correcoes`).
+**Data:** 02/10/2026 · **código:** `a33842b`, revalidado em `2b9112b` para as aulas 01–05 (branch `claude/e2e-empresa-nova-correcoes`).
 
 **Legenda** (a mesma dos manuais):
 
@@ -23,7 +23,7 @@ A plataforma tem uma **API operacional completa** e uma **interface de ação co
 
 - A **Administração Central**, a **Administração da Empresa** e os **Cadastros** têm CRUD e ações reais pela interface.
 - O **pedido de venda** tem ações reais no detalhe: enviar, aprovar, reservar, liberar reserva, gerar conta a receber e cancelar.
-- O CRM permite **mover oportunidades** no pipeline.
+- O CRM permite **mover oportunidades** no pipeline, desde que o pipeline já exista (não há tela para configurá-lo).
 - **Compras, Estoque/WMS, Logística, Financeiro (baixas) e Fiscal** são, na interface, **telas de consulta**. Criar pedido de compra, receber mercadoria, separar, expedir, dar baixa em título e gerar NF-e só é possível pela API.
 
 **Impacto direto na Academy:** uma aula "do início ao fim, onde clicar e o que preencher" só é integralmente possível hoje em **4 das 10 aulas** (01, 02, 09, 10). Duas aulas são **mistas** (03 e 06). As outras quatro (04, 05, 07, 08) ensinariam principalmente a **acompanhar e conferir** operações registradas fora da interface. A decisão sobre isso está no [README](README.md#decisões-para-validar).
@@ -69,7 +69,7 @@ A plataforma tem uma **API operacional completa** e uma **interface de ação co
 | | **Pedido de venda (detalhe)** | ✅ **Enviar para aprovação** · ✅ **Aprovar** · ✅ **Reservar estoque** (escolhe o local) · ✅ **Liberar reserva** · ✅ **Gerar conta a receber** · ✅ **Cancelar pedido** · 🔎 andamento, itens, expedições, financeiro, histórico |
 | | Faturamento | 🔎 (documentos fiscais) |
 | CRM | Leads · Oportunidades · Atividades | 🔎 |
-| | Pipeline | ✅ mover oportunidade de etapa |
+| | Pipeline | ✅ mover oportunidade de etapa (⚠️ só com pipeline e estágios existentes: a empresa nova nasce sem eles e não há tela para criá-los) |
 | **Suprimentos** | Solicitações · Cotações · Pedidos de compra · Agendamentos | 🔎 (todo o ciclo ⛔) |
 | **Logística e Estoque** | Recebimento · Estoque (saldos) · Movimentações · Transferências · Inventário · Endereçamento · Almoxarifado · Picking · Packing · Expedição · Transportes · Devoluções | 🔎 (todas as operações ⛔) |
 | **Financeiro** | Contas a pagar · Contas a receber · Fluxo de caixa · Centros de custo · painel | 🔎 (baixa, pagamento e lançamento ⛔) |
@@ -85,11 +85,15 @@ A plataforma tem uma **API operacional completa** e uma **interface de ação co
 **Categorias, marcas e unidades:** não têm tela própria nem item de menu.
 
 - No formulário do produto, "Categoria/Subcategoria" usa uma **lista fixa**.
-- "Categoria/Marca/Unidade (catálogo)" usa as tabelas relacionais. Confirmado ao vivo:
+- O bloco "Catálogo (categoria, marca e unidade relacionais)" usa as tabelas relacionais. Confirmado ao vivo numa empresa nova:
   - **categorias: 0 registros**, e a criação falha (⚠️ **B8**, hoje com a mensagem técnica "Invalid input: expected string, received undefined");
   - **marcas: 0**;
-  - **unidades: 1 (UN)**.
+  - **unidades de medida: 10, criadas com a empresa** (UN, KG, G, L, ML, M, CM, CX, FD, PAL).
 - Não há tela para criar marca ou unidade (⛔).
+
+**O que nasce com a empresa** (criação pela Central): papéis padrão, unidade inicial, **todos os módulos da plataforma contratados e habilitados** (a Central descontrata o que não faz parte do plano), os depósitos **Depósito Principal** (`PRINCIPAL`) e **Almoxarifado Operacional** (`ALMOX`) e as 10 unidades de medida. **Não** nascem: locais de estoque, categorias, marcas, condições de pagamento, tabelas de preço nem pipelines/estágios do CRM.
+
+**Códigos gerados:** clientes `CLI-0001`, fornecedores `FOR-0001`, orçamentos `ORC-`, pedidos `PV-`, solicitações `SC-`, pedidos de compra `PC-`, recebimentos `REC-`, transferências `TRF-`, contas a receber `CR-`, contas a pagar `CP-`. A numeração é **global entre empresas** (⚠️ B3). Produto e local de estoque têm código digitado, único por empresa.
 
 **Dados fiscais do produto:** o campo NCM existe no cadastro do produto. Porém a NF-e usa o **perfil fiscal do produto**, que **não tem tela** (⛔). O próprio painel Fiscal avisa: *"o perfil ainda sem tela de cadastro nesta versão"*.
 
@@ -125,12 +129,16 @@ A plataforma tem uma **API operacional completa** e uma **interface de ação co
 | Enviar pedido p/ aprovação | ✅ | ✅ | ✅ | ✅ | — | — | — | — |
 | **Aprovar pedido / orçamento** | ✅ | ✅ | — | — | — | — | — | — |
 | **Reservar estoque** | ✅ | ✅ | — | ✅ | — | — | ✅ | — |
+| Liberar reserva (`sales_orders.update`) | ✅ | ✅ | ✅ | ✅ | — | — | — | — |
 | Cancelar pedido | ✅ | ✅ | — | — | — | — | — | — |
 | Compras: criar solicitação/pedido | ✅ | ✅ | — | ✅ | — | — | — | — |
 | Compras: aprovar | ✅ | ✅ | — | — | — | — | — | — |
 | Recebimento: lançar / confirmar | ✅/✅ | ✅/✅ | — | ✅/✅ | — | — | —/✅ | — |
 | Estoque: ver saldo | ✅ | ✅ | ✅ | ✅ | — | — | ✅ | ✅ |
+| Estoque: entrada avulsa e transferência (API) | ✅ | ✅ | — | ✅ | — | — | ✅ | — |
 | Estoque: ajustar · aprovar | ✅ · ✅ | ✅ · ✅ | — | — · — | — | — | — · — | — |
+| Gerar conta a pagar do recebimento (`accounts_payable.approve`) | ✅ | ✅ | — | — | ✅ | — | — | — |
+| Excluir fornecedor, produto, local | ✅ | ✅ | — | — | — | — | — | — |
 | Separação / expedição | ✅ | ✅ | — | ✅ | — | — | ✅ | — |
 | Aprovar expedição | ✅ | ✅ | — | — | — | — | ✅ | — |
 | **Gerar conta a receber** (`accounts_receivable.approve`) | ✅ | ✅ | — | — | ✅ | — | — | — |
@@ -152,7 +160,7 @@ A plataforma tem uma **API operacional completa** e uma **interface de ação co
 - **Vendedor:** Comercial, CRM, Estoque (consulta), Relatórios, Produtos e Clientes.
 - **Financeiro:** Financeiro e Pedidos de venda.
 - **Fiscal:** Fiscal, Faturamento e Pedidos de venda.
-- **Logística:** Estoque, Logística, Recebimento e Cadastros de transporte.
+- **Logística:** Pedidos de venda, todo o menu Logística (Agendamentos, Recebimento, Estoque, Movimentações, Transferências, Inventário, Endereçamento, Almoxarifado, Picking, Packing, Expedição, Transportes, Devoluções), Relatórios e os cadastros (consulta, exceto Locais de estoque, que cria e edita).
 - **Admin, Gerente, Operador e Somente leitura:** todos os módulos.
 
 ---
@@ -187,6 +195,17 @@ Tudo ─────► Auditoria 🔎 (⚠️ B7: criações de pedido, movimen
 
 ---
 
+**Cobertura da auditoria** (conferida no código):
+
+- Cadastros: criação, alteração, ativação, inativação e exclusão ("Criado", "Alterado", "Ativado", "Inativado", "Excluído" no Histórico da gaveta).
+- Pedido de venda: **Aprovação, Reserva, Liberação e Cancelamento**, com o nome do autor. **Não** registra a criação nem o envio para aprovação (⚠️ B7).
+- Movimentos de estoque, separações e expedições: não aparecem como ação de usuário (⚠️ B7).
+- O "Histórico" do registro exige `audit_logs.read` (Administrador, Gerente, Operador e Somente leitura); os demais papéis veem "O histórico de alterações exige a permissão de auditoria."
+
+**Movimentações — tipos e origens reais:** Entrada (`RECEIPT`), Saída (`ISSUE`), Transferência (saída/entrada), Ajuste (+/−), Devolução (entrada/saída) têm rótulo. `RESERVATION` e `RELEASE` aparecem sem tradução (D5). A coluna Origem mostra o valor técnico: `PURCHASE_RECEIPT` (recebimento de compra), `stock_reservation` (reserva/liberação do pedido), `stock_transfer` (transferência), `SHIPMENT` (expedição), `manual` (entrada avulsa pela API).
+
+---
+
 ## 6. Bugs e débitos que aparecem nas aulas
 
 Do relatório de 7 empresas: **nenhum foi corrigido desde então**, conferido no código. Os marcados como "novo" foram encontrados neste mapeamento.
@@ -214,6 +233,11 @@ Do relatório de 7 empresas: **nenhum foi corrigido desde então**, conferido no
 | D1 | **novo** | "Configurações → Dados da empresa" não abre para nenhum papel | 10 |
 | D2 | **novo** | Categoria/marca/unidade sem tela; o produto usa lista fixa de categorias | 02 |
 | D3 | **novo** | Perfil fiscal do produto sem tela (a NF-e depende dele) | 02, 07 |
+| D4 | **novo** | Gaveta do cliente: "Pedidos de venda" sempre vazia; do fornecedor: "Pedidos de compra" sempre vazia (listas fixas no código) | 02 |
+| D5 | **novo** | Movimentações `RESERVATION`/`RELEASE` sem rótulo; coluna Origem com valores técnicos | 03, 05 |
+| D6 | **novo** | Nenhum alerta de estoque abaixo do mínimo (a comparação é manual) | 04, 05 |
+| D7 | **novo** | "Agendamentos" lista os mesmos recebimentos da tela "Recebimento" | 04 |
+| D8 | **novo** | Local de estoque sem Descrição não aparece na janela "Reservar estoque" e aparece como id curto no Saldo (a tela resolve o nome pela descrição; derivado do código, confirmar ao vivo) | 02, 05 |
 
 **Erros com mensagem clara** (bons para "ERRO → POR QUÊ → COMO RESOLVER"):
 
@@ -222,6 +246,8 @@ Do relatório de 7 empresas: **nenhum foi corrigido desde então**, conferido no
 - "Já existe um produto com este código." · "O estoque máximo deve ser maior ou igual ao mínimo."
 - "Exclusão não permitida… Utilize a inativação." (registro em uso)
 - "Selecione o local de onde reservar."
+- "Este fornecedor está vinculado a produtos cadastrados. Utilize a inativação." / "Este local está definido como localização padrão de produtos cadastrados. Utilize a inativação."
+- "Só é possível receber um pedido enviado ao fornecedor e ainda não totalmente recebido (status atual: …)." (API)
 - "Saldo insuficiente: disponível …, solicitado …"
 - "…o produto … precisa de NCM. Para corrigir: cadastre o NCM no perfil fiscal…"
 - "Sem acesso a este recurso" (tela restrita por papel)

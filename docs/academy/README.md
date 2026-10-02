@@ -4,7 +4,12 @@
 
 Cada aula é um treinamento de funcionário novo. Ela não diz "este é o módulo Comercial". Ela começa assim: *"Você é a vendedora da Órbita Distribuidora. São 8h30. Vamos registrar uma venda do início ao fim."*
 
-> **Estado: PLANO PARA VALIDAÇÃO.** Nenhuma aula foi gravada. Este índice, o [mapeamento do sistema real](MAPEAMENTO.md) e o `PLANO.md` de cada aula são a proposta a validar. O vídeo institucional fica separado, em [`docs/homologacao/video/`](../homologacao/video/).
+> **Estado (02/10/2026):** nenhuma aula foi gravada.
+>
+> - **Aulas 01–05: plano completo**, revalidado no código e no ambiente local. Cada `PLANO.md` tem as 13 seções de produção e a estrutura de cenas do vídeo.
+> - **Aulas 06–10: plano resumido** (primeira versão), a detalhar na segunda metade da Academy.
+>
+> Documentos comuns: [mapeamento do sistema real](MAPEAMENTO.md) · [padrão de produção](PADRAO-DE-PRODUCAO.md) (linguagem visual, gramática de cenas, narração e a história contínua). O vídeo institucional fica separado, em [`docs/homologacao/video/`](../homologacao/video/).
 
 ## Princípios
 
@@ -19,7 +24,31 @@ Cada aula é um treinamento de funcionário novo. Ela não diz "este é o módul
 4. **A interface é a protagonista.** A narração explica, a tela demonstra e o texto na tela só reforça (palavras-chave, nunca parágrafos).
 5. **Sem pressa.** Uma etapa que precisa de 40 s para ser entendida dura 40 s.
 
-## Formato de cada aula (9 partes)
+## Formato
+
+### Plano completo (aulas 01–05)
+
+Cada `PLANO.md` completo tem 13 seções:
+
+| # | Seção | Conteúdo |
+|---|---|---|
+| 1 | Identidade | número, título, personagens, papel real, duração, nível, cobertura, objetivo |
+| 2 | Contexto de negócio | a situação do dia, sem exagero |
+| 3 | O que o aluno vai aprender | resultados de aprendizagem |
+| 4 | Conceito antes da tela | o que é, por que existe, quem executa, módulo responsável, quem recebe |
+| 5 | Roteiro de navegação | personagem, rota real, tela, ação, dados e resultado esperado |
+| 6 | Demonstração | enquadramento, câmera, destaques, callouts, pausas |
+| 7 | Narração | texto completo por bloco de cena |
+| 8 | Estados e fluxo | entrada → processamento → resultado, e a passagem entre módulos |
+| 9 | Erros e exceções | situação, mensagem real, causa, impacto, como identificar, solução, se é bug |
+| 10 | Exercício prático | o que o aluno reproduz sozinho |
+| 11 | Checklist de conclusão | o que o aluno precisa saber fazer |
+| 12 | Evidências | capturas que comprovam a execução |
+| 13 | Preparação técnica | endpoints, usuário, dados e resultado de cada etapa ⛔ |
+
+Cada vídeo segue a gramática **A Abertura · B Contexto · C Explicação · D Demonstração · E Resultado · F Erro/exceção · G Exercício · H Fechamento**, descrita no [padrão de produção](PADRAO-DE-PRODUCAO.md#2-gramática-das-cenas-todo-vídeo).
+
+### Plano resumido (aulas 06–10)
 
 | # | Parte | O que mostra | Tempo típico |
 |---|---|---|---|
@@ -57,24 +86,26 @@ Os nomes são os propostos; os papéis são os **que existem** no sistema.
 
 | Aula | Público / personagem | Cenário | Viabilidade hoje | Duração est. | Status |
 |---|---|---|---|---|---|
-| [01 — Administração Central](01-administracao-central/PLANO.md) | Owner · **Marcus** | "Hoje entra um cliente novo: a Órbita Distribuidora." | ✅ completa | 11–13 min | planejada |
-| [02 — Cadastros](02-cadastros/PLANO.md) | Gerente/Operador · **Carlos**, **Rafael** | "Antes da primeira venda, a base precisa existir." | ✅ quase completa (categoria ⚠️ B8; marca, unidade e perfil fiscal ⛔) | 14–17 min | planejada |
-| [03 — Comercial](03-comercial/PLANO.md) | Vendedor, Gerente · **Juliana**, **Carlos** | "8h30: um cliente pediu 10 baldes." | 🟡 mista (criar orçamento/pedido ⛔ B1; enviar, aprovar e cancelar ✅) | 14–16 min | planejada |
-| [04 — Compras](04-compras/PLANO.md) | Operador, Gerente · **Rafael**, **Carlos** | "O estoque de baldes está baixo." | 🔎 consulta (todo o ciclo ⛔) | 7–9 min | **decisão pendente** |
-| [05 — Estoque / WMS](05-estoque-wms/PLANO.md) | Operador, Logística · **Rafael**, **Bruno** | "Chegaram 50 unidades. Depois, um pedido de 5." | 🟡 conceito + consulta; reserva e liberação ✅; entradas e saídas ⛔ | 15–18 min | planejada |
-| [06 — Financeiro](06-financeiro/PLANO.md) | Financeiro · **Fernanda** | "A venda foi aprovada. Agora é com você." | 🟡 mista (gerar conta a receber ✅; baixa e pagamento ⛔) | 10–12 min | planejada |
-| [07 — Fiscal](07-fiscal/PLANO.md) | Fiscal · **Lucas** | "A venda está pronta para o fiscal." | 🔎 consulta + checklist (gerar NF-e ⛔ B2; autorização SEFAZ: sem certificado) | 10–12 min | **decisão pendente** |
-| [08 — Logística](08-logistica/PLANO.md) | Logística, Gerente · **Bruno**, **Carlos** | "Um pedido aprovado precisa sair hoje." | 🔎 consulta (separar, expedir e entregar ⛔) | 9–11 min | **decisão pendente** |
-| [09 — Auditoria](09-auditoria/PLANO.md) | Administrador · **Ana** | "Quem reservou este pedido?" | ✅ completa (com limitações B7 e B17) | 7–9 min | planejada |
-| [10 — Configurações](10-configuracoes/PLANO.md) | Administrador · **Ana** | "A empresa foi criada ontem. Prepare tudo para a operação começar." | ✅ quase completa (Dados da empresa ⚠️ D1; fiscal ⛔) | 13–15 min | planejada |
+| [01 — Administração Central](01-administracao-central/PLANO.md) | Owner · **Marcus** | "Hoje entra um cliente novo: a Órbita Distribuidora." | ✅ completa | 12–13 min | **plano completo** |
+| [02 — Cadastros](02-cadastros/PLANO.md) | Gerente, Operador, Vendedor · **Carlos**, **Rafael**, **Juliana** | "Antes da primeira venda, a base precisa existir." | ✅ completa para fornecedor, local, produto e cliente · ⚠️ categoria/marca/unidade sem tela (D2, B8) · ⛔ perfil fiscal (D3) e saldo de implantação | 15–17 min | **plano completo** |
+| [03 — Comercial](03-comercial/PLANO.md) | Vendedor, Gerente, Operador · **Juliana**, **Carlos**, **Rafael** | "8h30: o Granito pediu 10 baldes." | 🟡 mista (criar orçamento/pedido ⛔ B1; enviar, aprovar e reservar ✅) | 14–16 min | **plano completo** |
+| [04 — Compras](04-compras/PLANO.md) | Operador, Gerente, Logística · **Rafael**, **Carlos**, **Bruno** | "O estoque de baldes está baixo." | 🔎 acompanhamento (todo o ciclo ⛔) | 10–12 min | **plano completo** (versão de acompanhamento, decisão 1-A) |
+| [05 — Estoque / WMS](05-estoque-wms/PLANO.md) | Logística, Operador · **Bruno**, **Rafael** | "Chegaram 50 unidades. Depois, um pedido de 5." | 🟡 conceito + consulta; reserva e liberação ✅; transferência e demais operações ⛔ | 15–17 min | **plano completo** |
+| [06 — Financeiro](06-financeiro/PLANO.md) | Financeiro · **Fernanda** | "A venda foi aprovada. Agora é com você." | 🟡 mista (gerar conta a receber ✅; baixa e pagamento ⛔) | 10–12 min | plano resumido |
+| [07 — Fiscal](07-fiscal/PLANO.md) | Fiscal · **Lucas** | "A venda está pronta para o fiscal." | 🔎 consulta + checklist (gerar NF-e ⛔ B2; autorização SEFAZ: sem certificado) | 10–12 min | plano resumido · **decisão pendente** |
+| [08 — Logística](08-logistica/PLANO.md) | Logística, Gerente · **Bruno**, **Carlos** | "Um pedido aprovado precisa sair hoje." | 🔎 consulta (separar, expedir e entregar ⛔) | 9–11 min | plano resumido · **decisão pendente** |
+| [09 — Auditoria](09-auditoria/PLANO.md) | Administrador · **Ana** | "Quem reservou este pedido?" | ✅ completa (com limitações B7 e B17) | 7–9 min | plano resumido |
+| [10 — Configurações](10-configuracoes/PLANO.md) | Administrador · **Ana** | "A empresa foi criada ontem. Prepare tudo para a operação começar." | ✅ quase completa (Dados da empresa ⚠️ D1; fiscal ⛔) | 13–15 min | plano resumido |
 
-**Total estimado:** cerca de 2 h a 2 h 15 min de aulas.
+**Total estimado:** cerca de 2 h a 2 h 10 min de aulas (01–05: cerca de 70 min).
 
 ### Ordem recomendada para quem aprende
 
 A numeração segue o pedido original, mas a sequência de estudo segue a vida real da empresa:
 
-**01 Central → 10 Configurações → 02 Cadastros → 03 Comercial → 05 Estoque → 04 Compras → 06 Financeiro → 07 Fiscal → 08 Logística → 09 Auditoria**
+**01 Central → 10 Configurações → 02 Cadastros → 03 Comercial → 04 Compras → 05 Estoque → 06 Financeiro → 07 Fiscal → 08 Logística → 09 Auditoria**
+
+A história das aulas 02–05 é contínua: o saldo de implantação (02) é reservado pelo pedido do Granito (03); o disponível baixo dispara a compra (04); os 50 baldes recebidos vão da doca para o picking e atendem o pedido da Ferrovia (05).
 
 ### Trilhas por função
 
@@ -84,7 +115,7 @@ A numeração segue o pedido original, mas a sequência de estudo segue a vida r
 | Administrador da empresa | 10 → 02 → 09 (+ visão geral das demais) |
 | Vendedor | 02 (clientes) → 03 |
 | Gerente | 03 → 04 → 05 → 08 |
-| Operador / Logística | 02 (locais) → 05 → 04 → 08 |
+| Operador / Logística | 02 (locais) → 04 → 05 → 08 |
 | Financeiro | 03 (partes 05 e 09) → 06 |
 | Fiscal | 02 (produto) → 07 |
 
@@ -111,7 +142,7 @@ O nível visual é o do vídeo institucional (marca, Núcleo, `#FF9408`, tipogra
 
 | Arquivo | Conteúdo |
 |---|---|
-| `PLANO.md` | **(hoje)** objetivo, personagem, cenário, fluxo, telas, ações, erros, conferência, duração |
+| `PLANO.md` | **(hoje)** plano de produção: 13 seções nas aulas 01–05; versão resumida nas 06–10 |
 | `roteiro.md` | roteiro técnico com as 9 partes e tempos |
 | `narracao.md` | texto da narração, com marcação de tempo |
 | `storyboard.jpg` | quadros-chave por parte |
@@ -134,5 +165,5 @@ O nível visual é o do vídeo institucional (marca, Núcleo, `#FF9408`, tipogra
    - **(A — recomendada)** **Amazon Polly Neural** (pt-BR: Thiago ou Camila) ou **Google Cloud TTS Neural2/Studio** (pt-BR). Ambos são alcançáveis daqui e têm qualidade de instrutor. Exigem credenciais suas, configuradas como segredo do ambiente (nunca no Git).
    - **(B)** **Locutor humano** gravando a partir do `narracao.md`. É a melhor qualidade; a edição se ajusta ao áudio.
    - **(C)** Liberar o Hugging Face na política de rede para usar o **Piper** (voz pt-BR offline). É gratuito, mas soa claramente sintético.
-4. **Aula piloto.** Sugestão: **02 — Cadastros**. Ela é 100% interface real, tem erros reais claros e exercita todo o formato: digitação, validação, conferência, relação com outros módulos. Ela valida voz, ritmo e visual antes da série.
+4. **Aula piloto.** Sugestão: **02 — Cadastros**. Ela é quase toda feita na interface real (só o saldo de implantação é preparado fora), tem erros reais claros e exercita todo o formato: digitação, validação, conferência, relação com outros módulos. Ela valida voz, ritmo e visual antes da série.
 5. **Correções baratas antes de gravar** (opcional). Corrigir **B5** (toast de reserva), **B14** e **B15** (mensagens técnicas) e **D1** (Dados da empresa) deixa as aulas mais limpas. São mudanças pequenas no app, fora do escopo de vídeo; só com a sua autorização.

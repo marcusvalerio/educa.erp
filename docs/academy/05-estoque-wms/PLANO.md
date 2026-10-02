@@ -326,7 +326,7 @@ Salvar em `docs/academy/05-estoque-wms/evidencias/`:
 | # | Etapa | Endpoint | Usuário | Dados | Resultado esperado |
 |---|---|---|---|---|---|
 | 1 | Pré-requisito | — | — | Aulas 02–04 concluídas | Doca 50/0/50 · Picking 12/10/2 |
-| 2 | Criar o pedido da Ferrovia | `POST /api/sales-orders` | Juliana (`sales_orders.create`) | `{ customerId: <Ferrovia>, expectedDeliveryAt: <sexta>, items: [{ productId: <BAL-08>, description: "Balde plástico 8 L", unit: "UN", quantity: 5, unitPrice: 19.40 }] }` | PV-0002 · Rascunho · R$ 97,00 |
+| 2 | Criar o pedido da Ferrovia | `POST /api/sales-orders` | Juliana (`sales_orders.create`) | `{ customerId: <Ferrovia>, paymentTermsId: <COND 30 dias>, expectedDeliveryAt: <sexta>, items: [{ productId: <BAL-08>, description: "Balde plástico 8 L", unit: "UN", quantity: 5, unitPrice: 19.40 }] }` | PV-0002 · Rascunho · R$ 97,00 |
 | 3 | Enviar para aprovação | `POST /api/sales-orders/:id/submit` | Juliana (`sales_orders.update`) | — | Aguardando aprovação |
 | 4 | Aprovar | `POST /api/sales-orders/:id/approve` | Carlos (`sales_orders.approve`) | — | Aprovado → **gravar as cenas 3–5** (a reserva parcial é feita **ao vivo** pelo Bruno) |
 | 5 | Criar a transferência | `POST /api/stock-transfers` | Bruno (`stock.create`) | `{ fromLocationId: <REC-01>, toLocationId: <PCK-A01>, items: [{ productId: <BAL-08>, quantity: 50 }] }` | TRF-0001 · Rascunho |

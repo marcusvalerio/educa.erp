@@ -6,8 +6,8 @@ Cada aula é um treinamento de funcionário novo. Ela não diz "este é o módul
 
 > **Estado (02/10/2026):** nenhuma aula foi gravada.
 >
-> - **Aulas 01–05: plano completo**, revalidado no código e no ambiente local. Cada `PLANO.md` tem as 13 seções de produção e a estrutura de cenas do vídeo.
-> - **Aulas 06–10: plano resumido** (primeira versão), a detalhar na segunda metade da Academy.
+> - **Aulas 01–10: plano completo**, validado no código e ao vivo no ambiente local. Cada `PLANO.md` tem as 13 seções de produção e a estrutura de cenas do vídeo.
+> - Correções de interface que melhoram as aulas foram aplicadas na `main` (`48775f5`, ver decisão 5).
 >
 > Documentos comuns: [mapeamento do sistema real](MAPEAMENTO.md) · [padrão de produção](PADRAO-DE-PRODUCAO.md) (linguagem visual, gramática de cenas, narração e a história contínua). O vídeo institucional fica separado, em [`docs/homologacao/video/`](../homologacao/video/).
 
@@ -26,7 +26,7 @@ Cada aula é um treinamento de funcionário novo. Ela não diz "este é o módul
 
 ## Formato
 
-### Plano completo (aulas 01–05)
+### Plano de cada aula
 
 Cada `PLANO.md` completo tem 13 seções:
 
@@ -47,20 +47,6 @@ Cada `PLANO.md` completo tem 13 seções:
 | 13 | Preparação técnica | endpoints, usuário, dados e resultado de cada etapa ⛔ |
 
 Cada vídeo segue a gramática **A Abertura · B Contexto · C Explicação · D Demonstração · E Resultado · F Erro/exceção · G Exercício · H Fechamento**, descrita no [padrão de produção](PADRAO-DE-PRODUCAO.md#2-gramática-das-cenas-todo-vídeo).
-
-### Plano resumido (aulas 06–10)
-
-| # | Parte | O que mostra | Tempo típico |
-|---|---|---|---|
-| 01 | Introdução | módulo, objetivo, quem usa, responsabilidades | 20–40 s |
-| 02 | O cenário | empresa, personagem, cargo (papel real) e situação do dia, com horário | 20–40 s |
-| 03 | Navegação | onde fica, menu, filtros, busca, ações e o raciocínio de cada tela | 1–2 min |
-| 04 | Operação principal | entrada → preenchimento → validação → salvamento → resultado → próxima etapa | 3–8 min |
-| 05 | O que acontece no ERP | reflexos em outros módulos, com animação de conexão | 1–2 min |
-| 06 | Caso realista | um segundo cenário menor ("o cliente pediu alteração") | 1–3 min |
-| 07 | Erros e exceções | **ERRO → POR QUE ACONTECEU → COMO RESOLVER**, com mensagens reais | 1–3 min |
-| 08 | Conferência | status, número do documento, auditoria, movimentação, outro módulo | 1 min |
-| 09 | Relação com outros módulos | "essa operação agora segue para…" | 30 s |
 
 ## Personagens
 
@@ -91,13 +77,13 @@ Os nomes são os propostos; os papéis são os **que existem** no sistema.
 | [03 — Comercial](03-comercial/PLANO.md) | Vendedor, Gerente, Operador · **Juliana**, **Carlos**, **Rafael** | "8h30: o Granito pediu 10 baldes." | 🟡 mista (criar orçamento/pedido ⛔ B1; enviar, aprovar e reservar ✅) | 14–16 min | **plano completo** |
 | [04 — Compras](04-compras/PLANO.md) | Operador, Gerente, Logística · **Rafael**, **Carlos**, **Bruno** | "O estoque de baldes está baixo." | 🔎 acompanhamento (todo o ciclo ⛔) | 10–12 min | **plano completo** (versão de acompanhamento, decisão 1-A) |
 | [05 — Estoque / WMS](05-estoque-wms/PLANO.md) | Logística, Operador · **Bruno**, **Rafael** | "Chegaram 50 unidades. Depois, um pedido de 5." | 🟡 conceito + consulta; reserva e liberação ✅; transferência e demais operações ⛔ | 15–17 min | **plano completo** |
-| [06 — Financeiro](06-financeiro/PLANO.md) | Financeiro · **Fernanda** | "A venda foi aprovada. Agora é com você." | 🟡 mista (gerar conta a receber ✅; baixa e pagamento ⛔) | 10–12 min | plano resumido |
-| [07 — Fiscal](07-fiscal/PLANO.md) | Fiscal · **Lucas** | "A venda está pronta para o fiscal." | 🔎 consulta + checklist (gerar NF-e ⛔ B2; autorização SEFAZ: sem certificado) | 10–12 min | plano resumido · **decisão pendente** |
-| [08 — Logística](08-logistica/PLANO.md) | Logística, Gerente · **Bruno**, **Carlos** | "Um pedido aprovado precisa sair hoje." | 🔎 consulta (separar, expedir e entregar ⛔) | 9–11 min | plano resumido · **decisão pendente** |
-| [09 — Auditoria](09-auditoria/PLANO.md) | Administrador · **Ana** | "Quem reservou este pedido?" | ✅ completa (com limitações B7 e B17) | 7–9 min | plano resumido |
-| [10 — Configurações](10-configuracoes/PLANO.md) | Administrador · **Ana** | "A empresa foi criada ontem. Prepare tudo para a operação começar." | ✅ quase completa (Dados da empresa ⚠️ D1; fiscal ⛔) | 13–15 min | plano resumido |
+| [06 — Financeiro](06-financeiro/PLANO.md) | Financeiro · **Fernanda** | "A venda foi aprovada. Agora é com você." | 🟡 mista (gerar conta a receber ✅; baixa, pagamento e contas financeiras ⛔; D9) | 11–13 min | **plano completo** |
+| [07 — Fiscal](07-fiscal/PLANO.md) | Fiscal · **Lucas** | "A primeira NF-e da Órbita." | 🔎 acompanhamento + checklist (base fiscal e NF-e ⛔ B2/D3; para em Pronta: sem provedor nem certificado) | 11–12 min | **plano completo** (acompanhamento, decisão 1-A) |
+| [08 — Logística](08-logistica/PLANO.md) | Logística, Gerente · **Bruno**, **Carlos** | "O pedido do Granito sai hoje." | 🔎 acompanhamento (transportadora ✅; separar, expedir e entregar ⛔; B11) | 11–13 min | **plano completo** (acompanhamento, decisão 1-A) |
+| [09 — Auditoria](09-auditoria/PLANO.md) | Administrador · **Ana** | "Quem aprovou o preço e quando saiu?" | ✅ completa (com limitações B7 e B17) | 8–10 min | **plano completo** |
+| [10 — Configurações](10-configuracoes/PLANO.md) | Administrador · **Ana** | "A empresa existe há meia hora. Prepare a equipe." | ✅ quase completa (Dados da empresa ⚠️ D1; fiscal ⛔) | 14–16 min | **plano completo** (anexo: [permissões dos papéis](10-configuracoes/PERMISSOES-PAPEIS.md)) |
 
-**Total estimado:** cerca de 2 h a 2 h 10 min de aulas (01–05: cerca de 70 min).
+**Total estimado:** cerca de 2 h 10 min a 2 h 20 min de aulas (01–05: cerca de 70 min; 06–10: cerca de 60 min).
 
 ### Ordem recomendada para quem aprende
 
@@ -116,7 +102,7 @@ A história das aulas 02–05 é contínua: o saldo de implantação (02) é res
 | Vendedor | 02 (clientes) → 03 |
 | Gerente | 03 → 04 → 05 → 08 |
 | Operador / Logística | 02 (locais) → 04 → 05 → 08 |
-| Financeiro | 03 (partes 05 e 09) → 06 |
+| Financeiro | 03 (conceito e segregação) → 06 |
 | Fiscal | 02 (produto) → 07 |
 
 ## Como as aulas serão produzidas
@@ -142,7 +128,7 @@ O nível visual é o do vídeo institucional (marca, Núcleo, `#FF9408`, tipogra
 
 | Arquivo | Conteúdo |
 |---|---|
-| `PLANO.md` | **(hoje)** plano de produção: 13 seções nas aulas 01–05; versão resumida nas 06–10 |
+| `PLANO.md` | **(hoje)** plano de produção com 13 seções e a estrutura de cenas |
 | `roteiro.md` | roteiro técnico com as 9 partes e tempos |
 | `narracao.md` | texto da narração, com marcação de tempo |
 | `storyboard.jpg` | quadros-chave por parte |
@@ -154,7 +140,7 @@ O nível visual é o do vídeo institucional (marca, Núcleo, `#FF9408`, tipogra
 
 ## Decisões para validar
 
-1. **Aulas que hoje são de consulta** (04 Compras, 07 Fiscal, 08 Logística; parte da 05 e da 06). Opções:
+1. **Aulas que hoje são de consulta** (04 Compras, 07 Fiscal, 08 Logística; parte da 05 e da 06). ✅ Os planos seguem a opção **A** ("siga como achar melhor", 02/10). Opções:
    - **(A — recomendada)** Gravar já, como **"aulas de acompanhamento"**: ensinar a ler o fluxo, os status e a conferência, com as etapas ⛔ mostradas como resultado e avisadas. Quando as telas de ação existirem, essas aulas são regravadas como "operação" (o plano já prevê as duas versões).
    - **(B)** Adiar essas aulas até existirem as telas: criar pedido e orçamento (B1), NF-e (B2), compras, recebimento, separação, expedição e baixa financeira.
    - **(C)** Implementar primeiro as telas que faltam e só então gravar todas. É uma decisão de produto, de escopo grande.

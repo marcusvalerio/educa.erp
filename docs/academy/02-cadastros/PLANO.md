@@ -34,7 +34,7 @@
 - Por que os cadastros vêm **antes** de qualquer operação, e em que **ordem**.
 - O padrão comum a todos os cadastros: lista, busca, filtros, colunas, exportação, ações do registro, ações em lote e gaveta de detalhe. Aprendeu um, aprendeu todos.
 - Cadastrar um **fornecedor**, um **local de estoque**, um **produto** e um **cliente**, campo a campo.
-- Entender os campos que outros módulos usam depois: estoque mínimo (Compras), local padrão (Estoque), condição de pagamento e limite de crédito (Comercial e Financeiro), NCM (Fiscal).
+- Entender os campos que outros módulos usam depois: estoque mínimo (Compras), local padrão (Estoque), limite de crédito e condição de pagamento (informativos nesta versão), NCM (Fiscal, com ressalva).
 - **Editar** um registro e conferir o histórico.
 - **Inativar** em vez de excluir, e por que o sistema bloqueia a exclusão de um registro em uso.
 - O que cada papel pode fazer nos cadastros.
@@ -48,7 +48,7 @@
 | Por que existe | Um pedido não guarda o nome do cliente digitado à mão: ele aponta para o cadastro. Se o cadastro estiver certo, todo o resto herda o dado certo: preço, prazo, endereço, NCM, local. Se estiver errado, o erro se espalha. |
 | Quem executa | Gerente e Administrador: tudo, inclusive excluir. Operador: cria e edita fornecedores, produtos, clientes e locais, mas não exclui. Vendedor: cria e edita clientes; vê produtos. Logística: cria e edita locais de estoque e consulta os cadastros de transporte. |
 | Módulo responsável | Cadastros (`/app/cadastros`) |
-| Quem recebe o resultado | Comercial (cliente e produto, aula 03), Compras (fornecedor e estoque mínimo, aula 04), Estoque/WMS (locais e local padrão, aula 05), Financeiro (condição de pagamento e limite, aula 06), Fiscal (NCM, aula 07), Logística (locais de expedição e transportadoras, aula 08). |
+| Quem recebe o resultado | Comercial (cliente e produto, aula 03), Compras (fornecedor e estoque mínimo, aula 04), Estoque/WMS (locais e local padrão, aula 05), Financeiro (aula 06; o vencimento do título vem da condição de pagamento do **pedido**, não deste campo), Fiscal (NCM, aula 07), Logística (locais de expedição e transportadoras, aula 08). |
 
 **Ordem de dependência** (diagrama da cena C):
 
@@ -228,7 +228,7 @@ PERSONAGEM: Rafael — fora da gravação
 | Produto | Gaveta longa; câmera desce seção a seção | Callouts: **Código** (único), **Categoria** (lista fixa), **Unidade de medida**, **NCM** ("o Fiscal usa"), **Fornecedor**, **Estoque mínimo** ("Compras usa"), **Localização padrão** | Pausa de 1,5 s em cada callout |
 | Catálogo relacional | Zoom no bloco "Catálogo…" com as listas vazias | Selo ⚠️ D2 "Sem tela de cadastro nesta versão" | 2,5 s |
 | Vínculos | Gaveta de detalhe do BAL-08; anel em "Fornecedor vinculado" e "Local de estoque padrão" | — | 2 s |
-| Cliente | Zoom nas **Condições comerciais** | Callouts: **Limite de crédito**, **Condição de pagamento** ("vira prazo do título no Financeiro") | toast 2,5 s |
+| Cliente | Zoom nas **Condições comerciais** | Callouts: **Limite de crédito** e **Condição de pagamento** ("informativos: o pedido não os confere") + selo ⚠️ D9 | toast 2,5 s |
 | Edição e histórico | Zoom no bloco **Histórico** | Anel em "Alterado" e no autor | 2 s |
 | Descartar alterações | Diálogo centralizado | — | 2 s |
 | Inativar | Zoom no selo de status Ativo → Inativo; filtro Status | Callout "Inativo não some: sai das listas de seleção" | 2 s |
@@ -266,7 +266,7 @@ Com fornecedor e locais prontos, o Carlos cadastra o produto. O código é únic
 Abra o produto. Repare nos vínculos: o fornecedor e o local padrão aparecem aqui. E, no fornecedor, os dois baldes aparecem como produtos vinculados.
 
 **[D6 — Cliente]**
-Por último, os clientes. Limite de crédito e condição de pagamento parecem detalhes, mas não são: a condição de pagamento vira o vencimento do título no financeiro.
+Por último, os clientes. Preencha o limite de crédito e a condição de pagamento: eles orientam quem vende. Mas atenção, nesta versão os dois são informativos. O sistema não bloqueia um pedido acima do limite, e o vencimento do título no financeiro vem da condição de pagamento do pedido, não deste campo. Vamos ver isso na aula de financeiro.
 
 **[E — Resultado]**
 Em pouco mais de uma hora, a Órbita tem um fornecedor, três locais, dois produtos e dois clientes. Tudo com código, status ativo e histórico de quem criou. A base está pronta para a primeira venda.
@@ -319,6 +319,7 @@ Cliente    ──► Comercial (orçamento, pedido) ──► Financeiro (contas
 | Gaveta do cliente: "Pedidos de venda (0)" mesmo com pedidos | "Nenhum registro vinculado." | A lista de pedidos do cliente ainda não é carregada (sempre vazia); o mesmo vale para "Pedidos de compra" no fornecedor | Pode sugerir que o cliente não tem pedidos | Comparar com Pedidos de venda filtrados pelo cliente | Consultar em Comercial → Pedidos de venda | ⚠️ D4 (novo) |
 | Categoria (catálogo), Marca: listas vazias | — | Não há tela para criar categoria, marca ou unidade; criar categoria pela API falha | Produto fica sem categoria relacional | Listas vazias no bloco "Catálogo…" | Usar a **Categoria** da lista fixa (obrigatória) | ⚠️ D2 · B8 |
 | Local sem descrição | — (o local aparece pelo código, ex.: "PCK-A01", na reserva e no saldo) | A tela usa a descrição como nome e, sem ela, o código | Nome menos claro para quem reserva | Lista de locais da reserva | **Preencher sempre a Descrição** | corrigido em `48775f5` (antes o local sumia da lista, D8) |
+| Condição de pagamento do cliente | — | O campo é texto livre; o pedido usa a condição de pagamento **relacional** (cadastro sem tela) | O título a receber vence no dia da geração se o pedido não tiver condição | Vencimento do título (aula 06) | Preparação da aula 03 cria a condição "28 dias" por integração | ⚠️ D9 (novo) |
 | Perfil fiscal do produto | — | ⛔ não há tela; a NF-e depende dele | A NF-e não sai só com o NCM do cadastro | Aula 07 | Fora do escopo desta aula | ⛔ D3 |
 | Valor fora da lista enviado pela API | Erro 500 genérico | Validação incompleta no servidor | — | — | Não ocorre pela tela | ⚠️ B13 (não provocar) |
 | Mensagens técnicas em inglês | "Invalid input…" | Casos de borda da API | — | — | Não ocorre no fluxo da aula | ⚠️ B14 (não provocar) |
@@ -337,7 +338,7 @@ Cliente    ──► Comercial (orçamento, pedido) ──► Financeiro (contas
 - [ ] Sei a ordem: fornecedor e locais antes do produto; clientes antes da venda.
 - [ ] Reconheço o padrão comum (lista, filtros, CSV, menu da linha, gaveta, lote).
 - [ ] Cadastrei fornecedor, local, produto e cliente.
-- [ ] Sei para que servem estoque mínimo, local padrão, NCM, limite de crédito e condição de pagamento.
+- [ ] Sei para que servem estoque mínimo, local padrão e NCM, e que limite de crédito e condição de pagamento do cliente são informativos nesta versão.
 - [ ] Editei um registro e encontrei a alteração no Histórico.
 - [ ] Inativei e reativei um registro; inativei em lote.
 - [ ] Entendi por que a exclusão de um registro em uso é bloqueada.

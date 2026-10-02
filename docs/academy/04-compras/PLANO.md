@@ -319,7 +319,7 @@ Cada etapa é executada **entre as cenas**, na ordem, com a conta do papel corre
 | 8 | Enviar ao fornecedor | `POST /api/purchase-orders/:id/send` | Rafael (`purchase_orders.update`) | — | Enviado |
 | 9 | Lançar o recebimento | `POST /api/purchase-receipts` | Rafael (`purchase_receipts.create`) | `{ purchaseOrderId: <PC-0001>, documentType: "NF-e", documentNumber: "1520", documentSeries: "1", documentValue: 490.00, items: [{ purchaseOrderItemId: <item>, productId: <BAL-08>, quantityReceived: 50, unit: "UN", destinationLocationId: <REC-01> }] }` | REC-0001 Rascunho → **gravar a cena 6** |
 | 10 | Confirmar | `POST /api/purchase-receipts/:id/confirm` | Bruno (`purchase_receipts.confirm`) | — | Confirmado · Entrada 50 na Doca · PC Recebido · SC Concluída |
-| 11 | Gerar a conta a pagar | `POST /api/purchase-receipts/:id/generate-payable` | Fernanda (`accounts_payable.approve`) | `{}` | Título "Recebimento REC-0001" · R$ 490,00 · Em aberto |
+| 11 | Gerar a conta a pagar | `POST /api/purchase-receipts/:id/generate-payable` | Fernanda (`accounts_payable.approve`) | `{ paymentTermsId: <COND 28 dias> }` (sem a condição, vence no mesmo dia — D9; ver aula 06, passo 4) | Título "Recebimento REC-0001" · R$ 490,00 · 28 dias · Em aberto |
 
 - **Irreversível?** Recebimento confirmado gera movimento imutável e título financeiro. Executar só no ambiente Academy.
 - **Datas:** a história usa terça e quinta. Se as etapas forem preparadas no mesmo dia, as colunas de data mostrarão o mesmo dia; a narração não cita datas absolutas.

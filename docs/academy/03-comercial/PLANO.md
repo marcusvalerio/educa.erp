@@ -205,7 +205,7 @@ Terça-feira, oito e meia. O Granito precisa de dez baldes de oito litros até q
 O Comercial transforma o que o cliente quer num compromisso da empresa. O caminho tem quatro passos: o orçamento, que é a proposta; o pedido, quando o cliente aceita; a aprovação, feita por um gerente; e a reserva, que separa o estoque para aquele cliente. Repare que três pessoas participam. Quem vende não aprova o próprio pedido: é a segregação de funções. E quem reserva é quem cuida do armazém.
 
 **[D1 — Cliente e saldo]**
-Primeiro, o cliente. No cadastro do Granito, a Juliana vê o limite de crédito e a condição de pagamento: vinte e oito dias. Depois, o estoque. No saldo, o balde de oito litros tem doze unidades no picking, nenhuma reservada. Doze disponíveis. Dá para atender.
+Primeiro, o cliente. No cadastro do Granito, a Juliana vê o limite de crédito e a condição combinada: vinte e oito dias. Depois, o estoque. No saldo, o balde de oito litros tem doze unidades no picking, nenhuma reservada. Doze disponíveis. Dá para atender.
 
 **[D2 — Orçamento e pedido]**
 Agora, uma observação importante sobre esta versão. O orçamento e o pedido ainda não são criados pela tela. Eles foram registrados por integração: a Juliana montou a proposta de dez baldes a dezenove reais e quarenta, o cliente aceitou e o Carlos registrou a aprovação. Veja o resultado: o orçamento ORC zero zero zero um está aprovado. E dele nasceu o pedido PV zero zero zero um, em rascunho.
@@ -337,7 +337,8 @@ Todas as etapas ⛔ são feitas **fora da gravação**, cada uma com a conta do 
 | 2 | Criar o orçamento | `POST /api/sales-quotes` | Juliana (`sales_quotes.create`) | `{ customerId: <Granito>, validUntil: <terça + 7>, notes: "Reposição de baldes — obra no porto", items: [{ productId: <BAL-08>, description: "Balde plástico 8 L", unit: "UN", quantity: 10, unitPrice: 19.40 }] }` | ORC-0001 · Rascunho · R$ 194,00 |
 | 3 | Enviar ao cliente | `POST /api/sales-quotes/:id/send` | Juliana (`sales_quotes.update`) | — | Enviado |
 | 4 | Registrar o aceite | `POST /api/sales-quotes/:id/approve` | Carlos (`sales_quotes.approve`) | — | Aprovado |
-| 5 | Gerar o pedido | `POST /api/sales-orders` | Juliana (`sales_orders.create`) | `{ customerId: <Granito>, salesQuoteId: <ORC-0001>, expectedDeliveryAt: <quinta> }` (itens copiados do orçamento) | PV-0001 · Rascunho · R$ 194,00 |
+| 4b | Condições de pagamento (cadastro sem tela, D9) | `POST /api/payment-terms` | Carlos (`payment_terms.create`) | `{ name: "28 dias", installments: [{ daysAfter: 28, percentage: 100 }] }` e `{ name: "30 dias", installments: [{ daysAfter: 30, percentage: 100 }] }` | COND-0001 e COND-0002 (usadas pelos pedidos e, na aula 06, pelo vencimento do título) |
+| 5 | Gerar o pedido | `POST /api/sales-orders` | Juliana (`sales_orders.create`) | `{ customerId: <Granito>, salesQuoteId: <ORC-0001>, paymentTermsId: <COND 28 dias>, expectedDeliveryAt: <quinta> }` (itens copiados do orçamento) | PV-0001 · Rascunho · R$ 194,00 |
 | 6 | Conferir B18 | — | — | Abrir o PV-0001 | Registrar se a coluna Un. mostra "UN" ou "—" e ajustar a narração |
 
 - **Ações ao vivo** (na gravação): enviar (Juliana), aprovar (Carlos), reservar (Rafael). Não preparar nada disso antes.

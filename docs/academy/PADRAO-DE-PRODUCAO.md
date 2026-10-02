@@ -114,6 +114,8 @@ Senhas: nunca aparecem em tela nem no Git. Vêm só de variáveis de ambiente do
 | Locais (aula 02) | `REC-01` Doca de recebimento (Recebimento) · `PCK-A01` Picking — rua A, módulo 01 (Picking) · `EXP-01` Área de expedição (Expedição). Todos no Depósito Principal. |
 | Fornecedor (aula 02) | **Polar Fornecimentos OD Ltda.** · CNPJ **60.518.329/0001-70** · Embalagens · prazo médio 3 dias · 28 dias |
 | Produtos (aula 02) | `BAL-08` **Balde plástico 8 L** · `BAL-12` **Balde plástico 12 L**. Produto acabado / Geral / UN / NCM 39249000 / fornecedor Polar / local padrão PCK-A01. 8 L: custo R$ 9,80, venda R$ 19,40, mínimo de venda R$ 17,00, estoque mínimo 20, máximo 120, ponto de reposição 30. 12 L: custo R$ 11,90, venda R$ 23,40. |
+| Condições de pagamento (aula 03, ⛔) | **28 dias** (Granito) e **30 dias** (Ferrovia): cadastro relacional sem tela, usado pelo pedido e pelo vencimento do título (D9) |
+| Transportadora (aula 08) | **Rota Litoral Transportes OD Ltda.** · Santos/SP · Rodoviário · Sudeste |
 | Clientes (aula 02) | **Granito Serviços OD Ltda.** · CNPJ **31.902.874/0001-68** · Santos/SP · 28 dias · limite R$ 20.000,00. **Ferrovia Comércio OD Ltda.** · CNPJ **27.456.183/0001-00** · Campinas/SP · 30 dias. |
 
 ### Linha do tempo
@@ -121,13 +123,17 @@ Senhas: nunca aparecem em tela nem no Git. Vêm só de variáveis de ambiente do
 | Quando | Aula | Fato |
 |---|---|---|
 | Seg 08:10 | 01 | Marcus cria a Órbita (Em avaliação), convida a Ana e descontrata os módulos fora do plano |
-| Seg 08:40 | 10 | Ana configura a empresa e convida a equipe (segunda metade da Academy) |
+| Seg 08:40 | 10 | Ana faz o primeiro acesso, cria setores, cargos e os papéis Financeiro, Fiscal e Logística, convida a equipe e define o contexto de cada um |
 | Seg 09:00 | 02 | Carlos e Rafael montam a base: fornecedor, locais, produtos e clientes |
-| Seg 11:30 | 02 → ⛔ | **Saldo de implantação:** 12 × BAL-08 em PCK-A01, lançado por integração (contagem física da implantação) |
-| Ter 08:30 | 03 | Granito pede 10 × BAL-08 → ORC-0001 (⛔) → PV-0001 (⛔ criação) → Juliana envia ✅ → Carlos aprova ✅ → Rafael reserva 10 no Picking ✅ |
+| Seg 11:30 | 02 → ⛔ | **Saldo de implantação:** 12 × BAL-08 em PCK-A01, lançado por integração |
+| Ter 08:30 | 03 | Granito pede 10 × BAL-08 → condições "28 dias" e "30 dias" (⛔, D9) → ORC-0001 (⛔) → PV-0001 (⛔ criação) → Juliana envia ✅ → Carlos aprova ✅ → Rafael reserva 10 no Picking ✅ |
 | Ter 14:00 | 04 | Rafael vê o Picking com disponível 2, abaixo do mínimo de 20 → SC-0001 → PC-0001 (50 un, Polar), tudo ⛔ e acompanhado nas telas |
-| Qui 07:30 | 04 / 05 | Chegam 50 un → REC-0001 confirmado na Doca (⛔) → conta a pagar gerada (⛔) |
-| Qui 10:00 | 05 | Ferrovia pede 5 × BAL-08 → PV-0002 aprovado (⛔ preparação) → Bruno reserva no Picking → **reserva parcial (2 de 5)** → transferência Doca → Picking (⛔) → nova reserva ✅ → 100% |
+| Qui 07:30 | 04 / 05 | Chegam 50 un → REC-0001 lançado (Rafael) e confirmado (Bruno) na Doca (⛔) → conta a pagar CP-0001 (⛔, Fernanda) |
+| Qui 10:00 | 05 | Ferrovia pede 5 × BAL-08 → PV-0002 aprovado (⛔ preparação) → Bruno reserva no Picking → **reserva parcial (2 de 5)** → transferência Doca → Picking (⛔) → nova reserva ✅ → 100% · Picking 62 / 15 / 47 |
+| Qui 14:00 | 06 | Fernanda gera CR-0001 (Granito, 28 dias) e CR-0002 (Ferrovia, 30 dias) ✅; a Ferrovia paga por PIX (baixa ⛔) |
+| Sex 08:30 | 07 | Lucas: base fiscal (⛔), erro de NCM sem perfil fiscal, perfis (⛔), DF-0001 Rascunho → Calculada → Pronta (⛔); para em Pronta |
+| Sex 09:45 | 08 | Carlos cadastra a transportadora Rota Litoral ✅; Bruno separa (SEP-0001), embala, Carlos aprova, Bruno expede e entrega (EXP-0001), tudo ⛔ · Picking 52 / 5 / 47 · PV-0001 "Expedido" (B11) |
+| Sex 16:00 | 09 | Ana reconstrói a semana do PV-0001 pela auditoria |
 
 **Horário de gravação:** gravar **antes das 21h (Brasília)**. ⚠️ B4: os documentos são datados em UTC; à noite eles cairiam no dia seguinte.
 

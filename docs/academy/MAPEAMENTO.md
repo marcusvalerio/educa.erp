@@ -238,6 +238,10 @@ Do relatório de 7 empresas: **nenhum foi corrigido desde então**, conferido no
 | D6 | **novo** | Nenhum alerta de estoque abaixo do mínimo (a comparação é manual) | 04, 05 |
 | D7 | **novo** | "Agendamentos" lista os mesmos recebimentos da tela "Recebimento" | 04 |
 | D8 | ~~novo~~ | ~~Local de estoque sem Descrição some da janela "Reservar estoque"~~ — **corrigido (`48775f5`)**: aparece pelo código | 02, 05 |
+| D9 | **novo** | "Condição de pagamento" do cliente é texto livre: o pedido e o título usam a condição **relacional** (`payment_terms`), sem tela. Sem ela, "Gerar conta a receber" cria parcela única vencendo no dia | 02, 03, 06 |
+| D10 | **novo** | Rótulos técnicos remanescentes: CFOP com Direção "SAIDA" e Abrangência "INTERNAL"; Auditoria com entidade "stock_reservations"; Devoluções cita "RETURN_IN/RETURN_OUT" | 07, 08, 09 |
+| D11 | **novo** | Início dos papéis personalizados: "Painéis → Executivo" no menu, mas o cartão "Resumo" mostra "Não foi possível carregar o relatório executivo — Sem permissão para estes dados." (é o B6, reconfirmado em 02/10) | 06, 07, 08 |
+| D12 | **novo** | Ocorrências e eventos de entrega (saída para entrega, ausente, recusada…) só pela API e **sem tela** de consulta; "Nenhum transportadora cadastrado" (concordância) e toasts "Transportadora criado." | 08 |
 
 **Erros com mensagem clara** (bons para "ERRO → POR QUÊ → COMO RESOLVER"):
 

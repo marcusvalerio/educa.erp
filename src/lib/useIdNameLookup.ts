@@ -8,9 +8,11 @@ import { cachedGet } from "@/lib/dashboard/client";
 // (nome/razaoSocial/descricao) e as de domínio devolvem linhas do banco
 // (name/legal_name/description): o campo pedido é tentado primeiro e,
 // sem ele, os equivalentes conhecidos. Enquanto o lookup não chega, a
-// coluna mostra o id curto — nunca um nome fictício.
+// coluna mostra o id curto — nunca um nome fictício. Local de estoque sem
+// descrição cai no código do local (codigoLocal), para continuar aparecendo
+// na reserva e no saldo.
 
-const NAME_FALLBACKS = ["nome", "nomeFantasia", "razaoSocial", "name", "trade_name", "legal_name", "descricao", "description", "codigo", "code"];
+const NAME_FALLBACKS = ["nome", "nomeFantasia", "razaoSocial", "name", "trade_name", "legal_name", "descricao", "description", "codigoLocal", "codigo", "code"];
 
 /** Cadastros paginam por padrão (200); o lookup pede o máximo permitido. */
 export function lookupPath(apiPath: string): string {

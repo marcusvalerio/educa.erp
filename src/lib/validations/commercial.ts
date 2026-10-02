@@ -36,6 +36,20 @@ export const updatePaymentTermSchema = z.object({
 });
 
 // ------------------------------------------------------------ Orçamento
+// Desconto não pode passar do valor bruto do item (quantidade × preço):
+// sem isso o pedido era gravado e aprovado com total negativo.
+const ITEM_DISCOUNT_MESSAGE = "O desconto do item não pode ser maior que o valor do item (quantidade × preço unitário).";
+const itemDiscountWithinValue = (item: { quantity: number; unitPrice: number; discount?: number }) =>
+  (item.discount ?? 0) <= item.quantity * item.unitPrice + 0.000001;
+
+// Desconto do cabeçalho: no máximo o total dos itens + frete (total ≥ 0).
+const HEADER_DISCOUNT_MESSAGE = "O desconto do pedido não pode ser maior que o total dos itens mais o frete.";
+const headerDiscountWithinTotal = (data: { discount?: number; freightCost?: number; items?: Array<{ quantity: number; unitPrice: number; discount?: number }> }) => {
+  if (!data.items?.length || !data.discount) return true;
+  const items = data.items.reduce((sum, i) => sum + i.quantity * i.unitPrice - (i.discount ?? 0), 0);
+  return data.discount <= items + (data.freightCost ?? 0) + 0.000001;
+};
+
 const salesQuoteItemSchema = z.object({
   productId: optionalUuid,
   description: z.string().trim().min(1, "Descreva o item."),
@@ -44,7 +58,7 @@ const salesQuoteItemSchema = z.object({
   unitPrice: z.coerce.number().min(0, "O preço unitário não pode ser negativo."),
   discount: nonNegativeNumber,
   notes: z.string().trim().optional(),
-});
+}).refine(itemDiscountWithinValue, { message: ITEM_DISCOUNT_MESSAGE, path: ["discount"] });
 
 export const createSalesQuoteSchema = z.object({
   customerId: uuidField("Selecione o cliente."),
@@ -56,7 +70,7 @@ export const createSalesQuoteSchema = z.object({
   freightCost: nonNegativeNumber,
   notes: z.string().trim().optional(),
   items: z.array(salesQuoteItemSchema).min(1, "O orçamento precisa de ao menos um item."),
-});
+}).refine(headerDiscountWithinTotal, { message: HEADER_DISCOUNT_MESSAGE, path: ["discount"] });
 
 export const rejectSalesQuoteSchema = z.object({
   reason: z.string().trim().optional(),
@@ -71,7 +85,7 @@ const salesOrderItemSchema = z.object({
   unitPrice: z.coerce.number().min(0, "O preço unitário não pode ser negativo."),
   discount: nonNegativeNumber,
   notes: z.string().trim().optional(),
-});
+}).refine(itemDiscountWithinValue, { message: ITEM_DISCOUNT_MESSAGE, path: ["discount"] });
 
 export const createSalesOrderSchema = z.object({
   customerId: uuidField("Selecione o cliente."),
@@ -94,7 +108,7 @@ export const createSalesOrderSchema = z.object({
   // Opcional — quando ausente e salesQuoteId presente, os itens são
   // copiados do orçamento aprovado (conversão orçamento -> pedido).
   items: z.array(salesOrderItemSchema).optional(),
-});
+}).refine(headerDiscountWithinTotal, { message: HEADER_DISCOUNT_MESSAGE, path: ["discount"] });
 
 export const reserveSalesOrderStockSchema = z.object({
   locationId: uuidField("Selecione o local de onde reservar."),

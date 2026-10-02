@@ -1,3 +1,6 @@
+// Mensagens do Zod em português em todo processo que trata erros de API.
+import "@/lib/validations/zod-messages";
+
 export class ApiError extends Error {
   code: string;
   status: number;
@@ -7,6 +10,24 @@ export class ApiError extends Error {
     this.code = code;
     this.status = status;
   }
+}
+
+// Bloqueio otimista: o registro mudou depois que o usuário abriu o formulário.
+export function staleRecordError() {
+  return new ApiError(
+    "STALE_RECORD",
+    "Este registro foi alterado por outra pessoa enquanto você editava. Feche o formulário, abra de novo para ver a versão atual e refaça a sua alteração.",
+    409
+  );
+}
+
+// Mesma versão? Compara o texto e, se o formato variar, o instante.
+export function sameVersion(current: string | null | undefined, expected: string): boolean {
+  if (!current) return false;
+  if (current === expected) return true;
+  const a = Date.parse(current);
+  const b = Date.parse(expected);
+  return Number.isFinite(a) && Number.isFinite(b) && a === b;
 }
 
 export function notFoundError(entityLabel: string) {
@@ -36,7 +57,14 @@ export function forbiddenError(permissionCode: string) {
 export function translatePostgresError(error: { code?: string; message?: string; details?: string }): ApiError {
   // unique_violation
   if (error.code === "23505") {
-    const detail = `${error.message ?? ""} ${error.details ?? ""}`.toLowerCase();
+    // Classifica pelas COLUNAS da chave ("Key (company_id, document)=…"),
+    // não pelo nome da restrição: "fiscal_documents_source_unique" contém
+    // "document" e virava "CPF/CNPJ duplicado". Sem o detalhe, usa a mensagem.
+    const keyColumns = /key \(([^)]*)\)/i.exec(error.details ?? "")?.[1];
+    const detail = (keyColumns ?? `${error.message ?? ""} ${error.details ?? ""}`).toLowerCase();
+    if (/\bsource_id\b/.test(detail)) {
+      return new ApiError("DUPLICATE_SOURCE", "Este documento já foi gerado a partir desta origem. Atualize a tela para ver o documento existente.", 409);
+    }
     if (detail.includes("document")) {
       return new ApiError("DUPLICATE_DOCUMENT", "Já existe um registro com este documento (CPF/CNPJ).", 409);
     }
@@ -73,6 +101,25 @@ export function translatePostgresError(error: { code?: string; message?: string;
       "Não é possível excluir: existem registros vinculados a este cadastro. Utilize a inativação.",
       409
     );
+  }
+
+  // Valores que o banco recusou por formato/faixa. Antes viravam HTTP 500
+  // ("Não foi possível concluir a operação") sem dizer o que corrigir.
+  if (error.code === "22P02") {
+    if (/uuid/i.test(error.message ?? "")) return new ApiError("NOT_FOUND", "Registro não encontrado. Confira o endereço ou o código informado.", 404);
+    return new ApiError("VALIDATION_ERROR", "Um dos valores informados está em formato inválido. Revise os dados.", 422);
+  }
+  if (error.code === "22003") {
+    return new ApiError("VALIDATION_ERROR", "Um dos valores passa do limite permitido. Revise quantidades e valores.", 422);
+  }
+  if (error.code === "22007" || error.code === "22008") {
+    return new ApiError("VALIDATION_ERROR", "Data inválida. Confira dia, mês e ano.", 422);
+  }
+  if (error.code === "23514") {
+    const text = `${error.message ?? ""} ${error.details ?? ""}`.toLowerCase();
+    if (/from_location|to_location|stock_transfers_check/.test(text)) return new ApiError("VALIDATION_ERROR", "O local de origem e o de destino precisam ser diferentes.", 422);
+    if (/price|cost|amount|discount/.test(text)) return new ApiError("VALIDATION_ERROR", "Valores e preços não podem ser negativos.", 422);
+    return new ApiError("VALIDATION_ERROR", "Um dos valores informados não é permitido. Revise os dados e tente novamente.", 422);
   }
 
   // not_null_violation: campo obrigatório que chegou vazio ao banco.

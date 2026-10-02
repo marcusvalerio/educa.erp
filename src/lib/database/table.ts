@@ -2,7 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEV_ACTOR_LABEL } from "./constants";
-import { ApiError, blockedByDependentsError, notFoundError, translatePostgresError } from "./errors";
+import { ApiError, blockedByDependentsError, notFoundError, sameVersion, staleRecordError, translatePostgresError } from "./errors";
 import type { AuditLogRow } from "./schema";
 import type { BaseEntity, StatusCadastro } from "@/lib/cadastros/types";
 
@@ -55,6 +55,9 @@ export type TableConfig<Entity extends BaseEntity, Row extends { id: string; sta
   toRowFields: (data: Partial<Entity>) => Partial<Row>;
   labelOf: (entity: Entity) => string;
   dependents?: DependentCheck<Entity>[];
+  // Campos gravados só na criação, quando o formulário não os informa
+  // (ex.: o código obrigatório de categoria/marca, derivado do nome).
+  createDefaults?: (data: Partial<Entity>) => Partial<Row>;
 };
 
 function statusToDb(status: StatusCadastro): "active" | "inactive" {
@@ -140,7 +143,7 @@ export function createTableRepository<Entity extends BaseEntity, Row extends { i
   }
 
   async function create(companyId: string, input: Partial<Entity>, actor: ActorContext = DEFAULT_ACTOR): Promise<Entity> {
-    const fields = config.toRowFields(input);
+    const fields = { ...(config.createDefaults?.(input) ?? {}), ...config.toRowFields(input) };
     const { data, error } = await supabase()
       .from(config.table)
       .insert({ ...fields, company_id: companyId } as Record<string, unknown>)
@@ -163,20 +166,29 @@ export function createTableRepository<Entity extends BaseEntity, Row extends { i
     companyId: string,
     id: string,
     patch: Partial<Entity>,
-    actor: ActorContext = DEFAULT_ACTOR
+    actor: ActorContext = DEFAULT_ACTOR,
+    options: { expectedUpdatedAt?: string } = {}
   ): Promise<Entity> {
     const before = await get(companyId, id);
     if (!before) throw notFoundError(config.entityLabel);
+    // Bloqueio otimista (quando o formulário informa a versão que abriu):
+    // sem ele, o segundo a salvar apagava em silêncio a alteração do primeiro.
+    const expected = options.expectedUpdatedAt;
+    if (expected && !sameVersion(before.atualizadoEm, expected)) throw staleRecordError();
 
     const fields = config.toRowFields(patch);
-    const { data, error } = await supabase()
+    let query = supabase()
       .from(config.table)
       .update(fields as Record<string, unknown>)
       .eq("company_id", companyId)
-      .eq("id", id)
-      .select("*")
-      .single();
-    if (error) throw translatePostgresError(error);
+      .eq("id", id);
+    // Fecha a janela entre a leitura e a gravação: só grava se ninguém gravou antes.
+    if (expected) query = query.eq("updated_at", before.atualizadoEm);
+    const { data, error } = await query.select("*").single();
+    if (error) {
+      if (expected && error.code === "PGRST116") throw staleRecordError();
+      throw translatePostgresError(error);
+    }
 
     const entity = config.fromRow(data as Row);
     const statusChanged = before.status !== entity.status;
@@ -234,7 +246,7 @@ export function createTableRepository<Entity extends BaseEntity, Row extends { i
     });
   }
 
-  return { list, get, create, update, toggleStatus, remove };
+  return { list, get, create, update, toggleStatus, remove, entityLabel: config.entityLabel };
 }
 
 export { ApiError };

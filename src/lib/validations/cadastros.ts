@@ -11,11 +11,13 @@ import { z } from "zod";
 const statusSchema = z.enum(["Ativo", "Inativo"]);
 const optionalText = z.string().trim().optional().default("");
 const optionalNumber = z.coerce.number().optional().default(0);
+// Preços, custos e níveis de estoque: nunca negativos (o banco recusava com HTTP 500).
+const nonNegative = (label: string) => z.coerce.number().min(0, `${label} não pode ser negativo.`).optional().default(0);
 
 export const productSchema = z.object({
-  codigo: z.string().trim().min(1, "Informe o código do produto."),
+  codigo: z.string().trim().min(1, "Informe o código do produto.").max(60, "Use no máximo 60 caracteres no código."),
   sku: optionalText,
-  descricao: z.string().trim().min(1, "Informe a descrição do produto."),
+  descricao: z.string().trim().min(1, "Informe a descrição do produto.").max(250, "Use no máximo 250 caracteres na descrição."),
   descricaoCurta: optionalText,
   categoria: z.string().trim().min(1, "Selecione a categoria."),
   subcategoria: optionalText,
@@ -26,9 +28,9 @@ export const productSchema = z.object({
   altura: optionalNumber,
   largura: optionalNumber,
   comprimento: optionalNumber,
-  estoqueMinimo: optionalNumber,
-  estoqueMaximo: optionalNumber,
-  pontoReposicao: optionalNumber,
+  estoqueMinimo: nonNegative("O estoque mínimo"),
+  estoqueMaximo: nonNegative("O estoque máximo"),
+  pontoReposicao: nonNegative("O ponto de reposição"),
   localizacaoPadrao: optionalText,
   fornecedorId: optionalText,
   loteControlado: z.coerce.boolean().optional().default(false),
@@ -36,15 +38,15 @@ export const productSchema = z.object({
   categoriaId: optionalText,
   marcaId: optionalText,
   unidadeId: optionalText,
-  precoCusto: optionalNumber,
-  precoVenda: optionalNumber,
-  precoMinimo: optionalNumber,
+  precoCusto: nonNegative("O preço de custo"),
+  precoVenda: nonNegative("O preço de venda"),
+  precoMinimo: nonNegative("O preço mínimo"),
   status: statusSchema.optional().default("Ativo"),
 });
 
 export const customerSchema = z.object({
   tipo: z.enum(["Pessoa Física", "Pessoa Jurídica"]),
-  nome: z.string().trim().min(1, "Informe o nome ou razão social."),
+  nome: z.string().trim().min(1, "Informe o nome ou razão social.").max(200, "Use no máximo 200 caracteres no nome."),
   nomeFantasia: optionalText,
   documento: z.string().trim().min(1, "Informe o CPF/CNPJ."),
   inscricaoEstadual: optionalText,
@@ -70,7 +72,7 @@ export const customerSchema = z.object({
 
 export const supplierSchema = z.object({
   tipo: z.enum(["Pessoa Física", "Pessoa Jurídica"]),
-  razaoSocial: z.string().trim().min(1, "Informe a razão social."),
+  razaoSocial: z.string().trim().min(1, "Informe a razão social.").max(200, "Use no máximo 200 caracteres na razão social."),
   nomeFantasia: optionalText,
   documento: z.string().trim().min(1, "Informe o CNPJ/CPF."),
   inscricaoEstadual: optionalText,
@@ -92,7 +94,7 @@ export const supplierSchema = z.object({
 });
 
 export const carrierSchema = z.object({
-  razaoSocial: z.string().trim().min(1, "Informe a razão social."),
+  razaoSocial: z.string().trim().min(1, "Informe a razão social.").max(200, "Use no máximo 200 caracteres na razão social."),
   nomeFantasia: optionalText,
   cnpj: z.string().trim().min(1, "Informe o CNPJ."),
   inscricaoEstadual: optionalText,

@@ -157,7 +157,7 @@ export function createItemHandlers(entity: EntityRoute) {
       const { companyId } = await requireAccess(entity, "read");
       const { id } = await context.params;
       const item = await table.get(companyId, id);
-      if (!item) throw notFoundError(entity);
+      if (!item) throw notFoundError(table.entityLabel);
       return NextResponse.json({ success: true, data: item });
     } catch (error) {
       return jsonError(error);
@@ -180,7 +180,10 @@ export function createItemHandlers(entity: EntityRoute) {
         const documentError = documentRuleError(entity, parsed.data as Record<string, unknown>, current as unknown as Record<string, unknown>);
         if (documentError) throw validationError(documentError);
       }
-      const updated = await table.update(companyId, id, parsed.data as never, actor);
+      // Versão que o formulário abriu (o formulário envia o registro inteiro).
+      const raw = body as Record<string, unknown>;
+      const expectedUpdatedAt = typeof raw.atualizadoEm === "string" && raw.atualizadoEm ? raw.atualizadoEm : undefined;
+      const updated = await table.update(companyId, id, parsed.data as never, actor, { expectedUpdatedAt });
       return NextResponse.json({ success: true, data: updated });
     } catch (error) {
       return jsonError(error);

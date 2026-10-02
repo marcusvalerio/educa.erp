@@ -505,6 +505,21 @@ export function warehouseLocationToRowFields(data: Partial<LocalEstoque>): Parti
   } as Record<string, unknown>) as Partial<WarehouseLocationRow>;
 }
 
+// Código derivado do nome para cadastros cujo formulário não pede código
+// (categoria, marca): "Matéria-prima" → "MATERIA-PRIMA". A coluna code é
+// obrigatória e única por empresa; nome repetido cai no 409 de duplicidade.
+export function codeFromName(name: string, maxLength = 30): string {
+  const code = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, maxLength)
+    .replace(/-+$/g, "");
+  return code || "SEM-NOME";
+}
+
 // ------------------------------------------------------ Categoria (produto)
 export function productCategoryFromRow(row: ProductCategoryRow): CategoriaProduto {
   return {

@@ -15,6 +15,19 @@ import { randomUUID } from "node:crypto";
 import { Client } from "pg";
 
 const url = process.env.POC_DATABASE_OWNER_URL;
+
+/** CNPJ fictício com dígitos verificadores válidos (evita colidir com dados do banco de teste). */
+function randomCnpj(): string {
+  const base = Array.from({ length: 12 }, () => Math.floor(Math.random() * 10));
+  const dv = (digits: number[]) => {
+    const weights = digits.length === 12 ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2] : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const r = digits.reduce((a, d, i) => a + d * weights[i], 0) % 11;
+    return r < 2 ? 0 : 11 - r;
+  };
+  const d1 = dv(base);
+  const d2 = dv([...base, d1]);
+  return [...base, d1, d2].join("");
+}
 const COMPANY = "00000000-0000-0000-0000-000000000001";
 
 describe("rodada 2 — integridade do pedido (PostgreSQL real)", { skip: !url && "POC_DATABASE_OWNER_URL não definida" }, () => {
@@ -106,8 +119,8 @@ describe("rodada 2 — integridade do pedido (PostgreSQL real)", { skip: !url &&
     );
     await db.query("insert into public.user_roles (user_id, role_id) select $1, id from public.roles where company_id = $2 and code = 'admin'", [u.id, COMPANY]);
     customer = (await one<{ id: string }>(
-      "insert into public.customers (company_id, code, type, name, document, state, status) values ($1, 'CLI-R2-' || substr(md5(random()::text), 1, 6), 'company', 'Cliente do teste da rodada 2', '11222333000181', 'MG', 'active') returning id",
-      [COMPANY]
+      "insert into public.customers (company_id, code, type, name, document, state, status) values ($1, 'CLI-R2-' || substr(md5(random()::text), 1, 6), 'company', 'Cliente do teste da rodada 2', $2, 'MG', 'active') returning id",
+      [COMPANY, randomCnpj()]
     )).id;
     warehouse = (await one<{ id: string }>("insert into public.warehouses (company_id, code, name, status) values ($1, 'DEP-R2-' || substr(md5(random()::text), 1, 6), 'Depósito do teste', 'active') returning id", [COMPANY])).id;
     location = (await one<{ id: string }>("insert into public.warehouse_locations (company_id, code, name, warehouse_id, status, purpose) values ($1, 'LOC-R2-A-' || substr(md5(random()::text), 1, 6), 'Local A', $2, 'active', 'STOCK') returning id", [COMPANY, warehouse])).id;

@@ -1,0 +1,20 @@
+# pass 0 # fail 1 | R48-01: índice único recusa o 2º título ATIVO do mesmo pedido
+# pass 0 # fail 1 | R48-01: geração idempotente diz se criou ou se já existia
+# pass 0 # fail 1 | R48-06 (G1): 2ª separação aberta do mesmo pedido é recusada nomeando a existente
+# pass 0 # fail 1 | R48-06 (G3) / R2-02: 2ª expedição (mesmo em sequência) não passa do reservado
+# pass 0 # fail 1 | R2-03: expedição só a partir do local onde o estoque foi reservado para o pedido
+# pass 0 # fail 1 | R48-11: expedição consome a reserva (consumida, não 'active') e o saldo reservado zera
+# pass 0 # fail 1 | R2-01: pedido separado (pronto para expedir) sem expedição cancela e libera a reserva
+# pass 0 # fail 1 | R2-01 / R2-16: com separação aberta o cancelamento é recusado nomeando a separação
+# pass 0 # fail 1 | R2-01: cancelamento depois de expedição parcial libera só o que restou
+# pass 0 # fail 1 | R48-17/22: mensagens do banco sem UUID e sem 4 casas decimais
+# pass 1 # fail 0 | R48-15: a reserva trava o saldo antes de ler o disponível (parcial do que sobrou)
+# pass 0 # fail 1 | R2-04/05/06: o papel com fiscal_documents.calculate numera; numera depois de pronto; não renumera
+# pass 0 # fail 1 | R2-07: autorização manual exige número e chave de 44 dígitos com DV
+# pass 0 # fail 1 | R2-08: número de documento de saída não se repete na série
+# pass 0 # fail 1 | simulação: recusa sem provedor configurado e em documento de produção; autoriza com provedor; cancela
+# pass 0 # fail 1 | simulação: rejeita com código próprio quando o CFOP não é do destino (SIM-106)
+# pass 0 # fail 1 | R2-19: gerar a NF-e de um pedido que já tem documento devolve created=false e não cria outro
+# pass 0 # fail 1 | R2-13: eventos do documento gravados na mesma transação ficam em ordem de horário
+# pass 0 # fail 1 | B18: item do pedido sem unidade herda a unidade do produto
+# pass 0 # fail 1 | R2-18: criação e envio do pedido aparecem na trilha com o autor real

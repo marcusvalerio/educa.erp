@@ -3,7 +3,7 @@
 // ("Permissão negada (sales_orders.reserve)"), UUID de item e números do
 // numeric(16,4) ("7.0000"). A API passa toda mensagem de erro por aqui antes
 // de responder (src/lib/api/response.ts). Rodada 2 do teste com 48 usuários.
-import { actionLabel, resourceLabel } from "@/lib/permission-labels";
+import { ACTION_LABELS, RESOURCE_LABELS, actionLabel, resourceLabel } from "@/lib/permission-labels";
 import { STATUS_REGISTRY, statusMeta, type StatusEntity } from "@/lib/status";
 
 const UUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
@@ -53,6 +53,14 @@ export function formatDbQuantity(value: string | number): string {
 function permissionText(code: string): string {
   const dot = code.indexOf(".");
   if (dot < 0) return code;
+  // Códigos de 3 partes ("settings.company.update", "controlling.period.manage"):
+  // procura a divisão recurso/ação que existe nos dois mapas (R2-23).
+  const parts = code.split(".");
+  for (let i = 1; i < parts.length; i++) {
+    const res = parts.slice(0, i).join("_");
+    const act = parts.slice(i).join(".");
+    if (RESOURCE_LABELS[res] && ACTION_LABELS[act]) return `${RESOURCE_LABELS[res]} — ${ACTION_LABELS[act]}`;
+  }
   const resource = code.slice(0, dot);
   const action = code.slice(dot + 1);
   return `${resourceLabel(resource)} — ${actionLabel(action)}`;

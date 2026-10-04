@@ -561,6 +561,9 @@ export async function setAdminModuleEnabled(request: NextRequest, context: CodeR
 export async function listAdminAudit(request: NextRequest) {
   try {
     const { supabase, companyId } = await requireCompanyUser();
+    // R2-22: sem audit_logs.read a RLS devolvia 200 com lista vazia (parecia
+    // "nada aconteceu"). A trilha da empresa é restrita: 403 explícito.
+    if (!(await hasPermission(companyId, "audit_logs.read"))) throw forbiddenError("audit_logs.read");
     const params = new URL(request.url).searchParams;
     const page = Math.max(1, Number(params.get("page") ?? 1) || 1);
     const pageSize = Math.min(100, Math.max(10, Number(params.get("pageSize") ?? 25) || 25));

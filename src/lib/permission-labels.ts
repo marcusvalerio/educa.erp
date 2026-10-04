@@ -34,6 +34,10 @@ export const RESOURCE_LABELS: Record<string, string> = {
   shipments: "Expedições", standard_costs: "Custos padrão", stock: "Estoque", suppliers: "Fornecedores", tax_rules: "Regras de impostos",
   time_entries: "Apontamento de horas", users: "Usuários", vehicles: "Veículos", warehouse_locations: "Locais de estoque",
   warehouses: "Depósitos", workflow: "Fluxos de aprovação",
+  // Prefixos de código que diferem do recurso do catálogo (R2-23): o 403
+  // cita o código ("audit_logs.read"), não o recurso ("audit").
+  audit_logs: "Auditoria", brands: "Marcas", categories: "Categorias", roles: "Papéis e permissões",
+  unit_conversions: "Conversões de unidade", units: "Unidades de medida",
 };
 
 export const ACTION_LABELS: Record<string, string> = {

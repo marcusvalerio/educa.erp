@@ -151,6 +151,30 @@ describe("rodada 2 — R48-26: lista de usuários sem users.read", () => {
   });
 });
 
+describe("rodada 2 — R2-22: trilha de auditoria da empresa sem audit_logs.read", () => {
+  test("o handler checa audit_logs.read antes de consultar (antes: 200 com lista vazia)", async () => {
+    const src = (await import("node:fs")).readFileSync(new URL("../src/lib/api/admin-handlers.ts", import.meta.url), "utf8");
+    const body = src.slice(src.indexOf("export async function listAdminAudit"), src.indexOf("export async function", src.indexOf("export async function listAdminAudit") + 10));
+    assert.match(body, /hasPermission\(companyId, "audit_logs\.read"\)\)\) throw forbiddenError\("audit_logs\.read"\)/);
+    assert.ok(body.indexOf("audit_logs.read") < body.indexOf('.from("audit_logs")'), "a checagem vem antes da consulta");
+  });
+});
+
+describe("rodada 2 — R2-23: permissão por extenso também para códigos fora do padrão recurso.ação", () => {
+  // Os 28 códigos do catálogo cujo prefixo difere do recurso (consulta no banco local).
+  const codes = [
+    "audit_logs.read", "brands.create", "categories.read", "controlling.budget.create", "controlling.budget.view",
+    "controlling.forecast.view", "inventory.valuation.view", "roles.manage", "roles.read", "settings.company.update",
+    "settings.company.view", "settings.establishment.update", "unit_conversions.create", "units.read", "controlling.period.manage",
+  ];
+  for (const code of codes) {
+    test(code, () => {
+      const out = humanizeErrorMessage(`Você não tem permissão para esta operação (${code}).`);
+      assert.doesNotMatch(out, /[a-z]_[a-z]|\b(Audit|Brands|Categories|Controlling|Inventory|Roles|Settings|Units?|Company|Establishment|Budget|Forecast|Valuation|Period|Logs)\b/, out);
+    });
+  }
+});
+
 describe("rodada 2 — R2-17: soma das parcelas ≠ total é validação (422), não conflito (409)", () => {
   test("o mapeamento do Financeiro trata a soma das parcelas antes do 409", async () => {
     const src = (await import("node:fs")).readFileSync(new URL("../src/lib/api/finance-handlers.ts", import.meta.url), "utf8");

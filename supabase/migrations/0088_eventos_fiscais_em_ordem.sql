@@ -1,0 +1,11 @@
+-- 0088 — Rodada 2 (48 usuários), R2-13: eventos do documento fiscal gravados na
+-- mesma transação ficavam com o MESMO horário.
+--
+-- Encontrado: na autorização (simulada ou real) os eventos AUTHORIZING e
+-- AUTHORIZED nascem na mesma transação; created_at tinha default now(), que é
+-- o início da transação. Os dois ficavam com o mesmo instante e a linha do
+-- tempo do documento podia mostrar "Autorizado" antes de "Em autorização".
+--
+-- Correção: default clock_timestamp() (o instante real da gravação de cada
+-- linha). Não reescreve eventos antigos.
+alter table public.fiscal_document_events alter column created_at set default clock_timestamp();

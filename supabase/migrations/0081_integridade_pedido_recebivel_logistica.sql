@@ -627,8 +627,9 @@ begin
 
     v_free := v_order_item.reserved_quantity - v_order_item.shipped_quantity - v_in_open;
     if v_qty > v_free then
-      raise exception 'Não é possível criar a expedição: para o produto %, a quantidade a expedir (%) é maior que o reservado ainda livre para expedição (%). % já está em outra expedição aberta deste pedido.',
-        public.fn_product_label(v_order_item.product_id), public.fn_fmt_qty(v_qty), public.fn_fmt_qty(greatest(v_free, 0)), public.fn_fmt_qty(v_in_open)
+      raise exception 'Não é possível criar a expedição: para o produto %, a quantidade a expedir (%) é maior que o reservado ainda livre para expedição (%).%',
+        public.fn_product_label(v_order_item.product_id), public.fn_fmt_qty(v_qty), public.fn_fmt_qty(greatest(v_free, 0)),
+        case when v_in_open > 0 then ' ' || public.fn_fmt_qty(v_in_open) || ' já está em outra expedição aberta deste pedido.' else '' end
         using errcode = 'P0001';
     end if;
 

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAuthContext, hasPermission } from "@/lib/auth/context";
 import { ApiError, forbiddenError, notFoundError, unauthorizedError, validationError, translatePostgresError } from "@/lib/database/errors";
 import { jsonError } from "./response";
+import { receivableGenerationResult } from "./receivable-generation";
 import {
   financialCategorySchema,
   costCenterSchema,
@@ -73,7 +74,9 @@ function rpcError(error: { message?: string; code?: string }): ApiError {
   if (message.includes("permissão negada")) return new ApiError("FORBIDDEN", error.message ?? "", 403);
   if (message.includes("excede") || message.includes("saldo")) return new ApiError("EXCEEDS_AVAILABLE", error.message ?? "", 409);
   if (message.includes("não encontrad")) return new ApiError("NOT_FOUND", error.message ?? "", 404);
-  if (message.includes("só é possível") || message.includes("não pode ser") || message.includes("já estornado") || message.includes("não corresponde")) {
+  // Soma das parcelas ≠ valor do título é dado inválido (422), não conflito de situação (409).
+  if (message.includes("soma das parcelas")) return new ApiError("VALIDATION_ERROR", error.message ?? "", 422);
+  if (message.includes("só é possível") || message.includes("não pode ser") || message.includes("já estornado")) {
     return new ApiError("INVALID_STATUS_TRANSITION", error.message ?? "", 409);
   }
   return translatePostgresError(error);
@@ -613,7 +616,11 @@ export async function generateAccountsReceivableFromSalesOrder(request: NextRequ
     const data_ = parsed.success ? parsed.data : undefined;
 
     const supabase = await createClient();
-    const { data, error } = await supabase.rpc("fn_generate_accounts_receivable_from_sales_order", {
+    // fn_generate_receivable_for_sales_order (0081) trava o pedido e diz se o
+    // título foi criado agora ou já existia: duas gerações simultâneas (duplo
+    // clique, duas pessoas) não criam dois títulos (há também índice único na
+    // origem), e quem chegou depois recebe a resposta certa, não "gerada".
+    const { data, error } = await supabase.rpc("fn_generate_receivable_for_sales_order", {
       p_sales_order_id: id,
       p_category_id: data_?.categoryId ?? null,
       p_cost_center_id: data_?.costCenterId ?? null,
@@ -623,7 +630,25 @@ export async function generateAccountsReceivableFromSalesOrder(request: NextRequ
       p_description: data_?.description ?? null,
     });
     if (error) throw rpcError(error);
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    const result = receivableGenerationResult(data);
+    if (!result.receivable) throw new ApiError("DATABASE_ERROR", "Não foi possível gerar a conta a receber. Tente novamente.", 500);
+    if (result.created) {
+      return NextResponse.json(
+        { success: true, data: result.receivable, created: true, message: `Conta a receber ${result.receivable.code} gerada.` },
+        { status: 201 },
+      );
+    }
+    if (result.receivable.status === "CANCELLED") {
+      throw new ApiError(
+        "RECEIVABLE_CANCELLED",
+        `A conta a receber deste pedido (${result.receivable.code}) está cancelada. O sistema não gera outra automaticamente para o mesmo pedido; se for preciso cobrar, lance um título avulso.`,
+        409,
+      );
+    }
+    return NextResponse.json(
+      { success: true, data: result.receivable, created: false, message: `Este pedido já tem a conta a receber ${result.receivable.code}. Nenhum título novo foi criado.` },
+      { status: 200 },
+    );
   } catch (error) {
     return jsonError(error);
   }

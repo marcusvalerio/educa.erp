@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAuthContext, hasPermission } from "@/lib/auth/context";
 import { ApiError, forbiddenError, notFoundError, unauthorizedError, validationError, translatePostgresError } from "@/lib/database/errors";
 import { jsonError } from "./response";
+import { fiscalGenerationResult } from "./fiscal-generation";
 import { cnpjError, documentChanged } from "@/lib/documents";
 import {
   fiscalEstablishmentSchema,
@@ -958,14 +959,28 @@ export async function createFiscalDocumentFromSalesOrder(request: NextRequest, c
     const body = await parseBody(request, createFiscalDocumentFromSalesOrderSchema);
 
     const supabase = await createClient();
-    const { data, error } = await supabase.rpc("fn_create_fiscal_document_from_sales_order", {
+    // fn_generate_fiscal_document_for_sales_order (0087) trava o pedido e diz
+    // se a NF-e foi criada agora ou já existia (R2-19): quem chega depois não
+    // recebe "criado" para um documento que outra pessoa gerou.
+    const { data, error } = await supabase.rpc("fn_generate_fiscal_document_for_sales_order", {
       p_sales_order_id: id,
       p_fiscal_establishment_id: body.fiscalEstablishmentId,
       p_operation_nature_id: body.operationNatureId,
       p_notes: body.notes ?? null,
     });
     if (error) throw rpcError(error);
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    const result = fiscalGenerationResult(data);
+    if (!result.document) throw new ApiError("DATABASE_ERROR", "Não foi possível gerar a NF-e. Tente novamente.", 500);
+    if (result.created) {
+      return NextResponse.json(
+        { success: true, data: result.document, created: true, message: `NF-e ${result.document.code} gerada em rascunho.` },
+        { status: 201 },
+      );
+    }
+    return NextResponse.json(
+      { success: true, data: result.document, created: false, message: `Este pedido já tem a NF-e ${result.document.code}. Nenhum documento novo foi criado.` },
+      { status: 200 },
+    );
   } catch (error) {
     return jsonError(error);
   }

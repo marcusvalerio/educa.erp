@@ -62,6 +62,17 @@ export function translatePostgresError(error: { code?: string; message?: string;
     // "document" e virava "CPF/CNPJ duplicado". Sem o detalhe, usa a mensagem.
     const keyColumns = /key \(([^)]*)\)/i.exec(error.details ?? "")?.[1];
     const detail = (keyColumns ?? `${error.message ?? ""} ${error.details ?? ""}`).toLowerCase();
+    // Índices únicos da rodada 2 (0081/0083): mensagem do caso, não "já existe um registro".
+    const constraint = /constraint "([^"]+)"/i.exec(error.message ?? "")?.[1] ?? "";
+    if (constraint === "fiscal_documents_own_number_unique" || (/\bnumber\b/.test(detail) && /\bseries\b|fiscal_establishment_id/.test(detail))) {
+      return new ApiError("DUPLICATE_FISCAL_NUMBER", "Este número já foi usado em outro documento de saída desta série. Número de documento próprio não se repete.", 409);
+    }
+    if (constraint === "accounts_receivable_origin_active_unique" || /\borigin_id\b/.test(detail)) {
+      return new ApiError("DUPLICATE_RECEIVABLE", "Este pedido já tem conta a receber. Atualize a tela para vê-la.", 409);
+    }
+    if (constraint === "pick_lists_open_per_order_unique" || (/\bsales_order_id\b/.test(detail) && !/\bsource_id\b/.test(detail))) {
+      return new ApiError("DUPLICATE_PICK_LIST", "Este pedido já tem uma separação em aberto. Use essa separação ou cancele-a antes de criar outra.", 409);
+    }
     if (/\bsource_id\b/.test(detail)) {
       return new ApiError("DUPLICATE_SOURCE", "Este documento já foi gerado a partir desta origem. Atualize a tela para ver o documento existente.", 409);
     }

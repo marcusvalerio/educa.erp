@@ -27,7 +27,7 @@ export function portugueseIssueMessage(issue: { code?: string; input?: unknown; 
     if (issue.input === undefined || issue.input === null || issue.input === "") {
       return label ? `Informe ${label}.` : "Preencha os campos obrigatórios.";
     }
-    if (issue.expected === "number") return label ? `Informe ${label} como número (ex.: 10,50 → 10.50).` : "Use apenas números nos campos de valor e quantidade.";
+    if (issue.expected === "number") return label ? `Informe ${label} só com números, com ponto antes dos centavos (ex.: 10.50).` : "Use apenas números nos campos de valor e quantidade.";
     return label ? `Confira ${label}: o formato não é válido.` : "Um dos campos está em formato inválido. Revise os dados.";
   }
   if (issue.code === "invalid_value" || issue.code === "invalid_union") return label ? `Escolha uma opção válida para ${label}.` : "Escolha uma das opções disponíveis.";

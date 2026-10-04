@@ -77,3 +77,18 @@ export function auditEntityLabel(entity: string | null | undefined): string {
   if (!entity) return "—";
   return LABELS[entity] ?? entity;
 }
+
+/**
+ * Autor legível (R48-23): convites e rotinas da plataforma gravam o rótulo
+ * técnico "platform:OWNER:email" / "platform:system"; usuários da empresa
+ * gravam o nome — passa como está.
+ */
+export function auditActorLabel(actor: string | null | undefined): string {
+  if (!actor) return "—";
+  const owner = /^platform:OWNER:(.+)$/i.exec(actor);
+  if (owner) return `Owner da plataforma (${owner[1]})`;
+  if (/^platform:system$/i.test(actor)) return "Plataforma (rotina automática)";
+  const member = /^platform:([A-Z_]+):(.+)$/.exec(actor);
+  if (member) return `Plataforma (${member[2]})`;
+  return actor;
+}

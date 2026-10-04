@@ -313,6 +313,7 @@ export const STATUS_REGISTRY = {
     AUTHORIZE: S("Autorização", "success"),
     EVENT: S("Evento", "neutral"),
     RESERVE: S("Reserva", "info"),
+    SUBMIT: S("Envio para aprovação", "info"),
   },
 } satisfies Record<string, Record<string, StatusMeta>>;
 

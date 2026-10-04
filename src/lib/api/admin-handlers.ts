@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { jsonError } from "./response";
 import { dbError, parseJson, requireCompanyUser, type IdRouteContext } from "./governance";
-import { notFoundError, validationError } from "@/lib/database/errors";
+import { forbiddenError, notFoundError, validationError } from "@/lib/database/errors";
+import { hasPermission } from "@/lib/auth/context";
 import {
   createCompanyRoleSchema,
   departmentSchema,
@@ -33,6 +34,9 @@ const ok = (data: unknown, status = 200) => NextResponse.json({ success: true, d
 export async function listAdminUsers() {
   try {
     const { supabase, companyId } = await requireCompanyUser();
+    // R48-26: sem users.read a RLS ainda devolve o próprio registro (200 com
+    // 1 linha). A lista é da Administração: sem a permissão, 403 explícito.
+    if (!(await hasPermission(companyId, "users.read"))) throw forbiddenError("users.read");
     const [users, access] = await Promise.all([
       supabase
         .from("users")

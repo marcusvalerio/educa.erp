@@ -9,6 +9,8 @@ export type FiscalSetupStatus = {
   ncms: number;
   active_products: number;
   products_with_ncm: number;
+  /** Séries de numeração de documento fiscal ativas (0083, R2-09). */
+  fiscal_series?: number;
 };
 
 export type FiscalSetupStep = {
@@ -63,6 +65,16 @@ export function fiscalSetupSteps(s: FiscalSetupStatus): FiscalSetupStep[] {
         s.active_products === 0
           ? "Nenhum produto ativo."
           : `${s.products_with_ncm} de ${s.active_products} produto(s) com NCM no perfil fiscal. A NF-e usa o NCM do perfil fiscal do produto (não o campo NCM do cadastro), e o perfil ${NO_SCREEN.charAt(0).toLowerCase()}${NO_SCREEN.slice(1)}`,
+    },
+    {
+      // R2-09: sem série de numeração a NF-e não pode ser numerada nem autorizada.
+      id: "series",
+      label: "Série de numeração da NF-e no estabelecimento",
+      done: (s.fiscal_series ?? 0) > 0,
+      detail:
+        (s.fiscal_series ?? 0) > 0
+          ? `${s.fiscal_series} série(s) ativa(s).`
+          : `Nenhuma série de numeração: a NF-e não pode ser numerada nem autorizada. ${NO_SCREEN}`,
     },
   ];
 }

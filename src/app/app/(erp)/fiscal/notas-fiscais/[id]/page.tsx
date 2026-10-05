@@ -17,7 +17,7 @@ import { RecordHistory } from "@/components/resource/RecordHistory";
 import { DetailError, DetailHeader, DetailSection, DetailSkeleton, InfoGrid, MiniTable } from "@/components/resource/DetailLayout";
 import { useCached, invalidateCache } from "@/lib/dashboard/client";
 import { apiSendWithMessage } from "@/lib/api-client";
-import { formatAccessKey, isSimulatedProtocol } from "@/lib/fiscal/simulation";
+import { fiscalEventMessage, formatAccessKey, isSimulatedProtocol } from "@/lib/fiscal/simulation";
 import { formatCurrencyBRL, formatDate } from "@/lib/format";
 import { simulatedOriginLabel, type SimulatedDocumentPayload } from "@/lib/fiscal/simulated-document";
 
@@ -193,7 +193,7 @@ export default function NotaFiscalDetailPage() {
           columns={[
             { label: "Quando", cell: (e) => <span className="tabular-nums">{new Date(e.at).toLocaleString("pt-BR")}</span> },
             { label: "Evento", cell: (e) => <span className="font-medium">{EVENT_LABELS[e.type] ?? "Registro"}</span> },
-            { label: "Mensagem", cell: (e) => <span className="line-clamp-2">{e.message ?? "—"}</span> },
+            { label: "Mensagem", cell: (e) => <span className="line-clamp-2">{fiscalEventMessage(e.message)}</span> },
           ]}
         />
       </DetailSection>

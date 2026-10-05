@@ -2,6 +2,8 @@
 // SEFAZ: o documento recebe chave no formato da NF-e e protocolo
 // "SIMULACAO-…", que deixa claro que não houve autorização real.
 
+import { formatCurrencyBRL } from "@/lib/format";
+
 export const SIMULATION_WATERMARK = "ATLAS.ERP — SIMULAÇÃO";
 export const SIMULATION_BANNER = "ATLAS.ERP · DOCUMENTO FISCAL SIMULADO · SEM VALOR FISCAL · NÃO AUTORIZADO PELA SEFAZ";
 
@@ -29,4 +31,14 @@ export function isValidAccessKey(key: string | null | undefined): boolean {
 export function formatAccessKey(key: string | null | undefined): string {
   const k = (key ?? "").replace(/\D/g, "");
   return k.replace(/(\d{4})(?=\d)/g, "$1 ");
+}
+
+/**
+ * Mensagem de evento da linha do tempo da NF-e. O cálculo grava
+ * "Total: 337.5000 (produtos 337.5000 + impostos 0)" (numeric cru, 0039/0041);
+ * os eventos antigos ficam como estão no banco e a tela mostra em R$ (R2-26).
+ */
+export function fiscalEventMessage(message: string | null | undefined): string {
+  if (!message) return "—";
+  return message.replace(/\b(Total:|produtos|impostos) (-?\d+(?:\.\d+)?)(?![\d.,])/g, (_m, label: string, n: string) => `${label} ${formatCurrencyBRL(Number(n))}`);
 }

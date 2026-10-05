@@ -203,6 +203,19 @@ describe("rodada 2 — R2-25: origem do documento simulado quando o usuário nã
   });
 });
 
+describe("rodada 2 — R2-26: valores da linha do tempo da NF-e em R$", () => {
+  test("evento 'Calculado' gravado pelo banco (antes: 'Total: 337.5000 (produtos 337.5000 + impostos 0)')", async () => {
+    const { fiscalEventMessage } = await import("@/lib/fiscal/simulation");
+    assert.equal(fiscalEventMessage("Total: 337.5000 (produtos 337.5000 + impostos 0)"), "Total: R$ 337,50 (produtos R$ 337,50 + impostos R$ 0,00)");
+    assert.equal(fiscalEventMessage("Documento autorizado na simulação."), "Documento autorizado na simulação.");
+    assert.equal(fiscalEventMessage(null), "—");
+  });
+  test("a tela usa a função na coluna Mensagem", async () => {
+    const src = (await import("node:fs")).readFileSync(new URL("../src/app/app/(erp)/fiscal/notas-fiscais/[id]/page.tsx", import.meta.url), "utf8");
+    assert.match(src, /fiscalEventMessage\(e\.message\)/);
+  });
+});
+
 describe("rodada 2 — R2-17: soma das parcelas ≠ total é validação (422), não conflito (409)", () => {
   test("o mapeamento do Financeiro trata a soma das parcelas antes do 409", async () => {
     const src = (await import("node:fs")).readFileSync(new URL("../src/lib/api/finance-handlers.ts", import.meta.url), "utf8");

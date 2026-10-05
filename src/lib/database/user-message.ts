@@ -5,6 +5,7 @@
 // de responder (src/lib/api/response.ts). Rodada 2 do teste com 48 usuários.
 import { ACTION_LABELS, RESOURCE_LABELS, actionLabel, resourceLabel } from "@/lib/permission-labels";
 import { STATUS_REGISTRY, statusMeta, type StatusEntity } from "@/lib/status";
+import { formatCurrencyBRL } from "@/lib/format";
 
 const UUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
 
@@ -88,6 +89,12 @@ export function humanizeErrorMessage(message: string): string {
   text = text.replace(new RegExp(`Item ${UUID.source}:\\s*`, "gi"), "Um item do pedido: ");
   text = text.replace(UUID, "(registro)");
 
+  // Dinheiro nas mensagens de parcela (R2-24: "Recebimento (999999) excede o
+  // saldo da parcela (670.0200)"): os dois valores em R$.
+  text = text.replace(
+    /\b(Pagamento|Recebimento|soma das parcelas|saldo da parcela|valor atualizado do título) \((-?\d+(?:\.\d+)?)\)/g,
+    (_m, label: string, n: string) => `${label} (${formatCurrencyBRL(Number(n))})`,
+  );
   // numeric(16,4) do banco: 7.0000 -> 7; 670.0200 -> 670,02.
   text = text.replace(/(?<![\d.,])(\d+)\.(\d{4})(?![\d])/g, (_m, i: string, d: string) => formatDbQuantity(`${i}.${d}`));
   // Quantidade inteira grande depois de "solicitado/disponível/reservado"

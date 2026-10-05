@@ -18,7 +18,8 @@ describe("rodada 2 — mensagens do banco para o usuário", () => {
 
   test("R48-22: numeric(16,4) sem os zeros (antes: 'Reserva de 7.0000', 'saldo da parcela (670.0200)')", () => {
     assert.equal(humanizeErrorMessage("Reserva de 7.0000 excede o saldo disponível."), "Reserva de 7 excede o saldo disponível.");
-    assert.equal(humanizeErrorMessage("Valor maior que o saldo da parcela (670.0200)."), "Valor maior que o saldo da parcela (670,02).");
+    // R2-24: o valor da parcela agora sai em R$ (antes "(670,02)"); o objetivo do R48-22 — sem "670.0200" — continua.
+    assert.equal(humanizeErrorMessage("Valor maior que o saldo da parcela (670.0200)."), "Valor maior que o saldo da parcela (R$ 670,02).");
     assert.equal(formatDbQuantity("1234.5000"), "1.234,5");
   });
 
@@ -173,6 +174,17 @@ describe("rodada 2 — R2-23: permissão por extenso também para códigos fora 
       assert.doesNotMatch(out, /[a-z]_[a-z]|\b(Audit|Brands|Categories|Controlling|Inventory|Roles|Settings|Units?|Company|Establishment|Budget|Forecast|Valuation|Period|Logs)\b/, out);
     });
   }
+});
+
+describe("rodada 2 — R2-24: valores em dinheiro das mensagens da parcela em R$", () => {
+  test("recebimento maior que o saldo (mensagem real do r7)", () => {
+    const out = humanizeErrorMessage("Recebimento (999999) excede o saldo da parcela (670.0200).");
+    assert.match(out, /Recebimento \(R\$\s999\.999,00\) excede o saldo da parcela \(R\$\s670,02\)/);
+  });
+  test("pagamento e soma das parcelas", () => {
+    assert.match(humanizeErrorMessage("Pagamento (1500.5) excede o saldo da parcela (100.0000)."), /\(R\$\s1\.500,50\).*\(R\$\s100,00\)/);
+    assert.match(humanizeErrorMessage("A soma das parcelas (90) não corresponde ao valor atualizado do título (100)."), /parcelas \(R\$\s90,00\).*título \(R\$\s100,00\)/);
+  });
 });
 
 describe("rodada 2 — R2-17: soma das parcelas ≠ total é validação (422), não conflito (409)", () => {

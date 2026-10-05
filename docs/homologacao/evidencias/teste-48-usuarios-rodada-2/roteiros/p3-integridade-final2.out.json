@@ -1,0 +1,224 @@
+{
+  "phase": "final2",
+  "cut": "2026-10-04T21:36:37Z",
+  "pass": 27,
+  "fail": 0,
+  "checks": [
+    {
+      "name": "Saldo físico = soma do razão de movimentos (por produto/local/lote)",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Saldo negativo ou reservado > físico",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Reservado no saldo = reservas ativas ainda não consumidas (por produto/local)",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Reserva 'active' de pedido já expedido/cancelado/concluído (reserva fantasma)",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Reserva consumida acima do reservado ou item com consumo sem expedição",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Item do pedido: reservado/separado/expedido/cancelado incoerentes",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Reservado no item do pedido = reservas do pedido (ativas + consumidas)",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Mais de uma separação ABERTA por pedido",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Expedições abertas + expedido > reservado (por item do pedido)",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Saídas de estoque de expedição = quantidade expedida",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Mais de um evento 'entregue' por expedição (R2-10)",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Expedição de pedido cancelado ainda aberta",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Mais de uma conta a receber ATIVA por pedido (R48-01)",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Conta a receber de pedido com valor diferente do pedido",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Soma das parcelas ≠ valor do título (a receber)",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Soma das parcelas ≠ valor do título (a pagar)",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Parcela recebida/paga acima do valor",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Saldo da conta financeira = abertura ± lançamentos",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Mais de uma NF-e ativa por pedido",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Número de documento de saída repetido na série",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Documento AUTORIZADO sem número ou com chave fora do padrão",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Documento simulado (protocolo SIMULACAO-) fora de homologação",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Total do documento ≠ produtos − desconto + frete + seguro + outras + impostos destacados",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Registro apontando para cadastro de OUTRA empresa (pedido↔cliente, título↔pedido, NF-e↔pedido, expedição↔pedido)",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Auditoria gravada na empresa X por usuário da empresa Y",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Auditoria sem autor em ação de usuário (criados na rodada 2)",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    },
+    {
+      "name": "Ações críticas da rodada 2 sem registro de auditoria (títulos, NF-e autorizadas/canceladas, expedições)",
+      "total": 0,
+      "historic": 0,
+      "recent": 0,
+      "ok": true,
+      "sample": []
+    }
+  ]
+}

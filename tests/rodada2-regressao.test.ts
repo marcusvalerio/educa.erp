@@ -187,6 +187,20 @@ describe("rodada 2 — R2-24: valores em dinheiro das mensagens da parcela em R$
   });
 });
 
+describe("rodada 2 — R2-25: origem do documento simulado quando o usuário não vê o código", () => {
+  test("Fiscal sem acesso a recebimentos: diz que há origem, sem inventar o código (antes: '—')", async () => {
+    const { simulatedOriginLabel } = await import("@/lib/fiscal/simulated-document");
+    assert.equal(simulatedOriginLabel("purchase_receipt", "REC-0007"), "Recebimento de compra REC-0007");
+    assert.equal(simulatedOriginLabel("sales_order", "PV-0001"), "Pedido de venda PV-0001");
+    assert.match(simulatedOriginLabel("purchase_receipt", null), /^Recebimento de compra \(código visível só para quem acessa Recebimentos\)$/);
+    assert.equal(simulatedOriginLabel(null, null), "—");
+  });
+  test("a tela usa a função (não volta ao '—' fixo)", async () => {
+    const src = (await import("node:fs")).readFileSync(new URL("../src/app/app/(erp)/fiscal/notas-fiscais/[id]/documento-simulado/page.tsx", import.meta.url), "utf8");
+    assert.match(src, /simulatedOriginLabel\(d\.sourceType, d\.sourceCode\)/);
+  });
+});
+
 describe("rodada 2 — R2-17: soma das parcelas ≠ total é validação (422), não conflito (409)", () => {
   test("o mapeamento do Financeiro trata a soma das parcelas antes do 409", async () => {
     const src = (await import("node:fs")).readFileSync(new URL("../src/lib/api/finance-handlers.ts", import.meta.url), "utf8");

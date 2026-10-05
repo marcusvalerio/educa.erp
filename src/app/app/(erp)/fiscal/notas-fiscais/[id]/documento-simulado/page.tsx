@@ -8,7 +8,7 @@ import { DetailError, DetailSkeleton } from "@/components/resource/DetailLayout"
 import { SIMULATION_BANNER, SIMULATION_WATERMARK, formatAccessKey } from "@/lib/fiscal/simulation";
 import { statusMeta } from "@/lib/status";
 import { formatCurrencyBRL, formatDate } from "@/lib/format";
-import type { SimulatedDocumentPayload, SimulatedParty } from "@/lib/fiscal/simulated-document";
+import { simulatedOriginLabel, type SimulatedDocumentPayload, type SimulatedParty } from "@/lib/fiscal/simulated-document";
 
 // Documento visual da SIMULAÇÃO fiscal. Estrutura parecida com o documento
 // auxiliar brasileiro para conferência na homologação, mas: sem brasões ou
@@ -68,7 +68,7 @@ export default function DocumentoSimuladoPage() {
 
         <div className="relative grid border-b border-neutral-800 sm:grid-cols-2">
           <Box title="Natureza da operação" className="sm:border-r">{d.operationNature ?? "—"}</Box>
-          <Box title="Origem">{d.sourceCode ? `${d.sourceType === "purchase_receipt" ? "Recebimento de compra" : "Pedido de venda"} ${d.sourceCode}` : "—"}</Box>
+          <Box title="Origem">{simulatedOriginLabel(d.sourceType, d.sourceCode)}</Box>
         </div>
 
         <Box title={d.partner.role === "destinatario" ? "Destinatário" : "Remetente (fornecedor)"} className="relative border-b">

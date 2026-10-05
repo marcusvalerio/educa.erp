@@ -54,3 +54,15 @@ export type SimulatedDocumentPayload = {
   sourceType: string | null;
   sourceCode: string | null;
 };
+
+/**
+ * Texto da "Origem" no documento simulado. Sem permissão para ler o
+ * recebimento/pedido o código vem nulo: antes a tela mostrava "—", como se o
+ * documento não tivesse origem (R2-25). Agora diz o tipo e por que o código
+ * não aparece, sem revelá-lo.
+ */
+export function simulatedOriginLabel(sourceType: string | null | undefined, sourceCode: string | null | undefined): string {
+  if (!sourceType) return "—";
+  const [label, area] = sourceType === "purchase_receipt" ? ["Recebimento de compra", "Recebimentos"] : sourceType === "sales_order" ? ["Pedido de venda", "Pedidos de venda"] : ["Documento de origem", "o documento de origem"];
+  return sourceCode ? `${label} ${sourceCode}` : `${label} (código visível só para quem acessa ${area})`;
+}

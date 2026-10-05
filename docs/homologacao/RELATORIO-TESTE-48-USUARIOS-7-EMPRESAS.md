@@ -424,7 +424,7 @@ Mesma entrada da 1ª passada, na build com as correções:
 
 ## R2.0 Incidente: o ambiente foi reiniciado no meio da rodada (e o que isso mudou)
 
-No fim da primeira execução desta rodada o contêiner foi **reiniciado** e perdeu o clone de trabalho, o banco local e os roteiros que estavam só nele — inclusive **dois commits que eu ainda não tinha enviado** ao GitHub. O erro foi meu: devia ter enviado a cada etapa. Refiz a rodada inteira, desta vez **enviando a cada etapa** (15 commits ao final). Consequências, sem esconder nada:
+No fim da primeira execução desta rodada o contêiner foi **reiniciado** e perdeu o clone de trabalho, o banco local e os roteiros que estavam só nele — inclusive **dois commits que eu ainda não tinha enviado** ao GitHub. O erro foi meu: devia ter enviado a cada etapa. Refiz a rodada inteira, desta vez **enviando a cada etapa** (16 commits ao final). Consequências, sem esconder nada:
 
 - **Ambiente refeito do zero** pelo mesmo caminho da rodada 1: banco pelo plano equivalente à produção (98 migrations), dublê de autenticação, Owner pelo bootstrap oficial e as 7 empresas / 48 usuários / massa de dados pelos roteiros **commitados** da rodada 1 (`r1-setup`, `r2-dados`). Por isso os **códigos e números** (PV-…, CR-…, contagens) são diferentes dos da execução perdida.
 - **As correções foram reescritas** a partir do registro da sessão: 0086 e 0087 e os testes de regressão foram recuperados literalmente; 0081–0085, 0088, o fiscal simulado e os roteiros `p1`/`p2`/`p3` foram reescritos e **comprovados de novo** (antes → depois) neste ambiente novo. Nenhum resultado abaixo vem da execução perdida, exceto onde está escrito "execução perdida".

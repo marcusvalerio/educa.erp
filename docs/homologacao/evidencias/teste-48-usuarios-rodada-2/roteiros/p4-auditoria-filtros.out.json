@@ -1,0 +1,312 @@
+{
+  "pass": 51,
+  "fail": 0,
+  "out": [
+    {
+      "company": "Vértice Operações",
+      "label": "sem filtro: total igual ao banco",
+      "ok": true,
+      "detail": "api 948 · banco 948"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "entidade = sales_orders",
+      "ok": true,
+      "detail": "api 406 · banco 406 · só a entidade: true"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "entidade = Produto",
+      "ok": true,
+      "detail": "api 107 · banco 107 · só a entidade: true"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "entidade = product_fiscal_profiles",
+      "ok": true,
+      "detail": "api 97 · banco 97 · só a entidade: true"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "ação = CREATE",
+      "ok": true,
+      "detail": "api 378 · banco 378"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "ação = UPDATE",
+      "ok": true,
+      "detail": "api 69 · banco 69"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "ação = APPROVE",
+      "ok": true,
+      "detail": "api 173 · banco 173"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "ação = CANCEL",
+      "ok": true,
+      "detail": "api 17 · banco 17"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "autor contém \"Raquel\"",
+      "ok": true,
+      "detail": "api 276 · banco 276"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "entidade sales_orders + ação CREATE",
+      "ok": true,
+      "detail": "api 93 · banco 93"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "histórico de um registro (entityId)",
+      "ok": true,
+      "detail": "api 6 · banco 6"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "entityId de outra empresa não devolve nada",
+      "ok": true,
+      "detail": "api 200 total 0"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "paginação sem repetição e mais recente primeiro",
+      "ok": true,
+      "detail": "p1 10 · repetição false · ordem true"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "entityId malformado: lista vazia, sem erro",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "ação inexistente: lista vazia, sem erro",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "nenhuma linha de outra empresa (100 mais recentes)",
+      "ok": true,
+      "detail": "100 linhas · de outra empresa: 0"
+    },
+    {
+      "company": "Vértice Operações",
+      "label": "R2-18: pedido criado depois da 0086 tem CREATE (autor = quem criou) e SUBMIT",
+      "ok": true,
+      "detail": "pedidos 93 · CREATE com autor 93 · enviados 89 · SUBMIT 89"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "sem filtro: total igual ao banco",
+      "ok": true,
+      "detail": "api 942 · banco 942"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "entidade = sales_orders",
+      "ok": true,
+      "detail": "api 417 · banco 417 · só a entidade: true"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "entidade = Produto",
+      "ok": true,
+      "detail": "api 108 · banco 108 · só a entidade: true"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "entidade = product_fiscal_profiles",
+      "ok": true,
+      "detail": "api 98 · banco 98 · só a entidade: true"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "ação = CREATE",
+      "ok": true,
+      "detail": "api 377 · banco 377"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "ação = UPDATE",
+      "ok": true,
+      "detail": "api 69 · banco 69"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "ação = APPROVE",
+      "ok": true,
+      "detail": "api 160 · banco 160"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "ação = CANCEL",
+      "ok": true,
+      "detail": "api 15 · banco 15"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "autor contém \"Danilo\"",
+      "ok": true,
+      "detail": "api 321 · banco 321"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "entidade sales_orders + ação CREATE",
+      "ok": true,
+      "detail": "api 93 · banco 93"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "histórico de um registro (entityId)",
+      "ok": true,
+      "detail": "api 6 · banco 6"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "entityId de outra empresa não devolve nada",
+      "ok": true,
+      "detail": "api 200 total 0"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "paginação sem repetição e mais recente primeiro",
+      "ok": true,
+      "detail": "p1 10 · repetição false · ordem true"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "entityId malformado: lista vazia, sem erro",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "ação inexistente: lista vazia, sem erro",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "nenhuma linha de outra empresa (100 mais recentes)",
+      "ok": true,
+      "detail": "100 linhas · de outra empresa: 0"
+    },
+    {
+      "company": "Sertão Atacado",
+      "label": "R2-18: pedido criado depois da 0086 tem CREATE (autor = quem criou) e SUBMIT",
+      "ok": true,
+      "detail": "pedidos 93 · CREATE com autor 93 · enviados 89 · SUBMIT 89"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "sem filtro: total igual ao banco",
+      "ok": true,
+      "detail": "api 332 · banco 332"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "entidade = sales_orders",
+      "ok": true,
+      "detail": "api 85 · banco 85 · só a entidade: true"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "entidade = Cliente",
+      "ok": true,
+      "detail": "api 30 · banco 30 · só a entidade: true"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "entidade = Produto",
+      "ok": true,
+      "detail": "api 20 · banco 20 · só a entidade: true"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "ação = CREATE",
+      "ok": true,
+      "detail": "api 138 · banco 138"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "ação = UPDATE",
+      "ok": true,
+      "detail": "api 34 · banco 34"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "ação = APPROVE",
+      "ok": true,
+      "detail": "api 49 · banco 49"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "ação = CANCEL",
+      "ok": true,
+      "detail": "api 2 · banco 2"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "autor contém \"Bernardo\"",
+      "ok": true,
+      "detail": "api 76 · banco 76"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "entidade sales_orders + ação CREATE",
+      "ok": true,
+      "detail": "api 21 · banco 21"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "histórico de um registro (entityId)",
+      "ok": true,
+      "detail": "api 4 · banco 4"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "entityId de outra empresa não devolve nada",
+      "ok": true,
+      "detail": "api 200 total 0"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "paginação sem repetição e mais recente primeiro",
+      "ok": true,
+      "detail": "p1 10 · repetição false · ordem true"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "entityId malformado: lista vazia, sem erro",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "ação inexistente: lista vazia, sem erro",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "nenhuma linha de outra empresa (100 mais recentes)",
+      "ok": true,
+      "detail": "100 linhas · de outra empresa: 0"
+    },
+    {
+      "company": "Cobalto Distribuidora",
+      "label": "R2-18: pedido criado depois da 0086 tem CREATE (autor = quem criou) e SUBMIT",
+      "ok": true,
+      "detail": "pedidos 21 · CREATE com autor 21 · enviados 16 · SUBMIT 16"
+    }
+  ]
+}

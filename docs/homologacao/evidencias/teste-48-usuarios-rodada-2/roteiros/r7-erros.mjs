@@ -5,7 +5,7 @@ import fs from "node:fs";
 import { check, shot, session, logout, goto, api, post, idOf, state, close, bodyText, evidenceCard, inDays, newUser, login, APP } from "./lib.mjs";
 import { COMPANIES } from "./companies.mjs";
 const { default: pg } = await import("/home/user/educa-app/node_modules/pg/lib/index.js");
-const db = new pg.Pool({ connectionString: "postgres://postgres:postgres@127.0.0.1:55440/educa_poc", max: 2 });
+const db = new pg.Pool({ connectionString: "postgres://postgres@127.0.0.1:55440/educa_poc", max: 2 });
 const q = async (sql, params = []) => (await db.query(sql, params)).rows;
 
 const TECH = /violat|constraint|null value|uuid|syntax|column|relation|invalid input|expected [a-z]|received [a-z]|undefined|stack|exception|\bsql\b|row-level|NaN|Unexpected token|JSON|ZodError|PGRST|duplicate key|function |permission denied for/i;

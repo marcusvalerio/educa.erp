@@ -1,0 +1,562 @@
+{
+  "summary": {
+    "users": 48,
+    "rounds": 4,
+    "calls": 1206,
+    "dayMs": 21524,
+    "byStatus": {
+      "200": 1000,
+      "201": 187,
+      "403": 16,
+      "409": 2,
+      "422": 1
+    },
+    "s5": 0,
+    "p50": 519,
+    "p95": 1619,
+    "p99": 3896,
+    "max": 7491,
+    "uiErrors": 0
+  },
+  "labelRows": [
+    [
+      "tela /app",
+      2,
+      2,
+      0,
+      0,
+      7491,
+      7491
+    ],
+    [
+      "tela /app/logistica/estoque",
+      10,
+      10,
+      0,
+      0,
+      5163,
+      6145
+    ],
+    [
+      "tela /app/financeiro/contas-receber",
+      13,
+      13,
+      0,
+      0,
+      2769,
+      5510
+    ],
+    [
+      "tela /app/comercial/pedidos-venda",
+      5,
+      5,
+      0,
+      0,
+      4796,
+      5086
+    ],
+    [
+      "tela /app/fiscal/notas-fiscais",
+      13,
+      13,
+      0,
+      0,
+      2037,
+      3244
+    ],
+    [
+      "tela /app/logistica/expedicao",
+      9,
+      9,
+      0,
+      0,
+      2056,
+      3202
+    ],
+    [
+      "tela /app/gestao/dashboard",
+      4,
+      4,
+      0,
+      0,
+      1917,
+      2669
+    ],
+    [
+      "papéis",
+      28,
+      28,
+      0,
+      0,
+      1270,
+      2127
+    ],
+    [
+      "consulta /api/products",
+      8,
+      8,
+      0,
+      0,
+      614,
+      1562
+    ],
+    [
+      "documentos fiscais",
+      16,
+      16,
+      0,
+      0,
+      509,
+      1555
+    ],
+    [
+      "auditoria",
+      28,
+      28,
+      0,
+      0,
+      673,
+      1546
+    ],
+    [
+      "NCMs",
+      16,
+      16,
+      0,
+      0,
+      445,
+      1523
+    ],
+    [
+      "relatório de compras",
+      12,
+      12,
+      0,
+      0,
+      578,
+      1523
+    ],
+    [
+      "consulta /api/accounts-receivable",
+      8,
+      8,
+      0,
+      0,
+      557,
+      1490
+    ],
+    [
+      "entrada de estoque",
+      28,
+      28,
+      0,
+      0,
+      620,
+      1449
+    ],
+    [
+      "perfis fiscais",
+      16,
+      16,
+      0,
+      0,
+      681,
+      1326
+    ],
+    [
+      "criar separação",
+      16,
+      15,
+      1,
+      0,
+      584,
+      1301
+    ],
+    [
+      "consulta /api/customers",
+      8,
+      8,
+      0,
+      0,
+      629,
+      1299
+    ],
+    [
+      "usuários",
+      28,
+      28,
+      0,
+      0,
+      640,
+      1297
+    ],
+    [
+      "ver pedidos",
+      32,
+      32,
+      0,
+      0,
+      598,
+      1286
+    ],
+    [
+      "criar solicitação de compra",
+      12,
+      12,
+      0,
+      0,
+      560,
+      1282
+    ],
+    [
+      "contexto da sessão",
+      28,
+      28,
+      0,
+      0,
+      695,
+      1269
+    ],
+    [
+      "pedidos aprovados",
+      40,
+      40,
+      0,
+      0,
+      536,
+      1250
+    ],
+    [
+      "criar pedido",
+      32,
+      32,
+      0,
+      0,
+      440,
+      1226
+    ],
+    [
+      "login",
+      48,
+      48,
+      0,
+      0,
+      1087,
+      1214
+    ],
+    [
+      "pedidos de compra",
+      12,
+      12,
+      0,
+      0,
+      418,
+      1212
+    ],
+    [
+      "separar item",
+      18,
+      18,
+      0,
+      0,
+      346,
+      1194
+    ],
+    [
+      "fluxo de caixa",
+      24,
+      24,
+      0,
+      0,
+      320,
+      1186
+    ],
+    [
+      "tentar criar cliente (deve ser negado)",
+      8,
+      0,
+      8,
+      0,
+      384,
+      1137
+    ],
+    [
+      "consultar saldos",
+      28,
+      28,
+      0,
+      0,
+      441,
+      1121
+    ],
+    [
+      "concluir separação",
+      15,
+      15,
+      0,
+      0,
+      235,
+      1114
+    ],
+    [
+      "expedições",
+      16,
+      16,
+      0,
+      0,
+      353,
+      1103
+    ],
+    [
+      "criar transferência para o picking",
+      28,
+      28,
+      0,
+      0,
+      542,
+      1102
+    ],
+    [
+      "detalhe do título",
+      23,
+      23,
+      0,
+      0,
+      596,
+      1087
+    ],
+    [
+      "movimentações",
+      28,
+      28,
+      0,
+      0,
+      615,
+      1055
+    ],
+    [
+      "consulta /api/stock-balances",
+      8,
+      8,
+      0,
+      0,
+      644,
+      1034
+    ],
+    [
+      "receber parcela",
+      23,
+      23,
+      0,
+      0,
+      519,
+      1032
+    ],
+    [
+      "criar cliente",
+      32,
+      32,
+      0,
+      0,
+      389,
+      1030
+    ],
+    [
+      "despachar transferência",
+      28,
+      28,
+      0,
+      0,
+      577,
+      997
+    ],
+    [
+      "pedidos reservados",
+      16,
+      16,
+      0,
+      0,
+      320,
+      992
+    ],
+    [
+      "receber transferência",
+      28,
+      28,
+      0,
+      0,
+      475,
+      988
+    ],
+    [
+      "enviar pedido",
+      32,
+      32,
+      0,
+      0,
+      399,
+      983
+    ],
+    [
+      "gerar conta a receber",
+      42,
+      42,
+      0,
+      0,
+      365,
+      982
+    ],
+    [
+      "enviar solicitação",
+      12,
+      12,
+      0,
+      0,
+      540,
+      982
+    ],
+    [
+      "relatório comercial",
+      28,
+      28,
+      0,
+      0,
+      385,
+      929
+    ],
+    [
+      "listar clientes",
+      32,
+      32,
+      0,
+      0,
+      546,
+      912
+    ],
+    [
+      "consulta /api/sales-orders",
+      8,
+      8,
+      0,
+      0,
+      355,
+      891
+    ],
+    [
+      "itens da separação",
+      15,
+      15,
+      0,
+      0,
+      325,
+      890
+    ],
+    [
+      "iniciar separação",
+      15,
+      15,
+      0,
+      0,
+      265,
+      850
+    ],
+    [
+      "contas a pagar",
+      24,
+      24,
+      0,
+      0,
+      430,
+      838
+    ],
+    [
+      "expedições embaladas",
+      28,
+      28,
+      0,
+      0,
+      302,
+      775
+    ],
+    [
+      "contas a receber",
+      24,
+      24,
+      0,
+      0,
+      304,
+      774
+    ],
+    [
+      "relatório fiscal",
+      16,
+      16,
+      0,
+      0,
+      469,
+      753
+    ],
+    [
+      "consulta /api/reports/executive?periodStart=2026-10-01&periodEnd=2026-10-31",
+      8,
+      8,
+      0,
+      0,
+      474,
+      708
+    ],
+    [
+      "pedidos aguardando aprovação",
+      28,
+      28,
+      0,
+      0,
+      361,
+      684
+    ],
+    [
+      "tentar cancelar pedido (deve ser negado)",
+      8,
+      0,
+      8,
+      0,
+      362,
+      649
+    ],
+    [
+      "painel executivo",
+      28,
+      28,
+      0,
+      0,
+      305,
+      600
+    ],
+    [
+      "reservar estoque",
+      30,
+      28,
+      2,
+      0,
+      275,
+      588
+    ],
+    [
+      "aprovar pedido",
+      33,
+      33,
+      0,
+      0,
+      251,
+      536
+    ]
+  ],
+  "errs": {
+    "reservar estoque → 409 Só é possível reservar estoque de um pedido aprovado (situação atual: Reservado).": 2,
+    "criar separação → 422 O pedido PV-0317 já tem a separação SEP-0122 em aberto. Use essa separação (ou cancele-a antes de criar outra).": 1,
+    "tentar criar cliente (deve ser negado) → 403 Você não tem permissão para esta operação (Clientes — Criar).": 8,
+    "tentar cancelar pedido (deve ser negado) → 403 Você não tem permissão para esta operação (Pedidos de venda — Cancelar).": 8
+  },
+  "s5": [],
+  "uiErrors": []
+}

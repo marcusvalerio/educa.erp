@@ -1,0 +1,470 @@
+{
+  "audit": [
+    {
+      "label": "Volume de auditoria por empresa (rodada 48)",
+      "ok": true,
+      "rows": [
+        {
+          "company_id": "12289919-87d8-43f7-97bf-9de12defa63a",
+          "n": 852,
+          "autores": 7,
+          "de": "2026-10-04 21:25:38.081684+00",
+          "ate": "2026-10-04 22:10:21.064399+00"
+        },
+        {
+          "company_id": "228a252f-8462-4bdf-8f15-f5bb6ac00832",
+          "n": 160,
+          "autores": 5,
+          "de": "2026-10-04 21:25:35.765747+00",
+          "ate": "2026-10-04 22:09:35.843234+00"
+        },
+        {
+          "company_id": "27b7225a-16dd-4d19-8a6a-869cd01ec6d2",
+          "n": 233,
+          "autores": 6,
+          "de": "2026-10-04 21:25:40.347672+00",
+          "ate": "2026-10-04 22:11:06.135109+00"
+        },
+        {
+          "company_id": "5a8f133f-ece5-48cd-bbcc-7f2c9a70db3c",
+          "n": 195,
+          "autores": 8,
+          "de": "2026-10-04 21:25:28.85526+00",
+          "ate": "2026-10-04 22:07:18.74249+00"
+        },
+        {
+          "company_id": "cfef2656-21eb-450f-9e44-6ccfcc2cb1a3",
+          "n": 857,
+          "autores": 7,
+          "de": "2026-10-04 21:25:42.614373+00",
+          "ate": "2026-10-04 22:11:51.50631+00"
+        },
+        {
+          "company_id": "dcfebb5d-75e8-45ba-b9ba-e8883cfe0256",
+          "n": 177,
+          "autores": 7,
+          "de": "2026-10-04 21:25:31.2352+00",
+          "ate": "2026-10-04 22:08:04.27973+00"
+        },
+        {
+          "company_id": "ee7be72d-dcb2-4a20-88a6-31cc7fdc321a",
+          "n": 202,
+          "autores": 8,
+          "de": "2026-10-04 21:25:33.468354+00",
+          "ate": "2026-10-04 22:08:50.255358+00"
+        }
+      ],
+      "note": "7 empresas com registros"
+    },
+    {
+      "label": "Registros sem autor (user_id nulo) nas 7 empresas",
+      "ok": false,
+      "rows": [
+        {
+          "company_id": "12289919-87d8-43f7-97bf-9de12defa63a",
+          "entity": "user_invitations",
+          "action": "CREATE",
+          "actor_label": "platform:OWNER:owner@atlaserp.test",
+          "n": 1
+        },
+        {
+          "company_id": "cfef2656-21eb-450f-9e44-6ccfcc2cb1a3",
+          "entity": "user_invitations",
+          "action": "CREATE",
+          "actor_label": "platform:OWNER:owner@atlaserp.test",
+          "n": 1
+        },
+        {
+          "company_id": "5a8f133f-ece5-48cd-bbcc-7f2c9a70db3c",
+          "entity": "user_invitations",
+          "action": "CREATE",
+          "actor_label": "platform:OWNER:owner@atlaserp.test",
+          "n": 1
+        },
+        {
+          "company_id": "228a252f-8462-4bdf-8f15-f5bb6ac00832",
+          "entity": "user_invitations",
+          "action": "CREATE",
+          "actor_label": "platform:OWNER:owner@atlaserp.test",
+          "n": 1
+        },
+        {
+          "company_id": "dcfebb5d-75e8-45ba-b9ba-e8883cfe0256",
+          "entity": "user_invitations",
+          "action": "CREATE",
+          "actor_label": "platform:OWNER:owner@atlaserp.test",
+          "n": 1
+        },
+        {
+          "company_id": "ee7be72d-dcb2-4a20-88a6-31cc7fdc321a",
+          "entity": "user_invitations",
+          "action": "CREATE",
+          "actor_label": "platform:OWNER:owner@atlaserp.test",
+          "n": 1
+        },
+        {
+          "company_id": "27b7225a-16dd-4d19-8a6a-869cd01ec6d2",
+          "entity": "user_invitations",
+          "action": "CREATE",
+          "actor_label": "platform:OWNER:owner@atlaserp.test",
+          "n": 1
+        }
+      ],
+      "note": ""
+    },
+    {
+      "label": "Registros com autor 'system'/'Sistema'/'service_role' nas 7 empresas",
+      "ok": true,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Registro gravado na empresa X por usuário da empresa Y",
+      "ok": true,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Registro cujo entity_id pertence a outra empresa (amostra: clientes, produtos, pedidos)",
+      "ok": true,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "actor_label diferente do nome/e-mail do usuário autor",
+      "ok": true,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Datas de auditoria no futuro ou antes da criação da empresa",
+      "ok": true,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Cobertura: ações críticas com registro na trilha",
+      "ok": true,
+      "rows": [
+        {
+          "op": "NF-e gerada",
+          "total": 49,
+          "auditados": 49
+        },
+        {
+          "op": "expedição expedida",
+          "total": 38,
+          "auditados": 38
+        },
+        {
+          "op": "pagamento (baixa)",
+          "total": 26,
+          "auditados": 26
+        },
+        {
+          "op": "papel alterado",
+          "total": 28,
+          "auditados": 28
+        },
+        {
+          "op": "pedido aprovado",
+          "total": 274,
+          "auditados": 274
+        },
+        {
+          "op": "pedido cancelado",
+          "total": 16,
+          "auditados": 16
+        },
+        {
+          "op": "recebimento (baixa)",
+          "total": 27,
+          "auditados": 27
+        }
+      ],
+      "note": "auditados = total em cada operação"
+    },
+    {
+      "label": "/api/admin/audit?entityId= devolve só a entidade pedida",
+      "ok": true,
+      "rows": [
+        {
+          "admin_audit": 1,
+          "outras_entidades": 0,
+          "audit_logs_api": 1
+        }
+      ],
+      "note": "filtro por entidade respeitado"
+    }
+  ],
+  "data": [
+    {
+      "label": "Saldo (stock_balances.on_hand) ≠ soma do razão de movimentos, por produto/local",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Saldo negativo ou reservado > saldo",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Reservado no saldo ≠ soma das reservas ativas",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": "status de reserva ativos considerados: active/reserved/partial"
+    },
+    {
+      "label": "Movimento de estoque com idempotency_key repetida",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Mais de uma conta a receber ativa para o mesmo pedido",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Parcela com recebido > valor ou pago > valor",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Parcela com status incoerente com o valor recebido/pago",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Soma dos recebimentos ≠ recebido na parcela",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Soma dos pagamentos ≠ pago na parcela",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Saldo da conta financeira ≠ abertura + entradas − saídas",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": "tipos de lançamento considerados: INCOME/IN/CREDIT/RECEIPT e EXPENSE/OUT/DEBIT/PAYMENT"
+    },
+    {
+      "label": "Mais de um documento fiscal ativo para o mesmo pedido",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Número de NF-e repetido no mesmo estabelecimento/série",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Mais de uma expedição ativa para o mesmo pedido com as mesmas quantidades",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": "pode ser legítimo em entrega parcial — conferir"
+    },
+    {
+      "label": "Item de pedido com expedido > pedido ou separado > pedido",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Total do pedido ≠ soma das linhas (− desconto + frete)",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Código de pedido repetido na mesma empresa",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Registro de uma empresa apontando para cadastro de outra (pedido→cliente, pedido-item→produto, CP→fornecedor)",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Usuário com mais de um vínculo de empresa ou papel de outra empresa",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    },
+    {
+      "label": "Usuários por empresa diferente do planejado",
+      "ok": true,
+      "n": 0,
+      "rows": [],
+      "note": ""
+    }
+  ],
+  "counts": [
+    {
+      "id": "5a8f133f-ece5-48cd-bbcc-7f2c9a70db3c",
+      "name": "Cobalto Distribuidora",
+      "usuarios": 8,
+      "clientes": 14,
+      "clientes_inativos": 0,
+      "produtos": 17,
+      "fornecedores": 5,
+      "pedidos": 17,
+      "pedidos_cancelados": 2,
+      "pedidos_compra": 1,
+      "movimentos": 49,
+      "receber": 7,
+      "pagar": 10,
+      "pagar_cancelados": 0,
+      "notas": 3,
+      "expedicoes": 4,
+      "auditoria": 195
+    },
+    {
+      "id": "dcfebb5d-75e8-45ba-b9ba-e8883cfe0256",
+      "name": "Ferrix Indústria",
+      "usuarios": 7,
+      "clientes": 8,
+      "clientes_inativos": 0,
+      "produtos": 13,
+      "fornecedores": 5,
+      "pedidos": 16,
+      "pedidos_cancelados": 2,
+      "pedidos_compra": 1,
+      "movimentos": 45,
+      "receber": 7,
+      "pagar": 11,
+      "pagar_cancelados": 0,
+      "notas": 3,
+      "expedicoes": 4,
+      "auditoria": 177
+    },
+    {
+      "id": "27b7225a-16dd-4d19-8a6a-869cd01ec6d2",
+      "name": "Lince Especialidades",
+      "usuarios": 6,
+      "clientes": 12,
+      "clientes_inativos": 0,
+      "produtos": 42,
+      "fornecedores": 5,
+      "pedidos": 16,
+      "pedidos_cancelados": 2,
+      "pedidos_compra": 1,
+      "movimentos": 73,
+      "receber": 7,
+      "pagar": 9,
+      "pagar_cancelados": 0,
+      "notas": 3,
+      "expedicoes": 4,
+      "auditoria": 233
+    },
+    {
+      "id": "ee7be72d-dcb2-4a20-88a6-31cc7fdc321a",
+      "name": "Mares Varejo",
+      "usuarios": 8,
+      "clientes": 24,
+      "clientes_inativos": 0,
+      "produtos": 15,
+      "fornecedores": 5,
+      "pedidos": 18,
+      "pedidos_cancelados": 2,
+      "pedidos_compra": 1,
+      "movimentos": 46,
+      "receber": 7,
+      "pagar": 10,
+      "pagar_cancelados": 0,
+      "notas": 3,
+      "expedicoes": 4,
+      "auditoria": 202
+    },
+    {
+      "id": "228a252f-8462-4bdf-8f15-f5bb6ac00832",
+      "name": "Prisma Serviços",
+      "usuarios": 5,
+      "clientes": 10,
+      "clientes_inativos": 0,
+      "produtos": 8,
+      "fornecedores": 5,
+      "pedidos": 14,
+      "pedidos_cancelados": 2,
+      "pedidos_compra": 1,
+      "movimentos": 38,
+      "receber": 7,
+      "pagar": 10,
+      "pagar_cancelados": 0,
+      "notas": 3,
+      "expedicoes": 4,
+      "auditoria": 160
+    },
+    {
+      "id": "12289919-87d8-43f7-97bf-9de12defa63a",
+      "name": "Sertão Atacado",
+      "usuarios": 7,
+      "clientes": 10,
+      "clientes_inativos": 0,
+      "produtos": 99,
+      "fornecedores": 5,
+      "pedidos": 125,
+      "pedidos_cancelados": 3,
+      "pedidos_compra": 1,
+      "movimentos": 217,
+      "receber": 23,
+      "pagar": 15,
+      "pagar_cancelados": 0,
+      "notas": 17,
+      "expedicoes": 25,
+      "auditoria": 852
+    },
+    {
+      "id": "cfef2656-21eb-450f-9e44-6ccfcc2cb1a3",
+      "name": "Vértice Operações",
+      "usuarios": 7,
+      "clientes": 12,
+      "clientes_inativos": 0,
+      "produtos": 98,
+      "fornecedores": 5,
+      "pedidos": 125,
+      "pedidos_cancelados": 3,
+      "pedidos_compra": 1,
+      "movimentos": 215,
+      "receber": 25,
+      "pagar": 16,
+      "pagar_cancelados": 0,
+      "notas": 17,
+      "expedicoes": 25,
+      "auditoria": 857
+    }
+  ]
+}

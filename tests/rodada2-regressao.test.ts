@@ -196,8 +196,10 @@ describe("rodada 2 — R2-25: origem do documento simulado quando o usuário nã
     assert.equal(simulatedOriginLabel(null, null), "—");
   });
   test("a tela usa a função (não volta ao '—' fixo)", async () => {
-    const src = (await import("node:fs")).readFileSync(new URL("../src/app/app/(erp)/fiscal/notas-fiscais/[id]/documento-simulado/page.tsx", import.meta.url), "utf8");
-    assert.match(src, /simulatedOriginLabel\(d\.sourceType, d\.sourceCode\)/);
+    for (const page of ["[id]/documento-simulado/page.tsx", "[id]/page.tsx"]) {
+      const src = (await import("node:fs")).readFileSync(new URL(`../src/app/app/(erp)/fiscal/notas-fiscais/${page}`, import.meta.url), "utf8");
+      assert.match(src, /simulatedOriginLabel\(d\.sourceType, d\.sourceCode\)/, page);
+    }
   });
 });
 

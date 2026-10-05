@@ -19,7 +19,7 @@ import { useCached, invalidateCache } from "@/lib/dashboard/client";
 import { apiSendWithMessage } from "@/lib/api-client";
 import { formatAccessKey, isSimulatedProtocol } from "@/lib/fiscal/simulation";
 import { formatCurrencyBRL, formatDate } from "@/lib/format";
-import type { SimulatedDocumentPayload } from "@/lib/fiscal/simulated-document";
+import { simulatedOriginLabel, type SimulatedDocumentPayload } from "@/lib/fiscal/simulated-document";
 
 // Detalhe do documento fiscal com o fluxo da homologação: numerar → calcular
 // → marcar como pronto → autorizar NA SIMULAÇÃO (provedor SIMULACAO, sem
@@ -160,7 +160,7 @@ export default function NotaFiscalDetailPage() {
             { label: "Natureza da operação", value: d.operationNature ?? "—" },
             { label: "Emitente", value: d.issuer.name ?? "—" },
             { label: partnerLabel, value: d.partner.name ?? "—" },
-            { label: "Origem", value: d.sourceCode ? `${d.sourceType === "purchase_receipt" ? "Recebimento" : "Pedido"} ${d.sourceCode}` : "—" },
+            { label: "Origem", value: simulatedOriginLabel(d.sourceType, d.sourceCode) },
             { label: "Protocolo", value: d.protocol ?? "—", mono: true },
             { label: "Autorizado em", value: d.authorizedAt ? formatDate(d.authorizedAt) : "—" },
             { label: "Chave de acesso", value: d.accessKey ? formatAccessKey(d.accessKey) : "—", mono: true, wide: true },

@@ -508,6 +508,7 @@ export function productCategoryFromRow(row: ProductCategoryRow): CategoriaProdut
     status: statusFromDb(row.status),
     criadoEm: row.created_at,
     atualizadoEm: row.updated_at,
+    codigo: row.code,
     nome: row.name,
     categoriaPaiId: row.parent_id ?? "",
   };
@@ -515,6 +516,7 @@ export function productCategoryFromRow(row: ProductCategoryRow): CategoriaProdut
 
 export function productCategoryToRowFields(data: Partial<CategoriaProduto>): Partial<ProductCategoryRow> {
   return omitUndefined({
+    code: data.codigo,
     name: data.nome,
     parent_id: nullableText(data.categoriaPaiId),
     status: statusToDb(data.status),
@@ -528,12 +530,14 @@ export function productBrandFromRow(row: ProductBrandRow): MarcaProduto {
     status: statusFromDb(row.status),
     criadoEm: row.created_at,
     atualizadoEm: row.updated_at,
+    codigo: row.code ?? "",
     nome: row.name,
   };
 }
 
 export function productBrandToRowFields(data: Partial<MarcaProduto>): Partial<ProductBrandRow> {
   return omitUndefined({
+    code: data.codigo,
     name: data.nome,
     status: statusToDb(data.status),
   } as Record<string, unknown>) as Partial<ProductBrandRow>;

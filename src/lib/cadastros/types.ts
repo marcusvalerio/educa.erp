@@ -39,11 +39,13 @@ export type Produto = BaseEntity & {
 };
 
 export type CategoriaProduto = BaseEntity & {
+  codigo: string;
   nome: string;
   categoriaPaiId: string;
 };
 
 export type MarcaProduto = BaseEntity & {
+  codigo: string;
   nome: string;
 };
 

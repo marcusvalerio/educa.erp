@@ -163,12 +163,16 @@ export const warehouseLocationSchema = z.object({
 });
 
 export const productCategorySchema = z.object({
+  // code é NOT NULL em product_categories (sem default): sem ele a gravação
+  // falhava com HTTP 500.
+  codigo: z.string().trim().min(1, "Informe o código da categoria."),
   nome: z.string().trim().min(1, "Informe o nome da categoria."),
   categoriaPaiId: optionalText,
   status: statusSchema.optional().default("Ativo"),
 });
 
 export const productBrandSchema = z.object({
+  codigo: z.string().trim().min(1, "Informe o código da marca."),
   nome: z.string().trim().min(1, "Informe o nome da marca."),
   status: statusSchema.optional().default("Ativo"),
 });

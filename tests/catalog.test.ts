@@ -73,13 +73,21 @@ describe("productCategorySchema", () => {
     assert.equal(productCategorySchema.safeParse({}).success, false);
   });
 
+  // code é NOT NULL em product_categories/product_brands (sem default nem
+  // gatilho): sem código a gravação sempre falhava (HTTP 500). O esquema passou
+  // a exigi-lo, como o de unidades.
   test("aceita categoria de topo (sem categoriaPaiId)", () => {
-    const result = productCategorySchema.safeParse({ nome: "Ferramentas" });
+    const result = productCategorySchema.safeParse({ codigo: "FER", nome: "Ferramentas" });
     assert.equal(result.success, true);
+  });
+
+  test("exige o código da categoria", () => {
+    assert.equal(productCategorySchema.safeParse({ nome: "Ferramentas" }).success, false);
   });
 
   test("aceita subcategoria com categoriaPaiId", () => {
     const result = productCategorySchema.safeParse({
+      codigo: "FER-CF",
       nome: "Chaves de fenda",
       categoriaPaiId: "11111111-1111-1111-1111-111111111111",
     });
@@ -93,7 +101,11 @@ describe("productBrandSchema", () => {
   });
 
   test("aceita marca válida", () => {
-    assert.equal(productBrandSchema.safeParse({ nome: "Marca X" }).success, true);
+    assert.equal(productBrandSchema.safeParse({ codigo: "MX", nome: "Marca X" }).success, true);
+  });
+
+  test("exige o código da marca", () => {
+    assert.equal(productBrandSchema.safeParse({ nome: "Marca X" }).success, false);
   });
 });
 

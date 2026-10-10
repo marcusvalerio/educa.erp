@@ -42,8 +42,8 @@ export const IMPORT_ENTITIES: Record<ImportableEntity, ImportEntityConfig> = {
   products: { entityType: "products", label: "Produtos", module: "cadastros", naturalKeyColumn: "code", naturalKeyField: "codigo", requiredFields: ["codigo", "descricao", "categoria", "unidade"] },
   customers: { entityType: "customers", label: "Clientes", module: "cadastros", naturalKeyColumn: "document", naturalKeyField: "documento", requiredFields: ["tipo", "nome", "documento"] },
   suppliers: { entityType: "suppliers", label: "Fornecedores", module: "cadastros", naturalKeyColumn: "document", naturalKeyField: "documento", requiredFields: ["tipo", "razaoSocial", "documento"] },
-  "product-categories": { entityType: "product-categories", label: "Categorias de produto", module: "cadastros", naturalKeyColumn: "name", naturalKeyField: "nome", requiredFields: ["nome"] },
-  "product-brands": { entityType: "product-brands", label: "Marcas de produto", module: "cadastros", naturalKeyColumn: "name", naturalKeyField: "nome", requiredFields: ["nome"] },
+  "product-categories": { entityType: "product-categories", label: "Categorias de produto", module: "cadastros", naturalKeyColumn: "name", naturalKeyField: "nome", requiredFields: ["codigo", "nome"] },
+  "product-brands": { entityType: "product-brands", label: "Marcas de produto", module: "cadastros", naturalKeyColumn: "name", naturalKeyField: "nome", requiredFields: ["codigo", "nome"] },
   units: { entityType: "units", label: "Unidades de medida", module: "cadastros", naturalKeyColumn: "code", naturalKeyField: "codigo", requiredFields: ["codigo", "nome"] },
 };
 

@@ -52,10 +52,15 @@ describe("isImportableEntity", () => {
 });
 
 describe("validateImportRow", () => {
-  test("product-categories: aceita linha só com nome", () => {
-    const result = validateImportRow("product-categories", { nome: "Eletrônicos" });
+  // Linha só com nome passava na validação e falhava ao gravar (code é NOT NULL).
+  test("product-categories: aceita linha com código e nome", () => {
+    const result = validateImportRow("product-categories", { codigo: "ELE", nome: "Eletrônicos" });
     assert.equal(result.success, true);
     if (result.success) assert.equal(result.naturalKey, "Eletrônicos");
+  });
+
+  test("product-categories: rejeita linha sem código", () => {
+    assert.equal(validateImportRow("product-categories", { nome: "Eletrônicos" }).success, false);
   });
 
   test("product-categories: rejeita linha sem nome", () => {

@@ -7,6 +7,7 @@ import { getAuthContext, hasPermission } from "@/lib/auth/context";
 import { ApiError, forbiddenError, notFoundError, unauthorizedError, validationError, translatePostgresError } from "@/lib/database/errors";
 import { jsonError } from "./response";
 import { toRpcSalesItems } from "@/lib/commercial/rpc-items";
+import { classifyCrmRpcError } from "@/lib/crm/errors";
 import {
   leadOriginSchema,
   leadSchema,
@@ -47,12 +48,12 @@ async function parseBody<T>(request: NextRequest, schema: { safeParse: (v: unkno
   return parsed.data;
 }
 
+// Classificação pelo código do PostgreSQL (src/lib/crm/errors.ts). Antes as
+// regras de estado (P0001) e os parâmetros inválidos (22023) viravam 500.
 function rpcError(error: { message?: string; code?: string }): ApiError {
-  const message = (error.message ?? "").toLowerCase();
-  if (message.includes("permissão negada")) return new ApiError("FORBIDDEN", error.message ?? "", 403);
-  if (message.includes("não encontrad")) return new ApiError("NOT_FOUND", error.message ?? "", 404);
-  if (message.includes("inválid") || message.includes("transição")) return new ApiError("INVALID_STATUS_TRANSITION", error.message ?? "", 409);
-  return translatePostgresError(error);
+  const failure = classifyCrmRpcError(error);
+  if (failure.status === null) return translatePostgresError(error);
+  return new ApiError(failure.code, failure.message, failure.status);
 }
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -66,11 +67,34 @@ async function assertEditableStatus(table: "leads" | "opportunities", id: string
   if (error) throw translatePostgresError(error);
   if (!data) throw notFoundError(table === "leads" ? "Lead" : "Oportunidade");
   const status = (data as { status: string }).status;
-  if (table === "leads" && status === "CONVERTED") {
-    throw new ApiError("INVALID_STATUS_TRANSITION", "Lead convertido não pode ser editado. Altere o cliente ou a oportunidade gerada.", 409);
-  }
-  if (table === "opportunities" && status !== "OPEN") {
-    throw new ApiError("INVALID_STATUS_TRANSITION", "Oportunidade encerrada (ganha ou perdida) não pode ser editada.", 409);
+  if (table === "leads" && status === "CONVERTED") throw leadConvertedError();
+  if (table === "opportunities" && status !== "OPEN") throw opportunityClosedError();
+}
+const leadConvertedError = () => new ApiError("INVALID_STATUS_TRANSITION", "Lead convertido não pode ser editado. Altere o cliente ou a oportunidade gerada.", 409);
+const opportunityClosedError = () => new ApiError("INVALID_STATUS_TRANSITION", "Oportunidade encerrada (ganha ou perdida) não pode ser editada.", 409);
+
+// O registro do caminho (/:id) precisa ser da empresa da sessão ANTES de
+// chamar a função do banco: assim outra empresa recebe 404 (como no GET), e
+// não "Permissão negada", que revelaria que o ID existe.
+async function assertInCompany(table: "leads" | "opportunities", id: string, companyId: string) {
+  const { data, error } = await createAdminClient().from(table).select("id").eq("id", id).eq("company_id", companyId).maybeSingle();
+  if (error) throw translatePostgresError(error);
+  if (!data) throw notFoundError(table === "leads" ? "Lead" : "Oportunidade");
+}
+
+// Referências do corpo (responsável, origem, cliente, dono, pipeline/estágio).
+// O cliente administrativo não passa pela RLS e várias colunas têm FK simples
+// (só existência, sem empresa): sem esta checagem, um usuário gravaria o ID de
+// um cadastro de OUTRA empresa no seu registro.
+type Reference = { table: "users" | "lead_origins" | "customers" | "pipelines" | "pipeline_stages" | "leads"; id: string | null | undefined; label: string; extra?: Record<string, string> };
+async function assertReferencesInCompany(companyId: string, refs: Reference[]) {
+  for (const ref of refs) {
+    if (!ref.id) continue;
+    let query = createAdminClient().from(ref.table).select("id").eq("id", ref.id).eq("company_id", companyId);
+    for (const [column, value] of Object.entries(ref.extra ?? {})) query = query.eq(column, value);
+    const { data, error } = await query.maybeSingle();
+    if (error) throw translatePostgresError(error);
+    if (!data) throw validationError(`${ref.label} informado não existe nesta empresa.`);
   }
 }
 
@@ -156,6 +180,10 @@ export async function createLead(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("leads.create");
     const body = await parseBody(request, leadSchema);
+    await assertReferencesInCompany(companyId, [
+      { table: "users", id: body.responsibleUserId, label: "Responsável" },
+      { table: "lead_origins", id: body.originId, label: "Origem" },
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("leads")
@@ -187,6 +215,10 @@ export async function updateLead(request: NextRequest, context: RouteContext) {
     const { id } = await context.params;
     const body = await parseBody(request, updateLeadSchema);
     await assertEditableStatus("leads", id, companyId);
+    await assertReferencesInCompany(companyId, [
+      { table: "users", id: body.responsibleUserId, label: "Responsável" },
+      { table: "lead_origins", id: body.originId, label: "Origem" },
+    ]);
     const { data, error } = await createAdminClient()
       .from("leads")
       .update({
@@ -204,10 +236,16 @@ export async function updateLead(request: NextRequest, context: RouteContext) {
       })
       .eq("id", id)
       .eq("company_id", companyId)
+      // condição no próprio UPDATE: uma conversão entre a checagem acima e a
+      // gravação não é sobrescrita (o lead convertido fica como está).
+      .neq("status", "CONVERTED")
       .select("*")
       .maybeSingle();
     if (error) throw translatePostgresError(error);
-    if (!data) throw notFoundError("Lead");
+    if (!data) {
+      await assertEditableStatus("leads", id, companyId);
+      throw notFoundError("Lead");
+    }
     return NextResponse.json({ success: true, data });
   } catch (error) {
     return jsonError(error);
@@ -216,8 +254,9 @@ export async function updateLead(request: NextRequest, context: RouteContext) {
 
 export async function convertLeadToCustomer(_request: NextRequest, context: RouteContext) {
   try {
-    await requireAccess("leads.convert");
+    const { companyId } = await requireAccess("leads.convert");
     const { id } = await context.params;
+    await assertInCompany("leads", id, companyId);
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("fn_convert_lead_to_customer", { p_lead_id: id });
     if (error) throw rpcError(error);
@@ -229,9 +268,14 @@ export async function convertLeadToCustomer(_request: NextRequest, context: Rout
 
 export async function convertLeadToOpportunity(request: NextRequest, context: RouteContext) {
   try {
-    await requireAccess("leads.convert");
+    const { companyId } = await requireAccess("leads.convert");
     const { id } = await context.params;
     const body = await parseBody(request, convertLeadToOpportunitySchema);
+    await assertInCompany("leads", id, companyId);
+    await assertReferencesInCompany(companyId, [
+      { table: "pipelines", id: body.pipelineId, label: "Pipeline" },
+      { table: "pipeline_stages", id: body.stageId, label: "Estágio", extra: { pipeline_id: body.pipelineId } },
+    ]);
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("fn_convert_lead_to_opportunity", {
       p_lead_id: id,
@@ -374,6 +418,14 @@ export async function createOpportunity(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("opportunities.create");
     const body = await parseBody(request, opportunitySchema);
+    await assertReferencesInCompany(companyId, [
+      { table: "customers", id: body.customerId, label: "Cliente" },
+      { table: "leads", id: body.leadId, label: "Lead" },
+      { table: "pipelines", id: body.pipelineId, label: "Pipeline" },
+      { table: "pipeline_stages", id: body.stageId, label: "Estágio", extra: { pipeline_id: body.pipelineId } },
+      { table: "users", id: body.ownerUserId, label: "Responsável" },
+      { table: "lead_origins", id: body.originId, label: "Origem" },
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("opportunities")
@@ -407,6 +459,10 @@ export async function updateOpportunity(request: NextRequest, context: RouteCont
     const { id } = await context.params;
     const body = await parseBody(request, updateOpportunitySchema);
     await assertEditableStatus("opportunities", id, companyId);
+    await assertReferencesInCompany(companyId, [
+      { table: "customers", id: body.customerId, label: "Cliente" },
+      { table: "users", id: body.ownerUserId, label: "Responsável" },
+    ]);
     const { data, error } = await createAdminClient()
       .from("opportunities")
       .update({
@@ -420,10 +476,16 @@ export async function updateOpportunity(request: NextRequest, context: RouteCont
       })
       .eq("id", id)
       .eq("company_id", companyId)
+      // condição no próprio UPDATE: um fechamento entre a checagem e a
+      // gravação não é desfeito por esta edição.
+      .eq("status", "OPEN")
       .select("*")
       .maybeSingle();
     if (error) throw translatePostgresError(error);
-    if (!data) throw notFoundError("Oportunidade");
+    if (!data) {
+      await assertEditableStatus("opportunities", id, companyId);
+      throw notFoundError("Oportunidade");
+    }
     return NextResponse.json({ success: true, data });
   } catch (error) {
     return jsonError(error);
@@ -432,8 +494,9 @@ export async function updateOpportunity(request: NextRequest, context: RouteCont
 
 export async function moveOpportunityStage(request: NextRequest, context: RouteContext) {
   try {
-    await requireAccess("opportunities.move_stage");
+    const { companyId } = await requireAccess("opportunities.move_stage");
     const { id } = await context.params;
+    await assertInCompany("opportunities", id, companyId);
     const body = await parseBody(request, moveOpportunityStageSchema);
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("fn_move_opportunity_stage", { p_opportunity_id: id, p_stage_id: body.stageId });
@@ -446,8 +509,9 @@ export async function moveOpportunityStage(request: NextRequest, context: RouteC
 
 export async function closeOpportunity(request: NextRequest, context: RouteContext) {
   try {
-    await requireAccess("opportunities.close");
+    const { companyId } = await requireAccess("opportunities.close");
     const { id } = await context.params;
+    await assertInCompany("opportunities", id, companyId);
     const body = await parseBody(request, closeOpportunitySchema);
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("fn_close_opportunity", { p_opportunity_id: id, p_outcome: body.outcome, p_lost_reason: body.lostReason ?? null });
@@ -460,8 +524,9 @@ export async function closeOpportunity(request: NextRequest, context: RouteConte
 
 export async function convertOpportunityToQuote(request: NextRequest, context: RouteContext) {
   try {
-    await requireAccess("opportunities.convert");
+    const { companyId } = await requireAccess("opportunities.convert");
     const { id } = await context.params;
+    await assertInCompany("opportunities", id, companyId);
     const body = await parseBody(request, convertOpportunityToQuoteSchema);
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("fn_convert_opportunity_to_sales_quote", {
@@ -479,8 +544,9 @@ export async function convertOpportunityToQuote(request: NextRequest, context: R
 
 export async function convertOpportunityToOrder(request: NextRequest, context: RouteContext) {
   try {
-    await requireAccess("opportunities.convert");
+    const { companyId } = await requireAccess("opportunities.convert");
     const { id } = await context.params;
+    await assertInCompany("opportunities", id, companyId);
     const body = await parseBody(request, convertOpportunityToOrderSchema);
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("fn_convert_opportunity_to_sales_order", {
@@ -518,6 +584,7 @@ export async function createActivity(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("activities.create");
     const body = await parseBody(request, activitySchema);
+    await assertReferencesInCompany(companyId, [{ table: "users", id: body.ownerUserId, label: "Responsável" }]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("activities")
@@ -546,6 +613,7 @@ export async function updateActivity(request: NextRequest, context: RouteContext
     const { companyId } = await requireAccess("activities.update");
     const { id } = await context.params;
     const body = await parseBody(request, updateActivitySchema);
+    await assertReferencesInCompany(companyId, [{ table: "users", id: body.ownerUserId, label: "Responsável" }]);
     const { data, error } = await createAdminClient()
       .from("activities")
       .update({

@@ -48,7 +48,8 @@
 --
 -- 5. Papéis-modelo (só ajustes pontuais, aplicados sobre a definição
 --    existente):
---    - Vendedor: + units.read (a tela de produtos lê unidades), como a 0076;
+--    - Vendedor: + units.read (a tela de produtos lê unidades), como a 0076, e
+--      unit_conversions.read (mesma regra da família catálogo);
 --    - Somente leitura: se a 0076 estiver aplicada, o modelo dela concede toda
 --      consulta "view", INCLUSIVE o CRM. Dar CRM à Somente leitura é decisão
 --      de produto pendente; o modelo volta a excluir os módulos do CRM (regra
@@ -218,21 +219,25 @@ begin
   if position('''units.read''' in v_new) = 0 then
     v_new := replace(v_new, '''brands.read'', ''price_lists.read''', '''brands.read'', ''units.read'', ''price_lists.read''');
   end if;
+  -- Mesma regra da família catálogo (categories.read -> unit_conversions.read).
+  if position('''unit_conversions.read''' in v_new) = 0 then
+    v_new := replace(v_new, '''units.read'', ''price_lists.read''', '''units.read'', ''unit_conversions.read'', ''price_lists.read''');
+  end if;
   if position(v_leitura in v_new) > 0 and position('0091: sem CRM' in v_new) = 0 then
     v_new := replace(v_new, v_leitura, v_leitura || E'\n      -- 0091: sem CRM (decisão de produto pendente)\n      and p.module not in (''leads'', ''opportunities'', ''activities'', ''pipelines'', ''lead_origins'', ''crm_reports'')');
   end if;
   if v_new <> v_def then
     execute v_new;
   end if;
-  if position('''units.read''' in pg_get_functiondef('public.fn_role_template_permission_codes(text)'::regprocedure)) = 0 then
-    raise exception '0091: modelo do Vendedor sem units.read (definição inesperada de fn_role_template_permission_codes).';
+  if position('''unit_conversions.read''' in pg_get_functiondef('public.fn_role_template_permission_codes(text)'::regprocedure)) = 0 then
+    raise exception '0091: modelo do Vendedor sem units.read/unit_conversions.read (definição inesperada de fn_role_template_permission_codes).';
   end if;
 end;
 $$;
 
--- Vendedor existente: units.read, que o modelo passou a incluir.
+-- Vendedor existente: units.read e unit_conversions.read, que o modelo passou a incluir.
 insert into public.role_permissions (role_id, permission_id)
 select r.id, p.id
-from public.roles r join public.permissions p on p.code = 'units.read'
+from public.roles r join public.permissions p on p.code in ('units.read', 'unit_conversions.read')
 where r.is_system and r.code = 'vendedor'
 on conflict (role_id, permission_id) do nothing;

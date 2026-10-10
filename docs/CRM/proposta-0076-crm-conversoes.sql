@@ -1,3 +1,5 @@
+-- >>> SUBSTITUÍDA pela migration supabase/migrations/0089_crm_conversoes_de_lead.sql
+-- >>> (fase de correções, 10/10/2026). Mantida como histórico; NÃO aplicar.
 -- =====================================================================
 -- PROPOSTA (NÃO APLICADA) — correções do funil do CRM
 -- =====================================================================

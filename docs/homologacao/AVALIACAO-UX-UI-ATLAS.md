@@ -1,4 +1,6 @@
-# Avaliação de UX/UI — ATLAS.ERP (10/10/2026)
+# Avaliação de UX/UI — ATLAS.ERP (10/10/2026, atualizada na fase de correções)
+
+> **Atualização:** U-02, U-03 e U-04 avançaram na fase de correções (mesma branch), e U-01 ganhou análise de causa-raiz. O estado novo está no §4; o texto original de cada item fica abaixo como histórico. Relatório: [`RELATORIO-CORRECOES-CRM-E-PAINEIS.md`](RELATORIO-CORRECOES-CRM-E-PAINEIS.md).
 
 Branch `claude/atlas-neon-ux-crm`. Avaliação de uso real, feita no app
 **compilado** (`next build` + `next start`) em modo destino (`AUTH_PROVIDER=neon`,
@@ -65,7 +67,7 @@ decisão) · **Aberto**.
 - *Pendência:* causa-raiz. Decidir entre criar as permissões no catálogo (e
   concedê-las aos papéis de sistema) ou fazer a API usar `products.read` para
   esses auxiliares. É regra de RBAC: **não alterado**.
-- *Estado:* **Corrigido e verificado** (sintoma) · causa-raiz **Aberta**.
+- *Estado:* **Corrigido e verificado** (sintoma) · causa-raiz **Aberta** — análise das opções A/B/C no relatório de correções §6 (fase de correções).
 
 **U-02 — Painéis Fiscal, Estoque e Produção sempre em erro**
 - *Telas:* Painéis → Fiscal / Estoque / Produção; resumos de `/app/fiscal` e
@@ -81,7 +83,7 @@ decisão) · **Aberto**.
   lógica). [`proposta-relatorios-ambiguidade.sql`](proposta-relatorios-ambiguidade.sql).
 - *Validação:* cópia descartável do banco — as três falham antes e respondem
   depois.
-- *Estado:* **Proposta pronta** (migration a aplicar no Supabase e no Neon).
+- *Estado:* **Proposta pronta** (migration a aplicar no Supabase e no Neon). → Fase de correções: **migration 0090** (referências qualificadas), valores conferidos; ver §4.
 
 ### Alta
 
@@ -95,7 +97,7 @@ decisão) · **Aberto**.
 - *Melhoria:* formulários de lead/oportunidade/atividade e ações de conversão,
   reutilizando o padrão de `CadastroPage`/`EntityDrawer`. É desenvolvimento de
   funcionalidade, não ajuste de baixo risco — **não feito**.
-- *Estado:* **Aberto** (detalhes em [`../CRM/FLUXO-DE-DADOS-CRM.md`](../CRM/FLUXO-DE-DADOS-CRM.md)).
+- *Estado:* **Aberto** (detalhes em [`../CRM/FLUXO-DE-DADOS-CRM.md`](../CRM/FLUXO-DE-DADOS-CRM.md)). → Fase de correções: **implementado** (exceto orçamento/pedido); ver §4.
 
 **U-04 — Converter lead dá erro genérico**
 - *Fluxo:* lead → cliente (documento ainda sem cliente) e lead → oportunidade
@@ -107,7 +109,7 @@ decisão) · **Aberto**.
   ajuda.
 - *Melhoria:* [`../CRM/proposta-0076-crm-conversoes.sql`](../CRM/proposta-0076-crm-conversoes.sql).
 - *Validação:* `tests/crm-funnel-db.test.ts` — 3 `todo` passam com a proposta.
-- *Estado:* **Proposta pronta**.
+- *Estado:* **Proposta pronta**. → Fase de correções: **migration 0089** + API com mensagens claras; ver §4.
 
 **U-05 — Convites e recuperação de senha não chegam (produção)**
 - *Fluxo:* convite de usuário, "Esqueci minha senha".
@@ -192,3 +194,20 @@ Arquivos alterados: `src/components/cadastro/CadastroPage.tsx`,
 `src/components/data-table/columns.tsx`, `src/app/app/(erp)/crm/leads/page.tsx`,
 `src/app/app/(erp)/crm/atividades/page.tsx`, `src/app/app/admin/roles/page.tsx`,
 `src/lib/status.ts`. Lint e tipos limpos; 779/779 testes sem banco.
+
+## 4. Fase de correções (10/10/2026)
+
+Validado no app compilado com banco local (plano + 0089/0090) e dublê do Neon Auth. **Não aplicado na produção.**
+
+| Item | Antes | Agora | Validação | Estado |
+|---|---|---|---|---|
+| U-01 Produtos | sintoma corrigido; causa-raiz aberta | causa-raiz analisada: as rotas exigem códigos que só existem na 0005 do repositório, não na 0005 aplicada em produção; e `units` é legível entre empresas pela policy `units_select_authenticated` (`USING true`) | navegador: a lista carrega com o aviso; `tests/permissoes-produtos-db.test.ts` (2 aprovados + 2 `todo`) | **Decisão pendente** (opções A/B/C) |
+| U-02 Painéis Fiscal/Estoque/Produção | erro em toda chamada | **migration 0090**: valores conferidos com dados sintéticos; API = função do banco; telas carregam | `relatorios-paineis-db` 9/9 (sem a 0090: 3/9); `e2e-paineis` 13/13 | **Corrigido (local)** · produção: até aplicar |
+| U-03 CRM pela interface | só consulta | Leads, Oportunidades e Atividades com criar, editar, converter, mudar estágio, encerrar e registrar/concluir atividades; ações por permissão; sem envio duplicado; celular sem rolagem horizontal | `e2e-crm-ui` 32/32 | **Implementado** · orçamento/pedido pela tela: **aberto** (não há editor de itens no ATLAS) |
+| U-04 Converter lead | erro 500 genérico | conversões funcionam; erros de regra em português (409/422) | `crm-conversoes-db` 20/20 (sem a 0089: 4/20); `e2e-crm` 66/66 (antes: 47/66) | **Corrigido (local)** · produção: até aplicar |
+| U-13 Código técnico na mensagem de permissão | aberto | inalterado ("Permissão negada (leads.convert)") | — | **Aberto** |
+
+**Observações novas:**
+- **Papel Somente leitura sem CRM.** O papel de sistema não tem `leads.view` nem afins, e as telas do CRM mostram "acesso restrito". É configuração de papel (0075): decisão do dono.
+- **Faixa de homologação no celular.** A faixa "Homologação · dados fictícios" cobre parte do rodapé dos diálogos. É só de homologação e não captura cliques.
+

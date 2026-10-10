@@ -1,4 +1,6 @@
-# Fluxo de dados do CRM — ATLAS.ERP (10/10/2026)
+# Fluxo de dados do CRM — ATLAS.ERP (10/10/2026, atualizado na fase de correções)
+
+> **Atualização (fase de correções, mesma branch):** conversões de lead corrigidas no banco (migration **0089**), API alinhada ao banco e ao isolamento entre empresas, e CRM operável pela interface. Resumo no §11; detalhes e evidências em [`../homologacao/RELATORIO-CORRECOES-CRM-E-PAINEIS.md`](../homologacao/RELATORIO-CORRECOES-CRM-E-PAINEIS.md). As migrations novas **não** foram aplicadas na produção nem no Neon remoto: o que vale "em produção" continua sendo o descrito nas seções 1–10.
 
 Branch `claude/atlas-neon-ux-crm`. Levantamento feito no código (API, telas,
 migrations 0054/0055), executado de verdade no PostgreSQL com o esquema
@@ -72,14 +74,14 @@ Vermelho tracejado = **não existe**. Versão em texto:
 | Origem | Como entra | Selo |
 |---|---|---|
 | API `POST /api/leads` | sessão autenticada com `leads.create`; corpo validado por `leadSchema` | **[testada]** (HTTP 201; usuário só leitura recebe 403) |
-| Tela para criar lead | não há botão nem formulário em CRM → Leads (lista só de consulta) | **[não implementada]** |
+| Tela para criar lead | CRM → Leads → "Novo lead" (fase de correções) | **[testada]** (E2E da interface) |
 | Formulário público / landing page | nenhuma rota pública grava em `leads` | **[não implementada]** |
 | Webhook, e-mail, WhatsApp, redes sociais | nada no código | **[não implementada]** |
 | Importação de leads (CSV) | o registro de importação (`src/lib/import-export/registry.ts`) não tem a entidade `leads` | **[não implementada]** |
 | Rotina agendada (cron) / Edge Function | nenhuma | **[não implementada]** |
 | Clientes por Cadastros → Clientes | `POST /api/customers` (`createCollectionHandlers("customers")`) | **[não validada]** nesta etapa (fora do CRM; coberto pela suíte E2E geral) |
 | Clientes por importação CSV | `/api/imports`, entidade `customers`, chave natural `document` | **[não validada]** nesta etapa |
-| Clientes pela conversão de lead | `fn_convert_lead_to_customer` | **[parcial]** — só funciona quando já existe cliente com o mesmo documento (§8) |
+| Clientes pela conversão de lead | `fn_convert_lead_to_customer` | **[testada]** com a 0089 (antes: só com cliente já cadastrado, §8) |
 | Origem do lead (`lead_origins`: "Site", "Indicação"…) | cadastro `POST /api/lead-origins`; **não há origens pré-cadastradas** | **[configuração]** |
 
 Conclusão: **hoje o único jeito de um lead nascer é uma chamada à API feita por
@@ -144,7 +146,7 @@ Todas têm `company_id` e RLS por `has_permission(company_id, código)`.
 | Banco (RLS) | lead nasce `NEW`, sem cliente; ninguém grava `CONVERTED` por update direto; oportunidade nasce `OPEN` | **[testada]** |
 | Banco | estágio deve pertencer ao pipeline; oportunidade fechada não muda de estágio nem fecha de novo | **[testada]** (mover e fechar) |
 | Banco | documento do lead **não** é validado como CPF/CNPJ | **[não implementada]** |
-| Banco | sair de `CONVERTED` por update direto **é aceito** (a policy só barra *gravar* `CONVERTED`) | defeito — `todo` no teste; proposta 0076 |
+| Banco | sair de `CONVERTED` por update direto | **[testada]** recusado com a 0089 (antes: aceito) |
 
 ## 6. Deduplicação
 
@@ -153,9 +155,9 @@ Todas têm `company_id` e RLS por `has_permission(company_id, código)`.
 | Leads: **nenhuma**. O mesmo documento e o mesmo e-mail podem ser cadastrados quantas vezes se quiser | **[testada]** (o teste confirma que duplica) |
 | Clientes: `UNIQUE(company_id, document)` — o banco recusa outro cliente com o mesmo documento | **[testada]** |
 | Conversão lead → cliente: procura cliente com o **mesmo documento** e reaproveita | **[testada]** |
-| Conversão lead → cliente repetida: devolve o mesmo cliente (idempotente) | **[não validada]** |
-| Lead sem documento: cria cliente novo sempre (não compara nome, e-mail nem telefone) | **[não validada]** — e hoje falha (§8) |
-| Documento com e sem máscara (`11.222.333/0001-81` × `11222333000181`) | **[desconhecida]** — a comparação é por igualdade exata; depende de como cada origem grava |
+| Conversão lead → cliente repetida (inclusive simultânea): devolve o mesmo cliente | **[testada]** (0089, 2 conexões reais) |
+| Lead sem documento: **recusado** com mensagem — `customers.document` é obrigatório | **[testada]** (0089) |
+| Documento com e sem máscara (`11.222.333/0001-81` × `11222333000181`) | **[testada]** — a 0089 compara só os dígitos (antes: igualdade exata, duplicava) |
 
 ## 7. Relacionamentos e estados
 
@@ -195,12 +197,12 @@ Não como sequência única. O que existe:
 | Item | Situação | Selo |
 |---|---|---|
 | CRM → Vendas (orçamento e pedido) | funciona pela API; exige oportunidade **com cliente**; pedido nasce rascunho | **[testada]** |
-| Lead → cliente **novo** | falha: a função grava em `customers.legal_name`, coluna que não existe (o nome é `customers.name`). HTTP 500 genérico | defeito no banco (também em produção) — proposta 0076 |
-| Lead → oportunidade | falha: auditoria com ação `INSERT`, fora da lista permitida (`CREATE`). HTTP 500 | defeito no banco (também em produção) — proposta 0076 |
+| Lead → cliente **novo** | falhava: `customers.legal_name` (o nome é `customers.name`). HTTP 500 genérico | **corrigido na 0089** (local); **produção: defeito até aplicar** |
+| Lead → oportunidade | falhava: auditoria com ação `INSERT` (o permitido é `CREATE`). HTTP 500 | **corrigido na 0089** (local); **produção: defeito até aplicar** |
 | Lead convertido em cliente **depois** da oportunidade | a oportunidade não recebe o cliente automaticamente; é preciso PATCH com `customerId` | **[não validada]** |
-| Representante de vendas do cliente criado pelo lead | a função usa `responsible_user_id` (usuário do sistema) como representante; a proposta 0076 deixa vazio até decisão | decisão pendente |
+| Representante de vendas do cliente criado pelo lead | gravar o usuário na FK de representante violava a FK; a 0089 deixa vazio (o responsável vai para a oportunidade como dono) | decisão pendente |
 | Relatórios do CRM (8 APIs) | existem, nenhuma tela os usa | **[parcial]** |
-| Atividades | API completa; a tela só lista | **[parcial]** |
+| Atividades | API completa; tela com registrar, editar, concluir e cancelar | **[testada]** (E2E da interface) |
 | Notificações, e-mail ao responsável, lembretes | não há | **[não implementada]** |
 | Atribuição automática de responsável / distribuição | não há; `responsible_user_id` é opcional | **[não implementada]** |
 | Integrações externas (site, RD Station, WhatsApp, e-mail) | não há | **[não implementada]** |
@@ -266,3 +268,20 @@ oportunidade diretamente por `POST /api/opportunities` informando o cliente.
 7. **Ligar a oportunidade ao cliente** quando o lead dela for convertido depois.
 8. **Painel do CRM** usando os 8 relatórios já prontos.
 9. Decidir **quem vira representante de vendas** do cliente criado por lead.
+
+## 11. Fase de correções (10/10/2026) — o que mudou
+
+| Antes | Agora (local: banco do plano + 0089/0090, app compilado) |
+|---|---|
+| Lead → cliente novo falhava (`legal_name`) | funciona; reaproveita cliente com o mesmo CPF/CNPJ (só dígitos); lead sem documento é recusado com mensagem |
+| Lead → oportunidade falhava (auditoria `INSERT`) | funciona; auditoria `CREATE`; 2ª conversão com oportunidade aberta é recusada (sem duplicar, inclusive em corrida) |
+| Responsável do lead gravado como representante (FK violada) | representante vazio; decisão pendente |
+| Lead convertido editável por update direto | congelado (RLS e API) |
+| API: erros de regra viravam 500; IDs de outra empresa eram aceitos no corpo; 403 revelava existência | 403/404/409/422 com mensagem em português; referências conferidas na empresa da sessão; outra empresa → 404 |
+| CRM só de consulta na interface | Leads (novo, editar, converter em cliente/oportunidade), Oportunidades (nova, editar, mudar estágio, ganha/perdida), Atividades (nova, editar, concluir, cancelar) |
+| Orçamento/pedido da oportunidade | **só pela API** (corrigida e testada); sem botão porque o ATLAS não tem editor de itens em nenhuma tela |
+
+Exemplo 2 do §9 agora: "Maria — Mercado Lua" com CNPJ → **Converter em cliente** cria o cliente; **Converter em oportunidade** cria a oportunidade já com o cliente. Sem CNPJ: a tela diz "O lead LEAD-… não tem CPF/CNPJ. Informe o documento no lead antes de convertê-lo em cliente."
+
+Configuração ainda necessária antes do primeiro uso real: pipeline com estágios e origens (só por API, ainda sem tela) e a revisão dos papéis — o papel de sistema **Somente leitura** não tem nenhuma permissão do CRM.
+

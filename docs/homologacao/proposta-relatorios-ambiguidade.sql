@@ -1,3 +1,5 @@
+-- >>> SUBSTITUÍDA pela migration supabase/migrations/0090_relatorios_sem_ambiguidade.sql
+-- >>> (fase de correções, 10/10/2026: referências qualificadas em vez da diretiva). Histórico; NÃO aplicar.
 -- =====================================================================
 -- PROPOSTA (NÃO APLICADA) — painéis Fiscal, Estoque e Produção
 -- =====================================================================

@@ -187,7 +187,15 @@ export async function runModuleE2E({ APP, api, sql, check, a1, a2, b1, companyA,
     const s2 = await post(a1, "/api/pipeline-stages", { pipelineId: pipeId, code: "S2", name: "Proposta", sequence: 2, probabilityDefault: 50 });
     c("pipeline + 2 estágios: criar", pipe.status === 201 && s1.status === 201 && s2.status === 201, `${j(pipe)} ${j(s1)} ${j(s2)}`);
     const conv = await post(a1, `/api/leads/${leadId}/convert-to-opportunity`, { pipelineId: pipeId, stageId: idOf(s1), estimatedValue: 5000 });
-    c("linha de base (bug de produção): lead → oportunidade falha como no Supabase (audit 'INSERT' fora do CHECK); erro genérico e nada gravado", dbError(conv) && sql(`select count(*) from opportunities where lead_id='${leadId}'`) === "0" && sql(`select status from leads where id='${leadId}'`) === "CONTACTED", j(conv));
+    // Sem a 0089 (esquema igual ao da produção) a conversão falha pela auditoria
+    // 'INSERT'; com a 0089 ela funciona. O E2E confere o comportamento do
+    // esquema que está rodando, em vez de fixar um dos dois.
+    const has0089 = sql("select count(*) from pg_proc where proname='fn_convert_lead_to_opportunity' and prosrc like '%já tem a oportunidade%'") === "1";
+    if (has0089) {
+      c("lead → oportunidade (com a 0089): 201, oportunidade aberta e auditoria CREATE", conv.status === 201 && sql(`select count(*) from opportunities where lead_id='${leadId}' and status='OPEN'`) === "1" && sql(`select count(*) from audit_logs where entity='opportunities' and action='CREATE' and entity_id='${idOf(conv)}'`) === "1", j(conv));
+    } else {
+      c("linha de base (bug de produção): lead → oportunidade falha como no Supabase (audit 'INSERT' fora do CHECK); erro genérico e nada gravado", dbError(conv) && sql(`select count(*) from opportunities where lead_id='${leadId}'`) === "0" && sql(`select status from leads where id='${leadId}'`) === "CONTACTED", j(conv));
+    }
     const opp = await post(a1, "/api/opportunities", { title: "Oportunidade POC", leadId, pipelineId: pipeId, stageId: idOf(s1), estimatedValue: 5000, probability: 10 });
     const oppId = idOf(opp) ?? sql(`select id from opportunities where company_id='${companyA}' and lead_id='${leadId}'`);
     c("oportunidade: criar pelo cadastro direto", opp.status === 201 && inA("opportunities", oppId), j(opp));

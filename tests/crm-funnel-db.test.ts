@@ -6,8 +6,9 @@
 //
 // Cobre o caminho que a API percorre: o corpo validado pelos schemas Zod do
 // CRM, convertido por toRpcSalesItems, chega às funções de conversão (0055).
-// Os defeitos ainda abertos no banco ficam como `todo` (não quebram a suíte e
-// aparecem no relatório): docs/CRM/FLUXO-DE-DADOS-CRM.md §8.
+// Os três defeitos que eram `todo` (conversões de lead e lead convertido
+// editável) foram corrigidos pela migration 0089: o banco de teste precisa
+// tê-la (docs/homologacao/RELATORIO-CORRECOES-CRM-E-PAINEIS.md).
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -162,20 +163,20 @@ describe("funil do CRM (PostgreSQL real)", { skip: !url && "POC_DATABASE_OWNER_U
     assert.equal(r.status, "WON");
   });
 
-  // ---------------------------------------------------- defeitos abertos (banco)
-  test("lead → cliente NOVO (documento sem cliente)", { todo: "fn_convert_lead_to_customer grava em customers.legal_name, coluna que não existe (o nome é customers.name)" }, async () => {
+  // ----------------------------- defeitos corrigidos pela 0089 (antes: `todo`)
+  test("lead → cliente NOVO (documento sem cliente)", async () => {
     const lead = await newLead({ name: "Lead sem cliente", document: "55666777000188" });
     const r = await isolated(() => one("select public.fn_convert_lead_to_customer($1)", [lead]));
     assert.ok(r.ok, r.ok ? "" : r.error);
   });
 
-  test("lead → oportunidade", { todo: "fn_convert_lead_to_opportunity grava audit_logs.action = 'INSERT', valor fora de audit_logs_action_check (o correto é 'CREATE')" }, async () => {
+  test("lead → oportunidade", async () => {
     const lead = await newLead({ name: "Lead para oportunidade" });
     const r = await isolated(() => one("select public.fn_convert_lead_to_opportunity($1, $2, $3, 'Oportunidade', 100)", [lead, pipeline, stage1]));
     assert.ok(r.ok, r.ok ? "" : r.error);
   });
 
-  test("lead convertido não volta a NEW por edição direta", { todo: "a policy leads_update só impede GRAVAR 'CONVERTED'; não impede sair de 'CONVERTED'" }, async () => {
+  test("lead convertido não volta a NEW por edição direta", async () => {
     const doc = (await one<{ document: string }>("select document from public.customers where id = $1", [customer])).document;
     const lead = await newLead({ name: "Lead convertido", document: doc });
     await one("select public.fn_convert_lead_to_customer($1)", [lead]);

@@ -1,0 +1,199 @@
+{
+  "at": "2026-10-10T15:45:11.187Z",
+  "pass": 32,
+  "fail": 0,
+  "results": [
+    {
+      "area": "leads (tela)",
+      "name": "validação: sem nome mostra 'Informe o nome do lead.' e não envia",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "criar lead: confirmação na tela",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "duplo clique em 'Criar lead' grava UM lead",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "lista atualizada sem recarregar a página",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "Vendedor não tem users.read: campo Responsável não aparece e nenhuma lista dá 403",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "editar lead (situação Contatado)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "converter em cliente: confirmação com o código do cliente",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "banco: lead CONVERTED com cliente",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "lead convertido: sem 'Editar' e sem 'Converter em cliente'",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "detalhe do lead convertido mostra o nome do cliente gerado (lista recarregada)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "converter em oportunidade: confirmação",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "banco: oportunidade aberta, com o cliente do lead e valor 4800",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "segunda conversão em oportunidade: erro claro na tela, nada criado",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "atividades (tela)",
+      "name": "registrar atividade a partir do lead",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "atividades (tela)",
+      "name": "atividade aparece no detalhe do lead",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads (tela)",
+      "name": "lead sem CPF/CNPJ: a tela mostra a mensagem do servidor (não erro genérico)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades (tela)",
+      "name": "Vendedor não vê 'Ganha'/'Perdida' (sem opportunities.close)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades (tela)",
+      "name": "mudar estágio para Proposta + histórico",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades (tela)",
+      "name": "validação: probabilidade 150 recusada na tela",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades (tela)",
+      "name": "editar oportunidade aberta",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "telas",
+      "name": "Vendedor: nenhuma chamada da tela com erro 403/500",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades (tela)",
+      "name": "Admin marca como ganha",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades (tela)",
+      "name": "oportunidade ganha: sem Editar/Mudar estágio/Ganha/Perdida",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "atividades (tela)",
+      "name": "nova atividade pela tela de Atividades",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "atividades (tela)",
+      "name": "marcar atividade como realizada",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "telas",
+      "name": "Admin: nenhuma chamada da tela com erro 403/500",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "permissões (tela)",
+      "name": "Somente leitura em /app/crm/leads: acesso restrito e sem 'Novo lead'",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "permissões (tela)",
+      "name": "Somente leitura em /app/crm/oportunidades: acesso restrito e sem 'Nova oportunidade'",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "permissões (tela)",
+      "name": "Somente leitura em /app/crm/atividades: acesso restrito e sem 'Nova atividade'",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "telas",
+      "name": "Somente leitura: nenhuma chamada da tela com erro 500",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "responsivo",
+      "name": "Leads no celular (390 px): sem rolagem horizontal",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "responsivo",
+      "name": "diálogo 'Novo lead' cabe na largura do celular",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

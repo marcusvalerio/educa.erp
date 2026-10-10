@@ -107,7 +107,8 @@ async function firstAccess(page, email, password, before = 0) {
 async function acceptInvite(page) {
   await page.getByRole("heading", { name: "Aceitar convite" }).waitFor({ timeout: 20000 });
   await page.getByRole("button", { name: "Aceitar e continuar" }).click();
-  await page.waitForURL(/\/admin(\/|$|\?)|\/$|localhost:3200\/(\?|$)/, { timeout: 20000 });
+  // Desde 28/09 o ERP autenticado fica em /app (antes: / e /admin).
+  await page.waitForURL(/\/app(\/|$|\?)|\/admin(\/|$|\?)|\/$|localhost:3200\/(\?|$)/, { timeout: 20000 });
 }
 const sessionCookie = async (ctx) => (await ctx.cookies(APP)).find((c) => c.name === "educa_session");
 async function neonAdmin() {

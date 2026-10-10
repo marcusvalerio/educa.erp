@@ -1,0 +1,28 @@
+outra linha: 0076_empresa_nova_estoque_e_papeis.sql
+outra linha: 0077_relatorios_e_autor_da_auditoria.sql
+outra linha: 0078_nfe_pre_requisitos.sql
+outra linha: 0079_nome_da_empresa_na_central.sql
+outra linha: 0080_itens_sem_numero_de_serie.sql
+outra linha: 0081_integridade_pedido_recebivel_logistica.sql
+outra linha: 0082_fiscal_simulado.sql
+outra linha: 0083_fiscal_numeracao_e_autorizacao.sql
+outra linha: 0084_entrega_sem_duplicidade.sql
+outra linha: 0085_unidade_do_item_herda_do_produto.sql
+outra linha: 0086_auditoria_criacao_documentos.sql
+outra linha: 0087_nfe_do_pedido_idempotente.sql
+outra linha: 0088_eventos_fiscais_em_ordem.sql
+esta branch: supabase/migrations/0089_crm_conversoes_de_lead.sql
+esta branch: supabase/migrations/0090_relatorios_sem_ambiguidade.sql
+esta branch: supabase/migrations/0091_isolamento_catalogo_e_views.sql
+== vi_branch (vazio → só esta linha)
+OK 96/96
+== vi_int (vazio → sequência integrada)
+OK 109/109
+== idempotência: reaplica as migrations desta branch em vi_int
+ok
+== vi_incr (crm_base → 0076+)
+vi_int × vi_incr: esquema 0 linha(s) diferentes; permissões 0
+== vi_upd (educa_poc → 0089+)
+vi_int × vi_upd: esquema 0 linha(s) diferentes; permissões 0
+vi_branch: policy units_select_authenticated=0 FKs por empresa validadas=18/18 views security_invoker=4/4
+vi_int: policy units_select_authenticated=0 FKs por empresa validadas=18/18 views security_invoker=4/4

@@ -1,0 +1,85 @@
+{
+  "at": "2026-10-10T23:38:38.241Z",
+  "pass": 13,
+  "fail": 0,
+  "results": [
+    {
+      "area": "painéis",
+      "name": "fiscal: API 200 com os mesmos 8 números da função do banco",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "painéis",
+      "name": "tela fiscal: carrega sem \"Não foi possível carregar\"",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "painéis",
+      "name": "inventory: API 200 com os mesmos 8 números da função do banco",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "painéis",
+      "name": "tela estoque: carrega sem \"Não foi possível carregar\"",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "painéis",
+      "name": "production: API 200 com os mesmos 8 números da função do banco",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "painéis",
+      "name": "tela producao: carrega sem \"Não foi possível carregar\"",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "produtos (U-01)",
+      "name": "lista de produtos carrega (Pão francês) mesmo com listas auxiliares recusadas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "produtos (U-01)",
+      "name": "0091: listas auxiliares carregam — sem aviso de informações complementares",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "telas",
+      "name": "gamaAdmin: nenhuma chamada com erro 500",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "painéis",
+      "name": "fiscal: Vendedor sem permissão → 403 (não 500)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "painéis",
+      "name": "inventory: Vendedor sem permissão → 403 (não 500)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "painéis",
+      "name": "production: Vendedor sem permissão → 403 (não 500)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "telas",
+      "name": "gamaVendedor: nenhuma chamada com erro 500",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

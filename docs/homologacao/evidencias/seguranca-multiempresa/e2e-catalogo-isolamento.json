@@ -1,0 +1,229 @@
+{
+  "at": "2026-10-10T23:38:47.685Z",
+  "pass": 37,
+  "fail": 0,
+  "results": [
+    {
+      "area": "leitura",
+      "name": "Gama Administrador: GET /api/units → 200 só com unidades da Gama (10)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leitura",
+      "name": "Gama Vendedor: GET /api/units → 200 só com unidades da Gama (10)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leitura",
+      "name": "Gama Somente leitura: GET /api/units → 200 só com unidades da Gama (10)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leitura",
+      "name": "Delta Administrador: GET /api/units → só unidades da Delta",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leitura",
+      "name": "Gama Administrador: GET /api/product-categories → 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leitura",
+      "name": "Gama Administrador: GET /api/product-brands → 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leitura",
+      "name": "Gama Administrador: GET /api/unit-conversions → 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leitura",
+      "name": "Gama Administrador: GET /api/products → 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leitura",
+      "name": "Gama Somente leitura: GET /api/product-categories → 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leitura",
+      "name": "Gama Somente leitura: GET /api/product-brands → 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leitura",
+      "name": "Gama Somente leitura: GET /api/unit-conversions → 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leitura",
+      "name": "Gama Somente leitura: GET /api/products → 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "tenant",
+      "name": "companyId da Delta na URL é ignorado (continua só Gama)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "tenant",
+      "name": "company_id da Delta no corpo do POST é ignorado: unidade criada na Gama",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "id direto",
+      "name": "GET /api/units/<unidade da Delta> → 404 sem dados",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "id direto",
+      "name": "PATCH /api/units/<unidade da Delta> → 404 sem dados",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "id direto",
+      "name": "DELETE /api/units/<unidade da Delta> → 404 sem dados",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "id direto",
+      "name": "unidade da Delta intacta",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "referência",
+      "name": "conversão Gama → unidade da Delta: 422 genérico, nada gravado",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "referência",
+      "name": "conversão entre unidades da própria Gama: 201",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "referência",
+      "name": "produto da Gama com unidade da Delta: 422, nada gravado",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "produtos",
+      "name": "criar produto com unidade da própria empresa: 201",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "produtos",
+      "name": "editar produto: 200",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "produtos",
+      "name": "edição parcial (só a descrição) mantém a unidade do produto",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "referência",
+      "name": "editar produto trocando para unidade da Delta: 422 e unidade mantida",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "escrita",
+      "name": "Gama Somente leitura: POST /api/units → 403",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "escrita",
+      "name": "Gama Somente leitura: PATCH /api/units → 403",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "escrita",
+      "name": "Gama Somente leitura: DELETE /api/units → 403",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "escrita",
+      "name": "Gama Somente leitura: POST /api/product-categories → 403",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "escrita",
+      "name": "Gama Vendedor: POST /api/units → 403",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "escrita",
+      "name": "Gama Vendedor: PATCH /api/units → 403",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "escrita",
+      "name": "Gama Vendedor: DELETE /api/units → 403",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "escrita",
+      "name": "Gama Vendedor: POST /api/product-categories → 403",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "exportação",
+      "name": "Vendedor com import_export.export e sem users.read: exportar usuários → 403",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "exportação",
+      "name": "Vendedor exporta clientes (tem customers.read) → 200 só da Gama",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "tela",
+      "name": "Produtos (Administrador): lista carrega sem aviso de informações não carregadas e sem chamadas recusadas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "tela",
+      "name": "Produtos (Somente leitura): lista carrega sem aviso de informações não carregadas e sem chamadas recusadas",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

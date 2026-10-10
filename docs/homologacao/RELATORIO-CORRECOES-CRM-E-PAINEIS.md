@@ -203,6 +203,12 @@ Novos nesta fase: 48 (20 + 9 + 7 + 8 + 4), mais 3 `todo` que viraram testes. Os 
 
 ## 6. Permissões da tela de Produtos — análise (NÃO alterado)
 
+> **Atualização (missão de segurança multiempresa, 10/10/2026):** resolvido pela
+> migration `0091` e pelo novo mapa `src/lib/api/entity-permissions.ts` (modelo
+> da opção C, auditado). Ver `RELATORIO-PERMISSOES-PRODUTOS.md` e
+> `RELATORIO-SEGURANCA-MULTIEMPRESA.md`. O texto abaixo registra o estado
+> anterior.
+
 **O que existe hoje:**
 
 | Camada | Exige / tem |

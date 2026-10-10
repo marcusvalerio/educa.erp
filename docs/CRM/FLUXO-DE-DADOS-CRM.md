@@ -285,3 +285,19 @@ Exemplo 2 do §9 agora: "Maria — Mercado Lua" com CNPJ → **Converter em clie
 
 Configuração ainda necessária antes do primeiro uso real: pipeline com estágios e origens (só por API, ainda sem tela) e a revisão dos papéis — o papel de sistema **Somente leitura** não tem nenhuma permissão do CRM.
 
+## 12. Somente leitura e o CRM (missão de segurança multiempresa, 10/10/2026)
+
+- **Regra vigente, preservada:** o papel de sistema **Somente leitura** não tem
+  permissões do CRM. Em produção, o seed da 0075 dá a ele só as ações `read`,
+  e os códigos do CRM usam `view`.
+- **Mudança da migration 0076** (outra linha de trabalho): o modelo novo da
+  Somente leitura de empresas novas concede todo `read/view`, **inclusive**
+  `leads.view`, `opportunities.view`, `activities.view`, `pipelines.view`,
+  `lead_origins.view` e `crm_reports.view`.
+- **Ajuste da 0091:** quando a 0076 está aplicada, a 0091 tira esses módulos do
+  modelo, mantendo a regra vigente até a decisão de produto (decisão nº 6 em
+  `docs/homologacao/RELATORIO-HOMOLOGACAO-SEGURANCA-MULTIEMPRESA.md`). Se a
+  decisão for dar leitura do CRM à Somente leitura, basta uma migration que
+  remova a linha marcada "0091: sem CRM" do modelo e conceda os 6 códigos aos
+  papéis existentes.
+

@@ -1,0 +1,403 @@
+{
+  "at": "2026-10-10T23:37:53.503Z",
+  "pass": 66,
+  "fail": 0,
+  "results": [
+    {
+      "area": "leads",
+      "name": "Vendedor cria lead (201, status NEW)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "editar lead aberto (200)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "converter em cliente NOVO (200, cliente com nome da empresa)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "converter de novo devolve o MESMO cliente (sem duplicar)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "representante do cliente fica vazio (responsável é usuário, não representante)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "editar lead CONVERTIDO → 409 com mensagem",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "reabrir lead convertido (status NEW) → 409",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "gravar CONVERTED por edição → 422 (só a conversão converte)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "lead continua CONVERTED no banco depois das tentativas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "auditoria: cliente CREATE e lead UPDATE",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "lead SEM documento → 422 com mensagem clara (antes: 500)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "documento sem máscara reaproveita o cliente cadastrado com máscara",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "converter em oportunidade (201, OPEN)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "converter de novo em oportunidade → 409 (já tem oportunidade aberta)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "converter usando pipeline de OUTRA empresa → recusado (4xx)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "Somente leitura não cria lead (403)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "Somente leitura não converte (403)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "leads",
+      "name": "Somente leitura não edita (403)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "Delta não lê lead da Gama (404)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "Delta não edita lead da Gama (404)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "Delta não converte lead da Gama em cliente (404, sem revelar que existe)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "Delta não converte lead da Gama em oportunidade (404)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "lista de leads da Delta não traz leads da Gama",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "lead da Gama intacto",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "lead com responsável de OUTRA empresa → 422",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "lead com origem de OUTRA empresa → 422",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "editar lead para responsável de OUTRA empresa → 422",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "concorrência",
+      "name": "2 conversões simultâneas em cliente: as duas 200 com o MESMO cliente",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "concorrência",
+      "name": "2 conversões simultâneas em oportunidade: 201 + 409, 1 oportunidade",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "Vendedor cria oportunidade (201, OPEN)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "editar oportunidade aberta (200)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "mover estágio (transição legítima, 200)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "histórico de estágios registrado (2 entradas)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "mover para estágio de OUTRA empresa → recusado (4xx)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "Vendedor não fecha negócio (403; fechar é do Gerente/Admin)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "Admin fecha como GANHA (200, probabilidade 100)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "editar título de oportunidade GANHA → 409",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "editar valor de oportunidade GANHA → 409",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "editar cliente de oportunidade GANHA → 409",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "mover estágio de oportunidade ganha → 409",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "fechar de novo → 409",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "banco: título e valor intactos depois das tentativas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "fechar como PERDIDA com motivo (200)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "oportunidades",
+      "name": "editar oportunidade PERDIDA → 409",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "oportunidade com cliente de OUTRA empresa → 422",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "oportunidade com dono de OUTRA empresa → 422",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "editar oportunidade para cliente de OUTRA empresa → 422",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "Delta não lê oportunidade da Gama (404)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "Delta não edita oportunidade da Gama (404)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "Delta não move oportunidade da Gama (404)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "orçamento a partir da oportunidade (201, origem opportunity)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "item gravado com preço, quantidade e produto (camelCase → snake_case)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "pedido a partir da oportunidade (201, rascunho, origem opportunity)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "item do pedido gravado com preço e quantidade",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "pedido a partir de orçamento em RASCUNHO → 409 com mensagem (regra do comercial)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "pedido a partir do orçamento APROVADO da oportunidade (201, mesmos itens)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "orçamento com sem itens → 422",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "orçamento com quantidade zero → 422",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "orçamento com preço negativo → 422",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "orçamento com quantidade em texto → 422",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "produto inexistente → 4xx com mensagem, sem orçamento parcial",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "orçamento com produto de OUTRA empresa → 4xx",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "falhas não deixaram orçamento a mais (1 orçamento da oportunidade)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "isolamento",
+      "name": "Delta não converte oportunidade da Gama (404)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "Somente leitura não converte (403)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "area": "orçamento/pedido",
+      "name": "oportunidade SEM cliente → 422 com mensagem (antes: 500)",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

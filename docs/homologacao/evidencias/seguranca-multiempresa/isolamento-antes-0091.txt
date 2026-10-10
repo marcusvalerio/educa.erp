@@ -1,0 +1,293 @@
+▶ isolamento multiempresa do catálogo e das views (PostgreSQL real)
+  ✔ 0 — as duas empresas têm unidades próprias (semeadas na criação) e não existe unidade sem empresa (7.619563ms)
+  ✖ 1 — Alfa (Somente leitura) consulta as próprias unidades (11.973261ms)
+  ✖ 2 — Beta (Somente leitura) consulta as próprias unidades (7.478594ms)
+  ✖ 3 — Alfa não lê unidades privadas da Beta (nem filtrando pela empresa) (6.990723ms)
+  ✖ 4 — Beta não lê unidades privadas da Alfa (7.090719ms)
+  ✖ 5 — nem por id direto, código, paginação ou junções (produtos, conversões) (6.938426ms)
+  ✔ 6 — Alfa não insere unidade em nome da Beta (nem o administrador) (11.337354ms)
+  ✔ 7 — Alfa não altera nem exclui unidade da Beta (22.624264ms)
+  ✔ 8 — trocar o tenant pelo cliente não dá acesso: mover a própria unidade para a Beta é recusado; has_permission da Beta é falso (23.932255ms)
+  ✖ 8b — login ligado às duas empresas, com papel só na Alfa, vê só a Alfa (14.847678ms)
+  ✖ 9 — registros globais: o conceito não existe para unidades (nenhuma policy concede leitura fora da empresa) (1.620295ms)
+  ✖ 10 — sem permissão não lê; Somente leitura lê mas não cria, altera nem exclui (8.030238ms)
+  ✖ 11 — produto e conversão: funciona com unidade da própria empresa; unidade/categoria de OUTRA empresa é recusada (39.610949ms)
+  ✖ 12 — caminhos privilegiados: views financeiras/estoque não vazam; funções de semeadura não são executáveis por usuários (8.549119ms)
+✖ isolamento multiempresa do catálogo e das views (PostgreSQL real) (268.080295ms)
+▶ permissões do catálogo de produtos (PostgreSQL real)
+  ✔ o catálogo tem products.*, categories.*, brands.* e price_lists.* (0.885037ms)
+  ✖ todas as permissões exigidas pelas rotas do catálogo existem no catálogo de permissões (3.760396ms)
+  ✔ nenhum sinônimo redundante foi criado (product_categories.*, product_brands.*, product_suppliers.*) (0.345304ms)
+  ✖ API e RLS exigem a MESMA permissão em cada operação de cada tabela do catálogo (1.268377ms)
+  ✔ variantes, códigos de barras e unidades do produto seguem products.read / products.update (0.54329ms)
+  ✖ unidades de medida não são legíveis por usuário de OUTRA empresa: nenhuma policy permissiva sem has_permission(company_id, …) no catálogo (1.064011ms)
+  ✔ leitura não vira escrita: units.* e unit_conversions.* só foram dados a quem tem a mesma ação em categories.* (11.760466ms)
+✖ permissões do catálogo de produtos (PostgreSQL real) (49.486882ms)
+ℹ tests 21
+ℹ suites 2
+ℹ pass 8
+ℹ fail 13
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 677.820174
+
+✖ failing tests:
+
+test at tests/isolamento-multiempresa-db.test.ts:5:288
+✖ 1 — Alfa (Somente leitura) consulta as próprias unidades (11.973261ms)
+  AssertionError [ERR_ASSERTION]: só unidades da Alfa
+      at TestContext.<anonymous> (/home/user/crm/tests/isolamento-multiempresa-db.test.ts:123:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/isolamento-multiempresa-db.test.ts:5:557
+✖ 2 — Beta (Somente leitura) consulta as próprias unidades (7.478594ms)
+  AssertionError [ERR_ASSERTION]: só unidades da Beta
+      at TestContext.<anonymous> (/home/user/crm/tests/isolamento-multiempresa-db.test.ts:129:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/isolamento-multiempresa-db.test.ts:5:826
+✖ 3 — Alfa não lê unidades privadas da Beta (nem filtrando pela empresa) (6.990723ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  10 !== 0
+  
+      at TestContext.<anonymous> (/home/user/crm/tests/isolamento-multiempresa-db.test.ts:133:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 10,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/isolamento-multiempresa-db.test.ts:5:1162
+✖ 4 — Beta não lê unidades privadas da Alfa (7.090719ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  10 !== 0
+  
+      at TestContext.<anonymous> (/home/user/crm/tests/isolamento-multiempresa-db.test.ts:138:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 10,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/isolamento-multiempresa-db.test.ts:5:1439
+✖ 5 — nem por id direto, código, paginação ou junções (produtos, conversões) (6.938426ms)
+  AssertionError [ERR_ASSERTION]: id direto
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (/home/user/crm/tests/isolamento-multiempresa-db.test.ts:143:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/isolamento-multiempresa-db.test.ts:5:3943
+✖ 8b — login ligado às duas empresas, com papel só na Alfa, vê só a Alfa (14.847678ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(rows.every((u) => u.company_id === alfa))
+  
+      at TestContext.<anonymous> (/home/user/crm/tests/isolamento-multiempresa-db.test.ts:177:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/isolamento-multiempresa-db.test.ts:5:4213
+✖ 9 — registros globais: o conceito não existe para unidades (nenhuma policy concede leitura fora da empresa) (1.620295ms)
+  AssertionError [ERR_ASSERTION]: units_select_authenticated: true
+      at TestContext.<anonymous> (/home/user/crm/tests/isolamento-multiempresa-db.test.ts:185:34)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'true',
+    expected: /^has_permission\(company_id, 'units\.read'::text\)$/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/isolamento-multiempresa-db.test.ts:5:4714
+✖ 10 — sem permissão não lê; Somente leitura lê mas não cria, altera nem exclui (8.030238ms)
+  AssertionError [ERR_ASSERTION]: papel só com products.read
+  
+  53 !== 0
+  
+      at TestContext.<anonymous> (/home/user/crm/tests/isolamento-multiempresa-db.test.ts:189:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 53,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/isolamento-multiempresa-db.test.ts:5:5519
+✖ 11 — produto e conversão: funciona com unidade da própria empresa; unidade/categoria de OUTRA empresa é recusada (39.610949ms)
+  AssertionError [ERR_ASSERTION]: aceitou unidade da Beta
+      at TestContext.<anonymous> (/home/user/crm/tests/isolamento-multiempresa-db.test.ts:208:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/isolamento-multiempresa-db.test.ts:5:7446
+✖ 12 — caminhos privilegiados: views financeiras/estoque não vazam; funções de semeadura não são executáveis por usuários (8.549119ms)
+  AssertionError [ERR_ASSERTION]: v_cash_flow_summary sem login: leu
+      at TestContext.<anonymous> (/home/user/crm/tests/isolamento-multiempresa-db.test.ts:221:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/permissoes-produtos-db.test.ts:5:384
+✖ todas as permissões exigidas pelas rotas do catálogo existem no catálogo de permissões (3.760396ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'units.read',
+  +   'units.create',
+  +   'units.update',
+  +   'units.delete',
+  +   'unit_conversions.read',
+  +   'unit_conversions.create',
+  +   'unit_conversions.update',
+  +   'unit_conversions.delete'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (/home/user/crm/tests/permissoes-produtos-db.test.ts:64:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'units.read', 'units.create', 'units.update', 'units.delete', 'unit_conversions.read', 'unit_conversions.create', 'unit_conversions.update', 'unit_conversions.delete' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/permissoes-produtos-db.test.ts:5:979
+✖ API e RLS exigem a MESMA permissão em cada operação de cada tabela do catálogo (1.268377ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   "product_categories read: API categories.read × RLS has_permission(company_id, 'product_categories.read'::text)",
+  +   "product_categories create: API categories.create × RLS has_permission(company_id, 'product_categories.create'::text)",
+  +   "product_categories update: API categories.update × RLS has_permission(company_id, 'product_categories.update'::text) has_permission(company_id, 'product_categories.update'::text)",
+  +   "product_categories delete: API categories.delete × RLS has_permission(company_id, 'product_categories.delete'::text)",
+  +   "product_brands read: API brands.read × RLS has_permission(company_id, 'product_brands.read'::text)",
+  +   "product_brands create: API brands.create × RLS has_permission(company_id, 'product_brands.create'::text)",
+  +   "product_brands update: API brands.update × RLS has_permission(company_id, 'product_brands.update'::text) has_permission(company_id, 'product_brands.update'::text)",
+  +   "product_brands delete: API brands.delete × RLS has_permission(company_id, 'product_brands.delete'::text)",
+  +   'units read: API units.read × RLS true',
+  +   "product_suppliers read: API products.read × RLS has_permission(company_id, 'product_suppliers.read'::text)",
+  +   "product_suppliers create: API products.update × RLS has_permission(company_id, 'product_suppliers.create'::text)",
+  +   "product_suppliers update: API products.update × RLS has_permission(company_id, 'product_suppliers.update'::text) has_permission(company_id, 'product_suppliers.update'::text)",
+  +   "product_suppliers delete: API products.update × RLS has_permission(company_id, 'product_suppliers.delete'::text)"
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (/home/user/crm/tests/permissoes-produtos-db.test.ts:81:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ "product_categories read: API categories.read × RLS has_permission(company_id, 'product_categories.read'::text)", "product_categories create: API categories.create × RLS has_permission(company_id, 'product_categories.create'::text)", "product_categories update: API categories.update × RLS has_permission(company_id, 'product_categories.update'::text) has_permission(company_id, 'product_categories.update'::text)", "product_categories delete: API categories.delete × RLS has_permission(company_id, 'product_categories.delete'::text)", "product_brands read: API brands.read × RLS has_permission(company_id, 'product_brands.read'::text)", "product_brands create: API brands.create × RLS has_permission(company_id, 'product_brands.create'::text)", "product_brands update: API brands.update × RLS has_permission(company_id, 'product_brands.update'::text) has_permission(company_id, 'product_brands.update'::text)", "product_brands delete: API brands.delete × RLS has_permission(company_id, 'product_brands.delete'::text)", 'units read: API units.read × RLS true', "product_suppliers read: API products.read × RLS has_permission(company_id, 'product_suppliers.read'::text)", "product_suppliers create: API products.update × RLS has_permission(company_id, 'product_suppliers.create'::text)", "product_suppliers update: API products.update × RLS has_permission(company_id, 'product_suppliers.update'::text) has_permission(company_id, 'product_suppliers.update'::text)", "product_suppliers delete: API products.update × RLS has_permission(company_id, 'product_suppliers.delete'::text)" ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/permissoes-produtos-db.test.ts:5:2156
+✖ unidades de medida não são legíveis por usuário de OUTRA empresa: nenhuma policy permissiva sem has_permission(company_id, …) no catálogo (1.064011ms)
+  AssertionError [ERR_ASSERTION]: policy permissiva sem escopo de empresa (ex.: units_select_authenticated USING true)
+  + actual - expected
+  
+  + [
+  +   {
+  +     cmd: 'r',
+  +     expr: 'true ',
+  +     permissive: true,
+  +     table: 'units'
+  +   }
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (/home/user/crm/tests/permissoes-produtos-db.test.ts:98:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1047:25)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ { table: 'units', cmd: 'r', permissive: true, expr: 'true ' } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

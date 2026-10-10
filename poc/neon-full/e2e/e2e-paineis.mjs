@@ -70,7 +70,11 @@ try {
       await page.waitForTimeout(1200);
       const text = await page.locator("main").innerText().catch(() => "");
       check("produtos (U-01)", "lista de produtos carrega (Pão francês) mesmo com listas auxiliares recusadas", /Pão francês/.test(text), text.slice(0, 300));
-      check("produtos (U-01)", "aviso das informações complementares não carregadas (falha não escondida)", /complementares não foram carregadas/i.test(text), text.slice(0, 300));
+      // Sem a 0091 as listas auxiliares (unidades, categorias) eram recusadas e o
+      // aviso tinha de aparecer; com ela o Administrador lê todas e o aviso some.
+      const has0091 = psql("select count(*) from pg_constraint where conname = 'units_base_unit_id_same_company_fk'") === "1";
+      if (has0091) check("produtos (U-01)", "0091: listas auxiliares carregam — sem aviso de informações complementares", !/complementares não foram carregadas/i.test(text), text.slice(0, 300));
+      else check("produtos (U-01)", "aviso das informações complementares não carregadas (falha não escondida)", /complementares não foram carregadas/i.test(text), text.slice(0, 300));
       if (process.env.SHOTS) await page.screenshot({ path: path.join(process.env.SHOTS, "produtos-admin.png") });
     }
     check("telas", `${who}: nenhuma chamada com erro 500`, apiErrors.length === 0, apiErrors.join(", "));

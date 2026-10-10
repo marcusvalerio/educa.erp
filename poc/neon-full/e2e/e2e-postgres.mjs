@@ -367,13 +367,20 @@ try {
     const patch = (url, body) => api(a1.page, url, { method: "PATCH", body: JSON.stringify(body) });
     const del = (url) => api(a1.page, url, { method: "DELETE" });
 
-    // Catálogo. Linha de base de PRODUÇÃO (conferida no Supabase, só leitura):
-    // não existem permissões product_categories.* nem units.* no catálogo de
-    // permissões — a API responde 403 lá também. A POC deve reproduzir isso.
-    const cat = await post("/api/product-categories", { nome: "Ferramentas POC" });
-    check("linha de base: categorias sem permissão no catálogo (403, igual a produção)", cat.status === 403 && /product_categories\.create/.test(JSON.stringify(cat.body)), `${cat.status}`);
+    // Catálogo. Sem a 0091 (igual à produção, conferido só leitura): não
+    // existem units.* no catálogo e a API pedia product_categories.* → 403.
+    // Com a 0091: o Administrador cria categoria (categories.create, com
+    // código) e unidade (units.create) → 201.
+    const has0091 = sql("select count(*) from pg_constraint where conname = 'units_base_unit_id_same_company_fk'") === "1";
+    const cat = await post("/api/product-categories", { codigo: "FER-POC", nome: "Ferramentas POC" });
     const un = await post("/api/units", { codigo: "UNP", nome: "Unidade POC" });
-    check("linha de base: unidades sem permissão no catálogo (403, igual a produção)", un.status === 403 && /units\.create/.test(JSON.stringify(un.body)), `${un.status}`);
+    if (has0091) {
+      check("catálogo (0091): Administrador cria categoria com código (201)", cat.status === 201 && sql("select count(*) from product_categories where code='FER-POC'") === "1", `${cat.status} ${JSON.stringify(cat.body)}`);
+      check("catálogo (0091): Administrador cria unidade (201)", un.status === 201, `${un.status} ${JSON.stringify(un.body)}`);
+    } else {
+      check("linha de base: categorias sem permissão no catálogo (403, igual a produção)", cat.status === 403 && /product_categories\.create/.test(JSON.stringify(cat.body)), `${cat.status}`);
+      check("linha de base: unidades sem permissão no catálogo (403, igual a produção)", un.status === 403 && /units\.create/.test(JSON.stringify(un.body)), `${un.status}`);
+    }
     const unitsA = sql(`select count(*) from units where company_id='${companyA}' and code='UN'`);
     check("catálogo: unidades padrão criadas junto com a empresa (UN existe na Alfa)", unitsA === "1", unitsA);
     const badUnit = await post("/api/products", { codigo: "P-POC-X", descricao: "Unidade inexistente", categoria: "X", unidade: "NAOEXISTE" });

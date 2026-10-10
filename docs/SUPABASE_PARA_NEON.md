@@ -12,6 +12,13 @@ Levantamento de 29/09/2026: código da branch `claude/atlas-erp`; Supabase de
 produção, Neon de produção e Neon de homologação consultados **só para
 leitura**. Nada foi alterado em produção.
 
+> **Atualização 10/10/2026.** O Supabase de produção já está em **0075** (não
+> mais 0073) e tem uso real: 4 empresas, 8 logins, 14 convites. O Neon não foi
+> acessado nessa data. Verificação reproduzível do esquema-destino, delta a
+> aplicar e diagnóstico dos e-mails de autenticação em
+> [`homologacao/PREPARACAO-NEON-ETAPA-1.md`](homologacao/PREPARACAO-NEON-ETAPA-1.md).
+> As tabelas abaixo continuam com o retrato de 29/09.
+
 ---
 
 ## 1. Resumo

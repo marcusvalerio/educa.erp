@@ -8,6 +8,8 @@ import { ApiError, notFoundError, unauthorizedError, forbiddenError, validationE
 import { getAuthContext, hasPermission } from "@/lib/auth/context";
 import type { ActorContext } from "@/lib/database/table";
 import { jsonError } from "./response";
+import { entityPermissionCode } from "./entity-permissions";
+import { onlyProvided } from "@/lib/validations/partial-update";
 import type { StatusCadastro } from "@/lib/cadastros/types";
 
 // Handlers genéricos reutilizados pelas rotas de cadastro
@@ -23,30 +25,6 @@ import type { StatusCadastro } from "@/lib/cadastros/types";
 // aplicação — o RLS no banco (migration 0006) é a barreira real e
 // independente da API; nenhuma das duas depende só da outra.
 
-const PERMISSION_MODULE: Record<EntityRoute, string> = {
-  products: "products",
-  customers: "customers",
-  suppliers: "suppliers",
-  carriers: "carriers",
-  drivers: "drivers",
-  vehicles: "vehicles",
-  users: "users",
-  "warehouse-locations": "warehouse_locations",
-  "product-categories": "product_categories",
-  "product-brands": "product_brands",
-  units: "units",
-  "unit-conversions": "unit_conversions",
-  "product-suppliers": "product_suppliers",
-  warehouses: "warehouses",
-  "product-lots": "product_lots",
-  "sales-representatives": "sales_representatives",
-  "price-lists": "price_lists",
-  // Itens de tabela de preço reaproveitam as permissões de price_lists
-  // (editar uma tabela inclui editar seus itens) — não existe um
-  // permissions.price_list_items.* separado, de propósito.
-  "price-list-items": "price_lists",
-};
-
 function firstIssueMessage(error: { issues: { message: string }[] }) {
   return error.issues[0]?.message ?? "Dados inválidos.";
 }
@@ -57,7 +35,7 @@ async function requireAccess(entity: EntityRoute, action: "read" | "create" | "u
   const ctx = await getAuthContext();
   if (!ctx) throw unauthorizedError();
 
-  const permissionCode = `${PERMISSION_MODULE[entity]}.${action}`;
+  const permissionCode = entityPermissionCode(entity, action);
   const allowed = await hasPermission(ctx.companyId, permissionCode);
   if (!allowed) throw forbiddenError(permissionCode);
 
@@ -143,8 +121,9 @@ export function createItemHandlers(entity: EntityRoute) {
       if (!body || typeof body !== "object") throw validationError("Corpo da requisição inválido.");
       const parsed = schema.partial().safeParse(body);
       if (!parsed.success) throw validationError(firstIssueMessage(parsed.error));
-      if (Object.keys(parsed.data).length === 0) throw validationError("Nenhum dado para atualizar.");
-      const updated = await table.update(companyId, id, parsed.data as never, actor);
+      const changes = onlyProvided(parsed.data as Record<string, unknown>, body);
+      if (Object.keys(changes).length === 0) throw validationError("Nenhum dado para atualizar.");
+      const updated = await table.update(companyId, id, changes as never, actor);
       return NextResponse.json({ success: true, data: updated });
     } catch (error) {
       return jsonError(error);

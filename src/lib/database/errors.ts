@@ -64,6 +64,12 @@ export function translatePostgresError(error: { code?: string; message?: string;
   // foreign_key_violation — rede de segurança do banco além da checagem
   // de dependentes feita antes da exclusão.
   if (error.code === "23503") {
+    // Gravação com id relacionado inexistente NA EMPRESA (inclusive id de
+    // outra empresa, recusado pelas FKs compostas da 0091). Mensagem genérica:
+    // não confirma se o id existe em outra empresa.
+    if (/^insert or update on table/i.test(error.message ?? "")) {
+      return new ApiError("RELATED_NOT_FOUND", "Um dos registros relacionados não foi encontrado nesta empresa.", 422);
+    }
     return new ApiError(
       "HAS_DEPENDENTS",
       "Não é possível excluir: existem registros vinculados a este cadastro. Utilize a inativação.",

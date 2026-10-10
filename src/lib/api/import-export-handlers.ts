@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAuthContext, hasPermission } from "@/lib/auth/context";
 import { ApiError, forbiddenError, notFoundError, unauthorizedError, validationError, translatePostgresError } from "@/lib/database/errors";
 import { jsonError } from "./response";
+import { entityPermissionCode, type EntityAction } from "./entity-permissions";
 import { setImportMappingSchema, cancelImportJobSchema } from "@/lib/validations/import-export";
 import { parseCsv, toCsv } from "@/lib/import-export/csv";
 import { IMPORT_ENTITIES, isImportableEntity, validateImportRow, type ImportableEntity } from "@/lib/import-export/registry";
@@ -26,6 +27,18 @@ async function requireAccess(permissionCode: string): Promise<{ companyId: strin
   const allowed = await hasPermission(ctx.companyId, permissionCode);
   if (!allowed) throw forbiddenError(permissionCode);
   return { companyId: ctx.companyId, appUserId: ctx.appUserId, actorLabel: ctx.actorLabel };
+}
+
+// Importar/exportar não pode valer mais que o cadastro em si: as rotas
+// gravam e leem com o cliente administrativo, então além de import_export.*
+// exigem a permissão da PRÓPRIA entidade (ler para exportar; criar e editar
+// para importar, que faz upsert pela chave natural). Antes, quem tinha só
+// import_export.export exportava, por exemplo, usuários sem users.read.
+async function requireEntityPermissions(companyId: string, entity: EntityRoute, actions: EntityAction[]) {
+  for (const action of actions) {
+    const code = entityPermissionCode(entity, action);
+    if (!(await hasPermission(companyId, code))) throw forbiddenError(code);
+  }
 }
 
 function firstIssueMessage(error: { issues: { message: string }[] }) {
@@ -96,6 +109,7 @@ export async function uploadImport(request: NextRequest) {
     if (headers.length === 0) throw validationError("Arquivo CSV sem cabeçalho.");
     if (rows.length === 0) throw validationError("Arquivo CSV sem linhas de dados.");
 
+    await requireEntityPermissions(companyId, entityType, ["create", "update"]);
     const config = IMPORT_ENTITIES[entityType];
     const supabase = await createClient();
 
@@ -290,6 +304,7 @@ async function runProcessingPass(companyId: string, job: ImportJobRow, rowStatus
     throw validationError(`Importação de "${job.entity_type}" ainda não tem um conector de processamento nesta fase.`);
   }
   const entityType: ImportableEntity = job.entity_type;
+  await requireEntityPermissions(companyId, entityType, ["create", "update"]);
   const supabase = await createClient();
   const admin = createAdminClient();
   const ctx = await getAuthContext();
@@ -431,6 +446,7 @@ export async function exportEntity(request: NextRequest) {
       throw validationError("Exportação de XLSX não está disponível nesta fase (ver docs/IMPORT_EXPORT.md) — use format=csv.");
     }
 
+    await requireEntityPermissions(companyId, entityType, ["read"]);
     const table = tablesByEntity[entityType];
     const result = await table.list(companyId, {
       search,

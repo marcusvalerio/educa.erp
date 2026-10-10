@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAuthContext, hasPermission } from "@/lib/auth/context";
 import { ApiError, forbiddenError, notFoundError, unauthorizedError, validationError, translatePostgresError } from "@/lib/database/errors";
 import { jsonError } from "./response";
+import { toRpcSalesItems } from "@/lib/commercial/rpc-items";
 import {
   createPaymentTermSchema,
   updatePaymentTermSchema,
@@ -206,15 +207,7 @@ export async function createSalesQuote(request: NextRequest) {
     const { data, error } = await supabase.rpc("fn_create_sales_quote", {
       p_company_id: ctx.companyId,
       p_customer_id: body.customerId,
-      p_items: body.items.map((item) => ({
-        product_id: item.productId ?? null,
-        description: item.description,
-        unit: item.unit ?? null,
-        quantity: item.quantity,
-        unit_price: item.unitPrice,
-        discount: item.discount ?? 0,
-        notes: item.notes ?? null,
-      })),
+      p_items: toRpcSalesItems(body.items),
       p_sales_representative_id: body.salesRepresentativeId ?? null,
       p_price_list_id: body.priceListId ?? null,
       p_payment_terms_id: body.paymentTermsId ?? null,
@@ -322,17 +315,7 @@ export async function createSalesOrder(request: NextRequest) {
     const { data, error } = await supabase.rpc("fn_create_sales_order", {
       p_company_id: ctx.companyId,
       p_customer_id: body.customerId,
-      p_items: body.items
-        ? body.items.map((item) => ({
-            product_id: item.productId ?? null,
-            description: item.description,
-            unit: item.unit ?? null,
-            quantity: item.quantity,
-            unit_price: item.unitPrice,
-            discount: item.discount ?? 0,
-            notes: item.notes ?? null,
-          }))
-        : null,
+      p_items: body.items ? toRpcSalesItems(body.items) : null,
       p_sales_quote_id: body.salesQuoteId ?? null,
       p_sales_representative_id: body.salesRepresentativeId ?? null,
       p_price_list_id: body.priceListId ?? null,

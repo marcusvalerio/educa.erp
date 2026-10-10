@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAuthContext, hasPermission } from "@/lib/auth/context";
 import { ApiError, forbiddenError, notFoundError, unauthorizedError, validationError, translatePostgresError } from "@/lib/database/errors";
 import { jsonError } from "./response";
+import { toRpcSalesItems } from "@/lib/commercial/rpc-items";
 import {
   leadOriginSchema,
   leadSchema,
@@ -55,6 +56,23 @@ function rpcError(error: { message?: string; code?: string }): ApiError {
 }
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+// As rotas de cadastro usam o cliente administrativo (service_role), que não
+// passa pela RLS. As policies de leads/opportunities (0054) só aceitam edição
+// direta de lead não convertido e de oportunidade aberta; esta verificação
+// aplica a mesma regra na API. Mudanças de estado seguem pelas funções.
+async function assertEditableStatus(table: "leads" | "opportunities", id: string, companyId: string) {
+  const { data, error } = await createAdminClient().from(table).select("status").eq("id", id).eq("company_id", companyId).maybeSingle();
+  if (error) throw translatePostgresError(error);
+  if (!data) throw notFoundError(table === "leads" ? "Lead" : "Oportunidade");
+  const status = (data as { status: string }).status;
+  if (table === "leads" && status === "CONVERTED") {
+    throw new ApiError("INVALID_STATUS_TRANSITION", "Lead convertido não pode ser editado. Altere o cliente ou a oportunidade gerada.", 409);
+  }
+  if (table === "opportunities" && status !== "OPEN") {
+    throw new ApiError("INVALID_STATUS_TRANSITION", "Oportunidade encerrada (ganha ou perdida) não pode ser editada.", 409);
+  }
+}
 
 // ------------------------------------------------------------ lead_origins
 export async function listLeadOrigins() {
@@ -168,6 +186,7 @@ export async function updateLead(request: NextRequest, context: RouteContext) {
     const { companyId } = await requireAccess("leads.update");
     const { id } = await context.params;
     const body = await parseBody(request, updateLeadSchema);
+    await assertEditableStatus("leads", id, companyId);
     const { data, error } = await createAdminClient()
       .from("leads")
       .update({
@@ -387,6 +406,7 @@ export async function updateOpportunity(request: NextRequest, context: RouteCont
     const { companyId } = await requireAccess("opportunities.update");
     const { id } = await context.params;
     const body = await parseBody(request, updateOpportunitySchema);
+    await assertEditableStatus("opportunities", id, companyId);
     const { data, error } = await createAdminClient()
       .from("opportunities")
       .update({
@@ -446,7 +466,7 @@ export async function convertOpportunityToQuote(request: NextRequest, context: R
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("fn_convert_opportunity_to_sales_quote", {
       p_opportunity_id: id,
-      p_items: body.items,
+      p_items: toRpcSalesItems(body.items),
       p_valid_until: body.validUntil || null,
       p_notes: body.notes ?? null,
     });
@@ -465,7 +485,7 @@ export async function convertOpportunityToOrder(request: NextRequest, context: R
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("fn_convert_opportunity_to_sales_order", {
       p_opportunity_id: id,
-      p_items: body.items ?? null,
+      p_items: body.items ? toRpcSalesItems(body.items) : null,
       p_sales_quote_id: body.salesQuoteId ?? null,
       p_notes: body.notes ?? null,
     });

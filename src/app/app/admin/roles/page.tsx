@@ -31,6 +31,23 @@ function humanize(code: string) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+// Ações usadas nos códigos de permissão que não têm nome em
+// permission_actions: sem isto a matriz mostrava o código em inglês
+// ("Authorize", "Submit authorization"). O nome do catálogo, quando existe,
+// continua tendo prioridade.
+const ACTION_LABELS: Record<string, string> = {
+  activate: "Ativar", adjust: "Ajustar", admin: "Administrar", allocate: "Alocar", authorize: "Autorizar",
+  budget: "Orçar", calculate: "Calcular", close: "Encerrar", company: "Empresa", complete: "Concluir",
+  configure: "Configurar", confirm: "Confirmar", consume: "Consumir", consume_materials: "Consumir materiais",
+  consume_parts: "Consumir peças", convert: "Converter", count: "Contar", establishment: "Estabelecimento",
+  export: "Exportar", fail: "Registrar falha", finalize: "Finalizar", forecast: "Projetar", import: "Importar",
+  manage_costs: "Gerir custos", move_stage: "Mover estágio", period: "Período", quarantine: "Quarentena",
+  ready: "Marcar como pronto", record_result: "Registrar resultado", reject: "Rejeitar", release: "Liberar",
+  reopen: "Reabrir", reprocess: "Reprocessar", request: "Solicitar", reserve: "Reservar", return: "Devolver",
+  reverse: "Estornar", ship: "Expedir", start: "Iniciar", submit_authorization: "Enviar para autorização",
+  transfer: "Transferir", transition: "Mudar situação", valuation: "Avaliar",
+};
+
 function RolesInner() {
   const { can } = useSession();
   const canManage = can("roles.manage");
@@ -237,7 +254,7 @@ function RoleMatrix({
         const actions = [...new Set(perms.map((p) => p.action))].sort((a, b) => (actionOrder.get(a) ?? 100) - (actionOrder.get(b) ?? 100));
         const resources = [...new Set(perms.map((p) => p.resource ?? p.module))].sort();
         const cell = new Map(perms.map((p) => [`${p.resource ?? p.module}|${p.action}`, p]));
-        return { code, name: moduleName.get(code) ?? "Outros", actions: actions.map((a) => ({ code: a, name: actionName.get(a) ?? humanize(a) })), resources, cell, codes: perms.map((p) => p.code) };
+        return { code, name: moduleName.get(code) ?? "Outros", actions: actions.map((a) => ({ code: a, name: actionName.get(a) ?? ACTION_LABELS[a] ?? humanize(a) })), resources, cell, codes: perms.map((p) => p.code) };
       });
   }, [catalog, query]);
 

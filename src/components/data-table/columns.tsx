@@ -97,6 +97,17 @@ export function statusCol<T extends Row>(entity: StatusEntity | undefined, key =
   };
 }
 
+// Valor codificado do banco (ex.: HOT/WARM/COLD) exibido, ordenado, filtrado
+// e exportado pelo rótulo em português; código desconhecido aparece como veio.
+export function labelCol<T extends Row>(key: string, header: string, labels: Record<string, string>, opts: Opts<T> = {}): ColumnDef<T> {
+  const label = (row: T) => {
+    const raw = get(row, key);
+    if (raw === null || raw === undefined || raw === "") return "";
+    return labels[String(raw)] ?? String(raw);
+  };
+  return { id: key, header, value: label, exportValue: label, cell: (row) => label(row) || "—", ...opts };
+}
+
 export function refCol<T extends Row>(key: string, header: string, lookup: Map<string, string>, opts: Opts<T> = {}): ColumnDef<T> {
   const label = (row: T) => {
     const id = get(row, key) as string | null;

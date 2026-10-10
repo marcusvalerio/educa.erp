@@ -1,10 +1,13 @@
 "use client";
 
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
-import { codeCol, textCol, dateCol, statusCol, refCol, statusFilter, statusViews } from "@/components/data-table/columns";
+import { codeCol, textCol, dateCol, statusCol, refCol, labelCol, statusFilter, statusViews } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import type { LeadRow } from "@/lib/database/schema";
+
+// Qualificação (0054): COLD/WARM/HOT no banco; rótulo em português na tela e no CSV.
+const LEAD_QUALIFICATION_LABELS: Record<string, string> = { HOT: "Quente", WARM: "Morno", COLD: "Frio" };
 
 export default function LeadsPage() {
   const origins = useIdNameLookup("/api/lead-origins");
@@ -20,7 +23,7 @@ export default function LeadsPage() {
         textCol<LeadRow>("name", "Nome", { mobile: "meta" }),
         textCol<LeadRow>("company_name", "Empresa"),
         refCol<LeadRow>("origin_id", "Origem", origins),
-        textCol<LeadRow>("qualification", "Qualificação", { width: "7rem" }),
+        labelCol<LeadRow>("qualification", "Qualificação", LEAD_QUALIFICATION_LABELS, { width: "7rem" }),
         dateCol<LeadRow>("created_at", "Criado em", { mobile: "meta" }),
         statusCol<LeadRow>("leads"),
       ]}

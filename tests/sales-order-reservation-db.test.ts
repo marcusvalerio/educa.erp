@@ -69,7 +69,25 @@ describe("reserva de estoque do pedido (PostgreSQL real)", { skip: !url && "POC_
     }
     // Produto novo (saldo zerado e conhecido), cliente e local de estoque do seed fictício.
     product = (await one<{ id: string }>("insert into public.products (company_id, code, name, unit, status) values ($1, 'TESTE-RESERVA', 'Produto do teste de reserva', 'UN', 'active') returning id", [COMPANY])).id;
-    customer = (await one<{ id: string }>("select id from public.customers where company_id = $1 order by code limit 1", [COMPANY])).id;
+    // Cliente próprio do teste (antes dependia de outra suíte ter gravado um).
+    customer = (
+      await one<{ id: string }>(
+        "insert into public.customers (company_id, code, name, document, type) values ($1, 'TESTE-RES-CLI', 'Cliente do teste de reserva', '11222333000181', 'company') returning id",
+        [COMPANY]
+      )
+    ).id;
+    // Empresa recém-criada tem depósitos (semeados pelos gatilhos de companies)
+    // mas nenhum local: o usuário cria o local num depósito DA PRÓPRIA empresa.
+    // Sem local, os 7 casos eram cancelados; criá-lo aqui segue a mesma regra
+    // (a transação do teste é desfeita no fim).
+    await db.query(
+      `insert into public.warehouse_locations (company_id, warehouse_id, code, status)
+       select w.company_id, w.id, 'TESTE-RES-A01', 'active' from public.warehouses w
+       where w.company_id = $1 and w.status = 'active'
+         and not exists (select 1 from public.warehouse_locations l where l.company_id = $1 and l.warehouse_id is not null)
+       order by w.code desc limit 1`,
+      [COMPANY]
+    );
     const loc = await one<{ id: string; warehouse_id: string }>("select id, warehouse_id from public.warehouse_locations where company_id = $1 and warehouse_id is not null order by code limit 1", [COMPANY]);
     location = loc.id;
     warehouse = loc.warehouse_id;

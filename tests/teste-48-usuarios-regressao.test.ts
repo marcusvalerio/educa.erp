@@ -78,7 +78,8 @@ describe("R48-A — dois usuários salvando o mesmo cadastro (bloqueio otimista)
     assert.match(e.message, /abra de novo/);
   });
   it("o PATCH genérico repassa a versão do formulário e a gravação é condicional", () => {
-    assert.match(read("src/lib/api/handlers.ts"), /table\.update\(companyId, id, parsed\.data as never, actor, \{ expectedUpdatedAt \}\)/);
+    // Integração com a linha de segurança: grava só os campos enviados (`changes`, onlyProvided); mesmo contrato.
+    assert.match(read("src/lib/api/handlers.ts"), /table\.update\(companyId, id, (parsed\.data|changes) as never, actor, \{ expectedUpdatedAt \}\)/);
     const table = read("src/lib/database/table.ts");
     assert.match(table, /if \(expected\) query = query\.eq\("updated_at", before\.atualizadoEm\)/);
     assert.match(table, /if \(expected && !sameVersion\(before\.atualizadoEm, expected\)\) throw staleRecordError\(\)/);

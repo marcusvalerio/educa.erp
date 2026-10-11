@@ -17,7 +17,7 @@ import { useBreadcrumbTail } from "@/components/shell/Breadcrumbs";
 import { RecordHistory } from "@/components/resource/RecordHistory";
 import { DetailError, DetailHeader, DetailSection, DetailSkeleton, InfoGrid, MiniTable } from "@/components/resource/DetailLayout";
 import { useCached, invalidateCache } from "@/lib/dashboard/client";
-import { apiGet, apiSend } from "@/lib/api-client";
+import { apiGet, apiSend, apiSendWithMessage } from "@/lib/api-client";
 import { reservationFeedback } from "@/lib/reservation-feedback";
 import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import { dbStatusCode } from "@/lib/status";
@@ -36,7 +36,7 @@ const ACTIONS: Record<ActionId, { label: string; path: string; permission: strin
   approve: { label: "Aprovar", path: "approve", permission: "sales_orders.approve", statuses: ["pending_approval"], confirm: "Aprovar libera o pedido para reserva de estoque.", icon: CheckCircle2, success: "Pedido aprovado." },
   release: { label: "Liberar reserva", path: "release-reservation", permission: "sales_orders.update", statuses: ["reserved", "reservation_pending"], confirm: "As quantidades reservadas voltam a ficar disponíveis no estoque.", icon: PackageOpen, success: "Reserva liberada." },
   receivable: { label: "Gerar conta a receber", path: "generate-receivable", permission: "accounts_receivable.approve", statuses: ["approved", "reserved", "picking", "ready_to_ship", "partially_shipped", "shipped", "completed"], confirm: "Gera o título a receber a partir do valor do pedido e das condições de pagamento.", icon: Receipt, success: "Conta a receber gerada." },
-  cancel: { label: "Cancelar pedido", path: "cancel", permission: "sales_orders.cancel", statuses: ["draft", "pending_approval", "approved", "reservation_pending", "reserved"], confirm: "O cancelamento libera reservas e não pode ser desfeito.", tone: "danger", icon: Ban, success: "Pedido cancelado." },
+  cancel: { label: "Cancelar pedido", path: "cancel", permission: "sales_orders.cancel", statuses: ["draft", "pending_approval", "approved", "reservation_pending", "reserved", "picking", "ready_to_ship", "partially_shipped"], confirm: "O cancelamento libera o que ainda está reservado e não pode ser desfeito. Se houver separação ou expedição em aberto, cancele-a antes.", tone: "danger", icon: Ban, success: "Pedido cancelado." },
 };
 
 export default function PedidoVendaDetailPage() {
@@ -48,7 +48,8 @@ export default function PedidoVendaDetailPage() {
   const shipments = useCached<ShipmentRow[]>(`/api/shipments?salesOrderId=${id}`, shipmentsOk);
   const receivables = useCached<AccountsReceivableRow[]>(receivablesOk && order.data ? `/api/accounts-receivable?customerId=${order.data.customer_id}` : null, receivablesOk);
   const customers = useIdNameLookup("/api/customers");
-  const locations = useIdNameLookup("/api/warehouse-locations");
+  // R48-24: só quem pode reservar escolhe local (o Vendedor recebia 403 aqui).
+  const locations = useIdNameLookup(can("sales_orders.reserve") ? "/api/warehouse-locations" : null);
   const [pending, setPending] = useState<ActionId | null>(null);
   const [busy, setBusy] = useState(false);
   const [reserveOpen, setReserveOpen] = useState(false);
@@ -75,8 +76,10 @@ export default function PedidoVendaDetailPage() {
   async function run(action: ActionId) {
     setBusy(true);
     try {
-      await apiSend(`/api/sales-orders/${id}/${ACTIONS[action].path}`, "POST", action === "receivable" ? {} : undefined);
-      toast.success(ACTIONS[action].success);
+      const { message } = await apiSendWithMessage(`/api/sales-orders/${id}/${ACTIONS[action].path}`, "POST", action === "receivable" ? {} : undefined);
+      // A geração do título é idempotente: se o pedido já tinha título, o
+      // servidor diz qual (em vez do "gerada" fixo da tela).
+      toast.success(message ?? ACTIONS[action].success);
       setPending(null);
       refresh();
     } catch (error) {

@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { jsonError } from "./response";
 import { dbError, parseJson, requireCompanyUser, type IdRouteContext } from "./governance";
-import { notFoundError, validationError } from "@/lib/database/errors";
+import { forbiddenError, notFoundError, validationError } from "@/lib/database/errors";
+import { hasPermission } from "@/lib/auth/context";
 import {
   createCompanyRoleSchema,
   departmentSchema,
@@ -33,16 +34,23 @@ const ok = (data: unknown, status = 200) => NextResponse.json({ success: true, d
 export async function listAdminUsers() {
   try {
     const { supabase, companyId } = await requireCompanyUser();
-    const [users, userRoles, access] = await Promise.all([
+    // R48-26: sem users.read a RLS ainda devolve o próprio registro (200 com
+    // 1 linha). A lista é da Administração: sem a permissão, 403 explícito.
+    if (!(await hasPermission(companyId, "users.read"))) throw forbiddenError("users.read");
+    const [users, access] = await Promise.all([
       supabase
         .from("users")
         .select("id, code, name, email, login, status, branch_id, department_id, position_id, auth_user_id, created_at")
         .eq("company_id", companyId)
         .order("name"),
-      supabase.from("user_roles").select("user_id, role_id"),
       supabase.from("user_branch_access").select("user_id, branch_id, is_primary").eq("company_id", companyId),
     ]);
     if (users.error) throw dbError(users.error);
+    // Vínculos só dos usuários desta empresa (sem varrer user_roles da plataforma).
+    const userIds = (users.data ?? []).map((user) => user.id as string);
+    const userRoles = userIds.length
+      ? await supabase.from("user_roles").select("user_id, role_id").in("user_id", userIds)
+      : { data: [], error: null };
     // user_roles/user_branch_access dependem de roles.read/org.view: sem
     // essas permissões a lista de usuários ainda aparece, sem os vínculos.
     const rolesByUser = new Map<string, string[]>();
@@ -182,17 +190,23 @@ export async function revokeAdminUserBranch(request: NextRequest, context: IdRou
 export async function listAdminRoles() {
   try {
     const { supabase, companyId } = await requireCompanyUser();
-    const [roles, rolePerms, userRoles] = await Promise.all([
-      supabase
-        .from("roles")
-        .select("id, code, name, description, is_system, status, department_id, created_at, updated_at")
-        .eq("company_id", companyId)
-        .order("is_system", { ascending: false })
-        .order("name"),
-      supabase.from("role_permissions").select("role_id, permissions(code)"),
-      supabase.from("user_roles").select("role_id"),
-    ]);
+    const roles = await supabase
+      .from("roles")
+      .select("id, code, name, description, is_system, status, department_id, created_at, updated_at")
+      .eq("company_id", companyId)
+      .order("is_system", { ascending: false })
+      .order("name");
     if (roles.error) throw dbError(roles.error);
+    // Só os vínculos dos papéis DESTA empresa. Sem o filtro, a consulta lia
+    // role_permissions/user_roles de todas as empresas e o RLS avaliava
+    // has_permission linha a linha (≈20 mil linhas → 7,8 s com 16 empresas).
+    const roleIds = (roles.data ?? []).map((role) => role.id as string);
+    const [rolePerms, userRoles] = roleIds.length
+      ? await Promise.all([
+          supabase.from("role_permissions").select("role_id, permissions(code)").in("role_id", roleIds),
+          supabase.from("user_roles").select("role_id").in("role_id", roleIds),
+        ])
+      : [{ data: [] }, { data: [] }];
     const permsByRole = new Map<string, string[]>();
     for (const row of (rolePerms.data ?? []) as Array<{ role_id: string; permissions: { code: string } | { code: string }[] | null }>) {
       const perm = Array.isArray(row.permissions) ? row.permissions[0] : row.permissions;
@@ -547,6 +561,9 @@ export async function setAdminModuleEnabled(request: NextRequest, context: CodeR
 export async function listAdminAudit(request: NextRequest) {
   try {
     const { supabase, companyId } = await requireCompanyUser();
+    // R2-22: sem audit_logs.read a RLS devolvia 200 com lista vazia (parecia
+    // "nada aconteceu"). A trilha da empresa é restrita: 403 explícito.
+    if (!(await hasPermission(companyId, "audit_logs.read"))) throw forbiddenError("audit_logs.read");
     const params = new URL(request.url).searchParams;
     const page = Math.max(1, Number(params.get("page") ?? 1) || 1);
     const pageSize = Math.min(100, Math.max(10, Number(params.get("pageSize") ?? 25) || 25));
@@ -559,6 +576,15 @@ export async function listAdminAudit(request: NextRequest) {
     const entity = params.get("entity");
     const action = params.get("action");
     const search = params.get("search");
+    // Histórico de um registro (B17): antes o entityId era ignorado e a
+    // trilha devolvia a empresa inteira. Só aceita um UUID válido.
+    const entityId = params.get("entityId");
+    if (entityId) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(entityId)) {
+        return NextResponse.json({ success: true, data: [], meta: { total: 0, page, pageSize } });
+      }
+      query = query.eq("entity_id", entityId);
+    }
     if (entity) query = query.eq("entity", entity);
     if (action) query = query.eq("action", action);
     if (search) query = query.ilike("actor_label", `%${search}%`);

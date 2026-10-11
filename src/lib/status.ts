@@ -290,17 +290,17 @@ export const STATUS_REGISTRY = {
     RESUME: S("Reativação", "success"),
     CONFIGURE: S("Configuração", "info"),
     EXPORT: S("Exportação", "info"),
-    // Demais ações aceitas por audit_logs_action_check (sem isto, "Cancel", "Approve"...).
+    // Ações das funções de negócio (audit_logs_action_check).
     APPROVE: S("Aprovação", "success"),
     CANCEL: S("Cancelamento", "danger"),
-    RECEIVE: S("Recebimento", "info"),
+    RECEIVE: S("Recebimento", "success"),
     CONFIRM: S("Confirmação", "success"),
     REJECT: S("Rejeição", "danger"),
     PICK: S("Separação", "info"),
     PACK: S("Embalagem", "info"),
     SHIP: S("Expedição", "info"),
     DELIVER: S("Entrega", "success"),
-    FAIL: S("Falha", "critical"),
+    FAIL: S("Falha", "danger"),
     RETURN: S("Devolução", "warning"),
     RELEASE: S("Liberação", "info"),
     START: S("Início", "info"),
@@ -313,6 +313,7 @@ export const STATUS_REGISTRY = {
     AUTHORIZE: S("Autorização", "success"),
     EVENT: S("Evento", "neutral"),
     RESERVE: S("Reserva", "info"),
+    SUBMIT: S("Envio para aprovação", "info"),
   },
 } satisfies Record<string, Record<string, StatusMeta>>;
 

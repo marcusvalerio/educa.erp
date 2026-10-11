@@ -44,10 +44,10 @@ describe("canAccess / visibleSections", () => {
     const comercial = sections.find((s) => s.id === "comercial")!;
     assert.ok(comercial.items.every((i) => canAccess(i.permission, only("sales_orders.view"))));
   });
-  test("perfil sem permissões vê só o início e a aparência pessoal", () => {
+  test("perfil sem permissões vê só o início, a aparência pessoal e a documentação", () => {
     const sections = visibleSections(ERP_NAV, only());
     assert.deepEqual(sections.map((s) => s.id), ["inicio", "configuracoes"]);
-    assert.deepEqual(sections[1].items.map((i) => i.href), ["/app/configuracoes/aparencia"]);
+    assert.deepEqual(sections[1].items.map((i) => i.href), ["/app/configuracoes/aparencia", "/app/configuracoes/documentacao"]);
   });
 });
 

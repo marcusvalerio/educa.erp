@@ -15,7 +15,6 @@ import {
   PERFIS_USUARIO_CADASTRO,
   DEPARTAMENTOS,
   TIPOS_LOCAL_ESTOQUE,
-  ARMAZENS,
   STATUS_OPTIONS,
 } from "./constants";
 
@@ -300,7 +299,7 @@ export const localEstoqueForm: FormSection[] = [
     fields: [
       { key: "codigoLocal", label: "Código do local", type: "text", required: true, span: 2, placeholder: "CD01-R01-M03-N02-P01" },
       { key: "descricao", label: "Descrição", type: "text", span: 2 },
-      { key: "armazem", label: "Armazém", type: "select", options: ARMAZENS, required: true, span: 1 },
+      { key: "depositoId", label: "Depósito", type: "select", optionsSource: "depositos", required: true, span: 1 },
       { key: "tipo", label: "Tipo de local", type: "select", options: TIPOS_LOCAL_ESTOQUE, required: true, span: 1 },
       { key: "capacidade", label: "Capacidade", type: "number", span: 2 },
     ],

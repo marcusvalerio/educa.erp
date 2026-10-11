@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useMemo, useState } from "react";
+import { actionLabel, resourceLabel } from "@/lib/permission-labels";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Pencil, Plus, Search, ShieldCheck, Users } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -25,28 +26,6 @@ import { adminSend, useAdminCollections, type AdminRole, type PermissionCatalog 
 // catálogo e protege o papel administrador de sistema.
 
 type RoleForm = { code: string; name: string; description: string; departmentId: string; status: "active" | "inactive" };
-
-function humanize(code: string) {
-  const text = code.replace(/[_.]/g, " ");
-  return text.charAt(0).toUpperCase() + text.slice(1);
-}
-
-// Ações usadas nos códigos de permissão que não têm nome em
-// permission_actions: sem isto a matriz mostrava o código em inglês
-// ("Authorize", "Submit authorization"). O nome do catálogo, quando existe,
-// continua tendo prioridade.
-const ACTION_LABELS: Record<string, string> = {
-  activate: "Ativar", adjust: "Ajustar", admin: "Administrar", allocate: "Alocar", authorize: "Autorizar",
-  budget: "Orçar", calculate: "Calcular", close: "Encerrar", company: "Empresa", complete: "Concluir",
-  configure: "Configurar", confirm: "Confirmar", consume: "Consumir", consume_materials: "Consumir materiais",
-  consume_parts: "Consumir peças", convert: "Converter", count: "Contar", establishment: "Estabelecimento",
-  export: "Exportar", fail: "Registrar falha", finalize: "Finalizar", forecast: "Projetar", import: "Importar",
-  manage_costs: "Gerir custos", move_stage: "Mover estágio", period: "Período", quarantine: "Quarentena",
-  ready: "Marcar como pronto", record_result: "Registrar resultado", reject: "Rejeitar", release: "Liberar",
-  reopen: "Reabrir", reprocess: "Reprocessar", request: "Solicitar", reserve: "Reservar", return: "Devolver",
-  reverse: "Estornar", ship: "Expedir", start: "Iniciar", submit_authorization: "Enviar para autorização",
-  transfer: "Transferir", transition: "Mudar situação", valuation: "Avaliar",
-};
 
 function RolesInner() {
   const { can } = useSession();
@@ -238,13 +217,13 @@ function RoleMatrix({
   const groups = useMemo(() => {
     if (!catalog) return [];
     const actionOrder = new Map(catalog.actions.map((a) => [String(a.code), Number(a.sort_order ?? 100)]));
-    const actionName = new Map(catalog.actions.map((a) => [String(a.code), String(a.name ?? a.code)]));
+    const actionName = new Map(catalog.actions.map((a) => [String(a.code), actionLabel(String(a.code), a.name ? String(a.name) : null)]));
     const moduleName = new Map(catalog.modules.map((m) => [m.code, m.name]));
     const moduleOrder = new Map(catalog.modules.map((m) => [m.code, m.sort_order]));
     const q = query.trim().toLowerCase();
     const byModule = new Map<string, typeof catalog.permissions>();
     for (const p of catalog.permissions) {
-      if (q && !`${p.code} ${p.description ?? ""}`.toLowerCase().includes(q)) continue;
+      if (q && !`${p.code} ${p.description ?? ""} ${resourceLabel(String(p.resource ?? p.module))}`.toLowerCase().includes(q)) continue;
       const key = p.module_code ?? "outros";
       byModule.set(key, [...(byModule.get(key) ?? []), p]);
     }
@@ -254,7 +233,7 @@ function RoleMatrix({
         const actions = [...new Set(perms.map((p) => p.action))].sort((a, b) => (actionOrder.get(a) ?? 100) - (actionOrder.get(b) ?? 100));
         const resources = [...new Set(perms.map((p) => p.resource ?? p.module))].sort();
         const cell = new Map(perms.map((p) => [`${p.resource ?? p.module}|${p.action}`, p]));
-        return { code, name: moduleName.get(code) ?? "Outros", actions: actions.map((a) => ({ code: a, name: actionName.get(a) ?? ACTION_LABELS[a] ?? humanize(a) })), resources, cell, codes: perms.map((p) => p.code) };
+        return { code, name: moduleName.get(code) ?? "Outros", actions: actions.map((a) => ({ code: a, name: actionName.get(a) ?? actionLabel(a) })), resources, cell, codes: perms.map((p) => p.code) };
       });
   }, [catalog, query]);
 
@@ -341,7 +320,7 @@ function RoleMatrix({
                     <tbody>
                       {group.resources.map((resource) => (
                         <tr key={resource} className="h-9 border-b border-border last:border-0 hover:bg-surface-hover">
-                          <th scope="row" className="px-3 text-left font-normal">{humanize(resource)}</th>
+                          <th scope="row" className="px-3 text-left font-normal">{resourceLabel(resource)}</th>
                           {group.actions.map((a) => {
                             const perm = group.cell.get(`${resource}|${a.code}`);
                             if (!perm) return <td key={a.code} className="text-center text-subtle-foreground" aria-hidden>·</td>;
@@ -350,7 +329,7 @@ function RoleMatrix({
                             return (
                               <td key={a.code} className={cn("text-center", changed && "bg-accent-soft")}>
                                 <span className="inline-flex" title={perm.description ?? perm.code}>
-                                  <Checkbox checked={on} disabled={!editable} onCheckedChange={(v) => toggle(perm.code, v === true)} aria-label={`${humanize(resource)}: ${a.name}`} />
+                                  <Checkbox checked={on} disabled={!editable} onCheckedChange={(v) => toggle(perm.code, v === true)} aria-label={`${resourceLabel(resource)}: ${a.name}`} />
                                 </span>
                               </td>
                             );

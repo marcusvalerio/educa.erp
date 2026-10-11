@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+// 403 de um relatório: o perfil não cobre todos os dados dele (não é falha — não adianta "tentar novamente").
+export const FORBIDDEN_MESSAGE = "Sem permissão para estes dados.";
+
 // Busca com cache curto e deduplicação de requisições em voo: o centro
 // operacional, os painéis por área e as áreas de trabalho dos módulos
 // leem as mesmas coleções — cada uma é buscada uma vez por minuto, não
@@ -63,7 +66,7 @@ export function useCached<T>(path: string | null, enabled = true): Loadable<T> {
         setState({
           data: null,
           loading: false,
-          error: error instanceof FetchError && error.status === 403 ? "Sem permissão para estes dados." : error instanceof Error ? error.message : "Falha ao carregar.",
+          error: error instanceof FetchError && error.status === 403 ? FORBIDDEN_MESSAGE : error instanceof Error ? error.message : "Falha ao carregar.",
           key: path,
         })
       );

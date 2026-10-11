@@ -22,38 +22,54 @@ type EntityFormProps = {
   onChange: (key: string, value: string | number | boolean) => void;
 };
 
+// Ligação rótulo ↔ campo: o FormField entrega id/aria-* ao filho, e o
+// FieldControl os repassa ao controle real (sem isso, o rótulo apontava
+// para um id inexistente e o leitor de tela anunciava o campo sem nome).
+type ControlA11y = {
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
+  "aria-required"?: boolean;
+  invalid?: boolean;
+};
+
 function FieldControl({
   field,
   value,
   readOnly,
   options,
   onChange,
+  invalid,
+  ...a11y
 }: {
   field: FormFieldDef;
   value: unknown;
   readOnly: boolean;
   options?: SelectOption[];
   onChange: (key: string, value: string | number | boolean) => void;
-}) {
+} & ControlA11y) {
+  const shared = { id: a11y.id, invalid, "aria-describedby": a11y["aria-describedby"] };
   if (field.type === "select") {
     const opts = options ?? field.options?.map((o) => ({ value: o, label: o })) ?? [];
     // Listas longas (clientes, transportadoras...) ganham busca.
     return opts.length > 8 ? (
-      <Combobox value={(value as string) ?? ""} onValueChange={(v) => onChange(field.key, v)} options={opts} disabled={readOnly} />
+      <Combobox {...shared} value={(value as string) ?? ""} onValueChange={(v) => onChange(field.key, v)} options={opts} disabled={readOnly} />
     ) : (
-      <Select value={(value as string) ?? ""} onValueChange={(v) => onChange(field.key, v)} options={opts} disabled={readOnly} />
+      <Select {...shared} value={(value as string) ?? ""} onValueChange={(v) => onChange(field.key, v)} options={opts} disabled={readOnly} />
     );
   }
   if (field.type === "textarea") {
     return (
-      <Textarea value={(value as string) ?? ""} placeholder={field.placeholder} readOnly={readOnly} onChange={(e) => onChange(field.key, e.target.value)} />
+      <Textarea {...a11y} invalid={invalid} value={(value as string) ?? ""} placeholder={field.placeholder} readOnly={readOnly} onChange={(e) => onChange(field.key, e.target.value)} />
     );
   }
   if (field.type === "date") {
-    return <DatePicker value={(value as string) ?? ""} onChange={(v) => onChange(field.key, v)} disabled={readOnly} />;
+    return <DatePicker {...shared} value={(value as string) ?? ""} onChange={(v) => onChange(field.key, v)} disabled={readOnly} />;
   }
   return (
     <Input
+      {...a11y}
+      invalid={invalid}
       type={field.type}
       value={(value as string | number) ?? ""}
       placeholder={field.placeholder}

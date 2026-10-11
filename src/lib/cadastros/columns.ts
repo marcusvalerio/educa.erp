@@ -12,6 +12,7 @@ import type {
 import {
   transportadorasRepository,
   motoristasRepository,
+  depositosRepository,
 } from "./repository";
 import {
   CATEGORIAS_PRODUTO,
@@ -22,7 +23,6 @@ import {
   TIPOS_VEICULO,
   PERFIS_USUARIO_CADASTRO,
   TIPOS_LOCAL_ESTOQUE,
-  ARMAZENS,
   STATUS_OPTIONS,
 } from "./constants";
 
@@ -269,7 +269,7 @@ export function usuarioToRow(u: Usuario): Row {
 export const localEstoqueColumns: ColumnConfig[] = [
   { key: "codigo", label: "Código" },
   { key: "descricao", label: "Descrição" },
-  { key: "armazem", label: "Armazém" },
+  { key: "armazem", label: "Depósito" },
   { key: "tipo", label: "Tipo" },
   { key: "capacidade", label: "Capacidade", align: "right" },
   { key: "status", label: "Status", render: "status" },
@@ -277,7 +277,7 @@ export const localEstoqueColumns: ColumnConfig[] = [
 
 export const localEstoqueFilters: FilterConfig[] = [
   { key: "codigo", label: "Código", type: "text" },
-  { key: "armazem", label: "Armazém", type: "select", options: [...ARMAZENS] },
+  { key: "armazem", label: "Depósito", type: "text" },
   { key: "tipo", label: "Tipo", type: "select", options: [...TIPOS_LOCAL_ESTOQUE] },
   { key: "status", label: "Status", type: "select", options: [...STATUS_OPTIONS] },
 ];
@@ -287,7 +287,7 @@ export function localEstoqueToRow(l: LocalEstoque): Row {
     id: l.id,
     codigo: l.codigoLocal,
     descricao: l.descricao,
-    armazem: l.armazem,
+    armazem: depositosRepository.get(l.depositoId)?.nome ?? l.armazem,
     tipo: l.tipo,
     capacidade: l.capacidade,
     status: l.status,

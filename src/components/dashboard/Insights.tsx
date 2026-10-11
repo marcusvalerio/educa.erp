@@ -11,7 +11,7 @@ import { CalendarHeatmap, ColumnTrend, DistributionBar, FunnelBars, RankingBars 
 import { FlowSankey } from "@/components/charts/FlowSankey";
 import { cachedGet, reportPath, useCached } from "@/lib/dashboard/client";
 import { buildOrderToDeliveryFlow, buildProcureToReceiveFlow, buildProductionFlow, type Flow } from "@/lib/dashboard/flows";
-import { formatMetric, type ReportDef } from "@/lib/dashboard/metrics";
+import { formatMetric, reportAllowed, type ReportDef } from "@/lib/dashboard/metrics";
 import { inRange, lastMonths, toIso, type DateRange } from "@/lib/dashboard/periods";
 import { formatCurrencyBRL, formatInteger } from "@/lib/format";
 import { pickName } from "@/lib/useIdNameLookup";
@@ -25,7 +25,7 @@ type AnyRow = Record<string, unknown>;
 // ------------------------------------------------------------ tendência mensal
 export function MonthlyTrend({ report, metricKey, title, description }: { report: ReportDef; metricKey: string; title: string; description?: string }) {
   const { can } = useSession();
-  const allowed = can(report.permission);
+  const allowed = reportAllowed(report, can);
   const months = useMemo(() => lastMonths(6), []);
   const [state, setState] = useState<{ data: Array<{ label: string; value: number }> | null; error: string | null }>({ data: null, error: null });
 

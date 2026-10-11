@@ -21,3 +21,14 @@ test("FK na exclusão → 409 HAS_DEPENDENTS (inalterado)", () => {
   assert.equal(e.status, 409);
   assert.equal(e.code, "HAS_DEPENDENTS");
 });
+
+test("FK composta da 0091 em produtos: a mensagem fala da unidade, não do produto", () => {
+  const e = translatePostgresError({
+    code: "23503",
+    message: 'insert or update on table "products" violates foreign key constraint "products_unit_id_same_company_fk"',
+    details: 'Key (unit_id, company_id)=(11111111-1111-1111-1111-111111111111, 22222222-2222-2222-2222-222222222222) is not present in table "units".',
+  });
+  assert.equal(e.status, 422);
+  assert.match(e.message, /unidade/i);
+  assert.doesNotMatch(e.message, /1111|2222|constraint/);
+});

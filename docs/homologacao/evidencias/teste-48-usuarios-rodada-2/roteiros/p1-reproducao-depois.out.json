@@ -1,0 +1,350 @@
+{
+  "phase": "depois",
+  "pass": 48,
+  "fail": 0,
+  "rows": [
+    [
+      "Empresa",
+      "Cenário",
+      "Execução",
+      "Resultado",
+      "Detalhe"
+    ],
+    [
+      "Vértice Operações",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      1,
+      "PASS",
+      "200 / 201 · Este pedido já tem a conta a receber CR-0064. Nenhum título novo foi criado. | Conta a receber CR-0064 gerada. · títulos ativos 1"
+    ],
+    [
+      "Vértice Operações",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      1,
+      "PASS",
+      "422 O pedido PV-0142 já tem a separação SEP-0072 em aberto. Use essa separação (ou cancele-a antes de criar outra). / 201 · separações abertas 1"
+    ],
+    [
+      "Vértice Operações",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      1,
+      "PASS",
+      "201 / 422 Não é possível criar a expedição: para o produto VO-R2d70c-G31-3 — Produto rodada 2 G31 (VO-R2d70c), a quantidade a expedir (4) é maior que o reservado ainda li · quantidade em expedições 4 para 4 reservadas"
+    ],
+    [
+      "Vértice Operações",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      1,
+      "PASS",
+      "200 / 200 · reservado 10 de 10"
+    ],
+    [
+      "Vértice Operações",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      2,
+      "PASS",
+      "201 / 200 · Conta a receber CR-0065 gerada. | Este pedido já tem a conta a receber CR-0065. Nenhum título novo foi criado. · títulos ativos 1"
+    ],
+    [
+      "Vértice Operações",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      2,
+      "PASS",
+      "201 / 422 O pedido PV-0147 já tem a separação SEP-0074 em aberto. Use essa separação (ou cancele-a antes de criar outra). · separações abertas 1"
+    ],
+    [
+      "Vértice Operações",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      2,
+      "PASS",
+      "201 / 422 Não é possível criar a expedição: para o produto VO-R2d70c-G32-7 — Produto rodada 2 G32 (VO-R2d70c), a quantidade a expedir (4) é maior que o reservado ainda li · quantidade em expedições 4 para 4 reservadas"
+    ],
+    [
+      "Vértice Operações",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      2,
+      "PASS",
+      "200 / 200 · reservado 10 de 10"
+    ],
+    [
+      "Vértice Operações",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      3,
+      "PASS",
+      "200 / 201 · Este pedido já tem a conta a receber CR-0066. Nenhum título novo foi criado. | Conta a receber CR-0066 gerada. · títulos ativos 1"
+    ],
+    [
+      "Vértice Operações",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      3,
+      "PASS",
+      "201 / 422 O pedido PV-0152 já tem a separação SEP-0076 em aberto. Use essa separação (ou cancele-a antes de criar outra). · separações abertas 1"
+    ],
+    [
+      "Vértice Operações",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      3,
+      "PASS",
+      "201 / 422 Não é possível criar a expedição: para o produto VO-R2d70c-G33-11 — Produto rodada 2 G33 (VO-R2d70c), a quantidade a expedir (4) é maior que o reservado ainda l · quantidade em expedições 4 para 4 reservadas"
+    ],
+    [
+      "Vértice Operações",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      3,
+      "PASS",
+      "200 / 200 · reservado 10 de 10"
+    ],
+    [
+      "Vértice Operações",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      4,
+      "PASS",
+      "200 / 201 · Este pedido já tem a conta a receber CR-0067. Nenhum título novo foi criado. | Conta a receber CR-0067 gerada. · títulos ativos 1"
+    ],
+    [
+      "Vértice Operações",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      4,
+      "PASS",
+      "201 / 422 O pedido PV-0157 já tem a separação SEP-0078 em aberto. Use essa separação (ou cancele-a antes de criar outra). · separações abertas 1"
+    ],
+    [
+      "Vértice Operações",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      4,
+      "PASS",
+      "201 / 422 Não é possível criar a expedição: para o produto VO-R2d70c-G34-15 — Produto rodada 2 G34 (VO-R2d70c), a quantidade a expedir (4) é maior que o reservado ainda l · quantidade em expedições 4 para 4 reservadas"
+    ],
+    [
+      "Vértice Operações",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      4,
+      "PASS",
+      "200 / 200 · reservado 10 de 10"
+    ],
+    [
+      "Vértice Operações",
+      "G3b — 2ª expedição em sequência com a mesma quantidade (sem concorrência)",
+      "",
+      "PASS",
+      "201 / 422 Não é possível criar a expedição: para o produto VO-R2d70c-G3b-17 — Produto rodada 2 G3b (VO-R2d70c), a quantidade a expedir (4) é maior que o reservado ainda l"
+    ],
+    [
+      "Vértice Operações",
+      "R11 — Reserva do pedido expedido deixa de ficar ativa",
+      "",
+      "PASS",
+      "expedir 200 · reservas ativas 0 · reservado no saldo 0"
+    ],
+    [
+      "Vértice Operações",
+      "R11b — Liberar reserva de pedido já expedido: recusa clara, sem código técnico",
+      "",
+      "PASS",
+      "422 Este pedido não tem reserva ativa para liberar (situação atual: Expedido)."
+    ],
+    [
+      "Vértice Operações",
+      "H1 — Cancelar pedido com separação aberta: cancela e libera OU recusa nomeando a separação",
+      "",
+      "PASS",
+      "422 Não é possível cancelar o pedido PV-0163: a separação SEP-0082 está em aberto. Cancele a separação antes de cancelar o pedido. · reservas ativas 1"
+    ],
+    [
+      "Vértice Operações",
+      "H1c — Cancelar pedido separado (pronto para expedir) sem expedição criada",
+      "",
+      "PASS",
+      "200 · reservas ativas 0 · reservado no saldo 0"
+    ],
+    [
+      "Vértice Operações",
+      "H2 — Expedir o pedido A a partir de um local onde a reserva é do pedido X",
+      "",
+      "PASS",
+      "422 Não é possível criar a expedição: o pedido PV-0166 não tem reserva suficiente neste local para o produto VO-R2d70c-H2-21 — Produto rodada 2 H2 (VO-R2d70c) (rese"
+    ],
+    [
+      "Vértice Operações",
+      "M17 — Expedir mais que o reservado: mensagem sem UUID e sem números com 4 casas",
+      "",
+      "PASS",
+      "422 Não é possível criar a expedição: para o produto VO-R2d70c-M17-22 — Produto rodada 2 M17 (VO-R2d70c), a quantidade a expedir (5) é maior que o reservado ainda livre para expedição (4). 0 já está em ou"
+    ],
+    [
+      "Vértice Operações",
+      "B18 — Item do pedido sem unidade herda a unidade do produto (CX)",
+      "",
+      "PASS",
+      "unidade gravada: CX"
+    ],
+    [
+      "Sertão Atacado",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      1,
+      "PASS",
+      "201 / 200 · Conta a receber CR-0068 gerada. | Este pedido já tem a conta a receber CR-0068. Nenhum título novo foi criado. · títulos ativos 1"
+    ],
+    [
+      "Sertão Atacado",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      1,
+      "PASS",
+      "422 O pedido PV-0170 já tem a separação SEP-0086 em aberto. Use essa separação (ou cancele-a antes de criar outra). / 201 · separações abertas 1"
+    ],
+    [
+      "Sertão Atacado",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      1,
+      "PASS",
+      "201 / 422 Não é possível criar a expedição: para o produto SA-R2dgpj-G31-3 — Produto rodada 2 G31 (SA-R2dgpj), a quantidade a expedir (4) é maior que o reservado ainda li · quantidade em expedições 4 para 4 reservadas"
+    ],
+    [
+      "Sertão Atacado",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      1,
+      "PASS",
+      "200 / 200 · reservado 10 de 10"
+    ],
+    [
+      "Sertão Atacado",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      2,
+      "PASS",
+      "200 / 201 · Este pedido já tem a conta a receber CR-0069. Nenhum título novo foi criado. | Conta a receber CR-0069 gerada. · títulos ativos 1"
+    ],
+    [
+      "Sertão Atacado",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      2,
+      "PASS",
+      "201 / 422 O pedido PV-0175 já tem a separação SEP-0088 em aberto. Use essa separação (ou cancele-a antes de criar outra). · separações abertas 1"
+    ],
+    [
+      "Sertão Atacado",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      2,
+      "PASS",
+      "201 / 422 Não é possível criar a expedição: para o produto SA-R2dgpj-G32-7 — Produto rodada 2 G32 (SA-R2dgpj), a quantidade a expedir (4) é maior que o reservado ainda li · quantidade em expedições 4 para 4 reservadas"
+    ],
+    [
+      "Sertão Atacado",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      2,
+      "PASS",
+      "200 / 200 · reservado 10 de 10"
+    ],
+    [
+      "Sertão Atacado",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      3,
+      "PASS",
+      "201 / 200 · Conta a receber CR-0070 gerada. | Este pedido já tem a conta a receber CR-0070. Nenhum título novo foi criado. · títulos ativos 1"
+    ],
+    [
+      "Sertão Atacado",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      3,
+      "PASS",
+      "201 / 422 O pedido PV-0180 já tem a separação SEP-0090 em aberto. Use essa separação (ou cancele-a antes de criar outra). · separações abertas 1"
+    ],
+    [
+      "Sertão Atacado",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      3,
+      "PASS",
+      "201 / 422 Não é possível criar a expedição: para o produto SA-R2dgpj-G33-11 — Produto rodada 2 G33 (SA-R2dgpj), a quantidade a expedir (4) é maior que o reservado ainda l · quantidade em expedições 4 para 4 reservadas"
+    ],
+    [
+      "Sertão Atacado",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      3,
+      "PASS",
+      "200 / 200 · reservado 10 de 10"
+    ],
+    [
+      "Sertão Atacado",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      4,
+      "PASS",
+      "200 / 201 · Este pedido já tem a conta a receber CR-0071. Nenhum título novo foi criado. | Conta a receber CR-0071 gerada. · títulos ativos 1"
+    ],
+    [
+      "Sertão Atacado",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      4,
+      "PASS",
+      "201 / 422 O pedido PV-0185 já tem a separação SEP-0092 em aberto. Use essa separação (ou cancele-a antes de criar outra). · separações abertas 1"
+    ],
+    [
+      "Sertão Atacado",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      4,
+      "PASS",
+      "201 / 422 Não é possível criar a expedição: para o produto SA-R2dgpj-G34-15 — Produto rodada 2 G34 (SA-R2dgpj), a quantidade a expedir (4) é maior que o reservado ainda l · quantidade em expedições 4 para 4 reservadas"
+    ],
+    [
+      "Sertão Atacado",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      4,
+      "PASS",
+      "200 / 200 · reservado 10 de 10"
+    ],
+    [
+      "Sertão Atacado",
+      "G3b — 2ª expedição em sequência com a mesma quantidade (sem concorrência)",
+      "",
+      "PASS",
+      "201 / 422 Não é possível criar a expedição: para o produto SA-R2dgpj-G3b-17 — Produto rodada 2 G3b (SA-R2dgpj), a quantidade a expedir (4) é maior que o reservado ainda l"
+    ],
+    [
+      "Sertão Atacado",
+      "R11 — Reserva do pedido expedido deixa de ficar ativa",
+      "",
+      "PASS",
+      "expedir 200 · reservas ativas 0 · reservado no saldo 0"
+    ],
+    [
+      "Sertão Atacado",
+      "R11b — Liberar reserva de pedido já expedido: recusa clara, sem código técnico",
+      "",
+      "PASS",
+      "422 Este pedido não tem reserva ativa para liberar (situação atual: Expedido)."
+    ],
+    [
+      "Sertão Atacado",
+      "H1 — Cancelar pedido com separação aberta: cancela e libera OU recusa nomeando a separação",
+      "",
+      "PASS",
+      "422 Não é possível cancelar o pedido PV-0191: a separação SEP-0096 está em aberto. Cancele a separação antes de cancelar o pedido. · reservas ativas 1"
+    ],
+    [
+      "Sertão Atacado",
+      "H1c — Cancelar pedido separado (pronto para expedir) sem expedição criada",
+      "",
+      "PASS",
+      "200 · reservas ativas 0 · reservado no saldo 0"
+    ],
+    [
+      "Sertão Atacado",
+      "H2 — Expedir o pedido A a partir de um local onde a reserva é do pedido X",
+      "",
+      "PASS",
+      "422 Não é possível criar a expedição: o pedido PV-0194 não tem reserva suficiente neste local para o produto SA-R2dgpj-H2-21 — Produto rodada 2 H2 (SA-R2dgpj) (rese"
+    ],
+    [
+      "Sertão Atacado",
+      "M17 — Expedir mais que o reservado: mensagem sem UUID e sem números com 4 casas",
+      "",
+      "PASS",
+      "422 Não é possível criar a expedição: para o produto SA-R2dgpj-M17-22 — Produto rodada 2 M17 (SA-R2dgpj), a quantidade a expedir (5) é maior que o reservado ainda livre para expedição (4). 0 já está em ou"
+    ],
+    [
+      "Sertão Atacado",
+      "B18 — Item do pedido sem unidade herda a unidade do produto (CX)",
+      "",
+      "PASS",
+      "unidade gravada: CX"
+    ]
+  ]
+}

@@ -11,13 +11,14 @@ import { NoAccess } from "@/components/shell/ShellFrame";
 import { useSession } from "@/components/shell/SessionProvider";
 import { ERP_NAV } from "@/lib/nav";
 import { canAccess } from "@/lib/navigation/access";
-import { REPORTS } from "@/lib/dashboard/metrics";
+import { REPORTS, reportAllowed } from "@/lib/dashboard/metrics";
 import { useCached } from "@/lib/dashboard/client";
 import { formatCurrencyBRL, formatDate } from "@/lib/format";
 import type { StatusEntity } from "@/lib/status";
 import { DashboardHeader, PeriodPicker, usePeriod } from "./Context";
 import { SummaryStrip } from "./ReportBlocks";
 import { ProblemsPanel } from "./Problems";
+import { FiscalSetupPanel } from "./FiscalSetupPanel";
 
 // Área de trabalho de um módulo: contexto, resumo do período, pendências
 // do módulo, registros recentes e a navegação interna — tudo filtrado
@@ -275,7 +276,7 @@ export function ModuleWorkspace({ section: sectionId }: { section: string }) {
   if (items.length === 0) return <NoAccess />;
 
   const report = def.report ? REPORTS[def.report] : undefined;
-  const reportOk = !!report && can(report.permission);
+  const reportOk = !!report && reportAllowed(report, can);
   const dashboardItem = def.dashboard ? ERP_NAV.find((s) => s.id === "dashboards")?.items.find((i) => i.href === def.dashboard) : undefined;
   const dashboardOk = !!dashboardItem && canAccess(dashboardItem.permission, can);
   const hasActivity = !!def.problemModules || !!def.recent;
@@ -299,6 +300,8 @@ export function ModuleWorkspace({ section: sectionId }: { section: string }) {
       />
 
       {reportOk && report && <SummaryStrip report={report} range={range} previous={previous} enabled keys={def.summaryKeys} />}
+
+      {sectionId === "fiscal" && <FiscalSetupPanel />}
 
       {hasActivity && (
         <div className="grid gap-4 lg:grid-cols-5">

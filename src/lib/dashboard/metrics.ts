@@ -20,9 +20,16 @@ export type ReportDef = {
   label: string;
   endpoint: string;
   permission: string;
+  /** Permissões que a função do relatório também exige no banco (ex.: o executivo lê a controladoria). */
+  alsoRequires?: string[];
   module: string;
   metrics: Metric[];
 };
+
+/** O usuário pode ver o relatório inteiro? (permissão principal + as que o banco também exige) */
+export function reportAllowed(report: ReportDef, can: (code: string) => boolean): boolean {
+  return can(report.permission) && (report.alsoRequires ?? []).every((code) => can(code));
+}
 
 export const REPORTS: Record<string, ReportDef> = {
   executive: {
@@ -30,6 +37,8 @@ export const REPORTS: Record<string, ReportDef> = {
     label: "Executivo",
     endpoint: "/api/reports/executive",
     permission: "reports.view",
+    // fn_report_executive também consulta a controladoria (controlling.view).
+    alsoRequires: ["controlling.view"],
     module: "core",
     metrics: [
       { key: "net_revenue", label: "Receita líquida", format: "money", goodWhen: "up", href: "/app/comercial/faturamento" },

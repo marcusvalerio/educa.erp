@@ -18,7 +18,7 @@ import { platformSend } from "./data";
 
 // Onboarding de empresa pela plataforma:
 //   1. criar a empresa (fn_platform_create_company — só campos que existem
-//      no modelo; papéis, módulos essenciais e perfil SaaS são semeados
+//      no modelo; papéis, módulos (todos contratados e habilitados) e perfil SaaS são semeados
 //      pelos gatilhos do banco);
 //   2. convidar o PRIMEIRO administrador (fn_platform_invite_company_admin).
 // Depois disso, a empresa se administra em /admin — a plataforma não
@@ -242,7 +242,7 @@ export function NewCompanyDialog({ open, onClose, onCreated }: { open: boolean; 
       onOpenChange={(o) => !o && close()}
       size="lg"
       title={created ? "Empresa criada" : "Nova empresa"}
-      description={created ? undefined : "Cadastro da empresa cliente. Papéis padrão, módulos essenciais e perfil na plataforma são criados automaticamente."}
+      description={created ? undefined : "Cadastro da empresa cliente. Papéis padrão, perfil na plataforma e todos os módulos da plataforma (contratados e habilitados) são criados automaticamente."}
       footer={
         created ? (
           <Button variant="secondary" onClick={close}>
@@ -263,7 +263,7 @@ export function NewCompanyDialog({ open, onClose, onCreated }: { open: boolean; 
       {created ? (
         <div className="flex flex-col gap-4">
           <Alert tone="success" title={created.name}>
-            {created.lifecycle_status === "TRIAL" ? "Em avaliação" : "Ativa"}, com os papéis padrão e os módulos essenciais{created.branch_id ? " e a unidade inicial" : ""}.
+            {created.lifecycle_status === "TRIAL" ? "Em avaliação" : "Ativa"}, com os papéis padrão e todos os módulos da plataforma contratados e habilitados{created.branch_id ? " e a unidade inicial" : ""}. Os módulos podem ser ajustados no detalhe da empresa.
           </Alert>
           <div className="flex items-start gap-3">
             <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-surface-muted text-muted-foreground">

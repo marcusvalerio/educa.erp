@@ -1,0 +1,350 @@
+{
+  "phase": "antes",
+  "pass": 2,
+  "fail": 46,
+  "rows": [
+    [
+      "Empresa",
+      "Cenário",
+      "Execução",
+      "Resultado",
+      "Detalhe"
+    ],
+    [
+      "Vértice Operações",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      1,
+      "FAIL",
+      "201 / 201 ·  · títulos ativos 2"
+    ],
+    [
+      "Vértice Operações",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      1,
+      "FAIL",
+      "201 / 201 · separações abertas 2"
+    ],
+    [
+      "Vértice Operações",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      1,
+      "FAIL",
+      "201 / 201 · quantidade em expedições 8 para 4 reservadas"
+    ],
+    [
+      "Vértice Operações",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      1,
+      "FAIL",
+      "422 Reserva de 8.0000 excede o saldo disponível. / 200 · reservado 7 de 10"
+    ],
+    [
+      "Vértice Operações",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      2,
+      "FAIL",
+      "201 / 201 ·  · títulos ativos 2"
+    ],
+    [
+      "Vértice Operações",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      2,
+      "FAIL",
+      "201 / 201 · separações abertas 2"
+    ],
+    [
+      "Vértice Operações",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      2,
+      "FAIL",
+      "201 / 201 · quantidade em expedições 8 para 4 reservadas"
+    ],
+    [
+      "Vértice Operações",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      2,
+      "FAIL",
+      "422 Reserva de 8.0000 excede o saldo disponível. / 200 · reservado 7 de 10"
+    ],
+    [
+      "Vértice Operações",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      3,
+      "FAIL",
+      "201 / 201 ·  · títulos ativos 2"
+    ],
+    [
+      "Vértice Operações",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      3,
+      "FAIL",
+      "201 / 201 · separações abertas 2"
+    ],
+    [
+      "Vértice Operações",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      3,
+      "FAIL",
+      "201 / 201 · quantidade em expedições 8 para 4 reservadas"
+    ],
+    [
+      "Vértice Operações",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      3,
+      "FAIL",
+      "422 Reserva de 8.0000 excede o saldo disponível. / 200 · reservado 7 de 10"
+    ],
+    [
+      "Vértice Operações",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      4,
+      "FAIL",
+      "201 / 201 ·  · títulos ativos 2"
+    ],
+    [
+      "Vértice Operações",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      4,
+      "FAIL",
+      "201 / 201 · separações abertas 2"
+    ],
+    [
+      "Vértice Operações",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      4,
+      "FAIL",
+      "201 / 201 · quantidade em expedições 8 para 4 reservadas"
+    ],
+    [
+      "Vértice Operações",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      4,
+      "FAIL",
+      "200 / 422 Reserva de 7.0000 excede o saldo disponível. · reservado 8 de 10"
+    ],
+    [
+      "Vértice Operações",
+      "G3b — 2ª expedição em sequência com a mesma quantidade (sem concorrência)",
+      "",
+      "FAIL",
+      "201 / 201"
+    ],
+    [
+      "Vértice Operações",
+      "R11 — Reserva do pedido expedido deixa de ficar ativa",
+      "",
+      "FAIL",
+      "expedir 200 · reservas ativas 1 · reservado no saldo 0"
+    ],
+    [
+      "Vértice Operações",
+      "R11b — Liberar reserva de pedido já expedido: recusa clara, sem código técnico",
+      "",
+      "FAIL",
+      "422 Este pedido não tem reserva ativa para liberar (status atual: shipped)."
+    ],
+    [
+      "Vértice Operações",
+      "H1 — Cancelar pedido com separação aberta: cancela e libera OU recusa nomeando a separação",
+      "",
+      "FAIL",
+      "422 Um dos valores informados não é permitido. Revise os dados e tente novamente. · reservas ativas 1"
+    ],
+    [
+      "Vértice Operações",
+      "H1c — Cancelar pedido separado (pronto para expedir) sem expedição criada",
+      "",
+      "FAIL",
+      "422 Um dos valores informados não é permitido. Revise os dados e tente novamente. · reservas ativas 1 · reservado no saldo 3"
+    ],
+    [
+      "Vértice Operações",
+      "H2 — Expedir o pedido A a partir de um local onde a reserva é do pedido X",
+      "",
+      "FAIL",
+      "201"
+    ],
+    [
+      "Vértice Operações",
+      "M17 — Expedir mais que o reservado: mensagem sem UUID e sem números com 4 casas",
+      "",
+      "FAIL",
+      "409 Item 79623d82-b8f4-417f-832e-5edd2be25d75: quantidade a expedir (5) excede o saldo reservado disponível (4.0000). Reserve mais estoque ou reduza a quantidade."
+    ],
+    [
+      "Vértice Operações",
+      "B18 — Item do pedido sem unidade herda a unidade do produto (CX)",
+      "",
+      "FAIL",
+      "unidade gravada: nula"
+    ],
+    [
+      "Sertão Atacado",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      1,
+      "FAIL",
+      "201 / 201 ·  · títulos ativos 2"
+    ],
+    [
+      "Sertão Atacado",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      1,
+      "FAIL",
+      "201 / 201 · separações abertas 2"
+    ],
+    [
+      "Sertão Atacado",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      1,
+      "FAIL",
+      "201 / 201 · quantidade em expedições 8 para 4 reservadas"
+    ],
+    [
+      "Sertão Atacado",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      1,
+      "FAIL",
+      "200 / 422 Reserva de 7.0000 excede o saldo disponível. · reservado 8 de 10"
+    ],
+    [
+      "Sertão Atacado",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      2,
+      "PASS",
+      "201 / 201 ·  · títulos ativos 1"
+    ],
+    [
+      "Sertão Atacado",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      2,
+      "FAIL",
+      "201 / 201 · separações abertas 2"
+    ],
+    [
+      "Sertão Atacado",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      2,
+      "FAIL",
+      "201 / 201 · quantidade em expedições 8 para 4 reservadas"
+    ],
+    [
+      "Sertão Atacado",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      2,
+      "FAIL",
+      "200 / 422 Reserva de 7.0000 excede o saldo disponível. · reservado 8 de 10"
+    ],
+    [
+      "Sertão Atacado",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      3,
+      "PASS",
+      "201 / 201 ·  · títulos ativos 1"
+    ],
+    [
+      "Sertão Atacado",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      3,
+      "FAIL",
+      "201 / 201 · separações abertas 2"
+    ],
+    [
+      "Sertão Atacado",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      3,
+      "FAIL",
+      "201 / 201 · quantidade em expedições 8 para 4 reservadas"
+    ],
+    [
+      "Sertão Atacado",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      3,
+      "FAIL",
+      "422 Reserva de 8.0000 excede o saldo disponível. / 200 · reservado 7 de 10"
+    ],
+    [
+      "Sertão Atacado",
+      "E4 — Gerar a conta a receber do mesmo pedido 2× ao mesmo tempo",
+      4,
+      "FAIL",
+      "201 / 201 ·  · títulos ativos 2"
+    ],
+    [
+      "Sertão Atacado",
+      "G1 — Criar a separação do mesmo pedido 2× ao mesmo tempo",
+      4,
+      "FAIL",
+      "201 / 201 · separações abertas 2"
+    ],
+    [
+      "Sertão Atacado",
+      "G3 — Criar a expedição do mesmo pedido 2× ao mesmo tempo (4 reservadas)",
+      4,
+      "FAIL",
+      "201 / 201 · quantidade em expedições 8 para 4 reservadas"
+    ],
+    [
+      "Sertão Atacado",
+      "C — Reservar 8 e 7 ao mesmo tempo com saldo 10 (o perdedor fica com o que sobrou)",
+      4,
+      "FAIL",
+      "200 / 422 Reserva de 7.0000 excede o saldo disponível. · reservado 8 de 10"
+    ],
+    [
+      "Sertão Atacado",
+      "G3b — 2ª expedição em sequência com a mesma quantidade (sem concorrência)",
+      "",
+      "FAIL",
+      "201 / 201"
+    ],
+    [
+      "Sertão Atacado",
+      "R11 — Reserva do pedido expedido deixa de ficar ativa",
+      "",
+      "FAIL",
+      "expedir 200 · reservas ativas 1 · reservado no saldo 0"
+    ],
+    [
+      "Sertão Atacado",
+      "R11b — Liberar reserva de pedido já expedido: recusa clara, sem código técnico",
+      "",
+      "FAIL",
+      "422 Este pedido não tem reserva ativa para liberar (status atual: shipped)."
+    ],
+    [
+      "Sertão Atacado",
+      "H1 — Cancelar pedido com separação aberta: cancela e libera OU recusa nomeando a separação",
+      "",
+      "FAIL",
+      "422 Um dos valores informados não é permitido. Revise os dados e tente novamente. · reservas ativas 1"
+    ],
+    [
+      "Sertão Atacado",
+      "H1c — Cancelar pedido separado (pronto para expedir) sem expedição criada",
+      "",
+      "FAIL",
+      "422 Um dos valores informados não é permitido. Revise os dados e tente novamente. · reservas ativas 1 · reservado no saldo 3"
+    ],
+    [
+      "Sertão Atacado",
+      "H2 — Expedir o pedido A a partir de um local onde a reserva é do pedido X",
+      "",
+      "FAIL",
+      "201"
+    ],
+    [
+      "Sertão Atacado",
+      "M17 — Expedir mais que o reservado: mensagem sem UUID e sem números com 4 casas",
+      "",
+      "FAIL",
+      "409 Item 11efcb90-97f8-44dd-b120-71cbca902efb: quantidade a expedir (5) excede o saldo reservado disponível (4.0000). Reserve mais estoque ou reduza a quantidade."
+    ],
+    [
+      "Sertão Atacado",
+      "B18 — Item do pedido sem unidade herda a unidade do produto (CX)",
+      "",
+      "FAIL",
+      "unidade gravada: nula"
+    ]
+  ]
+}

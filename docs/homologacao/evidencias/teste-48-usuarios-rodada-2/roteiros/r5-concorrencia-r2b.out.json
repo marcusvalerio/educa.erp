@@ -1,0 +1,314 @@
+{
+  "scenarios": [
+    {
+      "id": "A",
+      "name": "Dois usuários salvam o mesmo produto ao mesmo tempo (formulário inteiro)",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "PATCH /api/products/:id × 2 (Gerente + Operador)",
+      "expected": "as duas alterações preservadas ou a segunda recusada com aviso (bloqueio otimista)",
+      "actual": "HTTP 409/200; preço final 25, descrição \"Produto de concorrência A (VO-r2b) — revisada\"; auditoria: 1 alterações; edição com cópia velha: HTTP 409, preço voltou para 40 (Gerente tinha gravado 40)",
+      "lostUpdate": true,
+      "before": "2026-10-04 21:47:04.621885+00"
+    },
+    {
+      "id": "B",
+      "name": "Gerente aprova enquanto Vendedor cancela e edita o mesmo pedido",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "approve × cancel × PATCH simultâneos",
+      "expected": "um vence; o outro recebe recusa clara; estado final coerente",
+      "actual": "aprovar 200; cancelar 403 Você não tem permissão para esta operação (Pedidos de venda — Cancelar).; editar 405 ; status final approved; obs \"Cenário B\""
+    },
+    {
+      "id": "B2",
+      "name": "Vendedor tenta mudar itens/preço de pedido já aprovado",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "PATCH /api/sales-orders/:id (aprovado)",
+      "expected": "itens e preço do pedido aprovado não mudam",
+      "actual": "HTTP 405 ; status approved; itens [{\"qtd\":3,\"p\":25}]; total 75"
+    },
+    {
+      "id": "C1",
+      "name": "Corrida de reserva: estoque 10, A reserva 8 e B reserva 7 ao mesmo tempo (rodada 1)",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "POST /reserve × 2 (Vendedor + Logística)",
+      "expected": "reservado ≤ 10; um pedido fica parcial/pendente",
+      "actual": "HTTP 200 / 200; saldo 10, reservado 10, reservas ativas 10 (2 active, 8 active)"
+    },
+    {
+      "id": "C2",
+      "name": "Corrida de reserva: estoque 10, A reserva 8 e B reserva 7 ao mesmo tempo (rodada 2)",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "POST /reserve × 2 (Vendedor + Logística)",
+      "expected": "reservado ≤ 10; um pedido fica parcial/pendente",
+      "actual": "HTTP 200 / 200; saldo 10, reservado 10, reservas ativas 10 (8 active, 2 active)"
+    },
+    {
+      "id": "C3",
+      "name": "Corrida de reserva: estoque 10, A reserva 8 e B reserva 7 ao mesmo tempo (rodada 3)",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "POST /reserve × 2 (Vendedor + Logística)",
+      "expected": "reservado ≤ 10; um pedido fica parcial/pendente",
+      "actual": "HTTP 200 / 200; saldo 10, reservado 10, reservas ativas 10 (2 active, 8 active)"
+    },
+    {
+      "id": "C4",
+      "name": "Mesmo pedido: 3 cliques simultâneos em Reservar",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "POST /reserve × 3 (mesmo usuário, Logística)",
+      "expected": "reservado = 6 (não 12 ou 18)",
+      "actual": "HTTP 200 / 409 Só é possível reservar estoque de um pedido aprovado (situação atual: Reservado). / 409 Só é possível reservar estoque de um pedido aprovado (situação atual: Reservado).; reservado 6"
+    },
+    {
+      "id": "D",
+      "name": "Entrada + consulta + reserva + separação + saída no mesmo produto, simultâneas",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "5 operações em paralelo (Operador, Vendedor, Gerente, Logística)",
+      "expected": "saldo = soma do razão; reservado ≤ saldo; nenhum 5xx",
+      "actual": "HTTP 201 / 200 / 200 / 200 / 403 Você não tem permissão para esta operação (Estoque — Ajustar). em 25 ms; saldo 35, reservado 14, razão 35"
+    },
+    {
+      "id": "E1",
+      "name": "Baixa duplicada do mesmo título (R$ 500) — Financeiro e Gerente ao mesmo tempo",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "POST /pay × 2",
+      "expected": "uma baixa; a outra recusada; banco debitado uma vez",
+      "actual": "HTTP 201 / 422 Parcela na situação \"Pago\" não pode receber pagamentos.; parcela {\"status\":\"PAID\",\"p\":500}; pagamentos {\"n\":1,\"s\":500}; lançamentos {\"n\":1,\"s\":500}; débito no banco 500"
+    },
+    {
+      "id": "E2",
+      "name": "Baixa duplicada do mesmo título (R$ 500) — mesmo usuário, duplo clique, sem chave de idempotência",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "POST /pay × 2",
+      "expected": "uma baixa; a outra recusada; banco debitado uma vez",
+      "actual": "HTTP 201 / 422 Parcela na situação \"Pago\" não pode receber pagamentos.; parcela {\"status\":\"PAID\",\"p\":500}; pagamentos {\"n\":1,\"s\":500}; lançamentos {\"n\":1,\"s\":500}; débito no banco 500"
+    },
+    {
+      "id": "E3",
+      "name": "Recebimento duplicado da mesma parcela (R$ 50)",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "POST /receive × 2 (Financeiro + Gerente)",
+      "expected": "um recebimento; o outro recusado",
+      "actual": "HTTP 201 / 422 Parcela na situação \"Recebido\" não pode receber recebimentos.; parcela {\"status\":\"RECEIVED\",\"r\":50}; recebimentos {\"n\":1,\"s\":50}"
+    },
+    {
+      "id": "E4",
+      "name": "Gerar conta a receber do mesmo pedido 2× ao mesmo tempo",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "POST /generate-receivable × 2",
+      "expected": "1 título ativo; o 2º informado",
+      "actual": "HTTP 201 / 200 · Conta a receber CR-0080 gerada. | Este pedido já tem a conta a receber CR-0080. Nenhum título novo foi criado.; títulos ativos do pedido: 1"
+    },
+    {
+      "id": "F1",
+      "name": "Gerar NF-e do mesmo pedido 2× ao mesmo tempo (Fiscal + Gerente)",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "POST /generate-fiscal-document × 2",
+      "expected": "1 documento",
+      "actual": "HTTP 201 / 200; documentos: 1"
+    },
+    {
+      "id": "F2",
+      "name": "Calcular, marcar pronta, numerar e autorizar a mesma NF-e 2× ao mesmo tempo",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "calculate/ready/assign-number/authorize × 2",
+      "expected": "itens não duplicam; uma autorização; número único",
+      "actual": "calcular 200/200; itens {\"n\":1,\"t\":50}; pronta 200/409 Só é possível confirmar a conferência fiscal de um documento calculado (situação atual: Pr; numerar 200/422 O documento DF-0055 já tem o número 12 (série 1). Número de documento não é trocado. → {\"status\":\"READY\",\"number\":12,\"series\":\"1\"}; autorizar 422 O documento DF-0055 já está autorizado (chave 31261022977477000164550010000000121749550583 / 200 → {\"status\":\"AUTHORIZED\",\"access_key\":\"31261022977477000164550010000000121749550583\"}"
+    },
+    {
+      "id": "G1",
+      "name": "Criar separação do mesmo pedido 2× ao mesmo tempo",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "POST /pick-lists × 2",
+      "expected": "1 lista de separação ativa",
+      "actual": "HTTP 201 / 422 O pedido PV-0273 já tem a separação SEP-0113 em aberto. Use essa separação (ou cancele-a a; listas ativas 1"
+    },
+    {
+      "id": "G2",
+      "name": "Separar o mesmo item e concluir a separação 2× ao mesmo tempo",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "pick × 2, complete × 2",
+      "expected": "separado = 4 (não 8)",
+      "actual": "separar 200/200; separado 4; concluir 200/200"
+    },
+    {
+      "id": "G3",
+      "name": "Criar expedição 2×, expedir 3× e entregar 2× ao mesmo tempo",
+      "ok": true,
+      "company": "Vértice Operações",
+      "target": "shipments × 2; ship × 3 (Logística + Gerente); deliver × 2",
+      "expected": "1 expedição; baixa de estoque única (4 un.); 1 evento de entrega",
+      "actual": "criar 201/422 Não é possível criar a expedição: para o produto VO-r2b-G — Produto de concorrência G (VO-, ativas 1; expedir 200/409 Só é possível expedir uma expedição pronta para envio (situação atual: Expedida)./409 Só é possível expedir uma expedição pronta para envio (situação atual: Expedida).; saldo 10→6; saídas {\"n\":1,\"s\":4}; entregar 409 Só é possível confirmar entrega de uma expedição expedida (situação atual: Entregue)./201; eventos 1"
+    },
+    {
+      "id": "A",
+      "name": "Dois usuários salvam o mesmo produto ao mesmo tempo (formulário inteiro)",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "PATCH /api/products/:id × 2 (Gerente + Operador)",
+      "expected": "as duas alterações preservadas ou a segunda recusada com aviso (bloqueio otimista)",
+      "actual": "HTTP 200/409; preço final 31.5, descrição \"Produto de concorrência A (SA-r2b)\"; auditoria: 1 alterações; edição com cópia velha: HTTP 409, preço voltou para 40 (Gerente tinha gravado 40)",
+      "lostUpdate": true,
+      "before": "2026-10-04 21:47:14.165188+00"
+    },
+    {
+      "id": "B",
+      "name": "Gerente aprova enquanto Vendedor cancela e edita o mesmo pedido",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "approve × cancel × PATCH simultâneos",
+      "expected": "um vence; o outro recebe recusa clara; estado final coerente",
+      "actual": "aprovar 200; cancelar 403 Você não tem permissão para esta operação (Pedidos de venda — Cancelar).; editar 405 ; status final approved; obs \"Cenário B\""
+    },
+    {
+      "id": "B2",
+      "name": "Vendedor tenta mudar itens/preço de pedido já aprovado",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "PATCH /api/sales-orders/:id (aprovado)",
+      "expected": "itens e preço do pedido aprovado não mudam",
+      "actual": "HTTP 405 ; status approved; itens [{\"qtd\":3,\"p\":25}]; total 75"
+    },
+    {
+      "id": "C1",
+      "name": "Corrida de reserva: estoque 10, A reserva 8 e B reserva 7 ao mesmo tempo (rodada 1)",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "POST /reserve × 2 (Vendedor + Logística)",
+      "expected": "reservado ≤ 10; um pedido fica parcial/pendente",
+      "actual": "HTTP 200 / 200; saldo 10, reservado 10, reservas ativas 10 (8 active, 2 active)"
+    },
+    {
+      "id": "C2",
+      "name": "Corrida de reserva: estoque 10, A reserva 8 e B reserva 7 ao mesmo tempo (rodada 2)",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "POST /reserve × 2 (Vendedor + Logística)",
+      "expected": "reservado ≤ 10; um pedido fica parcial/pendente",
+      "actual": "HTTP 200 / 200; saldo 10, reservado 10, reservas ativas 10 (8 active, 2 active)"
+    },
+    {
+      "id": "C3",
+      "name": "Corrida de reserva: estoque 10, A reserva 8 e B reserva 7 ao mesmo tempo (rodada 3)",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "POST /reserve × 2 (Vendedor + Logística)",
+      "expected": "reservado ≤ 10; um pedido fica parcial/pendente",
+      "actual": "HTTP 200 / 200; saldo 10, reservado 10, reservas ativas 10 (3 active, 7 active)"
+    },
+    {
+      "id": "C4",
+      "name": "Mesmo pedido: 3 cliques simultâneos em Reservar",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "POST /reserve × 3 (mesmo usuário, Logística)",
+      "expected": "reservado = 6 (não 12 ou 18)",
+      "actual": "HTTP 409 Só é possível reservar estoque de um pedido aprovado (situação atual: Reservado). / 200 / 409 Só é possível reservar estoque de um pedido aprovado (situação atual: Reservado).; reservado 6"
+    },
+    {
+      "id": "D",
+      "name": "Entrada + consulta + reserva + separação + saída no mesmo produto, simultâneas",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "5 operações em paralelo (Operador, Vendedor, Gerente, Logística)",
+      "expected": "saldo = soma do razão; reservado ≤ saldo; nenhum 5xx",
+      "actual": "HTTP 201 / 200 / 200 / 200 / 403 Você não tem permissão para esta operação (Estoque — Ajustar). em 29 ms; saldo 35, reservado 14, razão 35"
+    },
+    {
+      "id": "E1",
+      "name": "Baixa duplicada do mesmo título (R$ 500) — Financeiro e Gerente ao mesmo tempo",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "POST /pay × 2",
+      "expected": "uma baixa; a outra recusada; banco debitado uma vez",
+      "actual": "HTTP 201 / 422 Parcela na situação \"Pago\" não pode receber pagamentos.; parcela {\"status\":\"PAID\",\"p\":500}; pagamentos {\"n\":1,\"s\":500}; lançamentos {\"n\":1,\"s\":500}; débito no banco 500"
+    },
+    {
+      "id": "E2",
+      "name": "Baixa duplicada do mesmo título (R$ 500) — mesmo usuário, duplo clique, sem chave de idempotência",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "POST /pay × 2",
+      "expected": "uma baixa; a outra recusada; banco debitado uma vez",
+      "actual": "HTTP 422 Parcela na situação \"Pago\" não pode receber pagamentos. / 201; parcela {\"status\":\"PAID\",\"p\":500}; pagamentos {\"n\":1,\"s\":500}; lançamentos {\"n\":1,\"s\":500}; débito no banco 500"
+    },
+    {
+      "id": "E3",
+      "name": "Recebimento duplicado da mesma parcela (R$ 50)",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "POST /receive × 2 (Financeiro + Gerente)",
+      "expected": "um recebimento; o outro recusado",
+      "actual": "HTTP 201 / 422 Parcela na situação \"Recebido\" não pode receber recebimentos.; parcela {\"status\":\"RECEIVED\",\"r\":50}; recebimentos {\"n\":1,\"s\":50}"
+    },
+    {
+      "id": "E4",
+      "name": "Gerar conta a receber do mesmo pedido 2× ao mesmo tempo",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "POST /generate-receivable × 2",
+      "expected": "1 título ativo; o 2º informado",
+      "actual": "HTTP 200 / 201 · Este pedido já tem a conta a receber CR-0082. Nenhum título novo foi criado. | Conta a receber CR-0082 gerada.; títulos ativos do pedido: 1"
+    },
+    {
+      "id": "F1",
+      "name": "Gerar NF-e do mesmo pedido 2× ao mesmo tempo (Fiscal + Gerente)",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "POST /generate-fiscal-document × 2",
+      "expected": "1 documento",
+      "actual": "HTTP 200 / 201; documentos: 1"
+    },
+    {
+      "id": "F2",
+      "name": "Calcular, marcar pronta, numerar e autorizar a mesma NF-e 2× ao mesmo tempo",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "calculate/ready/assign-number/authorize × 2",
+      "expected": "itens não duplicam; uma autorização; número único",
+      "actual": "calcular 200/200; itens {\"n\":1,\"t\":50}; pronta 200/409 Só é possível confirmar a conferência fiscal de um documento calculado (situação atual: Pr; numerar 422 O documento DF-0056 já tem o número 12 (série 1). Número de documento não é trocado./200 → {\"status\":\"READY\",\"number\":12,\"series\":\"1\"}; autorizar 422 O documento DF-0056 já está autorizado (chave 35261087602980000180550010000000121397343143 / 200 → {\"status\":\"AUTHORIZED\",\"access_key\":\"35261087602980000180550010000000121397343143\"}"
+    },
+    {
+      "id": "G1",
+      "name": "Criar separação do mesmo pedido 2× ao mesmo tempo",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "POST /pick-lists × 2",
+      "expected": "1 lista de separação ativa",
+      "actual": "HTTP 201 / 422 O pedido PV-0288 já tem a separação SEP-0115 em aberto. Use essa separação (ou cancele-a a; listas ativas 1"
+    },
+    {
+      "id": "G2",
+      "name": "Separar o mesmo item e concluir a separação 2× ao mesmo tempo",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "pick × 2, complete × 2",
+      "expected": "separado = 4 (não 8)",
+      "actual": "separar 200/200; separado 4; concluir 200/200"
+    },
+    {
+      "id": "G3",
+      "name": "Criar expedição 2×, expedir 3× e entregar 2× ao mesmo tempo",
+      "ok": true,
+      "company": "Sertão Atacado",
+      "target": "shipments × 2; ship × 3 (Logística + Gerente); deliver × 2",
+      "expected": "1 expedição; baixa de estoque única (4 un.); 1 evento de entrega",
+      "actual": "criar 422 Não é possível criar a expedição: para o produto SA-r2b-G — Produto de concorrência G (SA-/201, ativas 1; expedir 200/409 Só é possível expedir uma expedição pronta para envio (situação atual: Expedida)./409 Só é possível expedir uma expedição pronta para envio (situação atual: Expedida).; saldo 10→6; saídas {\"n\":1,\"s\":4}; entregar 409 Só é possível confirmar entrega de uma expedição expedida (situação atual: Entregue)./201; eventos 1"
+    }
+  ]
+}

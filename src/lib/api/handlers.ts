@@ -3,13 +3,14 @@ import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { tablesByEntity } from "@/lib/database/repositories";
 import type { EntityRoute } from "@/lib/database/repositories";
-import { schemasByEntity } from "@/lib/validations/cadastros";
+import { schemasByEntity, createSchemasByEntity } from "@/lib/validations/cadastros";
 import { ApiError, notFoundError, unauthorizedError, forbiddenError, validationError } from "@/lib/database/errors";
 import { getAuthContext, hasPermission } from "@/lib/auth/context";
 import type { ActorContext } from "@/lib/database/table";
 import { jsonError } from "./response";
 import { entityPermissionCode } from "./entity-permissions";
 import { onlyProvided } from "@/lib/validations/partial-update";
+import { documentChanged, personDocumentError } from "@/lib/documents";
 import type { StatusCadastro } from "@/lib/cadastros/types";
 
 // Handlers genéricos reutilizados pelas rotas de cadastro
@@ -24,6 +25,25 @@ import type { StatusCadastro } from "@/lib/cadastros/types";
 // módulo/ação antes de tocar o repositório. Isso é reforço em camada de
 // aplicação — o RLS no banco (migration 0006) é a barreira real e
 // independente da API; nenhuma das duas depende só da outra.
+
+// Mapa rota → permissão: src/lib/api/entity-permissions.ts (o mesmo usado
+// pela importação/exportação e pelos testes de banco).
+
+// Documento de pessoa (CPF/CNPJ) com dígitos verificadores. Na criação vale
+// sempre; na alteração, só quando o documento ou o tipo mudam — cadastros
+// antigos podem ter documento fictício e continuar editáveis nos demais campos.
+const DOCUMENT_RULES: Partial<Record<EntityRoute, { field: string; typeField: string }>> = {
+  customers: { field: "documento", typeField: "tipo" },
+};
+
+function documentRuleError(entity: EntityRoute, next: Record<string, unknown>, previous?: Record<string, unknown> | null) {
+  const rule = DOCUMENT_RULES[entity];
+  if (!rule) return null;
+  const doc = (next[rule.field] ?? previous?.[rule.field]) as string | undefined;
+  const tipo = (next[rule.typeField] ?? previous?.[rule.typeField]) as string | undefined;
+  if (previous && !documentChanged(previous[rule.field] as string, doc) && tipo === previous[rule.typeField]) return null;
+  return personDocumentError(tipo, doc);
+}
 
 function firstIssueMessage(error: { issues: { message: string }[] }) {
   return error.issues[0]?.message ?? "Dados inválidos.";
@@ -83,8 +103,10 @@ export function createCollectionHandlers(entity: EntityRoute) {
       const { companyId, actor } = await requireAccess(entity, "create");
       const body = await request.json().catch(() => null);
       if (!body || typeof body !== "object") throw validationError("Corpo da requisição inválido.");
-      const parsed = schema.safeParse(body);
+      const parsed = (createSchemasByEntity[entity] ?? schema).safeParse(body);
       if (!parsed.success) throw validationError(firstIssueMessage(parsed.error));
+      const documentError = documentRuleError(entity, parsed.data as Record<string, unknown>);
+      if (documentError) throw validationError(documentError);
       const created = await table.create(companyId, parsed.data as never, actor);
       return NextResponse.json({ success: true, data: created }, { status: 201 });
     } catch (error) {
@@ -106,7 +128,7 @@ export function createItemHandlers(entity: EntityRoute) {
       const { companyId } = await requireAccess(entity, "read");
       const { id } = await context.params;
       const item = await table.get(companyId, id);
-      if (!item) throw notFoundError(entity);
+      if (!item) throw notFoundError(table.entityLabel);
       return NextResponse.json({ success: true, data: item });
     } catch (error) {
       return jsonError(error);
@@ -121,9 +143,21 @@ export function createItemHandlers(entity: EntityRoute) {
       if (!body || typeof body !== "object") throw validationError("Corpo da requisição inválido.");
       const parsed = schema.partial().safeParse(body);
       if (!parsed.success) throw validationError(firstIssueMessage(parsed.error));
+      // Só os campos enviados (zod 4 aplica defaults no .partial(); ver
+      // src/lib/validations/partial-update.ts).
       const changes = onlyProvided(parsed.data as Record<string, unknown>, body);
       if (Object.keys(changes).length === 0) throw validationError("Nenhum dado para atualizar.");
-      const updated = await table.update(companyId, id, changes as never, actor);
+      const rule = DOCUMENT_RULES[entity];
+      if (rule && (rule.field in changes || rule.typeField in changes)) {
+        const current = await table.get(companyId, id);
+        if (!current) throw notFoundError("Registro");
+        const documentError = documentRuleError(entity, changes, current as unknown as Record<string, unknown>);
+        if (documentError) throw validationError(documentError);
+      }
+      // Versão que o formulário abriu (bloqueio otimista).
+      const raw = body as Record<string, unknown>;
+      const expectedUpdatedAt = typeof raw.atualizadoEm === "string" && raw.atualizadoEm ? raw.atualizadoEm : undefined;
+      const updated = await table.update(companyId, id, changes as never, actor, { expectedUpdatedAt });
       return NextResponse.json({ success: true, data: updated });
     } catch (error) {
       return jsonError(error);

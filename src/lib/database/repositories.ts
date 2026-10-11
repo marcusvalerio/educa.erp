@@ -18,6 +18,7 @@ import {
   userToRowFields,
   warehouseLocationFromRow,
   warehouseLocationToRowFields,
+  codeFromName,
   productCategoryFromRow,
   productCategoryToRowFields,
   productBrandFromRow,
@@ -165,6 +166,7 @@ export const productCategoriesTable = createTableRepository({
   defaultSort: "created_at",
   fromRow: productCategoryFromRow,
   toRowFields: productCategoryToRowFields,
+  createDefaults: (item) => ({ code: codeFromName(item.nome ?? "") }),
   labelOf: (item) => item.nome,
   dependents: [
     {
@@ -189,6 +191,7 @@ export const productBrandsTable = createTableRepository({
   defaultSort: "created_at",
   fromRow: productBrandFromRow,
   toRowFields: productBrandToRowFields,
+  createDefaults: (item) => ({ code: codeFromName(item.nome ?? "") }),
   labelOf: (item) => item.nome,
   dependents: [
     {

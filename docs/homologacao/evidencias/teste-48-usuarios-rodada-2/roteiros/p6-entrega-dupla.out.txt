@@ -1,0 +1,2 @@
+{"db":"educa_base","results":["ok","ok"],"eventos_entregue":2}
+{"db":"educa_test","results":["ok","recusado: Só é possível confirmar entrega de uma expedição expedida (status atual: delivered)."],"eventos_entregue":1}

@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 import { Panel, PanelHeader } from "@/components/ui/Panel";
 import { Stat, StatStrip } from "@/components/ui/Stat";
 import { EmptyState, Skeleton } from "@/components/ui/Feedback";
-import { useCached, reportPath } from "@/lib/dashboard/client";
+import { FORBIDDEN_MESSAGE, useCached, reportPath } from "@/lib/dashboard/client";
 import { biggestChanges, formatMetric, type ReportDef } from "@/lib/dashboard/metrics";
 import { percentChange } from "@/lib/format";
 import type { DateRange } from "@/lib/dashboard/periods";
@@ -42,6 +42,13 @@ export function SummaryStrip({
   const { current, prior } = useReportPair(report, range, previous, enabled);
   const metrics = keys ? report.metrics.filter((m) => keys.includes(m.key)) : report.metrics.slice(0, 8);
   if (!enabled) return null;
+  if (current.error === FORBIDDEN_MESSAGE) {
+    return (
+      <Panel>
+        <EmptyState compact kind="no-permission" title={`Indicadores do relatório ${report.label.toLowerCase()} fora do seu perfil`} description="O seu papel não inclui todos os dados deste relatório. Se precisar deles, peça acesso ao administrador da empresa." />
+      </Panel>
+    );
+  }
   if (current.error) {
     return (
       <Panel>
@@ -85,6 +92,8 @@ export function ChangesPanel({ report, range, previous, enabled }: { report: Rep
           <Skeleton className="h-6 w-full" />
           <Skeleton className="h-6 w-2/3" />
         </div>
+      ) : current.error === FORBIDDEN_MESSAGE || prior.error === FORBIDDEN_MESSAGE ? (
+        <EmptyState compact kind="no-permission" title="Comparação fora do seu perfil" description="O seu papel não inclui todos os dados deste relatório." />
       ) : current.error || prior.error ? (
         <EmptyState compact kind="error" title="Comparação indisponível" description={current.error ?? prior.error} onRetry={() => { current.reload(); prior.reload(); }} />
       ) : changes.length === 0 ? (

@@ -1,0 +1,217 @@
+{
+  "phase": "final",
+  "pass": 34,
+  "fail": 0,
+  "rows": [
+    [
+      "Empresa",
+      "Cenário",
+      "Resultado",
+      "Detalhe"
+    ],
+    [
+      "Vértice Operações",
+      "C0 — Administrador cadastra a série e o provedor SIMULACAO do estabelecimento",
+      "PASS",
+      "série 409 Já existe um registro com este documento (CPF/CNPJ). · provedor 201 · séries ativas 1 · provedor 1"
+    ],
+    [
+      "Vértice Operações",
+      "S0 — Checklist da 1ª NF-e conta a série de numeração",
+      "PASS",
+      "200 séries 1"
+    ],
+    [
+      "Vértice Operações",
+      "N1 — O papel Fiscal numera a NF-e (antes: exigia permissão de configuração)",
+      "PASS",
+      "200 nº 14"
+    ],
+    [
+      "Vértice Operações",
+      "N2 — Documento já conferido (pronto) sem número pode ser numerado",
+      "PASS",
+      "pronto 200 · numerar 200"
+    ],
+    [
+      "Vértice Operações",
+      "N3 — Numerar de novo é recusado e o número não muda",
+      "PASS",
+      "422 O documento DF-0059 já tem o número 14 (série 1). Número de documento não é trocado. · número continua 14"
+    ],
+    [
+      "Vértice Operações",
+      "N4 — Autorização manual recusa documento sem número e chave '123'",
+      "PASS",
+      "sem número: 422 O documento DF-0061 está sem número. Numere-o antes de autorizar. · chave 123: 422 Chave de acesso inválida: informe os 44 dígitos da chave, com o dígito verificador correto. · situação READY"
+    ],
+    [
+      "Vértice Operações",
+      "N5 — Numerar dois documentos ao mesmo tempo dá números diferentes; nenhum número repetido na série",
+      "PASS",
+      "200 / 200 · nº 17 e 18 · repetidos 0"
+    ],
+    [
+      "Vértice Operações",
+      "S1 — Pedido → NF-e → numerar → calcular → pronta → autorizar na SIMULAÇÃO",
+      "PASS",
+      "200 · AUTHORIZED · chave válida true · SIMULACAO-26100503015900001 · pedido PV-0639 · qtd 4 × 37.5 · NCM 84713012 · CFOP 5102 · total 150.0000 · impostos 0.0000 · tentativas 1 · autor Wilson Uchoa"
+    ],
+    [
+      "Vértice Operações",
+      "S2 — Autorizar de novo: recusa clara, nada refeito",
+      "PASS",
+      "409 O documento DF-0064 já foi autorizado (simulação), chave 31261022977477000164550010000000191095496900. Nada foi refeito."
+    ],
+    [
+      "Vértice Operações",
+      "S3 — Três pessoas autorizam ao mesmo tempo: 1 autoriza, os outros recebem 'já autorizado'",
+      "PASS",
+      "200 / 409 O documento DF-0065 já foi autorizado (simulação), chave 31261022977477000164550010000000201422991283. Nada foi refeito. / 409 O documento DF-0065 já foi autorizado (simulação), chave 31261022977477000164550010000000201422991283. Nada foi refeito. · tentativas 1 · eventos 1"
+    ],
+    [
+      "Vértice Operações",
+      "S4 — CFOP interestadual (6102) para cliente do mesmo estado → rejeitado SIM-106",
+      "PASS",
+      "200 · REJECTED SIM-106"
+    ],
+    [
+      "Vértice Operações",
+      "S5 — CFOP de entrada (1102) em documento de saída → rejeitado SIM-105",
+      "PASS",
+      "200 · REJECTED SIM-105"
+    ],
+    [
+      "Vértice Operações",
+      "S6 — Cancelar: justificativa curta recusada; 2 pessoas ao mesmo tempo → 1 cancela",
+      "PASS",
+      "curta 422 Informe a justificativa do cancelamento com pelo menos 15 caracteres. · 200 / 409 O documento DF-0064 já está cancelado. Nada foi refeito. · CANCELLED · auditoria CANCEL 1"
+    ],
+    [
+      "Vértice Operações",
+      "S7 — Gerar a NF-e do mesmo pedido 2× ao mesmo tempo: 1 documento, só uma resposta 'criado'",
+      "PASS",
+      "201 / 200 · NF-e DF-0068 gerada em rascunho. | Este pedido já tem a NF-e DF-0068. Nenhum documento novo foi criado. · documentos 1"
+    ],
+    [
+      "Vértice Operações",
+      "S8 — Simulação sem permissão e em documento de outra empresa",
+      "PASS",
+      "vendedor 403 Você não tem permissão para esta operação (Documentos fiscais — Enviar para autorização). · operador 403 Você não tem permissão para esta operação (Documentos fiscais — Cancelar). · outra empresa 403/404"
+    ],
+    [
+      "Vértice Operações",
+      "S9 — Documento visual simulado: marca d'água e avisos, sem se apresentar como NF-e autorizada",
+      "PASS",
+      "capturado em 02-fiscal-simulado/07-vertice-documento-simulado.png"
+    ],
+    [
+      "Vértice Operações",
+      "S10 — NF-e de ENTRADA do recebimento de compra autorizada na simulação (fornecedor como remetente)",
+      "PASS",
+      "cfop 409 Já existe um registro com este código. · natureza 201 · gerar 201 · autorizar 409 O documento DF-0041 já foi autorizado (simulação), chave 31261022977477000164550010000000101492864209. Nada foi refeito. · AUTHORIZED ENTRADA · CFOP 1102 · remetente Polar Fornecimentos VO Ltda."
+    ],
+    [
+      "Sertão Atacado",
+      "C0 — Administrador cadastra a série e o provedor SIMULACAO do estabelecimento",
+      "PASS",
+      "série 409 Já existe um registro com este documento (CPF/CNPJ). · provedor 201 · séries ativas 1 · provedor 1"
+    ],
+    [
+      "Sertão Atacado",
+      "S0 — Checklist da 1ª NF-e conta a série de numeração",
+      "PASS",
+      "200 séries 1"
+    ],
+    [
+      "Sertão Atacado",
+      "N1 — O papel Fiscal numera a NF-e (antes: exigia permissão de configuração)",
+      "PASS",
+      "200 nº 14"
+    ],
+    [
+      "Sertão Atacado",
+      "N2 — Documento já conferido (pronto) sem número pode ser numerado",
+      "PASS",
+      "pronto 200 · numerar 200"
+    ],
+    [
+      "Sertão Atacado",
+      "N3 — Numerar de novo é recusado e o número não muda",
+      "PASS",
+      "422 O documento DF-0069 já tem o número 14 (série 1). Número de documento não é trocado. · número continua 14"
+    ],
+    [
+      "Sertão Atacado",
+      "N4 — Autorização manual recusa documento sem número e chave '123'",
+      "PASS",
+      "sem número: 422 O documento DF-0071 está sem número. Numere-o antes de autorizar. · chave 123: 422 Chave de acesso inválida: informe os 44 dígitos da chave, com o dígito verificador correto. · situação READY"
+    ],
+    [
+      "Sertão Atacado",
+      "N5 — Numerar dois documentos ao mesmo tempo dá números diferentes; nenhum número repetido na série",
+      "PASS",
+      "200 / 200 · nº 18 e 17 · repetidos 0"
+    ],
+    [
+      "Sertão Atacado",
+      "S1 — Pedido → NF-e → numerar → calcular → pronta → autorizar na SIMULAÇÃO",
+      "PASS",
+      "200 · AUTHORIZED · chave válida true · SIMULACAO-26100503021100001 · pedido PV-0647 · qtd 4 × 37.5 · NCM 44152000 · CFOP 5102 · total 150.0000 · impostos 0.0000 · tentativas 1 · autor Ingrid Gusmão"
+    ],
+    [
+      "Sertão Atacado",
+      "S2 — Autorizar de novo: recusa clara, nada refeito",
+      "PASS",
+      "409 O documento DF-0074 já foi autorizado (simulação), chave 35261087602980000180550010000000191975259290. Nada foi refeito."
+    ],
+    [
+      "Sertão Atacado",
+      "S3 — Três pessoas autorizam ao mesmo tempo: 1 autoriza, os outros recebem 'já autorizado'",
+      "PASS",
+      "409 O documento DF-0075 já foi autorizado (simulação), chave 35261087602980000180550010000000201611598358. Nada foi refeito. / 200 / 409 O documento DF-0075 já foi autorizado (simulação), chave 35261087602980000180550010000000201611598358. Nada foi refeito. · tentativas 1 · eventos 1"
+    ],
+    [
+      "Sertão Atacado",
+      "S4 — CFOP interestadual (6102) para cliente do mesmo estado → rejeitado SIM-106",
+      "PASS",
+      "200 · REJECTED SIM-106"
+    ],
+    [
+      "Sertão Atacado",
+      "S5 — CFOP de entrada (1102) em documento de saída → rejeitado SIM-105",
+      "PASS",
+      "200 · REJECTED SIM-105"
+    ],
+    [
+      "Sertão Atacado",
+      "S6 — Cancelar: justificativa curta recusada; 2 pessoas ao mesmo tempo → 1 cancela",
+      "PASS",
+      "curta 422 Informe a justificativa do cancelamento com pelo menos 15 caracteres. · 200 / 409 O documento DF-0074 já está cancelado. Nada foi refeito. · CANCELLED · auditoria CANCEL 1"
+    ],
+    [
+      "Sertão Atacado",
+      "S7 — Gerar a NF-e do mesmo pedido 2× ao mesmo tempo: 1 documento, só uma resposta 'criado'",
+      "PASS",
+      "201 / 200 · NF-e DF-0078 gerada em rascunho. | Este pedido já tem a NF-e DF-0078. Nenhum documento novo foi criado. · documentos 1"
+    ],
+    [
+      "Sertão Atacado",
+      "S8 — Simulação sem permissão e em documento de outra empresa",
+      "PASS",
+      "vendedor 403 Você não tem permissão para esta operação (Documentos fiscais — Enviar para autorização). · operador 403 Você não tem permissão para esta operação (Documentos fiscais — Cancelar). · outra empresa 403/404"
+    ],
+    [
+      "Sertão Atacado",
+      "S9 — Documento visual simulado: marca d'água e avisos, sem se apresentar como NF-e autorizada",
+      "PASS",
+      "capturado em 02-fiscal-simulado/05-sertao-documento-simulado.png"
+    ],
+    [
+      "Sertão Atacado",
+      "S10 — NF-e de ENTRADA do recebimento de compra autorizada na simulação (fornecedor como remetente)",
+      "PASS",
+      "cfop 409 Já existe um registro com este código. · natureza 201 · gerar 201 · autorizar 409 O documento DF-0052 já foi autorizado (simulação), chave 35261087602980000180550010000000101434588391. Nada foi refeito. · AUTHORIZED ENTRADA · CFOP 1102 · remetente Polar Fornecimentos SA Ltda."
+    ]
+  ]
+}

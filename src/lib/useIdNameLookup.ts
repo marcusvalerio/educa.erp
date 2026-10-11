@@ -28,11 +28,13 @@ export function pickName(row: Record<string, unknown>, nameField: string): strin
   return null;
 }
 
-export function useIdNameLookup(apiPath: string, nameField = "name"): Map<string, string> {
+/** apiPath nulo: não busca (ex.: o usuário não tem permissão de ler o cadastro). */
+export function useIdNameLookup(apiPath: string | null, nameField = "name"): Map<string, string> {
   const [lookup, setLookup] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     let cancelled = false;
+    if (!apiPath) return;
     cachedGet<Record<string, unknown>[]>(lookupPath(apiPath))
       .then((rows) => {
         if (cancelled || !Array.isArray(rows)) return;

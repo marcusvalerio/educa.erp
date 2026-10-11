@@ -1,0 +1,1269 @@
+{
+ "total": 234.69999999999996,
+ "scenes": [
+  {
+   "n": 1,
+   "name": "Abertura",
+   "chapter": "",
+   "start": 0,
+   "end": 11,
+   "dur": 11,
+   "in": "zoom",
+   "out": "zoom"
+  },
+  {
+   "n": 2,
+   "name": "O problema",
+   "chapter": "",
+   "start": 10.1,
+   "end": 25.1,
+   "dur": 15,
+   "in": "zoom",
+   "out": "through"
+  },
+  {
+   "n": 3,
+   "name": "Administração Central",
+   "chapter": "Administração Central",
+   "start": 24.2,
+   "end": 39.2,
+   "dur": 15,
+   "in": "through",
+   "out": "through"
+  },
+  {
+   "n": 4,
+   "name": "Empresa e usuários",
+   "chapter": "Empresa e usuários",
+   "start": 38.3,
+   "end": 58.8,
+   "dur": 20.5,
+   "in": "through",
+   "out": "slide"
+  },
+  {
+   "n": 5,
+   "name": "Cadastros",
+   "chapter": "Cadastros",
+   "start": 57.9,
+   "end": 70.9,
+   "dur": 13,
+   "in": "slide",
+   "out": "slide"
+  },
+  {
+   "n": 6,
+   "name": "Comercial",
+   "chapter": "Comercial",
+   "start": 70,
+   "end": 88.8,
+   "dur": 18.8,
+   "in": "slide",
+   "out": "through"
+  },
+  {
+   "n": 7,
+   "name": "Estoque e WMS",
+   "chapter": "Estoque · WMS",
+   "start": 87.9,
+   "end": 111.9,
+   "dur": 24,
+   "in": "through",
+   "out": "slide"
+  },
+  {
+   "n": 8,
+   "name": "Compras",
+   "chapter": "Compras",
+   "start": 111,
+   "end": 126.8,
+   "dur": 15.8,
+   "in": "slide",
+   "out": "slide"
+  },
+  {
+   "n": 9,
+   "name": "Financeiro",
+   "chapter": "Financeiro",
+   "start": 125.9,
+   "end": 141.7,
+   "dur": 15.8,
+   "in": "slide",
+   "out": "zoom"
+  },
+  {
+   "n": 10,
+   "name": "Fiscal",
+   "chapter": "Fiscal",
+   "start": 140.8,
+   "end": 156.8,
+   "dur": 16,
+   "in": "rise",
+   "out": "slide"
+  },
+  {
+   "n": 11,
+   "name": "Logística",
+   "chapter": "Logística",
+   "start": 155.9,
+   "end": 168.9,
+   "dur": 13,
+   "in": "slide",
+   "out": "through"
+  },
+  {
+   "n": 12,
+   "name": "Auditoria",
+   "chapter": "Auditoria",
+   "start": 168,
+   "end": 179,
+   "dur": 11,
+   "in": "through",
+   "out": "fade"
+  },
+  {
+   "n": 13,
+   "name": "O fluxo completo",
+   "chapter": "O fluxo completo",
+   "start": 178.1,
+   "end": 198.1,
+   "dur": 20,
+   "in": "fade",
+   "out": "fade"
+  },
+  {
+   "n": 14,
+   "name": "Multiempresa",
+   "chapter": "Multiempresa",
+   "start": 197.2,
+   "end": 211.2,
+   "dur": 14,
+   "in": "fade",
+   "out": "none"
+  },
+  {
+   "n": 15,
+   "name": "Dashboard",
+   "chapter": "Dashboard",
+   "start": 210.4,
+   "end": 222.4,
+   "dur": 12,
+   "in": "none",
+   "out": "none"
+  },
+  {
+   "n": 16,
+   "name": "Encerramento",
+   "chapter": "",
+   "start": 221.7,
+   "end": 234.7,
+   "dur": 13,
+   "in": "none",
+   "out": "fade"
+  }
+ ],
+ "cues": [
+  {
+   "t": 0.25,
+   "type": "build",
+   "scene": 1
+  },
+  {
+   "t": 1.55,
+   "type": "core",
+   "scene": 1
+  },
+  {
+   "t": 2.5,
+   "type": "text",
+   "scene": 1
+  },
+  {
+   "t": 3.4,
+   "type": "text",
+   "scene": 1
+  },
+  {
+   "t": 5.9,
+   "type": "lockup",
+   "scene": 1
+  },
+  {
+   "t": 6.6,
+   "type": "riser",
+   "dur": 1.9,
+   "scene": 1
+  },
+  {
+   "t": 8.45,
+   "type": "impact",
+   "scene": 1
+  },
+  {
+   "t": 10.1,
+   "type": "whooshSoft",
+   "scene": 2
+  },
+  {
+   "t": 11.1,
+   "type": "text",
+   "scene": 2
+  },
+  {
+   "t": 11.1,
+   "type": "text",
+   "scene": 2
+  },
+  {
+   "t": 15.35,
+   "type": "text",
+   "scene": 2
+  },
+  {
+   "t": 18.05,
+   "type": "cut",
+   "scene": 2
+  },
+  {
+   "t": 18.3,
+   "type": "core",
+   "scene": 2
+  },
+  {
+   "t": 19,
+   "type": "connect",
+   "scene": 2
+  },
+  {
+   "t": 19.8,
+   "type": "text",
+   "scene": 2
+  },
+  {
+   "t": 24.2,
+   "type": "whooshDeep",
+   "scene": 3
+  },
+  {
+   "t": 24.7,
+   "type": "text",
+   "scene": 3
+  },
+  {
+   "t": 25.65,
+   "type": "focus",
+   "scene": 3
+  },
+  {
+   "t": 27.8,
+   "type": "swap",
+   "scene": 3
+  },
+  {
+   "t": 28.85,
+   "type": "focus",
+   "scene": 3
+  },
+  {
+   "t": 30.2,
+   "type": "swipe",
+   "scene": 3
+  },
+  {
+   "t": 30.75,
+   "type": "focus",
+   "scene": 3
+  },
+  {
+   "t": 32.55,
+   "type": "click",
+   "scene": 3
+  },
+  {
+   "t": 33.25,
+   "type": "focus",
+   "scene": 3
+  },
+  {
+   "t": 35.15,
+   "type": "focus",
+   "scene": 3
+  },
+  {
+   "t": 36.2,
+   "type": "swap",
+   "scene": 3
+  },
+  {
+   "t": 36.85,
+   "type": "focus",
+   "scene": 3
+  },
+  {
+   "t": 38.3,
+   "type": "whooshDeep",
+   "scene": 4
+  },
+  {
+   "t": 38.8,
+   "type": "text",
+   "scene": 4
+  },
+  {
+   "t": 39.55,
+   "type": "focus",
+   "scene": 4
+  },
+  {
+   "t": 41.7,
+   "type": "swap",
+   "scene": 4
+  },
+  {
+   "t": 42,
+   "type": "user",
+   "scene": 4
+  },
+  {
+   "t": 42.95,
+   "type": "focus",
+   "scene": 4
+  },
+  {
+   "t": 44.9,
+   "type": "swap",
+   "scene": 4
+  },
+  {
+   "t": 45.65,
+   "type": "focus",
+   "scene": 4
+  },
+  {
+   "t": 47.9,
+   "type": "swap",
+   "scene": 4
+  },
+  {
+   "t": 48.45,
+   "type": "focus",
+   "scene": 4
+  },
+  {
+   "t": 49.7,
+   "type": "swap",
+   "scene": 4
+  },
+  {
+   "t": 51.2,
+   "type": "click",
+   "scene": 4
+  },
+  {
+   "t": 51.5,
+   "type": "focus",
+   "scene": 4
+  },
+  {
+   "t": 52.7,
+   "type": "swipe",
+   "scene": 4
+  },
+  {
+   "t": 52.9,
+   "type": "user",
+   "scene": 4
+  },
+  {
+   "t": 53.35,
+   "type": "blocked",
+   "scene": 4
+  },
+  {
+   "t": 53.55,
+   "type": "focus",
+   "scene": 4
+  },
+  {
+   "t": 54.9,
+   "type": "text",
+   "scene": 4
+  },
+  {
+   "t": 55.2,
+   "type": "text",
+   "scene": 4
+  },
+  {
+   "t": 57.9,
+   "type": "whoosh",
+   "scene": 5
+  },
+  {
+   "t": 58.3,
+   "type": "text",
+   "scene": 5
+  },
+  {
+   "t": 60.9,
+   "type": "swipe",
+   "scene": 5
+  },
+  {
+   "t": 61.55,
+   "type": "focus",
+   "scene": 5
+  },
+  {
+   "t": 62.8,
+   "type": "swipe",
+   "scene": 5
+  },
+  {
+   "t": 63.35,
+   "type": "focus",
+   "scene": 5
+  },
+  {
+   "t": 64.5,
+   "type": "swap",
+   "scene": 5
+  },
+  {
+   "t": 65.15,
+   "type": "focus",
+   "scene": 5
+  },
+  {
+   "t": 66.9,
+   "type": "swipe",
+   "scene": 5
+  },
+  {
+   "t": 67.55,
+   "type": "focus",
+   "scene": 5
+  },
+  {
+   "t": 68.6,
+   "type": "swipe",
+   "scene": 5
+  },
+  {
+   "t": 69.25,
+   "type": "focus",
+   "scene": 5
+  },
+  {
+   "t": 70,
+   "type": "whoosh",
+   "scene": 6
+  },
+  {
+   "t": 70.75,
+   "type": "text",
+   "scene": 6
+  },
+  {
+   "t": 71.3,
+   "type": "step",
+   "i": 0,
+   "scene": 6
+  },
+  {
+   "t": 71.8,
+   "type": "step",
+   "i": 1,
+   "scene": 6
+  },
+  {
+   "t": 72.3,
+   "type": "step",
+   "i": 2,
+   "scene": 6
+  },
+  {
+   "t": 72.8,
+   "type": "step",
+   "i": 3,
+   "scene": 6
+  },
+  {
+   "t": 74.8,
+   "type": "step",
+   "i": 0,
+   "scene": 6
+  },
+  {
+   "t": 74.8,
+   "type": "user",
+   "scene": 6
+  },
+  {
+   "t": 75.05,
+   "type": "focus",
+   "scene": 6
+  },
+  {
+   "t": 76.4,
+   "type": "swipe",
+   "scene": 6
+  },
+  {
+   "t": 76.7,
+   "type": "step",
+   "i": 1,
+   "scene": 6
+  },
+  {
+   "t": 77.15,
+   "type": "focus",
+   "scene": 6
+  },
+  {
+   "t": 78.8,
+   "type": "swap",
+   "scene": 6
+  },
+  {
+   "t": 79.1,
+   "type": "step",
+   "i": 2,
+   "scene": 6
+  },
+  {
+   "t": 79.35,
+   "type": "focus",
+   "scene": 6
+  },
+  {
+   "t": 80.45,
+   "type": "click",
+   "scene": 6
+  },
+  {
+   "t": 81.6,
+   "type": "click",
+   "scene": 6
+  },
+  {
+   "t": 82.15,
+   "type": "focus",
+   "scene": 6
+  },
+  {
+   "t": 83.2,
+   "type": "swap",
+   "scene": 6
+  },
+  {
+   "t": 83.25,
+   "type": "user",
+   "scene": 6
+  },
+  {
+   "t": 84.5,
+   "type": "click",
+   "scene": 6
+  },
+  {
+   "t": 84.75,
+   "type": "step",
+   "i": 3,
+   "scene": 6
+  },
+  {
+   "t": 84.75,
+   "type": "approve",
+   "scene": 6
+  },
+  {
+   "t": 85.15,
+   "type": "focus",
+   "scene": 6
+  },
+  {
+   "t": 87.9,
+   "type": "whooshDeep",
+   "scene": 7
+  },
+  {
+   "t": 88.4,
+   "type": "text",
+   "scene": 7
+  },
+  {
+   "t": 89.35,
+   "type": "focus",
+   "scene": 7
+  },
+  {
+   "t": 91.5,
+   "type": "swipe",
+   "scene": 7
+  },
+  {
+   "t": 92.15,
+   "type": "focus",
+   "scene": 7
+  },
+  {
+   "t": 93.8,
+   "type": "swipe",
+   "scene": 7
+  },
+  {
+   "t": 94.45,
+   "type": "focus",
+   "scene": 7
+  },
+  {
+   "t": 96.9,
+   "type": "step",
+   "i": 0,
+   "scene": 7
+  },
+  {
+   "t": 97.4,
+   "type": "user",
+   "scene": 7
+  },
+  {
+   "t": 97.5,
+   "type": "swap",
+   "scene": 7
+  },
+  {
+   "t": 97.85,
+   "type": "focus",
+   "scene": 7
+  },
+  {
+   "t": 98.8,
+   "type": "click",
+   "scene": 7
+  },
+  {
+   "t": 98.95,
+   "type": "step",
+   "i": 1,
+   "scene": 7
+  },
+  {
+   "t": 99.35,
+   "type": "focus",
+   "scene": 7
+  },
+  {
+   "t": 100.9,
+   "type": "swipe",
+   "scene": 7
+  },
+  {
+   "t": 101.2,
+   "type": "step",
+   "i": 2,
+   "scene": 7
+  },
+  {
+   "t": 101.45,
+   "type": "focus",
+   "scene": 7
+  },
+  {
+   "t": 103.1,
+   "type": "swipe",
+   "scene": 7
+  },
+  {
+   "t": 103.2,
+   "type": "user",
+   "scene": 7
+  },
+  {
+   "t": 103.55,
+   "type": "focus",
+   "scene": 7
+  },
+  {
+   "t": 104.8,
+   "type": "confirm",
+   "scene": 7
+  },
+  {
+   "t": 104.85,
+   "type": "step",
+   "i": 3,
+   "scene": 7
+  },
+  {
+   "t": 105.05,
+   "type": "focus",
+   "scene": 7
+  },
+  {
+   "t": 106.5,
+   "type": "swipe",
+   "scene": 7
+  },
+  {
+   "t": 106.7,
+   "type": "step",
+   "i": 4,
+   "scene": 7
+  },
+  {
+   "t": 107.05,
+   "type": "focus",
+   "scene": 7
+  },
+  {
+   "t": 109.6,
+   "type": "text",
+   "scene": 7
+  },
+  {
+   "t": 109.9,
+   "type": "text",
+   "scene": 7
+  },
+  {
+   "t": 111,
+   "type": "whoosh",
+   "scene": 8
+  },
+  {
+   "t": 111.75,
+   "type": "text",
+   "scene": 8
+  },
+  {
+   "t": 111.95,
+   "type": "text",
+   "scene": 8
+  },
+  {
+   "t": 112.3,
+   "type": "step",
+   "i": 0,
+   "scene": 8
+  },
+  {
+   "t": 112.8,
+   "type": "step",
+   "i": 1,
+   "scene": 8
+  },
+  {
+   "t": 113.3,
+   "type": "step",
+   "i": 2,
+   "scene": 8
+  },
+  {
+   "t": 113.8,
+   "type": "step",
+   "i": 3,
+   "scene": 8
+  },
+  {
+   "t": 115.8,
+   "type": "step",
+   "i": 0,
+   "scene": 8
+  },
+  {
+   "t": 116.05,
+   "type": "focus",
+   "scene": 8
+  },
+  {
+   "t": 117.6,
+   "type": "swipe",
+   "scene": 8
+  },
+  {
+   "t": 117.8,
+   "type": "step",
+   "i": 1,
+   "scene": 8
+  },
+  {
+   "t": 118.15,
+   "type": "focus",
+   "scene": 8
+  },
+  {
+   "t": 119.4,
+   "type": "swipe",
+   "scene": 8
+  },
+  {
+   "t": 119.85,
+   "type": "focus",
+   "scene": 8
+  },
+  {
+   "t": 121,
+   "type": "swap",
+   "scene": 8
+  },
+  {
+   "t": 121.45,
+   "type": "focus",
+   "scene": 8
+  },
+  {
+   "t": 122.3,
+   "type": "swipe",
+   "scene": 8
+  },
+  {
+   "t": 122.4,
+   "type": "step",
+   "i": 2,
+   "scene": 8
+  },
+  {
+   "t": 122.85,
+   "type": "focus",
+   "scene": 8
+  },
+  {
+   "t": 124.2,
+   "type": "swipe",
+   "scene": 8
+  },
+  {
+   "t": 124.4,
+   "type": "step",
+   "i": 3,
+   "scene": 8
+  },
+  {
+   "t": 124.75,
+   "type": "focus",
+   "scene": 8
+  },
+  {
+   "t": 125.9,
+   "type": "whoosh",
+   "scene": 9
+  },
+  {
+   "t": 126.65,
+   "type": "text",
+   "scene": 9
+  },
+  {
+   "t": 126.85,
+   "type": "text",
+   "scene": 9
+  },
+  {
+   "t": 127.2,
+   "type": "step",
+   "i": 0,
+   "scene": 9
+  },
+  {
+   "t": 127.7,
+   "type": "step",
+   "i": 1,
+   "scene": 9
+  },
+  {
+   "t": 128.2,
+   "type": "step",
+   "i": 2,
+   "scene": 9
+  },
+  {
+   "t": 130.3,
+   "type": "user",
+   "scene": 9
+  },
+  {
+   "t": 130.6,
+   "type": "step",
+   "i": 0,
+   "scene": 9
+  },
+  {
+   "t": 131.7,
+   "type": "click",
+   "scene": 9
+  },
+  {
+   "t": 131.95,
+   "type": "step",
+   "i": 1,
+   "scene": 9
+  },
+  {
+   "t": 132.25,
+   "type": "focus",
+   "scene": 9
+  },
+  {
+   "t": 133.7,
+   "type": "swipe",
+   "scene": 9
+  },
+  {
+   "t": 134.15,
+   "type": "focus",
+   "scene": 9
+  },
+  {
+   "t": 135.3,
+   "type": "confirm",
+   "scene": 9
+  },
+  {
+   "t": 135.35,
+   "type": "step",
+   "i": 2,
+   "scene": 9
+  },
+  {
+   "t": 135.5,
+   "type": "focus",
+   "scene": 9
+  },
+  {
+   "t": 137.1,
+   "type": "swipe",
+   "scene": 9
+  },
+  {
+   "t": 137.65,
+   "type": "focus",
+   "scene": 9
+  },
+  {
+   "t": 139.3,
+   "type": "swipe",
+   "scene": 9
+  },
+  {
+   "t": 140.8,
+   "type": "whooshSoft",
+   "scene": 10
+  },
+  {
+   "t": 141.3,
+   "type": "text",
+   "scene": 10
+  },
+  {
+   "t": 142.05,
+   "type": "focus",
+   "scene": 10
+  },
+  {
+   "t": 144.2,
+   "type": "swipe",
+   "scene": 10
+  },
+  {
+   "t": 144.65,
+   "type": "focus",
+   "scene": 10
+  },
+  {
+   "t": 147.2,
+   "type": "swipe",
+   "scene": 10
+  },
+  {
+   "t": 147.7,
+   "type": "step",
+   "i": 0,
+   "scene": 10
+  },
+  {
+   "t": 147.75,
+   "type": "focus",
+   "scene": 10
+  },
+  {
+   "t": 149.2,
+   "type": "confirm",
+   "scene": 10
+  },
+  {
+   "t": 149.3,
+   "type": "step",
+   "i": 1,
+   "scene": 10
+  },
+  {
+   "t": 149.45,
+   "type": "focus",
+   "scene": 10
+  },
+  {
+   "t": 151,
+   "type": "confirm",
+   "scene": 10
+  },
+  {
+   "t": 151.1,
+   "type": "step",
+   "i": 2,
+   "scene": 10
+  },
+  {
+   "t": 151.25,
+   "type": "focus",
+   "scene": 10
+  },
+  {
+   "t": 155.9,
+   "type": "whoosh",
+   "scene": 11
+  },
+  {
+   "t": 156.4,
+   "type": "text",
+   "scene": 11
+  },
+  {
+   "t": 157.15,
+   "type": "focus",
+   "scene": 11
+  },
+  {
+   "t": 159.2,
+   "type": "swipe",
+   "scene": 11
+  },
+  {
+   "t": 159.3,
+   "type": "step",
+   "i": 0,
+   "scene": 11
+  },
+  {
+   "t": 159.85,
+   "type": "step",
+   "i": 1,
+   "scene": 11
+  },
+  {
+   "t": 159.9,
+   "type": "focus",
+   "scene": 11
+  },
+  {
+   "t": 161.3,
+   "type": "confirm",
+   "scene": 11
+  },
+  {
+   "t": 161.4,
+   "type": "step",
+   "i": 2,
+   "scene": 11
+  },
+  {
+   "t": 161.55,
+   "type": "focus",
+   "scene": 11
+  },
+  {
+   "t": 163.2,
+   "type": "confirm",
+   "scene": 11
+  },
+  {
+   "t": 163.3,
+   "type": "step",
+   "i": 3,
+   "scene": 11
+  },
+  {
+   "t": 163.45,
+   "type": "focus",
+   "scene": 11
+  },
+  {
+   "t": 165.1,
+   "type": "swipe",
+   "scene": 11
+  },
+  {
+   "t": 165.65,
+   "type": "focus",
+   "scene": 11
+  },
+  {
+   "t": 168,
+   "type": "whooshDeep",
+   "scene": 12
+  },
+  {
+   "t": 168.4,
+   "type": "text",
+   "scene": 12
+  },
+  {
+   "t": 171.65,
+   "type": "focus",
+   "scene": 12
+  },
+  {
+   "t": 172.65,
+   "type": "focus",
+   "scene": 12
+  },
+  {
+   "t": 174.05,
+   "type": "focus",
+   "scene": 12
+  },
+  {
+   "t": 175.35,
+   "type": "focus",
+   "scene": 12
+  },
+  {
+   "t": 176.95,
+   "type": "focus",
+   "scene": 12
+  },
+  {
+   "t": 178.1,
+   "type": "whooshSoft",
+   "scene": 13
+  },
+  {
+   "t": 179.9,
+   "type": "step",
+   "i": 0,
+   "scene": 13
+  },
+  {
+   "t": 181.9,
+   "type": "step",
+   "i": 1,
+   "scene": 13
+  },
+  {
+   "t": 183.9,
+   "type": "step",
+   "i": 2,
+   "scene": 13
+  },
+  {
+   "t": 185.9,
+   "type": "step",
+   "i": 3,
+   "scene": 13
+  },
+  {
+   "t": 187.9,
+   "type": "step",
+   "i": 4,
+   "scene": 13
+  },
+  {
+   "t": 189.9,
+   "type": "step",
+   "i": 5,
+   "scene": 13
+  },
+  {
+   "t": 191.3,
+   "type": "text",
+   "scene": 13
+  },
+  {
+   "t": 192.3,
+   "type": "text",
+   "scene": 13
+  },
+  {
+   "t": 193.3,
+   "type": "swell",
+   "scene": 13
+  },
+  {
+   "t": 197.2,
+   "type": "whooshSoft",
+   "scene": 14
+  },
+  {
+   "t": 198.2,
+   "type": "swap",
+   "scene": 14
+  },
+  {
+   "t": 199.2,
+   "type": "connect",
+   "scene": 14
+  },
+  {
+   "t": 200.8,
+   "type": "lock",
+   "scene": 14
+  },
+  {
+   "t": 202.2,
+   "type": "text",
+   "scene": 14
+  },
+  {
+   "t": 205.35,
+   "type": "blocked",
+   "scene": 14
+  },
+  {
+   "t": 215.15,
+   "type": "focus",
+   "scene": 15
+  },
+  {
+   "t": 216.6,
+   "type": "swap",
+   "scene": 15
+  },
+  {
+   "t": 219.2,
+   "type": "swap",
+   "scene": 15
+  },
+  {
+   "t": 223.4,
+   "type": "connect",
+   "scene": 16
+  },
+  {
+   "t": 224.9,
+   "type": "converge",
+   "dur": 1.6,
+   "scene": 16
+  },
+  {
+   "t": 226.45,
+   "type": "resolve",
+   "scene": 16
+  },
+  {
+   "t": 228,
+   "type": "text",
+   "scene": 16
+  },
+  {
+   "t": 228.9,
+   "type": "text",
+   "scene": 16
+  },
+  {
+   "t": 231.1,
+   "type": "lockup",
+   "scene": 16
+  }
+ ]
+}

@@ -1,0 +1,47 @@
+[
+  [
+    "Empresa",
+    "Entrada",
+    "HTTP",
+    "Mensagem",
+    "Esperado",
+    "Real",
+    "Resultado"
+  ],
+  [
+    "Mares Varejo",
+    "Cliente com nome de 5.000 caracteres (CNPJ válido)",
+    422,
+    "Use no máximo 200 caracteres no nome.",
+    "422 com limite de tamanho",
+    "recusou",
+    "PASS"
+  ],
+  [
+    "Mares Varejo",
+    "Cliente com HTML/script no nome (CNPJ válido)",
+    201,
+    "",
+    "recusado ou exibido como texto",
+    "gravou — conferido na tela",
+    "—"
+  ],
+  [
+    "Mares Varejo",
+    "Tela /app/cadastros/clientes?q=Cliente%20XSS com o cliente de nome HTML",
+    "—",
+    "texto literal visível",
+    "não executa",
+    "não executou",
+    "PASS"
+  ],
+  [
+    "Mares Varejo",
+    "Tela /app/comercial/pedidos-venda com o cliente de nome HTML",
+    "—",
+    "—",
+    "não executa",
+    "não executou",
+    "PASS"
+  ]
+]

@@ -472,6 +472,7 @@ export function warehouseLocationFromRow(row: WarehouseLocationRow): LocalEstoqu
     atualizadoEm: row.updated_at,
     codigoLocal: row.code,
     descricao: row.name ?? "",
+    depositoId: row.warehouse_id,
     armazem: row.warehouse ?? "",
     finalidade: finalidadeFromDb(row.purpose),
     area: row.zone ?? "",
@@ -488,7 +489,10 @@ export function warehouseLocationToRowFields(data: Partial<LocalEstoque>): Parti
   return omitUndefined({
     code: data.codigoLocal,
     name: nullableText(data.descricao),
-    warehouse: nullableText(data.armazem),
+    // O banco resolve o depósito (0076): pelo id, ou pelo código/nome
+    // legado quando só o texto vier, e mantém `warehouse` sincronizado.
+    warehouse_id: data.depositoId ? data.depositoId : undefined,
+    warehouse: data.depositoId ? undefined : nullableText(data.armazem),
     purpose: finalidadeToDb(data.finalidade),
     zone: nullableText(data.area),
     aisle: nullableText(data.rua),
@@ -499,6 +503,21 @@ export function warehouseLocationToRowFields(data: Partial<LocalEstoque>): Parti
     capacity: data.capacidade,
     status: statusToDb(data.status),
   } as Record<string, unknown>) as Partial<WarehouseLocationRow>;
+}
+
+// Código derivado do nome para cadastros cujo formulário não pede código
+// (categoria, marca): "Matéria-prima" → "MATERIA-PRIMA". A coluna code é
+// obrigatória e única por empresa; nome repetido cai no 409 de duplicidade.
+export function codeFromName(name: string, maxLength = 30): string {
+  const code = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, maxLength)
+    .replace(/-+$/g, "");
+  return code || "SEM-NOME";
 }
 
 // ------------------------------------------------------ Categoria (produto)

@@ -9,7 +9,7 @@ export default function PickingPage() {
 
   return (
     <ResourceListPage<PickListRow>
-      title="Separação (picking)"
+      title="Separação"
       description="Listas de separação geradas a partir de pedidos de venda confirmados."
       apiPath="/api/pick-lists"
       searchPlaceholder="Buscar lista..."

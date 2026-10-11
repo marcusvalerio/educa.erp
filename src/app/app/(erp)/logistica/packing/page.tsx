@@ -11,7 +11,7 @@ export default function PackingPage() {
 
   return (
     <ResourceListPage<ShipmentRow>
-      title="Embalagem (packing)"
+      title="Embalagem"
       description="Expedições na etapa de embalagem — volumes e pesagem ficam nos itens da expedição."
       apiPath="/api/shipments"
       searchPlaceholder="Buscar expedição, cliente ou cidade..."

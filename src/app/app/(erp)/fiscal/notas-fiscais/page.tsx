@@ -36,6 +36,7 @@ export default function NotasFiscaisPage() {
         subtitle: (row) => row.customer_id ? customers.get(row.customer_id) : undefined,
         badges: (row) => <StatusBadge entity="fiscal_documents" status={row.status} />,
       }}
+      rowHref={(row) => `/app/fiscal/notas-fiscais/${row.id}`}
       emptyDescription="Quando houver registros, eles aparecem aqui."
     />
   );

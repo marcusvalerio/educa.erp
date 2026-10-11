@@ -1,0 +1,15 @@
+import { APP, OWNER, OWNER_PASS, newUser, login, close, pathOf } from "/home/user/educa-app/docs/homologacao/evidencias/teste-48-usuarios/roteiros/lib.mjs";
+const MAIL = "http://localhost:58025";
+const m = (await (await fetch(`${MAIL}/api/v1/search?query=${encodeURIComponent("to:" + OWNER)}`)).json()).messages;
+const full = await (await fetch(`${MAIL}/api/v1/message/${m[0].ID}`)).json();
+const link = (full.HTML || full.Text).match(/href="([^"]+)"/)[1].replace(/&amp;/g, "&");
+const u = await newUser();
+await u.page.goto(link);
+await u.page.getByRole("heading", { name: "Crie sua senha" }).waitFor();
+await u.page.getByLabel(/^Nova senha/).fill(OWNER_PASS);
+await u.page.getByLabel(/^Confirme a senha/).fill(OWNER_PASS);
+await u.page.getByRole("button", { name: /Criar senha/ }).click();
+await u.page.waitForTimeout(4000);
+console.log("depois da senha:", pathOf(u.page));
+const v = await newUser(); await login(v.page, OWNER, OWNER_PASS); console.log("login owner:", pathOf(v.page));
+await close();

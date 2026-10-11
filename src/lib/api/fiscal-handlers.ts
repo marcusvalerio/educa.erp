@@ -6,8 +6,11 @@ import { createClient } from "@/lib/supabase/server";
 import { getAuthContext, hasPermission } from "@/lib/auth/context";
 import { ApiError, forbiddenError, notFoundError, unauthorizedError, validationError, translatePostgresError } from "@/lib/database/errors";
 import { jsonError } from "./response";
+import { fiscalGenerationResult } from "./fiscal-generation";
+import { cnpjError, documentChanged } from "@/lib/documents";
 import {
   fiscalEstablishmentSchema,
+  fiscalEstablishmentBaseSchema,
   fiscalNcmSchema,
   fiscalCfopSchema,
   fiscalOperationNatureSchema,
@@ -153,8 +156,14 @@ export async function updateFiscalEstablishment(request: NextRequest, context: R
   try {
     const { companyId } = await requireAccess("fiscal_establishments.update");
     const { id } = await context.params;
-    const body = await parseBody(request, fiscalEstablishmentSchema.partial());
+    const body = await parseBody(request, fiscalEstablishmentBaseSchema.partial());
     if (Object.keys(body).length === 0) throw validationError("Nenhum dado para atualizar.");
+    if (body.cnpj !== undefined) {
+      // CNPJ alterado precisa ser válido; o mesmo CNPJ de antes não é revalidado.
+      const { data: current } = await createAdminClient().from("fiscal_establishments").select("cnpj").eq("company_id", companyId).eq("id", id).maybeSingle();
+      const error = documentChanged(current?.cnpj, body.cnpj) ? cnpjError(body.cnpj) : null;
+      if (error) throw validationError(error);
+    }
     const { stateRegistration, municipalRegistration, addressNumber, zipCode, taxRegime, ...rest } = body;
     const { data, error } = await createAdminClient().from("fiscal_establishments")
       .update({
@@ -950,14 +959,43 @@ export async function createFiscalDocumentFromSalesOrder(request: NextRequest, c
     const body = await parseBody(request, createFiscalDocumentFromSalesOrderSchema);
 
     const supabase = await createClient();
-    const { data, error } = await supabase.rpc("fn_create_fiscal_document_from_sales_order", {
+    // fn_generate_fiscal_document_for_sales_order (0087) trava o pedido e diz
+    // se a NF-e foi criada agora ou já existia (R2-19): quem chega depois não
+    // recebe "criado" para um documento que outra pessoa gerou.
+    const { data, error } = await supabase.rpc("fn_generate_fiscal_document_for_sales_order", {
       p_sales_order_id: id,
       p_fiscal_establishment_id: body.fiscalEstablishmentId,
       p_operation_nature_id: body.operationNatureId,
       p_notes: body.notes ?? null,
     });
     if (error) throw rpcError(error);
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    const result = fiscalGenerationResult(data);
+    if (!result.document) throw new ApiError("DATABASE_ERROR", "Não foi possível gerar a NF-e. Tente novamente.", 500);
+    if (result.created) {
+      return NextResponse.json(
+        { success: true, data: result.document, created: true, message: `NF-e ${result.document.code} gerada em rascunho.` },
+        { status: 201 },
+      );
+    }
+    return NextResponse.json(
+      { success: true, data: result.document, created: false, message: `Este pedido já tem a NF-e ${result.document.code}. Nenhum documento novo foi criado.` },
+      { status: 200 },
+    );
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+// ------------------------------------------------ Preparação da 1ª NF-e (0078)
+// Situação dos pré-requisitos da primeira NF-e da empresa, para a orientação
+// no módulo Fiscal (fn_fiscal_setup_status). Só leitura.
+export async function getFiscalSetupStatus() {
+  try {
+    const { companyId } = await requireAccess("fiscal_documents.view");
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_fiscal_setup_status", { p_company_id: companyId });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data: Array.isArray(data) ? data[0] ?? null : data });
   } catch (error) {
     return jsonError(error);
   }

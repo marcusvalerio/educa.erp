@@ -112,6 +112,5 @@ export const TIPOS_LOCAL_ESTOQUE = [
   "Bloqueado",
 ] as const;
 
-export const ARMAZENS = ["CD01", "CD02", "FIL03"] as const;
 
 export const STATUS_OPTIONS = ["Ativo", "Inativo"] as const;

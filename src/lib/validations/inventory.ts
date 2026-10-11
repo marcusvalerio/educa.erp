@@ -64,7 +64,7 @@ export const createTransferSchema = z.object({
   toLocationId: uuidField("Selecione o local de destino."),
   notes: z.string().trim().optional(),
   items: z.array(transferItemSchema).min(1, "A transferência precisa de ao menos um item."),
-});
+}).refine((t) => t.fromLocationId !== t.toLocationId, { message: "O local de origem e o de destino precisam ser diferentes.", path: ["toLocationId"] });
 
 export const idempotencyActionSchema = z.object({
   idempotencyKey: z.string().trim().min(1).optional(),

@@ -9,7 +9,8 @@
 // Antes da 0091 (banco igual ao de produção): o caso 3 falha — a Somente
 // leitura da Alfa lê as unidades da Beta (policy units_select_authenticated,
 // USING true) —, os casos 11 e 12 também (FKs de uma coluna e views sem
-// security_invoker). Ver docs/homologacao/RELATORIO-SEGURANCA-MULTIEMPRESA.md.
+// security_invoker; desde a 0094, usuários não têm privilégio nas views).
+// Ver docs/homologacao/RELATORIO-SEGURANCA-MULTIEMPRESA.md.
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -219,8 +220,11 @@ describe("isolamento multiempresa do catálogo e das views (PostgreSQL real)", {
     for (const view of ["v_cash_flow_summary", "v_cash_flow_projection", "inventory_valuation", "v_sales_order_item_margin"]) {
       const anon = await as(null, (c) => c.query(`select company_id from public.${view}`));
       assert.ok(!anon.ok && /permission denied/i.test(anon.error), `${view} sem login: ${anon.ok ? "leu" : anon.error}`);
-      const rows = must(await as(alfaComum, async (c) => (await c.query(`select distinct company_id from public.${view}`)).rows));
-      assert.ok(rows.every((r) => r.company_id === alfa), `${view}: ${JSON.stringify(rows)}`);
+      // 0094: nenhum consumidor legítimo lê a view com o papel do usuário; o
+      // recorte por empresa com SELECT concedido (segunda barreira) está em
+      // views-isolamento-db.test.ts.
+      const user = await as(alfaComum, (c) => c.query(`select distinct company_id from public.${view}`));
+      assert.ok(!user.ok && /permission denied/i.test(user.error), `${view} como usuário: ${user.ok ? JSON.stringify(user.value.rows) : user.error}`);
     }
     const anonUnits = await as(null, async (c) => (await c.query("select 1 from public.units")).rowCount);
     assert.ok(!anonUnits.ok || anonUnits.value === 0, "anon não lê unidades");

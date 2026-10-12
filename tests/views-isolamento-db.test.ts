@@ -6,7 +6,11 @@
 // Valores por empresa: Alfa = 1000, Beta = 2000 (saldo, a receber, estoque e
 // receita do pedido), para que qualquer vazamento apareça como número da outra
 // empresa. Antes da 0091 (banco igual ao de produção): anon lê as 4 views e
-// cada usuário vê as duas empresas. Ver docs/homologacao/CONTENCAO-SEGURANCA.md.
+// cada usuário vê as duas empresas. Desde a 0094 só o dono e service_role
+// (cliente administrativo) leem as views; os casos "segunda barreira" concedem
+// SELECT a authenticated dentro da transaction do teste (desfeita no fim) para
+// provar que, mesmo assim, o RLS das tabelas limita à empresa do usuário.
+// Ver docs/homologacao/CONTENCAO-SEGURANCA.md.
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -15,6 +19,7 @@ import { Client } from "pg";
 const url = process.env.POC_DATABASE_OWNER_URL;
 const VIEWS = ["v_cash_flow_summary", "v_cash_flow_projection", "inventory_valuation", "v_sales_order_item_margin"] as const;
 type Who = { auth: string; label: string };
+type As = { grantViews?: boolean; role?: "service_role" };
 
 describe("views financeiras e de estoque: isolamento por empresa (PostgreSQL real)", { skip: !url && "POC_DATABASE_OWNER_URL não definida" }, () => {
   const owner = new Client({ connectionString: url });
@@ -27,12 +32,16 @@ describe("views financeiras e de estoque: isolamento por empresa (PostgreSQL rea
   const betaAdmin = mk("v.beta.admin");
   const alfaSemFinanceiro = mk("v.alfa.sem");
 
-  const as = async <T>(who: Who | null, fn: (c: Client) => Promise<T>): Promise<{ ok: true; value: T } | { ok: false; error: string }> => {
+  const as = async <T>(who: Who | null, fn: (c: Client) => Promise<T>, opts: As = {}): Promise<{ ok: true; value: T } | { ok: false; error: string }> => {
     const c = new Client({ connectionString: url });
     await c.connect();
     try {
       await c.query("begin");
-      if (who) {
+      // Concessão temporária (só nesta transaction): simula alguém voltar a dar SELECT a authenticated.
+      if (opts.grantViews) await c.query(`grant select on ${VIEWS.map((v) => `public.${v}`).join(", ")} to authenticated`);
+      if (opts.role === "service_role") {
+        await c.query("set local role service_role");
+      } else if (who) {
         await c.query("set local role authenticated");
         await c.query("select set_config('request.jwt.claims', $1, true), set_config('request.jwt.claim.sub', $2, true)", [JSON.stringify({ sub: who.auth, role: "authenticated" }), who.auth]);
       } else {
@@ -46,8 +55,8 @@ describe("views financeiras e de estoque: isolamento por empresa (PostgreSQL rea
       await c.end();
     }
   };
-  const rowsOf = async (who: Who, view: string) => {
-    const r = await as(who, async (c) => (await c.query(`select * from public.${view} where company_id = any($1)`, [[alfa, beta]])).rows as Record<string, unknown>[]);
+  const rowsOf = async (who: Who, view: string, opts: As = { grantViews: true }) => {
+    const r = await as(who, async (c) => (await c.query(`select * from public.${view} where company_id = any($1)`, [[alfa, beta]])).rows as Record<string, unknown>[], opts);
     if (!r.ok) assert.fail(`${view}: ${r.error}`);
     return r.value;
   };
@@ -102,7 +111,23 @@ describe("views financeiras e de estoque: isolamento por empresa (PostgreSQL rea
     }
   });
 
-  test("2 — autenticado SEM permissão financeira/estoque não vê valores de nenhuma empresa", async () => {
+  test("1b — authenticated (qualquer papel, inclusive administrador) não consulta as 4 views (0094)", async () => {
+    for (const who of [alfaAdmin, betaAdmin, alfaSemFinanceiro]) {
+      for (const view of VIEWS) {
+        const r = await as(who, (c) => c.query(`select 1 from public.${view} limit 1`));
+        assert.ok(!r.ok && /permission denied/i.test(r.error), `${who.label} ${view}: ${r.ok ? "leu" : r.error}`);
+      }
+    }
+  });
+
+  test("1c — service_role (cliente administrativo do app) continua lendo as 4 views", async () => {
+    for (const view of VIEWS) {
+      const r = await as(null, async (c) => (await c.query(`select distinct company_id from public.${view} where company_id = any($1)`, [[alfa, beta]])).rows, { role: "service_role" });
+      assert.ok(r.ok && r.value.length === 2, `${view}: ${r.ok ? JSON.stringify(r.value) : r.error}`);
+    }
+  });
+
+  test("2 — segunda barreira: autenticado SEM permissão financeira/estoque não vê valores de nenhuma empresa", async () => {
     for (const view of VIEWS) {
       const rows = await rowsOf(alfaSemFinanceiro, view);
       assert.ok(rows.every((r) => r.company_id === alfa), `${view}: outra empresa`);
@@ -111,7 +136,7 @@ describe("views financeiras e de estoque: isolamento por empresa (PostgreSQL rea
     }
   });
 
-  test("3 — Alfa vê só a Alfa, com os próprios valores, nas 4 views", async () => {
+  test("3 — segunda barreira: Alfa vê só a Alfa, com os próprios valores, nas 4 views", async () => {
     const s = await rowsOf(alfaAdmin, "v_cash_flow_summary");
     assert.deepEqual(s.map((r) => [r.company_id, Number(r.current_balance_total), Number(r.open_receivable_total)]), [[alfa, 1000, 1000]]);
     for (const view of VIEWS) {
@@ -122,7 +147,7 @@ describe("views financeiras e de estoque: isolamento por empresa (PostgreSQL rea
     assert.equal(Number((await rowsOf(alfaAdmin, "v_sales_order_item_margin"))[0].revenue_amount), 1000);
   });
 
-  test("4 — Beta vê só a Beta, com os próprios valores, nas 4 views", async () => {
+  test("4 — segunda barreira: Beta vê só a Beta, com os próprios valores, nas 4 views", async () => {
     const s = await rowsOf(betaAdmin, "v_cash_flow_summary");
     assert.deepEqual(s.map((r) => [r.company_id, Number(r.current_balance_total), Number(r.open_receivable_total)]), [[beta, 2000, 2000]]);
     for (const view of VIEWS) {
@@ -146,21 +171,36 @@ describe("views financeiras e de estoque: isolamento por empresa (PostgreSQL rea
     assert.ok(byOrder.ok && byOrder.value.length === 1 && Number(byOrder.value[0].revenue) === 1000, JSON.stringify(byOrder));
   });
 
-  test("7 — regras fiscais: fn_resolve_applicable_tax_rules não é executável por anon nem por authenticated (0093)", async () => {
+  test("7 — regras fiscais: fn_resolve_applicable_tax_rules só é executável pelo dono (0093, 0094)", async () => {
     const sig = "public.fn_resolve_applicable_tax_rules(uuid,uuid,uuid,text,uuid,uuid,text,text,text,uuid,uuid,date)";
-    const { rows } = await owner.query(`select has_function_privilege('anon', '${sig}', 'execute') a, has_function_privilege('authenticated', '${sig}', 'execute') b`);
-    assert.deepEqual(rows[0], { a: false, b: false });
-    const r = await as(null, (c) => c.query("select * from public.fn_resolve_applicable_tax_rules($1, null, null, null, null, null, null, null, null, null, null, current_date)", [beta]));
-    assert.ok(!r.ok && /permission denied/i.test(r.error), r.ok ? "anon executou" : r.error);
+    const { rows } = await owner.query(
+      `select has_function_privilege('anon', '${sig}', 'execute') a, has_function_privilege('authenticated', '${sig}', 'execute') b,
+              has_function_privilege('service_role', '${sig}', 'execute') s,
+              (select count(*)::int from pg_proc p, aclexplode(p.proacl) x where p.oid = '${sig}'::regprocedure and x.grantee <> p.proowner) outros`
+    );
+    assert.deepEqual(rows[0], { a: false, b: false, s: false, outros: 0 });
+    const call = "select * from public.fn_resolve_applicable_tax_rules($1, null, null, null, null, null, null, null, null, null, null, current_date)";
+    const anon = await as(null, (c) => c.query(call, [beta]));
+    assert.ok(!anon.ok && /permission denied/i.test(anon.error), anon.ok ? "anon executou" : anon.error);
+    const user = await as(alfaAdmin, (c) => c.query(call, [beta]));
+    assert.ok(!user.ok && /permission denied/i.test(user.error), user.ok ? "authenticated executou" : user.error);
+    const service = await as(null, (c) => c.query(call, [beta]), { role: "service_role" });
+    assert.ok(!service.ok && /permission denied/i.test(service.error), service.ok ? "service_role executou" : service.error);
   });
 
-  test("6 — regressão: nenhuma view do schema public concede SELECT a anon nem roda com os direitos do dono", async () => {
+  test("6 — regressão: nenhuma view do schema public concede privilégio algum a anon/authenticated/PUBLIC nem roda com os direitos do dono", async () => {
+    // has_table_privilege segue herança de papéis e PUBLIC; aclexplode pega concessão direta a PUBLIC (grantee 0).
+    const privs = ["SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER"];
     const { rows } = await owner.query(
-      `select c.relname, has_table_privilege('anon', c.oid, 'SELECT') as anon_select,
+      `select c.relname,
+              (select array_agg(r || ':' || p) from unnest(array['anon', 'authenticated']) r, unnest($1::text[]) p where has_table_privilege(r, c.oid, p)) as user_privs,
+              exists (select 1 from aclexplode(c.relacl) x where x.grantee = 0 or x.grantee in ('anon'::regrole, 'authenticated'::regrole)) as public_grant,
               coalesce(array_to_string(c.reloptions, ','), '') like '%security_invoker=true%' as invoker
-       from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind in ('v', 'm')`
+       from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind in ('v', 'm')`,
+      [privs]
     );
-    const bad = rows.filter((r) => r.anon_select || !r.invoker);
-    assert.deepEqual(bad, [], "view acessível a anon ou sem security_invoker");
+    assert.ok(rows.length >= VIEWS.length, "views não encontradas");
+    const bad = rows.filter((r) => r.user_privs || r.public_grant || !r.invoker);
+    assert.deepEqual(bad, [], "view com privilégio para anon/authenticated/PUBLIC ou sem security_invoker");
   });
 });

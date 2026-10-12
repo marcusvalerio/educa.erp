@@ -119,3 +119,54 @@ esquema da produção **não foi comparado** por `pg_dump` (sem acesso de
 leitura ao dump). A equivalência com a produção vem do plano
 `plan-prod-equivalente.txt` e das consultas de catálogo feitas. **Não se
 afirma equivalência total.**
+
+## 5. Integração executada (rodada final, 12/10/2026)
+
+**Estratégia:** merge normal (sem rebase, sem reescrever histórico) numa
+branch nova, preservando as duas linhas:
+
+| Branch | Commit | Papel |
+|---|---|---|
+| `claude/e2e-empresa-nova-correcoes` | `3a19fb1` (inalterada) | origem de 0076–0088 e do código correspondente |
+| `claude/atlas-neon-ux-crm` | `2218019` (inalterada pelo merge) | CRM, painéis, segurança (0089–0093), contenção |
+| **`claude/atlas-integracao-0076-0093`** | merge `1ba81e4` + ajustes | integração validada |
+
+**Mapa do diff (base comum `1b61fd7`):** 855 arquivos só ou também na outra
+linha, 101 nesta; **13 alterados nas duas**.
+
+| Arquivo em ambas | Resolução |
+|---|---|
+| `src/lib/api/handlers.ts` (conflito) | mapa de permissões em `entity-permissions.ts` (superconjunto); PATCH = só campos enviados + validação de CPF/CNPJ + bloqueio otimista |
+| `src/lib/database/errors.ts` (conflito) | mensagens específicas da outra linha, agora pelas colunas da chave (FK da 0091 dizia "produto" no lugar de "unidade") |
+| pedido de venda, matriz de papéis, `status.ts` (conflito) | versão da outra linha (superconjunto: `apiSendWithMessage`, `actionLabel`, SUBMIT) |
+| `validations/cadastros.ts`, `mappers.ts`, `cadastros/types.ts`, `useIdNameLookup.ts`, `movimentacoes`, `reservation-feedback.ts`, `stock-labels.ts`, `stock-feedback.test.ts` | merge automático conferido (código obrigatório de categoria/marca + limites de tamanho da outra linha; bloqueio otimista em `table.update`) |
+
+**Migrations na branch integrada:** 0076–0088 **byte a byte iguais** à
+outra linha e 0089–0093 iguais a esta (conferido com `git diff`). Ordem final
+pela ordem dos nomes; nenhuma renumeração.
+
+**Contratos que mudaram com a integração (testes ajustados com motivo):**
+- `teste-48-usuarios-regressao`: regex de texto fixava `parsed.data`; o PATCH
+  passou a gravar `changes` (mesmo contrato de bloqueio otimista).
+- Roteiros E2E: com a 0076 o local de estoque é criado pela API (201); CPF/CNPJ
+  passaram a ser validados por dígito verificador (fixtures com CNPJs
+  fictícios válidos).
+
+**Validação (local):**
+
+| Cenário | Resultado |
+|---|---|
+| vazio → 0001–0075 + 0076–0093 | OK 111/111 |
+| vazio → só esta linha (0089–0093) | OK 98/98 |
+| incremental (`crm_base`, estado da produção) → 0076–0093 | esquema e permissões **idênticos** ao vazio (0 linhas) |
+| já atualizado (`educa_poc`, 0076–0088 + dados de 48 usuários) → 0089–0093 | idêntico (0 linhas); 18/18 FKs validadas |
+| idempotência (reaplicar 0089–0093) | sem erro |
+| `npm test` (código integrado, banco integrado) | **1062/1062**, 0 falhas, 0 canceladas, 0 TODO, 0 ignoradas |
+| E2E geral / CRM API / CRM UI / painéis / catálogo | 210/210 · 66/66 · 32/32 · 13/13 · 37/37 |
+| Código da `main` (produção, 48775f5) sobre o banco integrado | 209/210 no E2E geral; única diferença: criar categoria pela API continua 403 (comportamento atual da produção) — sem regressão |
+
+**Remoto:** 0091–0093 aplicadas numa branch filha da homologação Neon (md5
+conferido); 0076–0090 não (bloqueio de rede) — `RELATORIO-HOMOLOGACAO-REMOTA.md`.
+
+**Produção (só leitura, 12/10):** ledger em 0075; 0 duplicidades para os
+índices únicos da 0081/0083; 0 referências entre empresas para as FKs da 0091.

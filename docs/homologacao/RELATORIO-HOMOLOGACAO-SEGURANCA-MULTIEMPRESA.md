@@ -1,5 +1,44 @@
 # Homologação — segurança multiempresa, permissões de produtos e migrations
 
+> ## Rodada final — 12/10/2026 (estado atual; o restante do documento é a rodada de 10/10)
+>
+> **A exposição financeira (views sem login), a leitura de unidades entre
+> empresas e a execução pública das regras fiscais CONTINUAM ATIVAS EM
+> PRODUÇÃO** (catálogo conferido em 12/10). Nada foi aplicado em produção.
+>
+> | Parte | Classificação | Evidência |
+> |---|---|---|
+> | **A. Contenção** (`producao/contencao-emergencial.sql`) | **HOMOLOGADA REMOTAMENTE** e **PRONTA PARA PRODUÇÃO**, aguardando autorização (backup a confirmar no painel) | local: antes/depois/rollback/reaplicação; Neon: branch filha da homologação, dados sintéticos |
+> | **B. Atualização completa** (0076–0093 + código integrado) | **CONCLUÍDA LOCALMENTE**; remoto parcial (0091–0093 na homologação Neon; 0076–0090 bloqueadas por rede) | `npm test` 1062/1062; E2E 210/66/32/13/37; código da `main` sobre o banco integrado 209/210 (só a diferença esperada) |
+>
+> Novos nesta rodada:
+> - **0092:** margem por pedido falhava sempre (`min(uuid)`).
+> - **0093:** regras fiscais executáveis por `anon`.
+> - **Testes das 4 views com dados sintéticos** em duas empresas, mais
+>   regressões contra o retorno da exposição.
+> - **Integração** em `claude/atlas-integracao-0076-0093`, com merge normal
+>   sem reescrever histórico.
+>
+> Documentos novos:
+> - `CONTENCAO-SEGURANCA.md`
+> - `PLANO-PRODUCAO-E-ROLLBACK.md`
+> - `RELATORIO-HOMOLOGACAO-REMOTA.md`
+> - `RELATORIO-INVESTIGACAO-LOGS.md`
+>
+> Também foram atualizados o relatório de migrations (§5) e o de permissões (§7).
+>
+> **Decisões de produto (nenhuma bloqueia a correção de segurança):**
+>
+> | # | Questão | Comportamento atual | Alternativas e consequência | Recomendação técnica | Bloqueia segurança? |
+> |---|---|---|---|---|---|
+> | 1 | Responsável interno × representante comercial | a conversão de lead não preenche o representante do cliente | (a) vincular `users` ↔ `sales_representatives` no cadastro e preencher automaticamente; (b) escolher o representante na conversão; (c) manter manual | (a), com fallback para (b) quando não houver vínculo | não |
+> | 2 | Papéis × catálogo de produtos | derivado de `categories.*` (Admin/Gerente CRUD; Operador CRU; Vendedor e Somente leitura R) | confirmar ou restringir (ex.: Operador sem escrita em conversões) | manter (não amplia nada que o papel não tinha) | não |
+> | 3 | Converter lead desqualificado | **permitido** (as funções da 0089 não conferem DISQUALIFIED) | permitir com motivo / proibir | proibir, ou exigir requalificação antes | não |
+> | 4 | Mais de uma oportunidade por lead (criação direta) | conversão recusa se já houver aberta; criação direta não | bloquear também na criação direta / permitir | alinhar com a conversão (uma aberta por lead) | não |
+> | 5 | Responsável automático | não atribui; o Vendedor não vê o campo | dono do lead / quem cria / rodízio | quem cria, editável | não |
+> | 6 | Somente leitura com leitura do CRM | **sem CRM** (0091 neutraliza o P3 da 0076) | conceder os 6 códigos `*.view` / manter | decisão de negócio; tecnicamente trivial (uma migration) | não |
+> | 7 | Oportunidade encerrada gera cotação/pedido | **permitido** pela API | só "ganha" gera / nenhuma | só "ganha" | não |
+
 Branch `claude/atlas-neon-ux-crm` · 10/10/2026 · início `2946864`.
 
 Relatórios de detalhe:

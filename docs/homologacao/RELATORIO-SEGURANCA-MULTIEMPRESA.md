@@ -13,6 +13,13 @@ com autorização.
 Dados de teste fictícios: empresas Gama/Delta (E2E pelo app) e Alfa/Beta
 (testes de banco). Nenhum dado real aparece neste documento.
 
+> **Rodada final (12/10/2026):** soma-se E3 — `fn_resolve_applicable_tax_rules`
+> executável por `anon` (migration 0093) — e a margem por pedido (0092).
+> Contenção revisável, validação na homologação Neon e plano de produção:
+> `CONTENCAO-SEGURANCA.md`, `RELATORIO-HOMOLOGACAO-REMOTA.md`,
+> `PLANO-PRODUCAO-E-ROLLBACK.md`, `RELATORIO-INVESTIGACAO-LOGS.md`.
+> **Produção continua exposta** até a aplicação autorizada.
+
 ## 1. Problemas reproduzidos
 
 ### 1.1 Unidades de medida legíveis entre empresas (incidente reportado)

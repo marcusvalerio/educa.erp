@@ -141,3 +141,20 @@ auditoria encontrou:
 2. **Somente leitura e o CRM (decisão nº 6)**, que a 0076 alteraria (seção 5).
 3. Telas próprias para unidades, categorias, marcas, conversões e tabelas
    de preço não existem. Hoje esses cadastros são só por API ou importação.
+
+## 7. Matriz final (rodada final, 12/10/2026)
+
+Igual nas três verificações: banco local só desta linha, banco local integrado
+(0076–0093) e branch filha da homologação Neon (0091–0093 sobre 0075).
+
+| Papel (empresa nova) | Produtos, categorias, marcas, unidades, conversões, tabelas de preço | CRM | Observação |
+|---|---|---|---|
+| Administrador | ler, criar, editar, excluir | 20 códigos | invariante: todas as permissões |
+| Gerente | ler, criar, editar, excluir | 20 | |
+| Operador | ler, criar, editar | 10 (só criar/editar, como na 0075) — **16 com a 0076** (+ consultas) | sem excluir |
+| Vendedor | só ler (inclui `units.read` e `unit_conversions.read`) | 15 | conversões: mesma regra da família catálogo (ajuste da 0091) |
+| Somente leitura | só ler | **0** | regra vigente preservada (decisão nº 6 pendente) |
+
+Na branch integrada, o Operador de empresas novas segue o modelo da 0076
+(consulta + criar/editar); a Somente leitura segue o da 0076 **sem** o CRM.
+Papéis já existentes não são recalculados por nenhuma migration.

@@ -1,0 +1,19 @@
+# inventario-catalogo.sql em produção (bshvfsxapwwfntowdxyr), 12/10/2026 — somente leitura, só catálogo
+acl_funcoes|336|461f233e02fad9968f300361e2552b63
+acl_relacoes|925|947e2a0f7fa1ed02192b899b8b7e95e1
+colunas|2178|ad5b4d1835627d7baba93389e2e8add0
+constraints_c|403|5f1936f6a392448eef275218b1d4aad6
+constraints_f|567|a3bede0b41a433b393c0f55616a8f36e
+constraints_p|172|e537d8a18f154a307b467439a8d5d14a
+constraints_u|207|313ae4e3118d2f5159d1ddb63c74752b
+constraints_x|1|91004654eb475ed137f54de533527c94
+extensoes|8|1a225b3f733d835ae343cd5430b0b600
+funcoes|336|2f9a3c88688793a7b15c5adc75ba1490
+gatilhos|171|945dce40e93215aa68c54881b59634d7
+indices|706|56cb0c647338e890d3669f8b83be32ad
+ledger|86|2881c44b2131882563e4210db71fed23
+policies|328|cc151c872e5bc68307ed545cce4fd6a0
+rls|172|7dae20385a7b50502de21fb64c66df57
+sequencias|43|25b946152aeee6c9488fe4e7f6cfbf72
+tabelas|172|bf4eb7364d5771a7b0b396f4e4231264
+views|4|634c14279d17388e1e849efd6e963914

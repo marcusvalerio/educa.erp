@@ -2,10 +2,14 @@
 
 Branch `claude/atlas-integracao-0076-0093` · 12/10/2026.
 
-> **Classificação: PRONTA PARA APROVAÇÃO DE PRODUÇÃO — NÃO APLICADA.**
-> Em produção (Supabase `bshvfsxapwwfntowdxyr`), conferido por metadados em
-> 12/10/2026, as três exposições **continuam ativas** (`verificacao.sql` =
-> `f t t f f f f t t`). Nada foi alterado em produção.
+> **Classificação (gate final, 12/10/2026): PREPARAÇÃO INCOMPLETA — BACKUP BLOQUEADO.**
+> SQL íntegro (SHA-256 conferido, inalterado desde `fc952dc`), revisão final
+> sem pendências, identidade do projeto e procedimento de execução prontos e
+> testados. **Não é "pronta para aprovação de execução"** enquanto o dump não for
+> gerado e validado (`DUMP VALIDADO`) pelo operador: esta sessão não tem rede até
+> `*.supabase.co`, nem credencial do banco, nem acesso a imagens Docker.
+> Em produção (Supabase `bshvfsxapwwfntowdxyr`) as três exposições **continuam
+> ativas**. Nada foi alterado em produção.
 
 ## 0. Arquivos e hashes (SHA-256)
 
@@ -143,3 +147,14 @@ Pasta `evidencias/contencao-v2/`.
   autorizada das 3 branches filhas descartáveis; `homolog` intacta (plano, seção D).
 - O `anon` local é NOINHERIT e o de produção é INHERIT. O teste D usa
   `WITH INHERIT TRUE` para reproduzir produção.
+
+## 7. Gate final (12/10/2026)
+
+| Pré-requisito | Situação | Evidência |
+|---|---|---|
+| Integridade do SQL | **OK**: SHA-256 `84d174bc…f03a` em disco e no remoto (`680bb35`); 0 linhas de diff em `producao/` desde `fc952dc` | este documento, seção 0 |
+| Revisão final | **OK**: transação única; guarda de identidade e schema; 4 views com `security_invoker` e sem privilégio para anon/authenticated/PUBLIC; policy aberta removida; função só do dono; service_role preservado; herança verificada; nenhuma operação destrutiva além do `DROP POLICY` da policy aberta. Produção sem privilégio por coluna e sem associação de papéis; event triggers do Supabase (`pgrst_*`) benignos | `evidencias/contencao-v2/producao-metadados-12-10.md` |
+| Dependência de migrations de funcionalidade | **nenhuma**: só objetos da 0075; testado sobre cópia 0075 | seção 4 |
+| Identidade do projeto | **OK por metadados** (`system_identifier`, banco, ledger, inventário do catálogo); confirmação **visual** no painel fica com o operador (plano, seção 0) | `evidencias/contencao-v2/inventario-producao-12-10.txt` |
+| Procedimento de execução | **OK**: `executar-contencao.sh` (hash, PGUSER fixo, confirmações, conferências em sessão somente leitura, execução transacional, verificação) e `testar-data-api.sh`; todos os caminhos de interrupção testados | `teste-local-executar-contencao.txt` |
+| **Backup** | **BLOQUEADO**: plano free sem backup acessível; dump não gerado nesta sessão. Scripts prontos (`backup/gerar-dump-producao.sh`, `backup/validar-restauracao-dump.sh`); validador testado com dump simulado | `teste-local-validacao-dump.txt` |

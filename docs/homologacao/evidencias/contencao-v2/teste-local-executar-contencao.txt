@@ -1,0 +1,23 @@
+  OK    cópia de teste difere do wrapper só nas 3 checagens de ambiente
+== somente leitura de fato nas conferências
+  OK    escrita recusada após 'set session characteristics … read only'
+== interrupções antes de qualquer alteração
+  OK    hash divergente
+  OK    backup não confirmado
+  OK    confirmação final errada
+  OK    banco errado
+  OK    catálogo intacto após as interrupções
+== falha dentro da transação (anon herda SELECT de outro papel)
+  OK    abortou e registrou verificação pós-falha
+  OK    catálogo intacto após a falha
+  OK    verificacao-pos-falha.txt gravada
+== sucesso e segunda execução
+  OK    COMMIT e verificação depois t…t
+  OK    antes registrado
+  OK    pré-condições
+  OK    depois registrado
+  OK    permissões da pasta de saída
+  OK    senha fora do log
+  OK    segunda execução: já aplicada
+
+RESULTADO: todas as verificações passaram

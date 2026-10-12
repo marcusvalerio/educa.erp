@@ -1,76 +1,146 @@
 # Plano de aplicação em produção e rollback
 
-**Status: PRONTA PARA APROVAÇÃO DE PRODUÇÃO (contenção v2) — NÃO APLICADA.** Nada deste plano
-foi executado em produção. Cada parte exige aprovação explícita e separada.
+**Status da parte A (contenção): BLOQUEADA PELO BACKUP.** O SQL, os scripts e os
+testes estão prontos (hash conferido em 12/10). Falta o dump gerado **e
+validado** pelo operador; sem isso a execução não está liberada. Nada deste
+plano foi executado em produção. Cada parte exige aprovação explícita e separada.
 
 ## 0. Identificação do alvo (conferir antes de qualquer comando)
 
 | Item | Valor esperado | Como conferir |
 |---|---|---|
-| Projeto Supabase | `educa.erp`, ref **`bshvfsxapwwfntowdxyr`**, região `sa-east-1` | painel do Supabase (o SQL não enxerga o ref); o ref é o subdomínio de `NEXT_PUBLIC_SUPABASE_URL` da Vercel de produção |
-| Banco | `system_identifier` **7678069749886157684**, banco `postgres`, PostgreSQL 17.6 | 1ª coluna de `verificacao.sql` (`7678069749886157684/postgres`) — o script aborta sozinho se divergir |
-| Ledger | contém `20260929165645` `0075_company_roles_and_user_invites` (86 registros em 12/10) | `select version, name from supabase_migrations.schema_migrations order by version desc limit 3` |
+| Projeto Supabase | nome `educa.erp`, **Project ID (ref) `bshvfsxapwwfntowdxyr`**, região South America (São Paulo) `sa-east-1`, organização `marcusvalerio's Org` | ver "Como confirmar o ref no painel" abaixo |
+| Banco | `system_identifier` **7678069749886157684**, banco `postgres`, PostgreSQL 17.6 | 1ª coluna de `verificacao.sql` — o script aborta sozinho se divergir |
+| Ledger | contém `20260929165645` `0075_company_roles_and_user_invites` (86 registros em 12/10) | coluna `pre_ledger` de `precondicoes.sql` |
 | Estado vulnerável | `verificacao.sql` → `f t t f f f f t t` | rodar antes |
-| Arquivo | SHA-256 de `contencao-emergencial.sql` = `84d174bc336a4a1653001bd5b85fa17d66fead740366719f99c98ca0cf0ef03a` | `sha256sum` |
-| Executor | papel `postgres` (SQL Editor do painel ou conexão direta) — é o concedente de todos os grants afetados | `select current_user` |
+| Arquivo | SHA-256 de `contencao-emergencial.sql` = `84d174bc336a4a1653001bd5b85fa17d66fead740366719f99c98ca0cf0ef03a` (revisão `fc952dc`, inalterada até `680bb35`) | `sha256sum` (o wrapper confere sozinho) |
+| Executor | papel `postgres` do projeto, **não** superusuário; é o concedente de todos os grants afetados | colunas `executor`/`executor_superuser` de `precondicoes.sql` |
 
-Se qualquer item divergir: **parar**.
+**Como confirmar o ref no painel (visual):**
+1. Entrar em `https://supabase.com/dashboard` com a conta dona e abrir o projeto
+   **educa.erp**. A barra de endereço deve ser
+   `https://supabase.com/dashboard/project/bshvfsxapwwfntowdxyr/...`.
+2. **Project Settings → General**: campo *Project ID* (também chamado *Reference
+   ID*) = `bshvfsxapwwfntowdxyr`; *Name* = `educa.erp`; região São Paulo.
+3. **Connect** (botão no topo): o *Session pooler* mostra o usuário
+   `postgres.bshvfsxapwwfntowdxyr` — é dele que sai o `PGHOST`/`PGUSER` usados abaixo.
+4. Conferência cruzada: na Vercel (projeto de produção `educaerp`), a variável
+   `NEXT_PUBLIC_SUPABASE_URL` tem o host `bshvfsxapwwfntowdxyr.supabase.co`
+   (olhar só o host; não copiar chaves).
 
-## 1. Backup (pré-requisito)
+**Nada no repositório aponta para produção por alias:** não há
+`supabase/config.toml` nem vínculo `supabase/.temp`; `.env.local.example` só tem
+marcadores (`SEU-PROJETO`); o `.env.local` de desenvolvimento aponta para
+`127.0.0.1`. Os scripts abaixo não aceitam URL: o ref está fixo no código, o
+`PGUSER` precisa ser `postgres.bshvfsxapwwfntowdxyr` (o pooler roteia por ele)
+e o SQL ainda confere o `system_identifier`. Não usar `supabase link` dentro do
+repositório nem variáveis como `SUPABASE_DB_URL` herdadas do shell.
+
+## 1. Backup (pré-requisito — BLOQUEANTE)
 
 **Situação verificada (12/10):** organização no plano **free**. Pela
-documentação oficial do Supabase, backups diários acessíveis existem só nos
-planos Pro/Team/Enterprise e PITR é add-on desses planos; para o free a
-recomendação é exportar com o CLI. **Não há backup confirmado.** O conector não
-lista backups e esta sessão não tem a senha do banco nem acesso de rede ao host.
+documentação oficial, backups diários acessíveis só existem nos planos
+Pro/Team/Enterprise, e PITR é add-on desses planos. Para o free a recomendação é
+exportar com o CLI. **Não há backup confirmado.** Esta sessão não tem a senha
+do banco, a rede até `*.supabase.co` é bloqueada e os registros de imagens
+Docker recusam o download, então o dump **não** pôde ser gerado nem restaurado aqui.
 
-Antes da parte A (recomendado) e **obrigatório** antes da parte B:
+Procedimento (oficial: *Backup and Restore using the CLI*), numa máquina
+autorizada, com Supabase CLI ≥ 2.120, Docker, `psql` e `supabase login` feito:
 
-1. No painel: Database → Backups. Confirmar se aparece algum backup agendado
-   (esperado: nenhum no free). Se o plano mudar para Pro, confirmar o backup
-   diário mais recente e a data.
-2. Fora do repositório, numa máquina autorizada:
-   `supabase db dump --db-url "$URL" -f schema.sql` (esquema e grants),
-   `supabase db dump --db-url "$URL" --role-only -f roles.sql` e
-   `supabase db dump --db-url "$URL" --data-only -f dados.sql`. Guardar com
-   acesso restrito. **Não** colocar no Git (repositório público).
-3. Testar a restauração do dump numa base descartável (local ou projeto
-   Supabase de teste), nunca sobre produção.
-4. Registrar data/hora, quem gerou e onde está guardado.
+```bash
+# 1) gerar (só leitura na produção; saída fora do Git, pasta 700, arquivos 600)
+docs/homologacao/producao/backup/gerar-dump-producao.sh ~/educa-backups/prod-$(date -u +%Y%m%dT%H%M%SZ)
+#    pede a senha sem eco; vincula SOMENTE bshvfsxapwwfntowdxyr e confere o vínculo;
+#    gera roles.sql, schema.sql, data.sql (--use-copy), historico-*.sql,
+#    inventario-producao.txt (catálogo, sessão somente leitura) e MANIFEST.sha256.
 
-Parte A só altera catálogo (policy, opções de view, grants). Sua pré-imagem
-exata está em `evidencias/contencao-v2/producao-metadados-12-10.md` e o
-rollback SQL a restaura. Por isso, para A, o dump é salvaguarda; para B (que
-altera dados em 0079/0080/0081/0085), é **obrigatório**.
+# 2) validar por restauração num banco ISOLADO (pilha local do Supabase, PG 17)
+W=$(mktemp -d); supabase init --workdir "$W" --yes && supabase start --workdir "$W"
+TARGET_DB_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres' \
+  docs/homologacao/producao/backup/validar-restauracao-dump.sh ~/educa-backups/prod-<UTC>
+#    exige: manifesto íntegro; restauração completa numa transação; contagem de
+#    linhas de CADA tabela = data.sql; inventário do catálogo (tabelas, colunas,
+#    constraints, índices, views, funções, policies, RLS, gatilhos, ACLs,
+#    sequências, ledger) idêntico ao da produção. Só "DUMP VALIDADO" libera A.
+supabase stop --workdir "$W" --no-backup
+```
+
+- O código de saída zero do `supabase db dump` **não** valida o backup; só a
+  mensagem `DUMP VALIDADO` do passo 2 valida.
+- Se o inventário divergir só em `acl_*` por privilégios padrão do banco de
+  teste, investigar antes de aceitar. Não ajustar a comparação para passar.
+- Guardar a pasta fora do Git e de qualquer armazenamento público (GitHub,
+  Vercel, links compartilhados). Registrar data/hora, operador, local e o
+  `MANIFEST.sha256`.
+- Testado nesta sessão: o validador contra um dump simulado (`pg_dump` de uma
+  cópia local equivalente à produção) aprovou o íntegro (173 tabelas, 18 itens
+  de catálogo) e acusou arquivo adulterado, linha faltante e catálogo
+  divergente. O inventário roda em produção (`evidencias/contencao-v2/inventario-producao-12-10.txt`).
+  **Não testado aqui:** `gerar-dump-producao.sh` contra o Supabase real
+  (sem rede/credencial/imagem Docker).
 
 ## A. Contenção emergencial
 
 **Escopo:** fecha E1, E2 e E3 (`CONTENCAO-SEGURANCA.md`). Sem deploy de código,
-sem variável de ambiente, sem migração de infraestrutura.
+sem variável de ambiente, sem migração. **Não depende** de nenhuma migration de
+funcionalidade (0076+): as pré-condições exigem só objetos da 0075, e a
+contenção foi aplicada e testada sobre uma cópia no estado 0075.
 
-| Passo | Ação | Esperado |
+**Conexão do operador** (Session pooler; nada de URL com senha):
+```bash
+git fetch origin claude/atlas-integracao-0076-0093 && git checkout --detach 680bb35   # ou commit posterior aprovado
+export PGHOST='<host do Session pooler, copiado do painel → Connect>' PGPORT=5432 \
+       PGDATABASE=postgres PGUSER=postgres.bshvfsxapwwfntowdxyr PGSSLMODE=require
+```
+
+| Passo | Ação | Esperado / critério |
 |---|---|---|
-| A1 | Seção 0 (ref, hash) e seção 1 (backup) | conferidos e registrados |
-| A2 | `verificacao.sql` (antes) | `7678069749886157684/postgres` · `f t t f f f f t t` |
-| A3 | Executar `producao/contencao-emergencial.sql` inteiro, numa única execução (uma transação; aborta sozinho se pré-condição ou verificação falhar) | `COMMIT`, sem erro |
-| A4 | `verificacao.sql` (depois) | `t t t t t t t t t` |
-| A5 | Fumaça no app com um administrador: Financeiro → Fluxo de caixa; Estoque → Valorização; Controladoria → Margem por produto/cliente; Relatórios executivo e financeiro; Fiscal → calcular um documento em rascunho; Cadastros → Produtos | telas iguais às de antes. Margem por pedido e painel de estoque já falham hoje (0092/0090) e continuam iguais |
-| A6 | Chamada anônima à Data API: `GET /rest/v1/v_cash_flow_summary?limit=1` e `POST /rest/v1/rpc/fn_resolve_applicable_tax_rules` com a chave pública | `401`/`403` com `permission denied` |
-| A7 | Supabase → Advisors → Security | `security_definer_view` some para as 4 views |
+| A1 | **Backup**: `DUMP VALIDADO` de hoje (seção 1). **Ref**: conferido no painel (seção 0). **Hash**: `sha256sum docs/homologacao/producao/contencao-emergencial.sql` | backup validado; ref = `bshvfsxapwwfntowdxyr`; hash = `84d174bc…f03a`. Qualquer divergência: **parar** |
+| A2 | `docs/homologacao/producao/testar-data-api.sh antes` (chave pública, sem login; `limit=0`, nenhuma linha lida) | 4 views com HTTP 200 (exposição presente). Diferente disso: parar e investigar |
+| A3 | `docs/homologacao/producao/executar-contencao.sh` — confere hash, `PGUSER`, pede confirmação de backup/ref/janela, pede a senha sem eco, roda `verificacao.sql` e `precondicoes.sql` em sessão **somente leitura** e grava a saída, pede `APLICAR bshvfsxapwwfntowdxyr`, executa o SQL (uma transação, `ON_ERROR_STOP`) e roda a verificação depois | antes `7678069749886157684/postgres f t t f f f f t t`; pré-condições `t t t t t t t postgres f`; `COMMIT`; depois `t t t t t t t t t`. O wrapper **para sozinho** em qualquer divergência |
+| A4 | `docs/homologacao/producao/testar-data-api.sh depois` | 4 views 401/403 (`42501`) e a função 401/403/404 |
+| A5 | Fumaça no app (administrador): Financeiro → Fluxo de caixa; Estoque → Valorização; Controladoria → Margem por produto e por cliente; Relatórios executivo e financeiro; Fiscal → calcular um documento em rascunho; Cadastros → Produtos | iguais a antes. Margem por pedido e painel de estoque **já falham hoje** (0092/0090) e continuam iguais |
+| A6 | Supabase → Advisors → Security | `security_definer_view` some para as 4 views |
+| A7 | Registro: pasta de saída do wrapper (fora do Git, com `MANIFEST.sha256`), saídas de A2/A4, horário, operador e conferente | arquivado com acesso restrito |
 
-- **Se A3 falhar:** nada foi aplicado (transação). Anotar a mensagem
-  (`Contenção: …`) e parar. Não editar o script em produção.
+Execução manual equivalente (se o wrapper não puder ser usado), na mesma ordem:
+```bash
+read -rs PGPASSWORD; export PGPASSWORD
+psql -X -v ON_ERROR_STOP=1 -q -AtF' ' -c 'set session characteristics as transaction read only' -f docs/homologacao/producao/verificacao.sql
+psql -X -v ON_ERROR_STOP=1 -q -AtF' ' -c 'set session characteristics as transaction read only' -f docs/homologacao/producao/precondicoes.sql
+psql -X -v ON_ERROR_STOP=1 -f docs/homologacao/producao/contencao-emergencial.sql
+psql -X -v ON_ERROR_STOP=1 -q -AtF' ' -c 'set session characteristics as transaction read only' -f docs/homologacao/producao/verificacao.sql
+unset PGPASSWORD
+```
+O SQL Editor do painel **não** é recomendado: não confere o hash do texto
+colado, e uma colagem truncada pode perder o `commit` ou a verificação final.
+
+**Critérios de interrupção (parar, não improvisar):**
+- hash, ref, `PGUSER`, identidade (`system_identifier/banco`) ou estado "antes" diferentes do esperado;
+- qualquer pré-condição `f` ou executor superusuário;
+- erro `Contenção: …` na execução. A transação já foi desfeita: registrar a
+  mensagem e a `verificacao-pos-falha.txt`. Não editar o script em produção nem repetir sem entender a causa;
+- `lock_timeout` (o objeto estava em uso): pode-se repetir uma vez fora do pico; se repetir o erro, parar;
+- verificação depois ≠ `t…t`, A4 com qualquer HTTP 200, ou regressão funcional em A5:
+  acionar o responsável. **Não** aplicar rollback automaticamente (ver abaixo).
+
 - **Janela:** qualquer horário; locks curtos (`lock_timeout 5s`).
-- **Impacto esperado no app:** nenhum (seção 5 de `CONTENCAO-SEGURANCA.md`).
-- **Registro:** a contenção roda fora do ledger. Anotar data/hora, executor, SHA do
-  arquivo e saídas de A2/A4.
+- **Efeito colateral esperado:** os event triggers `pgrst_ddl_watch`/`pgrst_drop_watch`
+  do Supabase pedem ao PostgREST para recarregar o cache de schema (benigno).
 
-### Rollback de A
+### Rollback de A — só por decisão explícita
 
-`producao/rollback-contencao.sql`. **Reabre risco de segurança.** Não é
-resposta rotineira a falhas funcionais: primeiro investigar e corrigir no
-código ou numa migration. Usar só com quebra funcional **comprovada**, que não possa
-esperar, e pelo menor tempo possível. Executar só as seções da quebra:
+**Prioridade é corrigir para frente.** Uma regressão funcional depois da
+contenção se resolve no código (o app lê as views com `service_role`, que
+mantém o acesso) ou com uma migration nova, **sem** devolver acesso a
+`anon`/`authenticated`. `producao/rollback-contencao.sql` **reabre risco de
+segurança** e exige:
+1. quebra funcional **comprovada** (rota, usuário afetado, mensagem), sem correção possível no prazo;
+2. decisão **explícita e registrada** do responsável, ciente do risco da seção
+   escolhida (tabela abaixo), com prazo para reaplicar a contenção;
+3. execução **só** das seções necessárias (apagar as demais do arquivo), com a
+   mesma conexão e `psql -X -v ON_ERROR_STOP=1 -f`; depois, `verificacao.sql` e registro.
 
 | Seção | Restaura | Risco reaberto |
 |---|---|---|
@@ -78,7 +148,7 @@ esperar, e pelo menor tempo possível. Executar só as seções da quebra:
 | R2 | views sem `security_invoker` | sozinha nenhum (ninguém além do app tem privilégio); com R3, E2 para logados |
 | R3 | SELECT nas 4 views para `authenticated` | com R2, totais de todas as empresas para qualquer logado; sem R2, limitado pelo RLS |
 | R4 | EXECUTE da função para `service_role` | nenhum para usuários/anon (só o servidor) |
-| R5 (comentada) | estado integral anterior: ALL para `anon`/`authenticated`, EXECUTE para `anon`/`authenticated` | **E2 e E3 para qualquer pessoa na internet**; só com decisão explícita registrada |
+| R5 (comentada) | estado integral anterior: ALL para `anon`/`authenticated`, EXECUTE para `anon`/`authenticated` | **E2 e E3 para qualquer pessoa na internet**; nunca como primeira opção |
 
 O rollback tem a mesma guarda de identidade e uma conferência que aborta se
 `anon` voltar a ter acesso sem R5. Testado localmente: R1–R4 resultam em

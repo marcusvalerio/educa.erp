@@ -1,0 +1,11 @@
+== positivo
+  OK    dump íntegro → DUMP VALIDADO
+   173 tabelas com linhas conferidas; 18 itens de catálogo
+== negativos
+  OK    alvo já com tabelas é recusado
+  OK    URL citando o ref de produção é recusada
+  OK    data.sql adulterado (manifesto antigo)
+  OK    catálogo divergente da produção
+  OK    linha faltando no restaurado é detectada pela conferência do passo 3
+
+RESULTADO: todas as verificações passaram

@@ -109,7 +109,7 @@ Pasta `evidencias/contencao-v2/`.
 |---|---|---|
 | Local, cópia do banco equivalente à produção (PG16), `testar-contencao.sh` | A antes; B identidade da produção num banco que não é a produção; C ledger sem 0075; D `anon` herdando SELECT por outro papel (aborta na **verificação final**); E chamadora SECURITY INVOKER; F aplicar; G idempotência; H acesso real por papel; I rollback técnico + reaplicação; J rollback integral; K 0076…0094 por cima | **todas OK**. A `f t t f f f f t t`; B/C/D/E abortam pelo motivo esperado e o catálogo fica idêntico; F `t t t t t t t t t`; G catálogo igual; H anon e authenticated negados nas 4 views, service_role lê, função negada aos três; I `f t t t f f f t t` (reabre E1 e E2 para logados; anon fechado) e reaplicação volta a `t…t`; J catálogo idêntico ao original; K 19 migrations sem erro, `t…t` (`teste-local-contencao.txt`) |
 | Mesma cópia, `views-isolamento-db` (dados sintéticos Alfa=1000/Beta=2000) | antes × depois | antes 2/10 (anon e usuários leem as duas empresas); depois 9/10. A falha restante é `fn_margin_by_order` `min(uuid)`, defeito pré-existente de produção corrigido pela 0092, idêntico antes e depois (`views-isolamento-antes-depois.txt`) |
-| **PG17, branch Neon descartável** `valida-contencao-v2-20261012` | antes, falha deliberada, aplicação, acesso por papel, idempotência | antes = produção; identidade da produção → aborta sem alteração parcial; depois `t…t` incluindo MAINTAIN; anon/authenticated negados; função negada também a service_role; service_role lê as views; reexecução sem erro (`neon-pg17-branch-descartavel.md`) |
+| **PG17, branch Neon descartável** `valida-contencao-v2-20261012` | antes, falha deliberada, aplicação, acesso por papel, idempotência | antes = produção; identidade da produção → aborta sem alteração parcial; depois `t…t` incluindo MAINTAIN; anon/authenticated negados; função negada também a service_role; service_role lê as views; reexecução sem erro (`neon-pg17-branch-descartavel.md`; branch excluída depois) |
 | Código da **main (produção)** sobre banco equivalente à produção, **antes** e **depois** da contenção | E2E geral (login, CRUD por módulo, isolamento, fiscal incl. cálculo) | **210/210** antes e **210/210** depois |
 | Idem | E2E das rotas afetadas (`e2e-contencao-rotas.mjs`): fluxo de caixa, projeção, valorização, margens ×3, relatórios executivo/financeiro/estoque × 3 usuários + sem sessão | **48/50 antes e 48/50 depois, com as mesmas 2 falhas**: `margin-by-order` (`min(uuid)`, 0092) e `reports/inventory` (`total_value` ambíguo, 0090). São defeitos pré-existentes de produção sem relação com a contenção, reproduzidos no banco sem ela |
 | Código **integrado** sobre 0076…0094 | E2E das rotas afetadas | **72/72** |
@@ -139,5 +139,7 @@ Pasta `evidencias/contencao-v2/`.
   localmente. A chamada anônima à Data API (passo A6) confirma em produção.
 - 263 funções SECURITY DEFINER executáveis por `anon` (linter): fora do escopo.
   A varredura não achou outra exposição comprovada; revisão dedicada recomendada.
+- Credencial temporária `validador_seq` (Neon): **revogada** com a exclusão
+  autorizada das 3 branches filhas descartáveis; `homolog` intacta (plano, seção D).
 - O `anon` local é NOINHERIT e o de produção é INHERIT. O teste D usa
   `WITH INHERIT TRUE` para reproduzir produção.

@@ -145,32 +145,26 @@ Recomendação: em problema após B, primeiro reverter **só o código**
 
 ## D. Credenciais e branches temporárias (Neon `old-butterfly-53570465`, não é produção)
 
-| Branch | id | Situação | Proposta |
-|---|---|---|---|
-| `homolog` | `br-icy-cell-b62lgh06` | homologação principal; **não alterada** | manter |
-| `valida-contencao-20261011` | `br-restless-bonus-b6txjb6l` | filha descartável (contenção v1 + 0091–0093, dados sintéticos) | excluir após aprovação |
-| `valida-sequencia-20261012` | `br-blue-king-b6mrb350` | filha descartável; contém o papel **`validador_seq`** | excluir após aprovação (remove o papel) |
-| `valida-contencao-v2-20261012` | `br-quiet-surf-b6ob7mhx` | filha descartável criada nesta rodada (contenção v2 em PG17) | excluir após aprovação |
+**Papel `validador_seq`** (senha exibida numa sessão anterior), verificado em 12/10 antes da remoção:
+- existia **só** na branch `valida-sequencia-20261012` (não na `homolog` nem nas outras filhas);
+- `LOGIN`, membro de `neon_superuser` (`CREATEROLE`, `BYPASSRLS`), padrão de papéis criados pelo painel/API;
+- função auxiliar `zz_validacao_exec` já removida (0 funções `zz_*`); 0 objetos próprios,
+  0 grants em tabelas/funções/schemas/banco, 0 default ACL, 0 sessões;
+- `ALTER ROLE … NOLOGIN` pelo SQL foi negado ao `neondb_owner`. O reset de senha
+  exibiria uma senha nova, então foi descartado.
 
-**Papel `validador_seq`** (senha exibida numa sessão anterior). Verificado em 12/10:
-- existe **só** na branch `valida-sequencia-20261012` (não existe na `homolog`
-  nem nas outras filhas);
-- `LOGIN`, membro de `neon_superuser` (`CREATEROLE`, `BYPASSRLS`), o padrão de
-  papéis criados pelo painel/API;
-- função auxiliar `zz_validacao_exec` **removida** (0 funções `zz_*`);
-- 0 objetos próprios, 0 grants em tabelas/funções/schemas/banco, 0 default ACL, 0 sessões;
-- `ALTER ROLE validador_seq NOLOGIN` pelo SQL foi **negado** (`permission
-  denied to alter role`): o `neondb_owner` não administra papéis criados pelo painel;
-- o arquivo local com a credencial já tinha sido destruído; a senha não está
-  em nenhum arquivo do repositório nem das evidências.
+**Ação executada com autorização do responsável (12/10):** exclusão das três
+branches filhas descartáveis. Antes, reconferido: nome, mãe = `homolog`
+(`br-icy-cell-b62lgh06`), nenhuma padrão ou protegida, nenhuma branch dependente.
 
-**A credencial ainda NÃO está revogada.** O risco é limitado a uma branch
-descartável com dados sintéticos, mas o papel ignora RLS ali. Formas de revogar
-(todas exigem autorização, por serem destrutivas ou exibirem segredo):
-1. **Recomendado:** excluir a branch `valida-sequencia-20261012`
-   (`br-blue-king-b6mrb350`). Remove o papel e a credencial e não afeta a
-   `homolog` (filhas são independentes da mãe).
-2. Ou excluir só o papel: painel Neon → projeto → Branches →
-   `valida-sequencia-20261012` → Roles & Databases → `validador_seq` → Delete.
-3. Ou redefinir a senha (Reset password) sem registrar a nova. Isso invalida a antiga,
-   mas a nova seria exibida na tela de quem fizer o reset.
+| Branch | id | Situação |
+|---|---|---|
+| `valida-sequencia-20261012` | `br-blue-king-b6mrb350` | **excluída** (levou o papel `validador_seq` e a credencial) |
+| `valida-contencao-20261011` | `br-restless-bonus-b6txjb6l` | **excluída** |
+| `valida-contencao-v2-20261012` | `br-quiet-surf-b6ob7mhx` | **excluída** |
+| `homolog` | `br-icy-cell-b62lgh06` | mantida, **não alterada**; papéis: service_role, anon, authenticated, neondb_owner, educa_app (sem `validador_seq`) |
+| `main`, `homolog-antes-atlas-20260929`, `rehearsal-*` | — | mantidas (não criadas por estas rodadas) |
+
+**Credencial `validador_seq`: revogada** (o papel não existe mais em nenhuma
+branch). A senha não está em nenhum arquivo do repositório nem das evidências. O
+arquivo local que a continha foi destruído numa rodada anterior.

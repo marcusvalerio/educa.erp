@@ -29,3 +29,5 @@ Observação: uma branch Neon herda o `system_identifier` da mãe (cópia físic
 mesmo vale para cópias físicas de produção (restauração física, réplica). Por isso
 a guarda combina identificador, nome do banco, ledger e schema, e o operador
 confere o ref do projeto no painel antes de executar.
+
+Branch excluída em 12/10/2026, com autorização do responsável, após a validação.

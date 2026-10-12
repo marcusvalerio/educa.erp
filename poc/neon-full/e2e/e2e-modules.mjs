@@ -89,7 +89,7 @@ export async function runModuleE2E({ APP, api, sql, check, a1, a2, b1, companyA,
 
   // ---------------------------------------------------------------------- Fiscal
   await mod("Fiscal", async (c) => {
-    const est = await post(a1, "/api/fiscal-establishments", { code: "EST-POC", name: "Matriz Fiscal POC", cnpj: "12.345.678/0001-90", taxRegime: "SIMPLES_NACIONAL", state: "SP", city: "São Paulo" });
+    const est = await post(a1, "/api/fiscal-establishments", { code: "EST-POC", name: "Matriz Fiscal POC", cnpj: "12.345.678/0001-95", taxRegime: "SIMPLES_NACIONAL", state: "SP", city: "São Paulo" });
     c("estabelecimento: criar (201)", est.status === 201 && inA("fiscal_establishments", idOf(est)), j(est));
     const estUpd = await patch(a1, `/api/fiscal-establishments/${idOf(est)}`, { name: "Matriz Fiscal POC Ed." });
     c("estabelecimento: editar", estUpd.status === 200 && estUpd.body?.data?.name === "Matriz Fiscal POC Ed.", j(estUpd));

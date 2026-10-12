@@ -114,7 +114,7 @@ try {
       stages.push(ok(`estágio ${sname}`, await api(admin.page, "/api/pipeline-stages", { method: "POST", body: JSON.stringify({ pipelineId: pipe.id, code, name: sname, sequence: i + 1, probabilityDefault: prob }) })).id);
     }
     const origin = ok(`origem ${name}`, await api(admin.page, "/api/lead-origins", { method: "POST", body: JSON.stringify({ code: "SITE", name: "Site" }) }));
-    const customer = ok(`cliente ${name}`, await api(admin.page, "/api/customers", { method: "POST", body: JSON.stringify({ tipo: "Pessoa Jurídica", nome: `Padaria Sol (${name})`, documento: key === "gama" ? "11.222.333/0001-81" : "22.333.444/0001-55" }) }));
+    const customer = ok(`cliente ${name}`, await api(admin.page, "/api/customers", { method: "POST", body: JSON.stringify({ tipo: "Pessoa Jurídica", nome: `Padaria Sol (${name})`, documento: key === "gama" ? "11.222.333/0001-81" : "22.333.444/0001-81" }) }));
     const product = ok(`produto ${name}`, await api(admin.page, "/api/products", { method: "POST", body: JSON.stringify({ codigo: "PAO-01", descricao: "Pão francês (kg)", categoria: "Padaria", unidade: "KG", precoVenda: 18.9 }) }));
     state.fixtures[key] = { pipeline: pipe.id, stages, origin: origin.id, customer: customer.id, product: product.id };
     await admin.ctx.close();

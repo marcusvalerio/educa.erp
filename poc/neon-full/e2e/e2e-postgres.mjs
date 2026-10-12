@@ -401,12 +401,19 @@ try {
     check("CRUD estoque: criar depósito", wh.status === 201 && !!made.warehouse, JSON.stringify(wh.body));
     const whUpd = await patch(`/api/warehouses/${made.warehouse}`, { nome: "CD Alfa POC Ed." });
     check("CRUD estoque: editar depósito", whUpd.status === 200 && whUpd.body?.data?.nome === "CD Alfa POC Ed.", JSON.stringify(whUpd.body));
-    // Linha de base de PRODUÇÃO: warehouse_locations.warehouse_id é NOT NULL e
-    // o mapper da API não o preenche — o POST falha lá também (conferido).
+    // Sem a 0076 (igual à produção): warehouse_locations.warehouse_id é NOT
+    // NULL e o mapper da API não o preenchia — o POST falhava (conferido).
+    // Com a 0076: o gatilho resolve o depósito pelo código e o POST cria o local.
+    const has0076 = sql("select count(*) from pg_proc where proname = 'fn_warehouse_location_resolve_warehouse'") === "1";
     const loc = await post("/api/warehouse-locations", { codigoLocal: "A-01", armazem: "CD-POC", tipo: "Prateleira" });
-    check("linha de base: POST de local falha por warehouse_id NOT NULL (igual a produção; nada gravado)", loc.status >= 400 && sql(`select count(*) from warehouse_locations where company_id='${companyA}' and code='A-01'`) === "0", `${loc.status}`);
-    // Local criado como dado de teste (SQL de dono), para seguir com o fluxo de estoque.
-    made.location = sql(`with i as (insert into warehouse_locations (company_id, warehouse_id, warehouse, code, name) values ('${companyA}', '${made.warehouse}', 'CD-POC', 'A-01', 'Prateleira A-01') returning id) select id from i`);
+    if (has0076) {
+      made.location = loc.body?.data?.id;
+      check("estoque (0076): POST de local resolve o depósito pelo código (201)", loc.status === 201 && sql(`select count(*) from warehouse_locations where company_id='${companyA}' and code='A-01' and warehouse_id='${made.warehouse}'`) === "1", `${loc.status} ${JSON.stringify(loc.body)}`);
+    } else {
+      check("linha de base: POST de local falha por warehouse_id NOT NULL (igual a produção; nada gravado)", loc.status >= 400 && sql(`select count(*) from warehouse_locations where company_id='${companyA}' and code='A-01'`) === "0", `${loc.status}`);
+      // Local criado como dado de teste (SQL de dono), para seguir com o fluxo de estoque.
+      made.location = sql(`with i as (insert into warehouse_locations (company_id, warehouse_id, warehouse, code, name) values ('${companyA}', '${made.warehouse}', 'CD-POC', 'A-01', 'Prateleira A-01') returning id) select id from i`);
+    }
     const locGet = await api(a1.page, `/api/warehouse-locations/${made.location}`);
     check("CRUD estoque: ler local pela API (RLS da Alfa)", locGet.status === 200 && locGet.body?.data?.codigoLocal === "A-01", `${locGet.status}`);
     const locUpd = await patch(`/api/warehouse-locations/${made.location}`, { descricao: "Prateleira A-01 Ed." });
@@ -417,7 +424,7 @@ try {
     check("estoque: mesma chave de idempotência não duplica a entrada", rec2.status < 300 && Number(sql(`select coalesce(sum(on_hand),0) from stock_balances where product_id='${made.product}'`)) === 40, `${rec2.status}`);
 
     // Compras: fornecedor + solicitação + envio para aprovação
-    const sup = await post("/api/suppliers", { tipo: "Pessoa Jurídica", razaoSocial: "Fornecedor POC Ltda", documento: "12.345.678/0001-90" });
+    const sup = await post("/api/suppliers", { tipo: "Pessoa Jurídica", razaoSocial: "Fornecedor POC Ltda", documento: "12.345.678/0001-95" });
     made.supplier = sup.body?.data?.id;
     check("CRUD compras: criar fornecedor", sup.status === 201 && !!made.supplier, JSON.stringify(sup.body));
     const pr = await post("/api/purchase-requests", { priority: "high", justification: "Reposição POC", items: [{ productId: made.product, description: "Parafuso POC", quantity: 100 }] });
@@ -427,7 +434,7 @@ try {
     check("compras: enviar solicitação para aprovação (workflow no banco)", prSub.status === 200 && sql(`select status from purchase_requests where id='${made.purchaseRequest}'`) !== "draft", `${prSub.status} ${JSON.stringify(prSub.body)}`);
 
     // Vendas: cliente + pedido de venda
-    const cus = await post("/api/customers", { tipo: "Pessoa Jurídica", nome: "Cliente POC SA", documento: "98.765.432/0001-10" });
+    const cus = await post("/api/customers", { tipo: "Pessoa Jurídica", nome: "Cliente POC SA", documento: "98.765.432/0001-98" });
     made.customer = cus.body?.data?.id;
     check("CRUD vendas: criar cliente", cus.status === 201 && !!made.customer, JSON.stringify(cus.body));
     const so = await post("/api/sales-orders", { customerId: made.customer, items: [{ productId: made.product, description: "Parafuso POC", quantity: 3, unitPrice: 13.9 }] });
@@ -477,7 +484,7 @@ try {
     check("papel leitura: A2 não cria produto (403)", rPost.status === 403, `${rPost.status}`);
     const rDel = await api(a2.page, `/api/carriers/${made.carrier}`, { method: "DELETE" });
     check("papel leitura: A2 não exclui (403)", rDel.status === 403, `${rDel.status}`);
-    const oCar = await api(b2.page, "/api/carriers", { method: "POST", body: JSON.stringify({ razaoSocial: "Transp Beta Op", cnpj: "22.333.444/0001-55" }) });
+    const oCar = await api(b2.page, "/api/carriers", { method: "POST", body: JSON.stringify({ razaoSocial: "Transp Beta Op", cnpj: "22.333.444/0001-81" }) });
     check("papel operador: B2 cria na própria empresa", oCar.status === 201 && sql(`select company_id from carriers where id='${oCar.body?.data?.id}'`) === companyB, JSON.stringify(oCar.body));
     const oDel = await api(b2.page, `/api/carriers/${oCar.body?.data?.id}`, { method: "DELETE" });
     check("papel operador: B2 não exclui (403)", oDel.status === 403, `${oDel.status}`);

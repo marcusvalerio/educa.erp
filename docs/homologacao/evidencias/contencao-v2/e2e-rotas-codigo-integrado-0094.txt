@@ -1,0 +1,74 @@
+PASS  sem sessão /api/cash-flow-summary → 401
+PASS  sem sessão /api/cash-flow-projection → 401
+PASS  sem sessão /api/inventory-valuation → 401
+PASS  sem sessão /api/controlling/margin-by-product → 401
+PASS  sem sessão /api/controlling/margin-by-customer → 401
+PASS  sem sessão /api/controlling/margin-by-order → 401
+PASS  sem sessão /api/reports/executive → 401
+PASS  sem sessão /api/reports/finance → 401
+PASS  sem sessão /api/reports/inventory → 401
+PASS  gamaAdmin /api/cash-flow-summary → 200
+PASS  gamaAdmin /api/cash-flow-summary: sem dado da outra empresa
+PASS  gamaAdmin /api/cash-flow-summary: API = banco ([1111,1111,0])
+PASS  gamaAdmin /api/cash-flow-projection → 200
+PASS  gamaAdmin /api/cash-flow-projection: sem dado da outra empresa
+PASS  gamaAdmin /api/cash-flow-projection: API = banco ("1")
+PASS  gamaAdmin /api/inventory-valuation → 200
+PASS  gamaAdmin /api/inventory-valuation: sem dado da outra empresa
+PASS  gamaAdmin /api/inventory-valuation: API = banco ("1|1111.00")
+PASS  gamaAdmin /api/controlling/margin-by-product → 200
+PASS  gamaAdmin /api/controlling/margin-by-product: sem dado da outra empresa
+PASS  gamaAdmin /api/controlling/margin-by-product: API = banco ("1111.00")
+PASS  gamaAdmin /api/controlling/margin-by-customer → 200
+PASS  gamaAdmin /api/controlling/margin-by-customer: sem dado da outra empresa
+PASS  gamaAdmin /api/controlling/margin-by-customer: API = banco ("1111.00")
+PASS  gamaAdmin /api/controlling/margin-by-order → 200
+PASS  gamaAdmin /api/controlling/margin-by-order: sem dado da outra empresa
+PASS  gamaAdmin /api/controlling/margin-by-order: API = banco ("1111.00")
+PASS  gamaAdmin /api/reports/executive → 200
+PASS  gamaAdmin /api/reports/executive: sem dado da outra empresa
+PASS  gamaAdmin /api/reports/executive: API = banco ({"gross_revenue":0,"net_revenue":0,"gross_margin_pct":0,"cmv":0,"operating_expenses":0,"managerial_result":0,"accounts_receivable_open":1111,"accounts_payable_open":0,"cash_balance":1111,"inventory_value":0,"open_sales_orders":1,"open_shipments":0,"open_production_orders":0})
+PASS  gamaAdmin /api/reports/finance → 200
+PASS  gamaAdmin /api/reports/finance: sem dado da outra empresa
+PASS  gamaAdmin /api/reports/finance: API = banco ({"cash_balance":1111,"accounts_receivable_open":1111,"accounts_payable_open":0,"overdue_receivable":0,"overdue_payable":0,"received_in_period":0,"paid_in_period":0})
+PASS  gamaAdmin /api/reports/inventory → 200
+PASS  gamaAdmin /api/reports/inventory: sem dado da outra empresa
+PASS  gamaAdmin /api/reports/inventory: API = banco ({"total_quantity":1111,"total_value":0,"receipts_count":0,"issues_count":0,"transfers_count":0,"adjustments_count":0,"reservations_active":0,"products_without_movement":1})
+PASS  gamaVendedor /api/cash-flow-summary → 403
+PASS  gamaVendedor /api/cash-flow-projection → 403
+PASS  gamaVendedor /api/inventory-valuation → 403
+PASS  gamaVendedor /api/controlling/margin-by-product → 403
+PASS  gamaVendedor /api/controlling/margin-by-customer → 403
+PASS  gamaVendedor /api/controlling/margin-by-order → 403
+PASS  gamaVendedor /api/reports/executive → 403
+PASS  gamaVendedor /api/reports/finance → 403
+PASS  gamaVendedor /api/reports/inventory → 403
+PASS  gamaLeitura /api/cash-flow-summary → 200
+PASS  gamaLeitura /api/cash-flow-summary: sem dado da outra empresa
+PASS  gamaLeitura /api/cash-flow-summary: API = banco ([1111,1111,0])
+PASS  gamaLeitura /api/cash-flow-projection → 200
+PASS  gamaLeitura /api/cash-flow-projection: sem dado da outra empresa
+PASS  gamaLeitura /api/cash-flow-projection: API = banco ("1")
+PASS  gamaLeitura /api/inventory-valuation → 200
+PASS  gamaLeitura /api/inventory-valuation: sem dado da outra empresa
+PASS  gamaLeitura /api/inventory-valuation: API = banco ("1|1111.00")
+PASS  gamaLeitura /api/controlling/margin-by-product → 200
+PASS  gamaLeitura /api/controlling/margin-by-product: sem dado da outra empresa
+PASS  gamaLeitura /api/controlling/margin-by-product: API = banco ("1111.00")
+PASS  gamaLeitura /api/controlling/margin-by-customer → 200
+PASS  gamaLeitura /api/controlling/margin-by-customer: sem dado da outra empresa
+PASS  gamaLeitura /api/controlling/margin-by-customer: API = banco ("1111.00")
+PASS  gamaLeitura /api/controlling/margin-by-order → 200
+PASS  gamaLeitura /api/controlling/margin-by-order: sem dado da outra empresa
+PASS  gamaLeitura /api/controlling/margin-by-order: API = banco ("1111.00")
+PASS  gamaLeitura /api/reports/executive → 200
+PASS  gamaLeitura /api/reports/executive: sem dado da outra empresa
+PASS  gamaLeitura /api/reports/executive: API = banco ({"gross_revenue":0,"net_revenue":0,"gross_margin_pct":0,"cmv":0,"operating_expenses":0,"managerial_result":0,"accounts_receivable_open":1111,"accounts_payable_open":0,"cash_balance":1111,"inventory_value":0,"open_sales_orders":1,"open_shipments":0,"open_production_orders":0})
+PASS  gamaLeitura /api/reports/finance → 200
+PASS  gamaLeitura /api/reports/finance: sem dado da outra empresa
+PASS  gamaLeitura /api/reports/finance: API = banco ({"cash_balance":1111,"accounts_receivable_open":1111,"accounts_payable_open":0,"overdue_receivable":0,"overdue_payable":0,"received_in_period":0,"paid_in_period":0})
+PASS  gamaLeitura /api/reports/inventory → 200
+PASS  gamaLeitura /api/reports/inventory: sem dado da outra empresa
+PASS  gamaLeitura /api/reports/inventory: API = banco ({"total_quantity":1111,"total_value":0,"receipts_count":0,"issues_count":0,"transfers_count":0,"adjustments_count":0,"reservations_active":0,"products_without_movement":1})
+
+72/72 verificações passaram

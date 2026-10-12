@@ -1,0 +1,59 @@
+== A. cópia de crm_base (estado da produção)
+  OK   verificação antes: f t t f f f f t t
+  exposições antes (privilégios efetivos):
+    anon SELECT views=4/4; authenticated SELECT views=4/4
+    execute fn regras fiscais: anon=true authenticated=true service_role=true
+    policy USING (true) em units: 1
+== B. falha deliberada: script SEM localizar (identidade da produção) num banco que não é a produção
+  OK   identidade — abortou: ERROR:  Contenção: banco não é o de produção esperado (system_identifier/current_database). Nada foi aplicado.
+  OK   nada parcial (catálogo idêntico): 1859e8cd6d7f2a448c5adbe89fa06a4e  -
+== C. falha deliberada: ledger sem a 0075
+  OK   ledger — abortou: ERROR:  Contenção: ledger sem 20260929165645 (0075_company_roles_and_user_invites). Nada foi aplicado.
+  OK   nada parcial: 1859e8cd6d7f2a448c5adbe89fa06a4e  -
+== D. falha deliberada na VERIFICAÇÃO FINAL: anon herda SELECT por outro papel (caminho que REVOKE de anon não remove; INHERIT como o anon da produção)
+  OK   verificação final — abortou: ERROR:  Contenção: views ainda expostas: v_cash_flow_summary
+  OK   nada parcial (policy, views e função como antes): d570a172eb68bd0ab214f31932b6c900  -
+  OK   estado restaurado após o teste D: 1859e8cd6d7f2a448c5adbe89fa06a4e  -
+== E. falha deliberada: chamadora da função que perderia acesso (SECURITY INVOKER)
+  OK   chamadora — abortou: ERROR:  Contenção: chamadora(s) de fn_resolve_applicable_tax_rules que perderiam acesso: vc_chamadora(). Nada foi aplicado.
+  OK   nada parcial: 1859e8cd6d7f2a448c5adbe89fa06a4e  -
+== F. aplicação
+  OK   COMMIT
+  OK   verificação depois: t t t t t t t t t
+    fn fn_resolve_applicable_tax_rules neondb_owner=X/neondb_owner
+    policy units_delete d authenticated has_permission(company_id, 'units.delete'::text)
+    policy units_insert a authenticated 
+    policy units_select r authenticated has_permission(company_id, 'units.read'::text)
+    policy units_update w authenticated has_permission(company_id, 'units.update'::text)
+    view inventory_valuation {security_invoker=true} neondb_owner=arwdDxt/neondb_owner,service_role=arwdDxt/neondb_owner
+    view v_cash_flow_projection {security_invoker=true} neondb_owner=arwdDxt/neondb_owner,service_role=arwdDxt/neondb_owner
+    view v_cash_flow_summary {security_invoker=true} neondb_owner=arwdDxt/neondb_owner,service_role=arwdDxt/neondb_owner
+    view v_sales_order_item_margin {security_invoker=true} neondb_owner=arwdDxt/neondb_owner,service_role=arwdDxt/neondb_owner
+== G. idempotência (segunda execução)
+  OK   COMMIT
+  OK   catálogo igual ao da 1ª aplicação: a06f698191be63b1d6b46b98fa49e0e1  -
+== H. acesso real depois (papéis do PostgREST)
+  OK   v_cash_flow_summary anon negado / authenticated negado / service_role lê: 1 1 1
+  OK   v_cash_flow_projection anon negado / authenticated negado / service_role lê: 1 1 1
+  OK   inventory_valuation anon negado / authenticated negado / service_role lê: 1 1 1
+  OK   v_sales_order_item_margin anon negado / authenticated negado / service_role lê: 1 1 1
+  OK   fn_resolve_applicable_tax_rules negada a anon: 1
+  OK   fn_resolve_applicable_tax_rules negada a authenticated: 1
+  OK   fn_resolve_applicable_tax_rules negada a service_role: 1
+== I. rollback técnico (R1–R4, padrão) numa cópia do estado contido
+  OK   COMMIT
+  OK   verificação após rollback técnico (reabre E1; E2 para logados; anon segue fechado): f t t t f f f t t
+  OK   falha deliberada do rollback fora da produção: abortou
+  OK   reaplicação da contenção após rollback: COMMIT
+  OK   verificação após reaplicar: t t t t t t t t t
+  OK   catálogo igual ao da 1ª aplicação: a06f698191be63b1d6b46b98fa49e0e1  -
+== J. rollback INTEGRAL (R5 descomentada) reproduz exatamente o estado anterior
+  OK   COMMIT
+  OK   verificação = estado vulnerável original: f t t f f f f t t
+  OK   catálogo idêntico ao original: 1859e8cd6d7f2a448c5adbe89fa06a4e  -
+== K. sequência completa 0076…0094 sobre o banco contido (contenção não conflita)
+  OK   19 migrations aplicadas
+  OK   verificação após a sequência: t t t t t t t t t
+
+RESULTADO: todas as verificações passaram
+Bancos mantidos para os testes de aplicação: vc_a (contido), vc_r (rollback+reaplicação), vc_f (rollback integral), vc_k (contido + 0076…0094)

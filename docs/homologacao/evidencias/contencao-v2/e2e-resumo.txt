@@ -1,0 +1,26 @@
+=== A/antes: main sobre 0075 (antes da contenção)
+Mon Oct 12 02:36:40 UTC 2026
+env main-antes-geral exit=0
+geral main-antes: 210/210 verificações passaram
+env main-antes-rotas exit=0
+setup main-antes: estado gravado em /home/user/local-secrets/crm-e2e-state.json (fora do Git)
+rotas main-antes: 48/50 verificações passaram
+=== A/depois: main sobre 0075 (depois da contenção)
+Mon Oct 12 02:38:33 UTC 2026
+env main-depois-geral exit=0
+contenção: COMMIT
+verificação: t t t t t t t t t
+geral main-depois: 210/210 verificações passaram
+env main-depois-rotas exit=0
+contenção: COMMIT
+verificação: t t t t t t t t t
+setup main-depois: estado gravado em /home/user/local-secrets/crm-e2e-state.json (fora do Git)
+rotas main-depois: 48/50 verificações passaram
+=== B: código integrado sobre 0076…0094
+Mon Oct 12 02:40:23 UTC 2026
+env int-rotas exit=0
+setup int: estado gravado em /home/user/local-secrets/crm-e2e-state.json (fora do Git)
+rotas int: 72/72 verificações passaram
+verificação B: t t t t t t t t t
+=== fim
+Mon Oct 12 02:40:59 UTC 2026

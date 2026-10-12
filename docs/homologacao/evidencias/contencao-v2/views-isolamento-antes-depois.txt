@@ -1,0 +1,30 @@
+### vc_antes (cópia da produção 0075, ANTES)
+  ✔ fixture: o dono (sem RLS) vê as duas empresas em cada view
+  ✖ 1 — anon não consulta nenhuma das 4 views (permission denied)
+  ✖ 1b — authenticated (qualquer papel, inclusive administrador) não consulta as 4 views (0094)
+  ✔ 1c — service_role (cliente administrativo do app) continua lendo as 4 views
+  ✖ 2 — segunda barreira: autenticado SEM permissão financeira/estoque não vê valores de nenhuma empresa
+  ✖ 3 — segunda barreira: Alfa vê só a Alfa, com os próprios valores, nas 4 views
+  ✖ 4 — segunda barreira: Beta vê só a Beta, com os próprios valores, nas 4 views
+  ✖ 5 — funções SECURITY DEFINER que leem as views recusam outra empresa e anon
+  ✖ 7 — regras fiscais: fn_resolve_applicable_tax_rules só é executável pelo dono (0093, 0094)
+  ✖ 6 — regressão: nenhuma view do schema public concede privilégio algum a anon/authenticated/PUBLIC nem roda com os direitos do dono
+ℹ tests 10
+ℹ pass 2
+ℹ fail 8
+  AssertionError [ERR_ASSERTION]: fn_margin_by_order: Alfa não leu a própria empresa: function min(uuid) does not exist
+### vc_a (mesma base, DEPOIS da contenção v2)
+  ✔ fixture: o dono (sem RLS) vê as duas empresas em cada view
+  ✔ 1 — anon não consulta nenhuma das 4 views (permission denied)
+  ✔ 1b — authenticated (qualquer papel, inclusive administrador) não consulta as 4 views (0094)
+  ✔ 1c — service_role (cliente administrativo do app) continua lendo as 4 views
+  ✔ 2 — segunda barreira: autenticado SEM permissão financeira/estoque não vê valores de nenhuma empresa
+  ✔ 3 — segunda barreira: Alfa vê só a Alfa, com os próprios valores, nas 4 views
+  ✔ 4 — segunda barreira: Beta vê só a Beta, com os próprios valores, nas 4 views
+  ✖ 5 — funções SECURITY DEFINER que leem as views recusam outra empresa e anon
+  ✔ 7 — regras fiscais: fn_resolve_applicable_tax_rules só é executável pelo dono (0093, 0094)
+  ✔ 6 — regressão: nenhuma view do schema public concede privilégio algum a anon/authenticated/PUBLIC nem roda com os direitos do dono
+ℹ tests 10
+ℹ pass 9
+ℹ fail 1
+  AssertionError [ERR_ASSERTION]: fn_margin_by_order: Alfa não leu a própria empresa: function min(uuid) does not exist

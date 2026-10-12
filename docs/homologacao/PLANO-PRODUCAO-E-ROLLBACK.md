@@ -1,61 +1,93 @@
 # Plano de aplicação em produção e rollback
 
-**Status: PRONTO PARA EXECUÇÃO, AGUARDANDO AUTORIZAÇÃO.** Nada deste plano
+**Status: PRONTA PARA APROVAÇÃO DE PRODUÇÃO (contenção v2) — NÃO APLICADA.** Nada deste plano
 foi executado em produção. Cada parte exige aprovação explícita e separada.
 
 ## 0. Identificação do alvo (conferir antes de qualquer comando)
 
 | Item | Valor esperado | Como conferir |
 |---|---|---|
-| Projeto Supabase | `educa.erp`, ref **`bshvfsxapwwfntowdxyr`**, região `sa-east-1` | painel do Supabase; o ref é o subdomínio de `NEXT_PUBLIC_SUPABASE_URL` da Vercel de produção (`educaerp.vercel.app`) |
-| PostgreSQL | 17.6 | `select version()` |
-| Ledger | 86 registros, último `20260929165645` `0075_company_roles_and_user_invites` | `select version, name from supabase_migrations.schema_migrations order by version desc limit 3` |
-| Estado vulnerável | `docs/homologacao/producao/verificacao.sql` → `f t t f f f t t` | rodar antes |
+| Projeto Supabase | `educa.erp`, ref **`bshvfsxapwwfntowdxyr`**, região `sa-east-1` | painel do Supabase (o SQL não enxerga o ref); o ref é o subdomínio de `NEXT_PUBLIC_SUPABASE_URL` da Vercel de produção |
+| Banco | `system_identifier` **7678069749886157684**, banco `postgres`, PostgreSQL 17.6 | 1ª coluna de `verificacao.sql` (`7678069749886157684/postgres`) — o script aborta sozinho se divergir |
+| Ledger | contém `20260929165645` `0075_company_roles_and_user_invites` (86 registros em 12/10) | `select version, name from supabase_migrations.schema_migrations order by version desc limit 3` |
+| Estado vulnerável | `verificacao.sql` → `f t t f f f f t t` | rodar antes |
+| Arquivo | SHA-256 de `contencao-emergencial.sql` = `84d174bc336a4a1653001bd5b85fa17d66fead740366719f99c98ca0cf0ef03a` | `sha256sum` |
+| Executor | papel `postgres` (SQL Editor do painel ou conexão direta) — é o concedente de todos os grants afetados | `select current_user` |
 
-Se qualquer item divergir: **parar**. Não aplicar em projeto identificado só
-pelo nome.
+Se qualquer item divergir: **parar**.
 
-## 1. Backup (pré-requisito das partes A e B)
+## 1. Backup (pré-requisito)
 
-- **Não verificado nesta sessão** (o conector não expõe backups). Conferir no
-  painel: Database → Backups (diário/PITR, conforme o plano contratado).
-- Se não houver backup recente utilizável: `supabase db dump` (schema) e
-  `supabase db dump --data-only` antes da parte B, guardados fora do
-  repositório. Testar a restauração do dump numa base descartável.
-- Parte A só altera catálogo (policy, opções de view, grants): o rollback SQL
-  é completo; o backup é salvaguarda. Parte B altera dados (0079, 0080, 0081,
-  0085): backup **obrigatório**.
+**Situação verificada (12/10):** organização no plano **free**. Pela
+documentação oficial do Supabase, backups diários acessíveis existem só nos
+planos Pro/Team/Enterprise e PITR é add-on desses planos; para o free a
+recomendação é exportar com o CLI. **Não há backup confirmado.** O conector não
+lista backups e esta sessão não tem a senha do banco nem acesso de rede ao host.
+
+Antes da parte A (recomendado) e **obrigatório** antes da parte B:
+
+1. No painel: Database → Backups. Confirmar se aparece algum backup agendado
+   (esperado: nenhum no free). Se o plano mudar para Pro, confirmar o backup
+   diário mais recente e a data.
+2. Fora do repositório, numa máquina autorizada:
+   `supabase db dump --db-url "$URL" -f schema.sql` (esquema e grants),
+   `supabase db dump --db-url "$URL" --role-only -f roles.sql` e
+   `supabase db dump --db-url "$URL" --data-only -f dados.sql`. Guardar com
+   acesso restrito. **Não** colocar no Git (repositório público).
+3. Testar a restauração do dump numa base descartável (local ou projeto
+   Supabase de teste), nunca sobre produção.
+4. Registrar data/hora, quem gerou e onde está guardado.
+
+Parte A só altera catálogo (policy, opções de view, grants). Sua pré-imagem
+exata está em `evidencias/contencao-v2/producao-metadados-12-10.md` e o
+rollback SQL a restaura. Por isso, para A, o dump é salvaguarda; para B (que
+altera dados em 0079/0080/0081/0085), é **obrigatório**.
 
 ## A. Contenção emergencial
 
-**Escopo:** só fecha E1, E2 e E3 (`CONTENCAO-SEGURANCA.md`). Sem deploy de
-código, sem variável de ambiente, sem migração de infraestrutura.
+**Escopo:** fecha E1, E2 e E3 (`CONTENCAO-SEGURANCA.md`). Sem deploy de código,
+sem variável de ambiente, sem migração de infraestrutura.
 
 | Passo | Ação | Esperado |
 |---|---|---|
-| A1 | Conferir identificação (seção 0) e backup | — |
-| A2 | `verificacao.sql` (antes) | `f t t f f f t t` |
-| A3 | Executar `producao/contencao-emergencial.sql` (uma transação; aborta sozinho se pré-condição ou verificação falhar) | `COMMIT` |
-| A4 | `verificacao.sql` (depois) | `t t t t t t t t` |
-| A5 | Fumaça no app: login; Financeiro → Fluxo de caixa; Estoque → Valorização; Controladoria → Margem; Cadastros → Produtos | telas iguais a antes (o app lê com service_role) |
-| A6 | (opcional) chamada anônima à Data API: `GET /rest/v1/v_cash_flow_summary` com a chave pública | `401/permission denied` |
+| A1 | Seção 0 (ref, hash) e seção 1 (backup) | conferidos e registrados |
+| A2 | `verificacao.sql` (antes) | `7678069749886157684/postgres` · `f t t f f f f t t` |
+| A3 | Executar `producao/contencao-emergencial.sql` inteiro, numa única execução (uma transação; aborta sozinho se pré-condição ou verificação falhar) | `COMMIT`, sem erro |
+| A4 | `verificacao.sql` (depois) | `t t t t t t t t t` |
+| A5 | Fumaça no app com um administrador: Financeiro → Fluxo de caixa; Estoque → Valorização; Controladoria → Margem por produto/cliente; Relatórios executivo e financeiro; Fiscal → calcular um documento em rascunho; Cadastros → Produtos | telas iguais às de antes. Margem por pedido e painel de estoque já falham hoje (0092/0090) e continuam iguais |
+| A6 | Chamada anônima à Data API: `GET /rest/v1/v_cash_flow_summary?limit=1` e `POST /rest/v1/rpc/fn_resolve_applicable_tax_rules` com a chave pública | `401`/`403` com `permission denied` |
+| A7 | Supabase → Advisors → Security | `security_definer_view` some para as 4 views |
 
+- **Se A3 falhar:** nada foi aplicado (transação). Anotar a mensagem
+  (`Contenção: …`) e parar. Não editar o script em produção.
 - **Janela:** qualquer horário; locks curtos (`lock_timeout 5s`).
-- **Impacto esperado no app:** nenhum. Usuários sem `units.read` (todos, hoje)
-  continuam sem ler `units` — a rota já responde 403 em produção.
-- **Registro:** a contenção roda fora do ledger. Anotar data/hora e quem
-  aplicou. A parte B registra 0091/0093 no ledger normalmente.
+- **Impacto esperado no app:** nenhum (seção 5 de `CONTENCAO-SEGURANCA.md`).
+- **Registro:** a contenção roda fora do ledger. Anotar data/hora, executor, SHA do
+  arquivo e saídas de A2/A4.
 
 ### Rollback de A
 
-`producao/rollback-contencao.sql` — restaura exatamente o estado anterior
-(policy aberta, views sem `security_invoker`, grants de `anon`, execute da
-função). **Reabre as exposições**: só em quebra funcional comprovada e
-enquanto a correção é preparada. Totalmente reversível (não há dados).
+`producao/rollback-contencao.sql`. **Reabre risco de segurança.** Não é
+resposta rotineira a falhas funcionais: primeiro investigar e corrigir no
+código ou numa migration. Usar só com quebra funcional **comprovada**, que não possa
+esperar, e pelo menor tempo possível. Executar só as seções da quebra:
+
+| Seção | Restaura | Risco reaberto |
+|---|---|---|
+| R1 | policy `units_select_authenticated USING (true)` | E1 para todo usuário logado |
+| R2 | views sem `security_invoker` | sozinha nenhum (ninguém além do app tem privilégio); com R3, E2 para logados |
+| R3 | SELECT nas 4 views para `authenticated` | com R2, totais de todas as empresas para qualquer logado; sem R2, limitado pelo RLS |
+| R4 | EXECUTE da função para `service_role` | nenhum para usuários/anon (só o servidor) |
+| R5 (comentada) | estado integral anterior: ALL para `anon`/`authenticated`, EXECUTE para `anon`/`authenticated` | **E2 e E3 para qualquer pessoa na internet**; só com decisão explícita registrada |
+
+O rollback tem a mesma guarda de identidade e uma conferência que aborta se
+`anon` voltar a ter acesso sem R5. Testado localmente: R1–R4 resultam em
+`f t t t f f f t t`; R5 reproduz o catálogo original exatamente; a contenção
+reaplica depois sem erro.
 
 ## B. Atualização completa (sequência integrada + código)
 
-**Escopo:** migrations 0076 … 0093 (ordem dos nomes) e o código da branch
+**Escopo:** migrations 0076 … 0094 (ordem dos nomes) e o código da branch
 `claude/atlas-integracao-0076-0093`.
 
 | Pré-condição | Situação (12/10/2026) |
@@ -65,17 +97,18 @@ enquanto a correção é preparada. Totalmente reversível (não há dados).
 | Sequência validada do zero, incremental e sobre banco já atualizado | local: esquema e permissões idênticos (0 linhas de diferença) |
 | 0091–0093 sobre a homologação Neon | aplicadas numa branch filha; 18/18 FKs validadas; matriz de papéis = local (`RELATORIO-HOMOLOGACAO-REMOTA.md`) |
 | 0076–0088 sobre a homologação Neon | **não executado** (bloqueio de rede; ver relatório remoto) |
-| Suíte com o código integrado | `npm test` 1062/1062; E2E 210 + 66 + 32 + 13 + 37, todos verdes (local) |
+| Suíte com o código integrado | `npm test` 1064/1064 (com 0094, inclusive sobre banco contido + 0076…0094); E2E 210 + 66 + 32 + 13 + 37 (antes da 0094) e rotas afetadas 72/72 (com 0094), local |
+| Contenção aplicada antes da sequência | banco contido + 0076…0094 = sequência pura: 0 linhas de diferença de esquema/concessões |
 
 **Ordem de deploy (banco antes do código):**
 1. Backup (seção 1) e janela de manutenção curta.
 2. Parte A, se ainda não aplicada (pode ficar — idempotente).
-3. Migrations 0076 → 0093 pelo mecanismo do ledger (`supabase db push` /
+3. Migrations 0076 → 0094 pelo mecanismo do ledger (`supabase db push` /
    ferramenta de migrations do Supabase), uma a uma, nome = arquivo sem
    `.sql`. Em erro: parar (cada arquivo é transacional).
 4. Verificação: `verificacao.sql` (`t` em tudo); `select count(*) from
    pg_constraint where conname like '%same_company_fk' and convalidated` =
-   18; ledger com 0076…0093.
+   18; ledger com 0076…0094.
 5. Deploy do código integrado na Vercel (produção).
 6. Fumaça: Produtos (lista sem aviso), Unidades/Categorias por API,
    Locais de estoque (criar), CRM (lead → cliente/oportunidade), Painéis
@@ -106,6 +139,38 @@ Recomendação: em problema após B, primeiro reverter **só o código**
 ## C. Aprovações necessárias
 
 1. **Autorizar A** (contenção) — recomendado imediatamente.
-2. **Autorizar B** — depois da revisão do merge `claude/atlas-integracao-0076-0093`
-   e, de preferência, da aplicação de 0076–0088 na homologação remota.
+2. **Autorizar B** — depois da revisão do merge `claude/atlas-integracao-0076-0093`,
+   do backup obrigatório (seção 1) e, de preferência, da aplicação de 0076–0088 e 0094 na homologação remota.
 3. Quem executa, quando, e quem confere a verificação pós-aplicação.
+
+## D. Credenciais e branches temporárias (Neon `old-butterfly-53570465`, não é produção)
+
+| Branch | id | Situação | Proposta |
+|---|---|---|---|
+| `homolog` | `br-icy-cell-b62lgh06` | homologação principal; **não alterada** | manter |
+| `valida-contencao-20261011` | `br-restless-bonus-b6txjb6l` | filha descartável (contenção v1 + 0091–0093, dados sintéticos) | excluir após aprovação |
+| `valida-sequencia-20261012` | `br-blue-king-b6mrb350` | filha descartável; contém o papel **`validador_seq`** | excluir após aprovação (remove o papel) |
+| `valida-contencao-v2-20261012` | `br-quiet-surf-b6ob7mhx` | filha descartável criada nesta rodada (contenção v2 em PG17) | excluir após aprovação |
+
+**Papel `validador_seq`** (senha exibida numa sessão anterior). Verificado em 12/10:
+- existe **só** na branch `valida-sequencia-20261012` (não existe na `homolog`
+  nem nas outras filhas);
+- `LOGIN`, membro de `neon_superuser` (`CREATEROLE`, `BYPASSRLS`), o padrão de
+  papéis criados pelo painel/API;
+- função auxiliar `zz_validacao_exec` **removida** (0 funções `zz_*`);
+- 0 objetos próprios, 0 grants em tabelas/funções/schemas/banco, 0 default ACL, 0 sessões;
+- `ALTER ROLE validador_seq NOLOGIN` pelo SQL foi **negado** (`permission
+  denied to alter role`): o `neondb_owner` não administra papéis criados pelo painel;
+- o arquivo local com a credencial já tinha sido destruído; a senha não está
+  em nenhum arquivo do repositório nem das evidências.
+
+**A credencial ainda NÃO está revogada.** O risco é limitado a uma branch
+descartável com dados sintéticos, mas o papel ignora RLS ali. Formas de revogar
+(todas exigem autorização, por serem destrutivas ou exibirem segredo):
+1. **Recomendado:** excluir a branch `valida-sequencia-20261012`
+   (`br-blue-king-b6mrb350`). Remove o papel e a credencial e não afeta a
+   `homolog` (filhas são independentes da mãe).
+2. Ou excluir só o papel: painel Neon → projeto → Branches →
+   `valida-sequencia-20261012` → Roles & Databases → `validador_seq` → Delete.
+3. Ou redefinir a senha (Reset password) sem registrar a nova. Isso invalida a antiga,
+   mas a nova seria exibida na tela de quem fizer o reset.

@@ -1,82 +1,143 @@
-# Contenção de segurança — exposições multiempresa
+# Contenção de segurança — exposições multiempresa (pacote de aprovação v2)
 
-Branch `claude/atlas-neon-ux-crm` / `claude/atlas-integracao-0076-0093` ·
-12/10/2026.
+Branch `claude/atlas-integracao-0076-0093` · 12/10/2026.
 
-> **Situação em produção (Supabase `bshvfsxapwwfntowdxyr`), 12/10/2026, só
-> metadados:** as exposições **continuam ativas**. A policy
-> `units_select_authenticated` existe; as 4 views seguem sem
-> `security_invoker`, com SELECT para `anon`; o ledger está em 0075 (86
-> registros). Nada foi aplicado em produção.
+> **Classificação: PRONTA PARA APROVAÇÃO DE PRODUÇÃO — NÃO APLICADA.**
+> Em produção (Supabase `bshvfsxapwwfntowdxyr`), conferido por metadados em
+> 12/10/2026, as três exposições **continuam ativas** (`verificacao.sql` =
+> `f t t f f f f t t`). Nada foi alterado em produção.
 
-## 1. Exposições comprovadas
+## 0. Arquivos e hashes (SHA-256)
 
-| # | Exposição | Quem alcança | Comprovação |
-|---|---|---|---|
-| E1 | `units_select_authenticated USING (true)`: unidades e `company_id` de **todas** as empresas | qualquer usuário autenticado (JWT do Supabase/PostgREST) | local (33 unidades de 3 empresas); Neon homolog (10 unidades da Beta sintética); produção: policy presente (catálogo) |
-| E2 | `v_cash_flow_summary`, `v_cash_flow_projection`, `inventory_valuation`, `v_sales_order_item_margin` sem `security_invoker`, dono com `bypassrls`, SELECT para `anon`: saldos, a receber/a pagar, valor de estoque e margem de **todas** as empresas | **sem login**, com a chave pública | local e Neon homolog (anon leu 3 empresas); produção: configuração presente (catálogo) e apontada pelo linter do Supabase (`security_definer_view`, ERROR, as mesmas 4 views) |
-| E3 | `fn_resolve_applicable_tax_rules` SECURITY DEFINER sem checagem, EXECUTE para `anon`/`authenticated`: regras fiscais (CST, alíquotas) de qualquer empresa pelo id | sem login, conhecendo o id da empresa (que E1 expunha) | local (anon leu a regra sintética); produção: grant presente (catálogo) |
-
-Não há leitura de conteúdo financeiro real em nenhuma comprovação: dados
-sintéticos (local e Neon) e metadados/contagens (produção).
-
-## 2. Consumidores legítimos verificados
-
-| Objeto | Consumidor | Efeito da contenção |
+| Arquivo | v1 (a7c44fd) | **v2 (para aprovação)** |
 |---|---|---|
-| 4 views | `finance-handlers.ts` (`/api/cash-flow-*`), `cost-handlers.ts` (valorização) — **cliente administrativo** (`service_role`, `bypassrls`) com filtro `company_id` da sessão; no modo Neon, `set local role service_role` | nenhum (service_role continua lendo; comprovado na homologação Neon) |
-| 4 views | `fn_margin_by_*`, `fn_report_executive/finance/inventory` — SECURITY DEFINER (rodam como dono) e conferem `has_permission(p_company_id, …)` | nenhum (dono ignora RLS; checagem própria mantida — testes recusam outra empresa e anon) |
-| `units` | API `/api/units` com cliente administrativo; o código em produção exige `units.read`, **inexistente** no catálogo de produção → já responde 403 hoje | nenhum para o app. Acesso **direto** ao banco por usuários fica sem leitura de `units` até a 0091 criar `units.read` |
-| `fn_resolve_applicable_tax_rules` | só funções SECURITY DEFINER (0039, 0041); o app não chama por RPC | nenhum |
+| `producao/contencao-emergencial.sql` | `055e7fc8…a32b15` | **`84d174bc336a4a1653001bd5b85fa17d66fead740366719f99c98ca0cf0ef03a`** |
+| `producao/verificacao.sql` | `d1713795…483f86e` | `1de7a3fa35b5f200bf39101d9f4c6755f67462e83df995e57378832b3fba0c58` |
+| `producao/rollback-contencao.sql` | `61499910…e48c30` | `bacf945967b556da18174b66f43b05bab264c6c39a2ce36874a8b61868adba2d` |
+| `supabase/migrations/0094_privilegios_minimos_views_e_regras_fiscais.sql` | — | `b19efea8ee3765b54566e10fbcd895f6e9a69e435320c060e78ac269399eda0b` |
 
-Logs da API em produção (24/09–11/10) mostram as views lidas **só** por
-`service_role` e nenhuma chamada REST de usuário a `units` — ver
-`RELATORIO-INVESTIGACAO-LOGS.md`.
+Conferir antes de executar: `sha256sum docs/homologacao/producao/contencao-emergencial.sql`.
+Diferenças v1→v2: `evidencias/contencao-v2/diff-contencao-v1-v2.diff` e
+`diff-rollback-v1-v2.diff`.
 
-## 3. Estratégia (contenção × sequência definitiva)
+## 1. Exposições
 
-- **Contenção** = `docs/homologacao/producao/contencao-emergencial.sql`:
-  subconjunto **literal** das migrations 0091 (§1 drop da policy; §4 views) e
-  0093 (revoke da função). Não cria permissões, não muda papéis nem dados.
-  Transação única com pré-condições e verificação que abortam.
-- **Definitiva** = 0091 (+ 0092, 0093) aplicadas pelo ledger, na sequência
-  integrada 0076…0093. Os mesmos comandos rodam de novo sem efeito
-  (idempotentes) — não há duas correções concorrentes nem dependência de
-  ordem acidental. A contenção fica incorporada à sequência pelas próprias
-  0091/0093; o ledger registrará 0091/0093 quando a sequência for aplicada.
-- **0091 não depende** de 0076–0090 (só detecta a 0076 para ajustar o modelo
-  da Somente leitura). A contenção não depende de nada além da 0075.
-- **Rollback**: `producao/rollback-contencao.sql` (reabre E1–E3; só para
-  emergência funcional).
-
-## 4. Validação
-
-| Ambiente | O que | Resultado |
+| # | Exposição | Quem alcança |
 |---|---|---|
-| Local, cópia do banco equivalente à produção (`crm_base`) | verificação antes → contenção → depois → reaplicar → rollback → reaplicar → 0089–0093 por cima | antes `f t t f f f t t`; depois `t t t t t t t t`; rollback restaura o estado anterior exatamente; reaplicação e sequência completa sem conflito; 28/28 testes de segurança |
-| Local, banco só com a contenção | `views-isolamento-db` | 7/8 — a falha é o defeito antigo de `fn_margin_by_order` (`min(uuid)`), corrigido pela 0092 (fora da contenção); anon recusado nas 6 funções |
-| **Neon, branch filha da homologação** (`valida-contencao-20261011`) | contenção pelo conector, dados sintéticos Alfa/Beta | anon: de 3 empresas → `permission denied`; Alfa: unidades/caixa da Beta 10/1 → 0/0; próprio caixa 1000; `service_role` inalterado |
+| E1 | policy `units_select_authenticated USING (true)`: unidades e `company_id` de todas as empresas | qualquer usuário autenticado |
+| E2 | `v_cash_flow_summary`, `v_cash_flow_projection`, `inventory_valuation`, `v_sales_order_item_margin`: sem `security_invoker`, o dono (`postgres`, BYPASSRLS) ignora o RLS. **Todos** os privilégios (`arwdDxtm`) para `anon` e `authenticated` | sem login, com a chave pública; e qualquer usuário logado |
+| E3 | `fn_resolve_applicable_tax_rules`: SECURITY DEFINER sem checagem, EXECUTE para `anon`, `authenticated` e `service_role` | sem login, conhecendo o id da empresa |
 
-Testes de regressão no repositório (falham se as exposições voltarem):
-- `tests/views-isolamento-db.test.ts` — anon nas 4 views; sem permissão não
-  vê valores; Alfa/Beta só os próprios números; 6 funções SECURITY DEFINER
-  recusam outra empresa e anon; **nenhuma view com anon ou sem
-  security_invoker**; execução pública da função de regras fiscais;
-- `tests/isolamento-multiempresa-db.test.ts`,
-  `tests/permissoes-produtos-db.test.ts` — unidades e catálogo.
+Pré-imagem exata do catálogo de produção: `evidencias/contencao-v2/producao-metadados-12-10.md`.
 
-## 5. Riscos e compatibilidade
+## 2. Revisão instrução por instrução (v2)
 
-- **Compatibilidade de schema:** os objetos exigidos existem em produção
-  (conferido); as pré-condições do script abortam se o schema divergir.
-  `security_invoker` existe desde o PostgreSQL 15 (produção 17.6).
-- **Bloqueios:** `ALTER VIEW` e `DROP POLICY` pegam lock curto; o script usa
-  `lock_timeout = 5s` (aborta em vez de enfileirar).
-- **Efeito colateral conhecido:** sem a 0091, nenhum usuário lê `units`
-  direto no banco (nem a própria empresa). O app não usa esse caminho.
-- **Fora da contenção (risco residual):** o linter do Supabase lista 263
-  funções SECURITY DEFINER executáveis por `anon`. A grande maioria confere
-  sessão/permissão internamente; varredura por padrões não encontrou outra
-  com exposição comprovada além de E3 (as demais sem checagem são gatilhos —
-  não chamáveis diretamente — e verificações booleanas de módulo). Revisão
-  dedicada recomendada.
+| Instrução | Propósito / verificação |
+|---|---|
+| `begin` … `commit` | uma transação: qualquer erro desfaz tudo |
+| `lock_timeout 5s`, `statement_timeout 60s` | aborta em vez de enfileirar atrás de locks |
+| pré-condição: `system_identifier = 7678069749886157684` e `current_database() = 'postgres'` | **identificação inequívoca** do banco de produção. Uma cópia física (restauração, réplica) herda o identificador; o operador também confere o ref no painel (seção 6) |
+| pré-condição: ledger contém `20260929165645` (0075) | schema no estado esperado |
+| pré-condição: as 4 views, `units` e a função existem; `units_select` (has_permission) existe; RLS ligado | não deixa `units` sem policy prevista; aborta se o schema divergir |
+| pré-condição: service_role com BYPASSRLS e SELECT nas 4 views | o app (cliente administrativo) continua lendo |
+| pré-condição: toda função que cita `fn_resolve_applicable_tax_rules` é SECURITY DEFINER do mesmo dono | nenhuma chamadora perde acesso (hoje só `fn_calculate_fiscal_document`) |
+| `drop policy if exists units_select_authenticated` | E1 (= 0091 §1) |
+| `alter view … set (security_invoker = true)` ×4 | E2: views passam a respeitar o RLS de quem consulta (= 0091 §4) |
+| `revoke all … from anon` (views) | = 0091 §4 (mantido literal) |
+| `revoke all … from public, anon, authenticated` (views) | **novo (0094)**: concessões são diretas a cada papel, então cada um é nomeado; o usuário não tem consumidor legítimo nas views |
+| `revoke all on function … from public, anon, authenticated` | E3 (= 0093) |
+| `revoke all on function … from public, anon, authenticated, service_role` | **novo (0094)**: o app não chama a função por RPC; só o dono executa |
+| verificação final (aborta → rollback) | nenhuma policy `USING (true)` em `units`; `units_select` e RLS mantidos; em **toda** view do schema `public`: nenhum privilégio efetivo (`has_table_privilege`, que segue herança e PUBLIC) de anon/authenticated em SELECT/INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/TRIGGER, **nenhuma entrada** na ACL crua para PUBLIC/anon/authenticated (cobre MAINTAIN do PG17), `security_invoker=true`; service_role ainda lê as 4; ACL da função explícita (NULL = PUBLIC) e só com o dono; nenhum EXECUTE efetivo para anon/authenticated/service_role |
+
+**Não altera:** dados, definições de views, funções, demais policies, papéis,
+permissões do app, variáveis de ambiente.
+
+### `REVOKE … FROM PUBLIC` não basta
+
+Em produção não há entrada PUBLIC nas ACLs: as concessões são **diretas** a `anon`,
+`authenticated` e `service_role`, concedidas por `postgres`. O script revoga
+de cada papel pelo nome. A verificação final confere os privilégios
+**efetivos**: herança por associação a outros papéis (`anon` é INHERIT em
+produção) e PUBLIC. Teste D (seção 4) concede SELECT a um papel do qual `anon`
+herda: a contenção **aborta** e nada fica aplicado.
+
+### security_invoker com os consumidores reais
+
+| Objeto | Consumidor real | Depois da contenção |
+|---|---|---|
+| `v_cash_flow_summary`, `v_cash_flow_projection` | `/api/cash-flow-summary` e `/api/cash-flow-projection`: cliente administrativo (`service_role`, BYPASSRLS), filtro pela empresa da sessão | iguais (E2E: API = banco, antes e depois) |
+| `inventory_valuation` | `/api/inventory-valuation`: cliente administrativo | igual |
+| `v_sales_order_item_margin` | `fn_margin_by_product/customer/order`, `fn_report_executive/finance/inventory`: SECURITY DEFINER (rodam como dono) e conferem `has_permission(p_company_id, …)` | iguais |
+
+Nenhum consumidor usa o papel do usuário nas views, então o usuário não
+precisa de grant nas views nem nas tabelas de base. `security_invoker` fica
+como **segunda barreira**: se alguém voltar a conceder SELECT a
+`authenticated`, o RLS das tabelas limita à empresa (testes 2–4 de
+`views-isolamento-db`).
+
+### Função fiscal: quem precisa executar
+
+Só a chamadora `fn_calculate_fiscal_document` (SECURITY DEFINER, dono
+`postgres`, confere `fiscal_documents.calculate`), que roda como o dono. O app
+não a chama por RPC (`grep` em `src/`). Resultado: EXECUTE só do dono. O cálculo
+fiscal pela API continua passando (E2E geral, "documento fiscal: calcular (RPC)
+com total 27,80").
+
+## 3. Reconciliação com a sequência definitiva
+
+- v1 = subconjunto de 0091 §1/§4 + 0093. A revisão encontrou privilégios além
+  do necessário que 0091/0093 não removiam: `authenticated` com ALL nas views e
+  `service_role` com EXECUTE na função. Em vez de divergir das migrations,
+  foi criada a **0094** (`supabase/migrations/0094_privilegios_minimos_views_e_regras_fiscais.sql`)
+  com exatamente essas duas revogações. A **v2 é um subconjunto literal de
+  0091 §1/§4 + 0093 + 0094**, sem nenhuma instrução própria além de guardas e verificações.
+- A atualização completa aplica 0076…0094 pelo ledger. Os comandos da
+  contenção rodam de novo sem efeito. Comprovado: banco contido + 0076…0094 =
+  sequência pura, **0 linhas** de diferença no esquema e nas concessões
+  (`pg_dump --schema-only`) e 0 nas permissões.
+- 0091/0093 não foram reescritas (já validadas na homologação remota). A 0094
+  é aditiva e idempotente.
+- A contenção roda fora do ledger. O ledger registra 0091/0093/0094 quando a
+  sequência for aplicada.
+- A contenção não depende de nada além da 0075. A parte B não depende da contenção.
+
+## 4. Evidências (antes/depois)
+
+Pasta `evidencias/contencao-v2/`.
+
+| Ambiente | Teste | Resultado |
+|---|---|---|
+| Local, cópia do banco equivalente à produção (PG16), `testar-contencao.sh` | A antes; B identidade da produção num banco que não é a produção; C ledger sem 0075; D `anon` herdando SELECT por outro papel (aborta na **verificação final**); E chamadora SECURITY INVOKER; F aplicar; G idempotência; H acesso real por papel; I rollback técnico + reaplicação; J rollback integral; K 0076…0094 por cima | **todas OK**. A `f t t f f f f t t`; B/C/D/E abortam pelo motivo esperado e o catálogo fica idêntico; F `t t t t t t t t t`; G catálogo igual; H anon e authenticated negados nas 4 views, service_role lê, função negada aos três; I `f t t t f f f t t` (reabre E1 e E2 para logados; anon fechado) e reaplicação volta a `t…t`; J catálogo idêntico ao original; K 19 migrations sem erro, `t…t` (`teste-local-contencao.txt`) |
+| Mesma cópia, `views-isolamento-db` (dados sintéticos Alfa=1000/Beta=2000) | antes × depois | antes 2/10 (anon e usuários leem as duas empresas); depois 9/10. A falha restante é `fn_margin_by_order` `min(uuid)`, defeito pré-existente de produção corrigido pela 0092, idêntico antes e depois (`views-isolamento-antes-depois.txt`) |
+| **PG17, branch Neon descartável** `valida-contencao-v2-20261012` | antes, falha deliberada, aplicação, acesso por papel, idempotência | antes = produção; identidade da produção → aborta sem alteração parcial; depois `t…t` incluindo MAINTAIN; anon/authenticated negados; função negada também a service_role; service_role lê as views; reexecução sem erro (`neon-pg17-branch-descartavel.md`) |
+| Código da **main (produção)** sobre banco equivalente à produção, **antes** e **depois** da contenção | E2E geral (login, CRUD por módulo, isolamento, fiscal incl. cálculo) | **210/210** antes e **210/210** depois |
+| Idem | E2E das rotas afetadas (`e2e-contencao-rotas.mjs`): fluxo de caixa, projeção, valorização, margens ×3, relatórios executivo/financeiro/estoque × 3 usuários + sem sessão | **48/50 antes e 48/50 depois, com as mesmas 2 falhas**: `margin-by-order` (`min(uuid)`, 0092) e `reports/inventory` (`total_value` ambíguo, 0090). São defeitos pré-existentes de produção sem relação com a contenção, reproduzidos no banco sem ela |
+| Código **integrado** sobre 0076…0094 | E2E das rotas afetadas | **72/72** |
+| Sequência integrada 0001…0094 (`vi_int`) e contenção+sequência (`vc_k`) | `npm test` | **1064/1064** em cada (0 falha, 0 cancelado, 0 pulado, 0 todo) |
+
+## 5. Impactos esperados da contenção em produção
+
+- **App:** nenhum. O código da main passou 210/210 e 48/50 igual antes e depois.
+- **Acesso direto à Data API com chave pública:** as 4 views e a função passam a
+  responder `permission denied`. Usuários logados (JWT) também perdem leitura
+  direta das views; nenhum fluxo legítimo usa esse caminho (logs 24/09–11/10:
+  só `service_role`).
+- **`units` direto no banco:** sem a 0091 não existe `units.read`, então nenhum
+  usuário lê `units` direto (nem a própria empresa). O app já responde 403 em
+  `/api/units` hoje (exige `units.read`). A parte B resolve.
+- **Locks:** `ALTER VIEW` e `DROP POLICY` pegam lock curto; aborta em 5 s se houver contenção de lock.
+
+## 6. Risco residual e questões não verificadas
+
+- **Backup não confirmado:** organização no plano free, sem backups diários
+  acessíveis nem PITR (documentação oficial). Ver pré-condições no plano.
+- O ref do projeto não é legível por SQL. A guarda usa `system_identifier` +
+  banco + ledger + schema, e o operador confere o ref no painel. Uma cópia
+  física de produção passaria na guarda; aplicar nela seria inofensivo (mesma correção).
+- Os E2E rodam no modo PostgreSQL local, com o cliente administrativo
+  emulado por `set local role service_role`. O PostgREST real do Supabase não foi exercitado
+  localmente. A chamada anônima à Data API (passo A6) confirma em produção.
+- 263 funções SECURITY DEFINER executáveis por `anon` (linter): fora do escopo.
+  A varredura não achou outra exposição comprovada; revisão dedicada recomendada.
+- O `anon` local é NOINHERIT e o de produção é INHERIT. O teste D usa
+  `WITH INHERIT TRUE` para reproduzir produção.

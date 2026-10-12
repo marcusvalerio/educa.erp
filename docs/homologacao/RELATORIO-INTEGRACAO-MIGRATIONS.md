@@ -170,3 +170,21 @@ conferido); 0076–0090 não (bloqueio de rede) — `RELATORIO-HOMOLOGACAO-REMOT
 
 **Produção (só leitura, 12/10):** ledger em 0075; 0 duplicidades para os
 índices únicos da 0081/0083; 0 referências entre empresas para as FKs da 0091.
+
+## 6. 0094 — privilégio mínimo (revisão da contenção, 12/10/2026)
+
+A revisão da contenção encontrou privilégios além do necessário que 0091/0093
+não removiam: `authenticated` com todos os privilégios nas 4 views de relatório
+e `service_role` com EXECUTE em `fn_resolve_applicable_tax_rules`. Nenhum consumidor
+legítimo usa esses caminhos. A `0094_privilegios_minimos_views_e_regras_fiscais.sql`
+(aditiva, idempotente, só `REVOKE`) os remove. Sequência agora 0076…0094.
+
+| Cenário | Resultado |
+|---|---|
+| vazio → 0001–0075 + 0076–0094 (`vi_int`) | OK 112/112; reaplicação idempotente |
+| vazio → só esta linha (0089–0094) | OK 99/99 |
+| cópia da produção (0075) → 0076+ (`vi_incr`) × `vi_int` | 0 linhas de diferença (esquema e permissões) |
+| cópia da produção + **contenção v2** → 0076…0094 (`vc_k`) × `vi_int` | 0 linhas de diferença (esquema com grants e permissões) |
+| `npm test` em `vi_int` e em `vc_k` | 1064/1064 em cada |
+
+Detalhes: `CONTENCAO-SEGURANCA.md` e `evidencias/contencao-v2/`.

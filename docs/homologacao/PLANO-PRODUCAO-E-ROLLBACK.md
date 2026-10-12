@@ -1,6 +1,9 @@
 # Plano de aplicação em produção e rollback
 
-**Status da parte A (contenção): BLOQUEADA PELO BACKUP.** O SQL, os scripts e os
+**Status da parte A (contenção): BLOQUEADA PELO BACKUP** (reconferido em
+12/10/2026: produção inalterada e ainda vulnerável — `f t t f f f f t t`; dump
+real não gerado: sem rede até `*.supabase.co`, sem CLI, sem Docker ativo e sem
+credencial nesta sessão). O SQL, os scripts e os
 testes estão prontos (hash conferido em 12/10). Falta o dump gerado **e
 validado** pelo operador; sem isso a execução não está liberada. Nada deste
 plano foi executado em produção. Cada parte exige aprovação explícita e separada.
@@ -149,6 +152,16 @@ reaplica depois sem erro.
 
 **Escopo:** migrations 0076 … 0094 (ordem dos nomes) e o código da branch
 `claude/atlas-integracao-0076-0093`.
+
+**Migrations pendentes por ambiente** (conferido em 12/10/2026, só leitura):
+
+| Ambiente | Estado | Pendentes |
+|---|---|---|
+| Produção Supabase `bshvfsxapwwfntowdxyr` | ledger com 86 registros, último `20260929165645` (0075); contenção **não** aplicada | 0076 → 0094 (19 arquivos) |
+| Homologação Neon `homolog` (`br-icy-cell-b62lgh06`) | sem ledger; nenhum marcador de 0076+ (sem `fn_simulate_fiscal_authorization`, 0 FKs `*_same_company_fk`, policy aberta presente) — equivalente à 0075 | 0076 → 0094; aplicar **primeiro aqui**, numa branch filha, antes da produção |
+| Local (`vi_int`, `vc_k`) | 0001 → 0094 aplicadas; `npm test` 1064/1064 | nenhuma |
+
+Ordem recomendada: (1) contenção na produção (parte A); (2) 0076 → 0094 numa branch filha da homologação Neon, com E2E; (3) backup obrigatório e 0076 → 0094 na produção pelo ledger; (4) deploy do código integrado.
 
 | Pré-condição | Situação (12/10/2026) |
 |---|---|

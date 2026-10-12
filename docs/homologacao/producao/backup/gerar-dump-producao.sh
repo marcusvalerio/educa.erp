@@ -44,6 +44,8 @@ LOG="$OUT/dump.log"
 {
   echo "início (UTC): $(date -u +%FT%TZ)"
   echo "supabase CLI: $(supabase --version)"
+  echo "docker: $(docker version --format '{{.Server.Version}}' 2>/dev/null)"
+  echo "psql: $(psql --version 2>/dev/null)"
   echo "projeto: $REF_ESPERADO"
 } > "$LOG"
 
@@ -96,14 +98,19 @@ if [ -n "$POOLER" ] && command -v psql >/dev/null && printf '%s' "$POOLER" | gre
     psql "$POOLER" -X -v ON_ERROR_STOP=1 -q -AtF '|' -c "set session characteristics as transaction read only" -f "$DIR_SCRIPT/inventario-catalogo.sql" > "$OUT/inventario-producao.txt" 2>>"$LOG" \
     || falha "inventário da produção falhou (ver $LOG)."
   [ -s "$OUT/inventario-producao.txt" ] || falha "inventário da produção vazio."
+  PGPASSWORD="$SUPABASE_DB_PASSWORD" \
+    psql "$POOLER" -X -v ON_ERROR_STOP=1 -q -At -c "set session characteristics as transaction read only" -f "$DIR_SCRIPT/inventario-detalhe.sql" > "$OUT/inventario-detalhe-producao.txt" 2>>"$LOG" \
+    || falha "inventário detalhado da produção falhou (ver $LOG)."
+  [ -s "$OUT/inventario-detalhe-producao.txt" ] || falha "inventário detalhado da produção vazio."
   echo "inventário da produção: $(wc -l < "$OUT/inventario-producao.txt") itens" | tee -a "$LOG"
 else
-  echo "AVISO: sem URL do pooler vinculada ao ref ou sem psql. Rode inventario-catalogo.sql no SQL Editor"
-  echo "       da produção e salve a saída (colunas separadas por '|') em $OUT/inventario-producao.txt." | tee -a "$LOG"
+  echo "AVISO: sem URL do pooler vinculada ao ref ou sem psql. Rode inventario-catalogo.sql e inventario-detalhe.sql"
+  echo "       no SQL Editor da produção e salve as saídas (colunas separadas por '|') em"
+  echo "       $OUT/inventario-producao.txt e $OUT/inventario-detalhe-producao.txt." | tee -a "$LOG"
 fi
 
 # ---------------------------------------------------------------- manifesto
-( cd "$OUT" && sha256sum roles.sql schema.sql data.sql historico-schema.sql historico-dados.sql $( [ -s inventario-producao.txt ] && echo inventario-producao.txt ) > MANIFEST.sha256 )
+( cd "$OUT" && sha256sum roles.sql schema.sql data.sql historico-schema.sql historico-dados.sql $(for f in inventario-producao.txt inventario-detalhe-producao.txt; do [ -s "$f" ] && echo "$f"; done) > MANIFEST.sha256 )
 chmod 600 "$OUT/MANIFEST.sha256" "$LOG"
 {
   echo "fim (UTC): $(date -u +%FT%TZ)"

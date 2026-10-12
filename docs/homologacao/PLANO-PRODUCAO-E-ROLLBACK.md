@@ -45,40 +45,30 @@ exportar com o CLI. **Não há backup confirmado.** Esta sessão não tem a senh
 do banco, a rede até `*.supabase.co` é bloqueada e os registros de imagens
 Docker recusam o download, então o dump **não** pôde ser gerado nem restaurado aqui.
 
-Procedimento (oficial: *Backup and Restore using the CLI*), numa máquina
-autorizada, com Supabase CLI ≥ 2.120, Docker, `psql` e `supabase login` feito:
+**Procedimento operacional completo: [`producao/backup/RUNBOOK-BACKUP.md`](producao/backup/RUNBOOK-BACKUP.md)**
+(baseado no oficial *Backup and Restore using the CLI*). Resumo dos comandos, numa
+máquina autorizada, com Supabase CLI ≥ 2.120, Docker, `psql` e `supabase login` feito:
 
 ```bash
-# 1) gerar (só leitura na produção; saída fora do Git, pasta 700, arquivos 600)
-docs/homologacao/producao/backup/gerar-dump-producao.sh ~/educa-backups/prod-$(date -u +%Y%m%dT%H%M%SZ)
-#    pede a senha sem eco; vincula SOMENTE bshvfsxapwwfntowdxyr e confere o vínculo;
-#    gera roles.sql, schema.sql, data.sql (--use-copy), historico-*.sql,
-#    inventario-producao.txt (catálogo, sessão somente leitura) e MANIFEST.sha256.
-
-# 2) validar por restauração num banco ISOLADO (pilha local do Supabase, PG 17)
-W=$(mktemp -d); supabase init --workdir "$W" --yes && supabase start --workdir "$W"
+docs/homologacao/producao/backup/preflight.sh ~/educa-backups                       # PREFLIGHT OK
+SAIDA=~/educa-backups/prod-$(date -u +%Y%m%dT%H%M%SZ)
+docs/homologacao/producao/backup/gerar-dump-producao.sh "$SAIDA"                    # só leitura; fora do Git
+ALVO=$(mktemp -d); supabase init --workdir "$ALVO" --yes && supabase start --workdir "$ALVO"   # PG 17 local
 TARGET_DB_URL='postgresql://postgres:postgres@127.0.0.1:54322/postgres' \
-  docs/homologacao/producao/backup/validar-restauracao-dump.sh ~/educa-backups/prod-<UTC>
-#    exige: manifesto íntegro; restauração completa numa transação; contagem de
-#    linhas de CADA tabela = data.sql; inventário do catálogo (tabelas, colunas,
-#    constraints, índices, views, funções, policies, RLS, gatilhos, ACLs,
-#    sequências, ledger) idêntico ao da produção. Só "DUMP VALIDADO" libera A.
-supabase stop --workdir "$W" --no-backup
+  docs/homologacao/producao/backup/validar-restauracao-dump.sh "$SAIDA"             # exige "DUMP VALIDADO"
+supabase stop --workdir "$ALVO" --no-backup
 ```
 
-- O código de saída zero do `supabase db dump` **não** valida o backup; só a
-  mensagem `DUMP VALIDADO` do passo 2 valida.
-- Se o inventário divergir só em `acl_*` por privilégios padrão do banco de
-  teste, investigar antes de aceitar. Não ajustar a comparação para passar.
-- Guardar a pasta fora do Git e de qualquer armazenamento público (GitHub,
-  Vercel, links compartilhados). Registrar data/hora, operador, local e o
-  `MANIFEST.sha256`.
-- Testado nesta sessão: o validador contra um dump simulado (`pg_dump` de uma
-  cópia local equivalente à produção) aprovou o íntegro (173 tabelas, 18 itens
-  de catálogo) e acusou arquivo adulterado, linha faltante e catálogo
-  divergente. O inventário roda em produção (`evidencias/contencao-v2/inventario-producao-12-10.txt`).
-  **Não testado aqui:** `gerar-dump-producao.sh` contra o Supabase real
-  (sem rede/credencial/imagem Docker).
+- O código de saída zero do `supabase db dump` **não** valida o backup. Só a
+  mensagem `DUMP VALIDADO` do validador valida, com 0 divergências em
+  integridade, restauração, contagem de linhas por tabela e catálogo (resumo e
+  objeto a objeto).
+- Divergências são registradas em `registro-divergencias.md` (runbook, passo 7),
+  nunca contornadas. Enquanto houver alguma não resolvida, o gate segue bloqueado.
+- Testado nesta sessão: o validador, contra um dump simulado, aprovou o íntegro
+  e acusou todos os casos negativos (`evidencias/contencao-v2/teste-local-validacao-dump.txt`).
+  Os inventários de catálogo rodam em produção. **Não testado aqui:**
+  `gerar-dump-producao.sh` contra o Supabase real (sem rede, credencial, CLI e imagem Docker).
 
 ## A. Contenção emergencial
 

@@ -1,11 +1,22 @@
 == positivo
-  OK    dump íntegro → DUMP VALIDADO
-   173 tabelas com linhas conferidas; 18 itens de catálogo
-== negativos
+  OK    dump íntegro → TESTE LOCAL OK (0 divergências)
+  OK    nunca 'DUMP VALIDADO' com a variável de teste
+  OK    relatório gravado com permissão 600
+   173 tabelas com linhas; 4544 objetos no inventário detalhado
+== alvo e integridade
+  OK    PostgreSQL < 17 recusado sem a variável de teste
   OK    alvo já com tabelas é recusado
   OK    URL citando o ref de produção é recusada
   OK    data.sql adulterado (manifesto antigo)
-  OK    catálogo divergente da produção
-  OK    linha faltando no restaurado é detectada pela conferência do passo 3
+== divergências registradas, não ignoradas
+  OK    resumo do catálogo divergente
+  OK    resultado: DUMP NÃO VALIDADO
+  OK    objeto a mais apontado pelo nome (policy units_select_authenticated)
+  OK    várias divergências na mesma execução (catálogo + objeto)
+  OK    divergências gravadas no relatório
+== erro de restauração sem dados no terminal
+  OK    restauração com erro detectada
+  OK    linha de dados não aparece no terminal
+  OK    linha de dados não aparece no relatório
 
 RESULTADO: todas as verificações passaram

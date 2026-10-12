@@ -1,0 +1,15 @@
+# inventario-detalhe.sql em produção (bshvfsxapwwfntowdxyr), 12/10/2026 — somente leitura, só catálogo.
+# Resumo por categoria: quantidade de objetos e md5 da lista ordenada "categoria|objeto|assinatura".
+# (A lista objeto a objeto é gerada pelo operador junto com o dump e fica fora do repositório.)
+constraint|1350|6bd3cf17d0175858c81ae76475acc636
+funcao|336|80333554cd735411b6fabe26f525e5e8
+gatilho|171|4c6792d6695b7e05f29b9ddfab5e55a0
+grant_funcao|336|3789c16b174fe91bf0f4ae1b1bd1bd0d
+grant_relacao|925|fcb6e40fffeebdedf83d41bc3cc1998e
+indice|706|1157cc537107f2018f2c718a2e42863d
+ledger|86|dc9fa88369961a59413b608e2914d468
+policy|328|9e755a7fe2d65eafb38c6915bf1ab24b
+rls|172|8cc4515be49e4235064b03e677188641
+sequencia|43|b46285ff74e5bac75d1d4309ff2697bb
+tabela|172|2c68116c5879f9b07fa2f6e582d96ca1
+view|4|44789e52889e10e6b60029d3ebadf3e8

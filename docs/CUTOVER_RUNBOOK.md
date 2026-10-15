@@ -36,14 +36,17 @@ O estado mudou depois da rodada de 27/09. Ordem obrigatória:
    fecha as três exposições (policy aberta em `units`, 4 views com `anon`/`authenticated`,
    `fn_resolve_applicable_tax_rules` executável). Fica aplicada durante todo o período só
    leitura de 14 dias.
-3. **Neon `main` antes da cópia: 0074 e 0075.** Conferido em 14/10 (só leitura, banco
+3. **Neon `main` antes da cópia: 0074 e 0075** — `poc/neon-full/migrate/aplicar-migrations-neon.sh antes`
+   (confere que o banco está na 0073, aplica, confere a 0075). Em 15/10 a impressão digital da `main`
+   (só leitura) bateu 11/11 com a referência 0073. Conferido em 14/10 (só leitura, banco
    `educa`): a `main` está **antes da 0074**: sem `fn_invite_company_user`, sem
    `fn_role_template_permission_codes` e com o `audit_logs_action_check` antigo. A produção
    está na 0075. Copiar assim pode falhar: a auditoria de produção já pode ter ações
    (ex.: `RESERVE`) que o check antigo recusa. Aplicar 0074 e 0075 em `main` e repetir as
    impressões digitais do passo 1. Diferenças aceitas: só as três da contenção.
 4. Janela (passos 9–20), com a cópia pelo `copy-data.sh`.
-5. **Neon `main` depois da cópia: 0076 → 0095**, na ordem, antes de descongelar
+5. **Neon `main` depois da cópia: 0076 → 0095** — `aplicar-migrations-neon.sh depois` (confere 0075,
+   aplica, confere 0095 e as travas de segurança), antes de descongelar
    (passo 20). Sequência homologada em 13/10 numa branch filha da `homolog`, partindo da
    0073 (`docs/homologacao/RELATORIO-HOMOLOGACAO-REMOTA.md` §5): catálogo final idêntico ao
    local, exposições fechadas, 18/18 FKs por empresa validadas. A 0095 (senha provisória,

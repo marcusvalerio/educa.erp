@@ -9,6 +9,7 @@ import { authProvider } from "@/lib/auth/provider";
 import { setNeonSessionCookie } from "@/lib/auth/session";
 import {
   adminMarkEmailVerified,
+  changePassword,
   getSession,
   NeonAuthError,
   requestPasswordReset,
@@ -22,6 +23,8 @@ import { buildNeonPasswordLinkUrl } from "./links";
 import { isTrustedAccountRequest, resetPasswordFlow, resolveNeonSession, signInFlow } from "./flows";
 import { appOrigin, bridgeFor, neonConfig, withServiceSession } from "./server";
 import { resolveCurrentNeonSession } from "./request";
+import { changeTemporaryPasswordFlow, temporaryPasswordBlock, TemporaryPasswordError } from "./temporary-password";
+import { consumeTemporaryPassword, temporaryPasswordState } from "./temporary-password-db";
 
 // Rotas de conta do ATLAS.ERP com AUTH_PROVIDER=neon. O navegador fala só com
 // elas; o servidor fala com o Neon Auth. Com AUTH_PROVIDER=supabase elas
@@ -90,6 +93,14 @@ export async function neonSignIn(request: NextRequest) {
       signOut: (cookie) => signOut(config, cookie, hints),
     }).catch(neonError);
     if (outcome.status !== "ok") {
+      // Senha certa, mas ainda é a provisória: a tela pede a senha nova.
+      const block = temporaryPasswordBlock(await temporaryPasswordState(outcome.user.id));
+      if (block === "change_required") {
+        throw new ApiError("PASSWORD_CHANGE_REQUIRED", "Esta é uma senha provisória. Crie a sua senha para continuar.", 409);
+      }
+      if (block === "expired") {
+        throw new ApiError("TEMPORARY_PASSWORD_EXPIRED", "A senha provisória expirou. Peça uma nova ao administrador.", 403);
+      }
       throw new ApiError("ACCESS_NOT_READY", "Seu acesso ao ATLAS.ERP ainda não foi liberado. Use o link do convite enviado para o seu e-mail.", 403);
     }
     await setNeonSessionCookie(outcome.cookie);
@@ -139,6 +150,48 @@ export async function neonResetPassword(request: NextRequest) {
     }).catch(neonError);
     if (outcome.status === "ok" && outcome.cookie) await setNeonSessionCookie(outcome.cookie);
     return ok({ signedIn: outcome.status === "ok" && !!outcome.cookie });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+const temporarySchema = z
+  .object({
+    email: z.string().trim().toLowerCase().email().max(254),
+    temporaryPassword: z.string().min(1).max(256),
+    newPassword: newPasswordSchema,
+  })
+  .strict();
+
+// POST /api/auth/password/temporary { email, temporaryPassword, newPassword }
+// Login com a senha provisória e troca obrigatória numa chamada só: o cookie
+// do ATLAS.ERP só é gravado depois que a senha nova existe.
+export async function neonChangeTemporaryPassword(request: NextRequest) {
+  try {
+    neonOnly();
+    sameAppOnly(request);
+    const input = await body(request, temporarySchema);
+    const config = neonConfig(request.nextUrl.origin);
+    const hints = hintsOf(request);
+    const outcome = await changeTemporaryPasswordFlow(input, {
+      signIn: (e, p) => signInWithPassword(config, e, p, hints),
+      resolve: (cookie) => resolveNeonSession(cookie, { getSession: (c) => getSession(config, c, hints), bridge: bridgeFor(config) }),
+      signOut: (cookie) => signOut(config, cookie, hints),
+      state: temporaryPasswordState,
+      changePassword: (cookie, current, next) => changePassword(config, cookie, current, next, hints),
+      consume: consumeTemporaryPassword,
+    }).catch((error) => {
+      if (error instanceof TemporaryPasswordError) {
+        if (error.code === "SAME_PASSWORD") throw validationError(error.message);
+        throw new ApiError(error.code === "EXPIRED" ? "TEMPORARY_PASSWORD_EXPIRED" : "TEMPORARY_PASSWORD_NOT_PENDING", error.message, 403);
+      }
+      return neonError(error);
+    });
+    if (outcome.status !== "ok") {
+      throw new ApiError("ACCESS_NOT_READY", "Senha criada, mas o seu acesso ainda não foi liberado. Fale com o administrador.", 403);
+    }
+    await setNeonSessionCookie(outcome.cookie);
+    return ok();
   } catch (error) {
     return jsonError(error);
   }

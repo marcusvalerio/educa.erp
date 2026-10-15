@@ -43,10 +43,11 @@ O estado mudou depois da rodada de 27/09. Ordem obrigatória:
    (ex.: `RESERVE`) que o check antigo recusa. Aplicar 0074 e 0075 em `main` e repetir as
    impressões digitais do passo 1. Diferenças aceitas: só as três da contenção.
 4. Janela (passos 9–20), com a cópia pelo `copy-data.sh`.
-5. **Neon `main` depois da cópia: 0076 → 0094**, na ordem, antes de descongelar
+5. **Neon `main` depois da cópia: 0076 → 0095**, na ordem, antes de descongelar
    (passo 20). Sequência homologada em 13/10 numa branch filha da `homolog`, partindo da
    0073 (`docs/homologacao/RELATORIO-HOMOLOGACAO-REMOTA.md` §5): catálogo final idêntico ao
-   local, exposições fechadas, 18/18 FKs por empresa validadas.
+   local, exposições fechadas, 18/18 FKs por empresa validadas. A 0095 (senha provisória,
+   aditiva) foi aplicada na mesma branch em 15/10; privilégios conferidos.
 6. Sondas de segurança (passo 15) **depois** da 0094.
 
 Pendências desta sequência: E2E da aplicação apontada para a branch homologada; homologar
@@ -132,7 +133,7 @@ homologação); portão E continua bloqueado.
 14. **Integridade:** 567 FKs recriadas (a recriação valida), `customers_segment_check`
     continua `NOT VALID` como em produção, cadeia do Owner (`auth.users` →
     `platform_members` OWNER → `auth_identity_links` → usuário `33e3fb0b…` no Neon Auth).
-14a. 🔒 **Migrations 0076 → 0094 em `main`** (sequência atual, item 5), uma transação por arquivo, na ordem. Erro em qualquer arquivo = parar e voltar pela branch `pre-cutover`.
+14a. 🔒 **Migrations 0076 → 0095 em `main`** (sequência atual, item 5), uma transação por arquivo, na ordem. Erro em qualquer arquivo = parar e voltar pela branch `pre-cutover`.
 15. **Sondas de segurança** numa branch filha de `main` (a bateria de
     `evidence/rehearsal-data.md` §Segurança). Esperado 56/56. Apagar a branch depois,
     com aprovação.

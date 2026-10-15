@@ -225,7 +225,7 @@ describe("login", () => {
       resolve: async () => ({ status: "denied", reason: "UNLINKED" }),
       signOut: async (c) => void calls.push(`out:${c}`),
     });
-    assert.deepEqual(r, { status: "not_allowed" });
+    assert.deepEqual(r, { status: "not_allowed", user: realUser });
     assert.deepEqual(calls, ["out:c"]);
   });
 });

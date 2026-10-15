@@ -90,16 +90,16 @@ export type SignInDeps = {
 export type SignInOutcome =
   | { status: "ok"; cookie: string }
   /** Credenciais certas, mas a identidade não chega ao ATLAS.ERP (sem vínculo, e-mail não confirmado, bloqueada). */
-  | { status: "not_allowed" };
+  | { status: "not_allowed"; user: NeonUser };
 
 /** Login: só devolve sessão se a identidade passar pela ponte inteira. */
 export async function signInFlow(email: string, password: string, deps: SignInDeps): Promise<SignInOutcome> {
-  const { cookie } = await deps.signIn(email, password);
+  const { cookie, user } = await deps.signIn(email, password);
   const resolved = await deps.resolve(cookie);
   if (resolved.status === "ok") return { status: "ok", cookie };
   // Não deixa sessão órfã no Neon.
   await deps.signOut(cookie).catch(() => undefined);
-  return { status: "not_allowed" };
+  return { status: "not_allowed", user };
 }
 
 export type ResetDeps = {

@@ -14,20 +14,26 @@ import { authProvider } from "./provider";
 
 const neon = () => authProvider() === "neon";
 
-async function postJson(url: string, body: unknown): Promise<{ ok: boolean; status: number; data: unknown; message: string | null }> {
+async function postJson(url: string, body: unknown): Promise<{ ok: boolean; status: number; data: unknown; message: string | null; code: string | null }> {
   const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), cache: "no-store" });
-  const json = (await res.json().catch(() => null)) as { success?: boolean; data?: unknown; error?: { message?: string } } | null;
-  return { ok: res.ok && !!json?.success, status: res.status, data: json?.data ?? null, message: json?.error?.message ?? null };
+  const json = (await res.json().catch(() => null)) as { success?: boolean; data?: unknown; error?: { message?: string; code?: string } } | null;
+  return { ok: res.ok && !!json?.success, status: res.status, data: json?.data ?? null, message: json?.error?.message ?? null, code: json?.error?.code ?? null };
 }
 
 // ------------------------------------------------------------ login
 
-export type SignInResult = { ok: true } | { ok: false; message: string };
+/** `newPasswordRequired`: senha certa, mas provisória (0095) — a tela pede a senha nova. */
+export type SignInResult = { ok: true } | { ok: false; message: string; newPasswordRequired?: boolean };
 
 export async function signInWithPassword(email: string, password: string): Promise<SignInResult> {
   if (neon()) {
     const res = await postJson("/api/auth/sign-in", { email, password });
-    return res.ok ? { ok: true } : { ok: false, message: res.message ?? "E-mail ou senha inválidos. Confira os dados e tente novamente." };
+    if (res.ok) return { ok: true };
+    return {
+      ok: false,
+      message: res.message ?? "E-mail ou senha inválidos. Confira os dados e tente novamente.",
+      newPasswordRequired: res.code === "PASSWORD_CHANGE_REQUIRED",
+    };
   }
   const supabase = createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -39,6 +45,16 @@ export async function signInWithPassword(email: string, password: string): Promi
         ? "Confirme o seu e-mail pelo link recebido antes de entrar."
         : "E-mail ou senha inválidos. Confira os dados e tente novamente.",
   };
+}
+
+/** A Administração pode gerar senha provisória (só com o Neon Auth). */
+export const temporaryPasswordAvailable = () => neon();
+
+/** Primeiro login com a senha provisória: entra e cria a senha nova numa chamada só (Neon). */
+export async function changeTemporaryPassword(email: string, temporaryPassword: string, newPassword: string): Promise<SignInResult> {
+  if (!neon()) return { ok: false, message: "Senha provisória indisponível neste ambiente." };
+  const res = await postJson("/api/auth/password/temporary", { email, temporaryPassword, newPassword });
+  return res.ok ? { ok: true } : { ok: false, message: res.message ?? "Não foi possível criar a senha. Tente novamente." };
 }
 
 // ------------------------------------------------------------ esqueci minha senha

@@ -40,7 +40,7 @@ async function findAuthUserId(email: string): Promise<string | null> {
   return null;
 }
 
-async function ensureShadowLogin(email: string): Promise<string> {
+export async function ensureShadowLogin(email: string): Promise<string> {
   const existing = await findAuthUserId(email);
   if (existing) return existing;
   const { data, error } = await createAdminClient().auth.admin.createUser({
@@ -57,7 +57,7 @@ async function ensureShadowLogin(email: string): Promise<string> {
   return data.user.id;
 }
 
-async function link(neonUserId: string, email: string, authUserId: string): Promise<void> {
+export async function link(neonUserId: string, email: string, authUserId: string): Promise<void> {
   const { error } = await createAdminClient().rpc("fn_link_identity", {
     p_provider: "neon",
     p_external_user_id: neonUserId,

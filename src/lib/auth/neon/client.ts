@@ -123,7 +123,7 @@ function fail(res: RawResponse): never {
   const code = errorCode(res.body);
   const retry = Number(res.headers.get("x-retry-after") ?? res.headers.get("retry-after"));
   if (res.status === 429) throw new NeonAuthError("RATE_LIMITED", 429, "Muitas tentativas. Aguarde e tente novamente.", Number.isFinite(retry) ? retry : null);
-  if (code === "INVALID_EMAIL_OR_PASSWORD") throw new NeonAuthError("INVALID_CREDENTIALS", 401, "E-mail ou senha inválidos.");
+  if (code === "INVALID_EMAIL_OR_PASSWORD" || code === "INVALID_PASSWORD") throw new NeonAuthError("INVALID_CREDENTIALS", 401, "E-mail ou senha inválidos.");
   if (code === "BANNED_USER") throw new NeonAuthError("BANNED", 403, "Acesso bloqueado.");
   if (code === "INVALID_TOKEN") throw new NeonAuthError("INVALID_TOKEN", 400, "Link inválido ou expirado.");
   if (/PASSWORD_TOO_(SHORT|LONG)/.test(code)) throw new NeonAuthError("WEAK_PASSWORD", 400, "Senha fora da política.");
@@ -242,5 +242,17 @@ export async function adminMarkEmailVerified(config: NeonAuthConfig, adminCookie
 
 export async function adminRevokeUserSessions(config: NeonAuthConfig, adminCookie: string, userId: string): Promise<void> {
   const res = await request(config, "/admin/revoke-user-sessions", { body: { userId }, cookie: adminCookie });
+  if (res.status !== 200) fail(res);
+}
+
+/** Define a senha de outro usuário (senha provisória ou revogação). Better Auth: admin.setUserPassword. */
+export async function adminSetUserPassword(config: NeonAuthConfig, adminCookie: string, userId: string, newPassword: string): Promise<void> {
+  const res = await request(config, "/admin/set-user-password", { body: { userId, newPassword }, cookie: adminCookie });
+  if (res.status !== 200) fail(res);
+}
+
+/** Troca a senha da própria sessão (exige a senha atual) e revoga as outras sessões. */
+export async function changePassword(config: NeonAuthConfig, cookie: string, currentPassword: string, newPassword: string, hints?: ClientHints): Promise<void> {
+  const res = await request(config, "/change-password", { body: { currentPassword, newPassword, revokeOtherSessions: true }, cookie, hints });
   if (res.status !== 200) fail(res);
 }

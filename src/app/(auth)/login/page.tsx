@@ -4,7 +4,8 @@ import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LogIn } from "lucide-react";
-import { signInWithPassword } from "@/lib/auth/client";
+import { changeTemporaryPassword, signInWithPassword } from "@/lib/auth/client";
+import { newPasswordSchema } from "@/lib/onboarding/invitations";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
@@ -38,14 +39,27 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Senha provisória (0095): o servidor só cria a sessão depois da senha nova.
+  const [temporary, setTemporary] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setLoading(true);
     setError(null);
+    if (temporary) {
+      const valid = newPasswordSchema.safeParse(newPassword);
+      if (!valid.success) return setError(valid.error.issues[0]?.message ?? "Senha inválida.");
+      if (newPassword !== confirmPassword) return setError("As senhas não conferem.");
+    }
+    setLoading(true);
     try {
-      const result = await signInWithPassword(email, password);
+      const result = temporary ? await changeTemporaryPassword(email, password, newPassword) : await signInWithPassword(email, password);
       if (!result.ok) {
+        if (!temporary && result.newPasswordRequired) {
+          setTemporary(true);
+          return;
+        }
         setError(result.message);
         return;
       }
@@ -70,7 +84,13 @@ function LoginForm() {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
-      {error ? <Alert tone="danger">{error}</Alert> : notice && <Alert tone={notice.tone}>{notice.text}</Alert>}
+      {error ? (
+        <Alert tone="danger">{error}</Alert>
+      ) : temporary ? (
+        <Alert tone="info">Você entrou com uma senha provisória. Crie a sua senha para continuar: pelo menos 8 caracteres, com letras e números.</Alert>
+      ) : (
+        notice && <Alert tone={notice.tone}>{notice.text}</Alert>
+      )}
       <FormField label="E-mail" required>
         <Input
           type="email"
@@ -93,9 +113,24 @@ function LoginForm() {
       >
         <PasswordInput autoComplete="current-password" value={password} onChange={setPassword} />
       </FormField>
-      <Button type="submit" loading={loading} disabled={!email || !password} className="mt-1 w-full justify-center">
+      {temporary && (
+        <>
+          <FormField label="Nova senha" required>
+            <PasswordInput autoComplete="new-password" value={newPassword} onChange={setNewPassword} />
+          </FormField>
+          <FormField label="Confirme a nova senha" required>
+            <PasswordInput autoComplete="new-password" value={confirmPassword} onChange={setConfirmPassword} />
+          </FormField>
+        </>
+      )}
+      <Button
+        type="submit"
+        loading={loading}
+        disabled={!email || !password || (temporary && (!newPassword || !confirmPassword))}
+        className="mt-1 w-full justify-center"
+      >
         {!loading && <LogIn size={15} />}
-        {loading ? "Entrando..." : "Entrar"}
+        {loading ? "Entrando..." : temporary ? "Criar senha e entrar" : "Entrar"}
       </Button>
     </form>
   );

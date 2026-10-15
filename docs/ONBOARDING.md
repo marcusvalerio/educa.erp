@@ -528,3 +528,35 @@ Pendente, com a ação necessária e quem pode fazê-la:
 4. **Primeiro login real e testes em produção:** dependem de 1–3. Os
    mesmos cenários passaram na réplica (§5, "E2E real"), inclusive sobre
    o código de `main` depois do merge.
+
+## Senha provisória (0095, só com o Neon Auth)
+
+Alternativa ao convite por e-mail, para não depender do envio de e-mail (o
+remetente padrão do Neon Auth permite 2 e-mails por hora no projeto).
+
+- **Quem gera:** quem tem `users.update` na empresa do cadastro. Se o cadastro
+  tem papéis, exige também `roles.manage`. Nunca para si mesmo, nunca para quem
+  tem permissões que o Administrador não tem, nunca para login da equipe da
+  plataforma. Tudo decidido no banco (`fn_issue_temporary_password`).
+- **A senha:** 10 caracteres, letras maiúsculas e minúsculas e números, sem
+  caracteres que se confundem (0/O/o, 1/l/I). É gerada no servidor e mostrada
+  **uma vez** ao Administrador (resposta `no-store`). O banco do ATLAS.ERP guarda
+  só metadados (`user_temporary_passwords`); a senha existe apenas como hash no
+  Neon Auth. Vale 72 h.
+- **Primeiro login:** a pessoa entra com a senha provisória e a tela pede a senha
+  nova. O cookie do ATLAS.ERP só é gravado depois da troca
+  (`/api/auth/password/temporary`). Enquanto houver senha provisória pendente,
+  inclusive vencida, `fn_resolve_identity_link` não resolve a identidade.
+  Entrar direto no Neon Auth com a provisória não dá acesso ao banco.
+- **Na troca:** o banco consome a senha provisória e, se for o primeiro acesso,
+  liga o login ao cadastro com as mesmas regras do aceite de convite. Convites
+  pendentes do cadastro são cancelados.
+- **Gerar de novo / revogar:** a anterior deixa de valer. Revogar troca a
+  senha no Neon por uma que ninguém conhece e encerra as sessões. Gerar para uma
+  conta já ativa substitui a senha atual e derruba as sessões abertas.
+- **Auditoria:** gerar (`CREATE`), revogar (`REVOKE`), troca concluída
+  (`CONFIRM`) e vínculo do login (`ASSIGN`), sem a senha.
+- **Pendente de validação no serviço real:** as rotas do Neon Auth
+  `/admin/set-user-password` e `/change-password` (Better Auth) ainda não foram
+  exercitadas contra o Neon Auth gerenciado. Rodar o E2E de homologação antes de
+  usar em produção.

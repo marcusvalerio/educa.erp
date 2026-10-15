@@ -50,9 +50,9 @@ O estado mudou depois da rodada de 27/09. Ordem obrigatória:
    aditiva) foi aplicada na mesma branch em 15/10; privilégios conferidos.
 6. Sondas de segurança (passo 15) **depois** da 0094.
 
-Pendências desta sequência: E2E da aplicação apontada para a branch homologada; homologar
-0076 → 0094 também sobre o banco `educa` da `homolog` (está na 0075, com os dados de
-homologação); portão E continua bloqueado.
+Pendências desta sequência: E2E da aplicação apontada para a branch homologada (inclui as
+rotas do Neon Auth da senha provisória); portão E continua bloqueado. 0076 → 0095 sobre o
+banco `educa` com dados de homologação: feito em 15/10 (relatório remoto §6).
 
 ## Portões A–E (todos verdes antes do passo 1)
 

@@ -75,11 +75,7 @@ códigos `units.*`/`unit_conversions.*`; regras fiscais sem execução por anon.
 
 ## 4. O que NÃO foi validado remotamente (bloqueio real)
 
-- **0076–0094 sobre o banco `educa` da `homolog`** (o que tem os dados de
-  homologação, na 0075). A sequência foi homologada sobre o banco `neondb`
-  (§5); no `educa`, só 0091–0093 (§3).
-  Para executar: rodar `poc/neon-full/integracao/validar-sequencia.sh` de uma
-  máquina com acesso a `*.neon.tech`, apontando para uma branch filha.
+- ~~0076–0094 sobre o banco `educa`~~ — feito em 15/10 (0076 → 0095, §6).
 - **E2E do app contra o Neon**: mesmo bloqueio de rede.
 - Supabase: não existe ambiente remoto de homologação no Supabase; a produção
   só foi lida (metadados/contagens).
@@ -109,3 +105,19 @@ códigos `units.*`/`unit_conversions.*`; regras fiscais sem execução por anon.
 **Não feito aqui:** E2E da aplicação contra esta branch (sem rede até `*.neon.tech`
 e Preview atrás da autenticação da Vercel); sequência sobre o banco `educa`.
 A branch fica para conferência; excluir só com aprovação.
+
+## 6. 0076 → 0095 sobre o banco `educa` (dados de homologação, 15/10/2026)
+
+Mesma branch filha `br-hidden-cherry-b6dj1ksb`, banco `educa`. Antes de aplicar, o
+catálogo foi conferido por categoria: **idêntico à referência local 0075** (11/11).
+
+| Conferência | Resultado |
+|---|---|
+| Aplicação 0076 → 0095 (uma transação por arquivo) | 20/20 sem erro; travas de duplicidade da 0081/0083 passaram sobre os dados |
+| Catálogo final × local 0095 | **11/11 categorias idênticas** (normalizado só o `MAINTAIN` do PG17) |
+| FKs `*_same_company_fk` sobre os dados de homologação | 18/18 validadas (nenhuma referência entre empresas) |
+| E1/E2/E3 | policy aberta ausente; 4/4 views `security_invoker`, 0 grants para `anon`/`authenticated`, `service_role` lê as 4; função fiscal sem executor |
+| Senha provisória (0095), fluxo completo com dados sintéticos numa transação desfeita | Administrador gera (resposta sem senha); `authenticated` não lê a tabela; identidade **bloqueada** enquanto pendente; troca libera e liga o login ao cadastro; 3 registros de auditoria; o novo Vendedor cria pedido e não administra usuários. Depois: 0 empresa, 0 login e 0 senha sintéticos restantes |
+
+Não feito: E2E do app e as rotas do Neon Auth (`/admin/set-user-password`,
+`/change-password`) contra o serviço real — sem rede até `*.neon.tech` nesta sessão.

@@ -26,6 +26,33 @@ Referências: `docs/PRE_CUTOVER_CHECKLIST.md` (estado verificado de cada pré-co
 | Ensaio de dados | branch `rehearsal-2-educa` `br-autumn-sunset-b6j8aw5a` |
 | Homologação | branch `homolog` `br-icy-cell-b62lgh06` + Neon Auth em `authdb` |
 
+## Sequência atual (atualizada em 14/10/2026)
+
+O estado mudou depois da rodada de 27/09. Ordem obrigatória:
+
+1. **Backup da produção Supabase** por `docs/homologacao/producao/backup/RUNBOOK-BACKUP.md`
+   (dump restaurado e validado). Sem isso, nada altera a produção.
+2. 🔒 **Contenção no Supabase** (`docs/homologacao/PLANO-PRODUCAO-E-ROLLBACK.md`, parte A):
+   fecha as três exposições (policy aberta em `units`, 4 views com `anon`/`authenticated`,
+   `fn_resolve_applicable_tax_rules` executável). Fica aplicada durante todo o período só
+   leitura de 14 dias.
+3. **Neon `main` antes da cópia: 0074 e 0075.** Conferido em 14/10 (só leitura, banco
+   `educa`): a `main` está **antes da 0074**: sem `fn_invite_company_user`, sem
+   `fn_role_template_permission_codes` e com o `audit_logs_action_check` antigo. A produção
+   está na 0075. Copiar assim pode falhar: a auditoria de produção já pode ter ações
+   (ex.: `RESERVE`) que o check antigo recusa. Aplicar 0074 e 0075 em `main` e repetir as
+   impressões digitais do passo 1. Diferenças aceitas: só as três da contenção.
+4. Janela (passos 9–20), com a cópia pelo `copy-data.sh`.
+5. **Neon `main` depois da cópia: 0076 → 0094**, na ordem, antes de descongelar
+   (passo 20). Sequência homologada em 13/10 numa branch filha da `homolog`, partindo da
+   0073 (`docs/homologacao/RELATORIO-HOMOLOGACAO-REMOTA.md` §5): catálogo final idêntico ao
+   local, exposições fechadas, 18/18 FKs por empresa validadas.
+6. Sondas de segurança (passo 15) **depois** da 0094.
+
+Pendências desta sequência: E2E da aplicação apontada para a branch homologada; homologar
+0076 → 0094 também sobre o banco `educa` da `homolog` (está na 0075, com os dados de
+homologação); portão E continua bloqueado.
+
 ## Portões A–E (todos verdes antes do passo 1)
 
 | Portão | Critério | Estado em 2026-09-27 |
@@ -105,6 +132,7 @@ Referências: `docs/PRE_CUTOVER_CHECKLIST.md` (estado verificado de cada pré-co
 14. **Integridade:** 567 FKs recriadas (a recriação valida), `customers_segment_check`
     continua `NOT VALID` como em produção, cadeia do Owner (`auth.users` →
     `platform_members` OWNER → `auth_identity_links` → usuário `33e3fb0b…` no Neon Auth).
+14a. 🔒 **Migrations 0076 → 0094 em `main`** (sequência atual, item 5), uma transação por arquivo, na ordem. Erro em qualquer arquivo = parar e voltar pela branch `pre-cutover`.
 15. **Sondas de segurança** numa branch filha de `main` (a bateria de
     `evidence/rehearsal-data.md` §Segurança). Esperado 56/56. Apagar a branch depois,
     com aprovação.

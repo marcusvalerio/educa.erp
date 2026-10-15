@@ -158,10 +158,11 @@ reaplica depois sem erro.
 | Ambiente | Estado | Pendentes |
 |---|---|---|
 | Produção Supabase `bshvfsxapwwfntowdxyr` | ledger com 86 registros, último `20260929165645` (0075); contenção **não** aplicada | 0076 → 0094 (19 arquivos) |
-| Homologação Neon `homolog` (`br-icy-cell-b62lgh06`) | sem ledger; nenhum marcador de 0076+ (sem `fn_simulate_fiscal_authorization`, 0 FKs `*_same_company_fk`, policy aberta presente) — equivalente à 0075 | 0076 → 0094; aplicar **primeiro aqui**, numa branch filha, antes da produção |
+| Homologação Neon `homolog` (`br-icy-cell-b62lgh06`) | sem ledger; banco `neondb` conferido objeto a objeto em 13/10: está na **0073** (faltam a versão da 0074 de `fn_reserve_sales_order_stock`, o `audit_logs_action_check` da 0074 e as funções de papéis/convites da 0075) | banco `neondb`: 0074 → 0094 (21 arquivos), homologado em 13/10 na branch filha `br-hidden-cherry-b6dj1ksb` com catálogo final = local 0094. Banco `educa` (dados de homologação): marcadores da 0075 presentes, 0076+ ausentes; 0076 → 0094 ainda não homologadas nele |
+| Neon de produção `main` (`br-lively-darkness-b683lnw7`, banco `educa`) | conferido em 14/10, só leitura: **antes da 0074** (sem funções da 0075, check de auditoria antigo) | 0074 → 0075 **antes** da cópia dos dados; 0076 → 0094 depois (ver `docs/CUTOVER_RUNBOOK.md`, sequência atual) |
 | Local (`vi_int`, `vc_k`) | 0001 → 0094 aplicadas; `npm test` 1064/1064 | nenhuma |
 
-Ordem recomendada: (1) contenção na produção (parte A); (2) 0076 → 0094 numa branch filha da homologação Neon, com E2E; (3) backup obrigatório e 0076 → 0094 na produção pelo ledger; (4) deploy do código integrado.
+Ordem recomendada: (1) contenção na produção (parte A); (2) 0074 → 0094 numa branch filha da homologação Neon (catálogo feito em 13/10; falta o E2E da aplicação apontada para ela); (3) backup obrigatório e 0076 → 0094 na produção pelo ledger; (4) deploy do código integrado.
 
 | Pré-condição | Situação (12/10/2026) |
 |---|---|
@@ -169,7 +170,7 @@ Ordem recomendada: (1) contenção na produção (parte A); (2) 0076 → 0094 nu
 | Referências entre empresas que deixariam FKs da 0091 `NOT VALID` | **0** nas 18 relações (contagem só leitura, 10/10) |
 | Sequência validada do zero, incremental e sobre banco já atualizado | local: esquema e permissões idênticos (0 linhas de diferença) |
 | 0091–0093 sobre a homologação Neon | aplicadas numa branch filha; 18/18 FKs validadas; matriz de papéis = local (`RELATORIO-HOMOLOGACAO-REMOTA.md`) |
-| 0076–0088 sobre a homologação Neon | **não executado** (bloqueio de rede; ver relatório remoto) |
+| 0074–0094 sobre a homologação Neon | aplicadas em 13/10 numa branch filha, comando a comando, pela API do Neon: 4.630 objetos idênticos ao local 0094; 18/18 FKs validadas; E1/E2/E3 fechadas (`RELATORIO-HOMOLOGACAO-REMOTA.md`) |
 | Suíte com o código integrado | `npm test` 1064/1064 (com 0094, inclusive sobre banco contido + 0076…0094); E2E 210 + 66 + 32 + 13 + 37 (antes da 0094) e rotas afetadas 72/72 (com 0094), local |
 | Contenção aplicada antes da sequência | banco contido + 0076…0094 = sequência pura: 0 linhas de diferença de esquema/concessões |
 

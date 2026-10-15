@@ -1,4 +1,4 @@
-# Homologação remota — Neon (11–12/10/2026)
+# Homologação remota — Neon (11–13/10/2026)
 
 ## 1. Ambiente identificado
 
@@ -6,7 +6,7 @@
 |---|---|
 | Projeto | `educa-erp-prod` (`old-butterfly-53570465`), aws-sa-east-1. **Não é a produção atual** (produção = Supabase `bshvfsxapwwfntowdxyr`); é o alvo da futura migração |
 | Branch de homologação | `homolog` (`br-icy-cell-b62lgh06`), PostgreSQL 17.11, banco `educa` |
-| Estado da `homolog` (metadados) | objetos de 0070–0075 presentes; 0076+ ausentes; **mesmas exposições da produção** (policy aberta em `units`, 4 views com `anon`, sem `units.*`); sem ledger |
+| Estado da `homolog` (metadados) | banco `educa`: objetos de 0070–0075 presentes, 0076+ ausentes. Banco `neondb`: na **0073** (conferido objeto a objeto em 13/10). Nos dois, **mesmas exposições da produção** (policy aberta em `units`, 4 views com `anon`, sem `units.*`); sem ledger |
 | Acesso | conector Neon desta sessão (`run_sql` / `run_sql_transaction`). **Conexão direta bloqueada**: a política de rede da organização recusa `*.neon.tech` (CONNECT 403 no proxy) — nem `psql` nem o driver HTTP |
 | Branch `homolog` alterada? | **Não.** Toda mutação foi feita em branches filhas descartáveis |
 
@@ -75,13 +75,37 @@ códigos `units.*`/`unit_conversions.*`; regras fiscais sem execução por anon.
 
 ## 4. O que NÃO foi validado remotamente (bloqueio real)
 
-- **0076–0088 e 0089–0090 na homologação Neon.** Exigiria transcrever ~144 KB
-  de SQL pelo conector (sem conexão direta por política de rede), com risco à
-  integridade das migrations. Validadas localmente (vazio, incremental e
-  sobre o banco da homologação de 48 usuários). Para executar remotamente:
-  liberar a saída para `*.neon.tech` no ambiente (ou rodar
-  `poc/neon-full/integracao/validar-sequencia.sh` de uma máquina com acesso)
-  apontando para uma branch filha da `homolog`.
+- **0076–0094 sobre o banco `educa` da `homolog`** (o que tem os dados de
+  homologação, na 0075). A sequência foi homologada sobre o banco `neondb`
+  (§5); no `educa`, só 0091–0093 (§3).
+  Para executar: rodar `poc/neon-full/integracao/validar-sequencia.sh` de uma
+  máquina com acesso a `*.neon.tech`, apontando para uma branch filha.
 - **E2E do app contra o Neon**: mesmo bloqueio de rede.
 - Supabase: não existe ambiente remoto de homologação no Supabase; a produção
   só foi lida (metadados/contagens).
+
+## 5. Migrations 0074 → 0094 sobre a 0073 (13/10/2026)
+
+| Item | Valor |
+|---|---|
+| Branch filha | `homolog-0074-0094-20261013` (`br-hidden-cherry-b6dj1ksb`), criada da `homolog`; banco `neondb` |
+| Ponto de partida | catálogo conferido objeto a objeto contra a referência local: **0073** (só faltavam os objetos da 0074 e da 0075) |
+| Como | cada arquivo dividido em comandos por um divisor que respeita `$$`, aspas e comentários. A fidelidade foi provada localmente: o mesmo divisor sobre um banco 0073 dá catálogo idêntico ao da sequência pura (4.630 objetos, 0 diferenças). Depois, um `run_sql_transaction` por arquivo (uma transação por migration), na ordem 0074 … 0094 |
+| Erros | nenhum; nenhum `WARNING` de FK `NOT VALID` |
+
+**Conferências**
+
+| Conferência | Resultado |
+|---|---|
+| 0074/0075: 10 funções + `audit_logs_action_check` (hash de corpo/segurança e ACL) | 12/12 idênticos à referência local |
+| Catálogo final × local 0094 (tabelas, constraints, índices, views, funções, policies, RLS, gatilhos, grants, sequências) | **11/11 categorias e 4.630 objetos idênticos**. Única normalização: o privilégio `MAINTAIN` (`m`) do PostgreSQL 17 nas ACLs de tabela, que o local (16) não tem |
+| E1: policy `units_select_authenticated` | ausente; RLS ligado; `units_select/insert/update/delete` presentes |
+| E2: 4 views | 4/4 `security_invoker`; `anon` e `authenticated` sem SELECT; `service_role` lê as 4 |
+| E2 com troca de papel | `anon` → `v_cash_flow_summary`: `permission denied`; `authenticated` → `v_sales_order_item_margin`: `permission denied` |
+| E3: `fn_resolve_applicable_tax_rules` | nenhum de `anon`/`authenticated`/`service_role` executa; `authenticated` → `permission denied for function` |
+| `authenticated` sem JWT → `units` | 0 linhas |
+| FKs `*_same_company_fk` | 18/18 validadas |
+
+**Não feito aqui:** E2E da aplicação contra esta branch (sem rede até `*.neon.tech`
+e Preview atrás da autenticação da Vercel); sequência sobre o banco `educa`.
+A branch fica para conferência; excluir só com aprovação.

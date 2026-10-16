@@ -242,3 +242,31 @@ branches filhas descartáveis. Antes, reconferido: nome, mãe = `homolog`
 **Credencial `validador_seq`: revogada** (o papel não existe mais em nenhuma
 branch). A senha não está em nenhum arquivo do repositório nem das evidências. O
 arquivo local que a continha foi destruído numa rodada anterior.
+
+## Execução da parte A — contenção em produção (16/10/2026)
+
+- **Decisão do dono:** aplicar **sem o dump de backup**, por ser uma mudança só de
+  permissões (nenhum dado alterado), com pré-condições internas e
+  `rollback-contencao.sql` pronto.
+- **Como:** o dono executou `contencao-emergencial.sql`
+  (SHA-256 `84d174bc…f03a`, sem alteração) no SQL Editor do projeto
+  `bshvfsxapwwfntowdxyr`. Resultado: `Success. No rows returned`. Três tentativas
+  anteriores pelo conector do Supabase pararam por tempo limite. Cada uma foi
+  conferida depois: nada aplicado e nenhuma transação aberta.
+- **Antes** (`verificacao.sql`): `f t t f f f f t t`. **Depois**: `t t t t t t t t t`,
+  banco `7678069749886157684/postgres`.
+- **Prova com os papéis reais**, numa transação desfeita:
+
+  | Papel | Teste | Resultado |
+  |---|---|---|
+  | `anon` | `v_cash_flow_summary` | negado |
+  | `authenticated` | `v_sales_order_item_margin` | negado |
+  | `authenticated` | `fn_resolve_applicable_tax_rules` | negado |
+  | `service_role` (app) | `v_cash_flow_summary` e `inventory_valuation` | lê normalmente |
+
+- **Voltar atrás, se preciso:** `rollback-contencao.sql`. Ele reabre as exposições e só
+  deve ser usado se o app quebrar.
+- **Neon:** as mesmas correções estão nas migrations 0091/0093/0094. O banco `main`
+  do Neon (0073, ainda sem uso) as recebe no cutover, e
+  `aplicar-migrations-neon.sh depois` exige `ausente · 4/4 · 0 · 0 · 18/18`
+  antes de liberar.

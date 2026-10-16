@@ -125,7 +125,7 @@ describe("Modo Estudo: turma e grupos (PostgreSQL real)", { skip: !url && "POC_D
     assert.match((await attempt("select public.fn_platform_set_company_kind($1, 'business')", [turma])).error, /tem grupos/);
     // A lista da plataforma mostra tipo e turma (sem nome); professor não lê.
     const kinds = (await db.query("select company_id, company_kind, parent_company_id, groups::int from public.fn_platform_company_kinds() where company_id in ($1, $2)", [turma, grupo])).rows;
-    assert.deepEqual(kinds.sort((a, b) => (a.company_id === turma ? -1 : 1)), [
+    assert.deepEqual(kinds.sort((a) => (a.company_id === turma ? -1 : 1)), [
       { company_id: turma, company_kind: "study", parent_company_id: null, groups: 1 },
       { company_id: grupo, company_kind: "business", parent_company_id: turma, groups: 0 },
     ]);

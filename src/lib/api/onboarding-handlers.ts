@@ -188,7 +188,12 @@ export async function createPlatformCompany(request: NextRequest) {
     const body = await parseJson(request, createCompanySchema);
     const { data, error } = await supabase.rpc("fn_platform_create_company", createCompanyRpcArgs(body));
     if (error) throw dbError(error);
-    return ok(data, 201);
+    if (body.kind === "study") {
+      const created = data as { company_id: string };
+      const kind = await supabase.rpc("fn_platform_set_company_kind", { p_company_id: created.company_id, p_kind: "study" });
+      if (kind.error) throw dbError(kind.error);
+    }
+    return ok({ ...(data as object), company_kind: body.kind ?? "business" }, 201);
   } catch (error) {
     return jsonError(error);
   }

@@ -1,0 +1,83 @@
+import "server-only";
+
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { jsonError } from "./response";
+import { dbError, parseJson, requireCompanyUser, type IdRouteContext } from "./governance";
+
+// Modo Estudo (0096): a turma e seus grupos. Toda decisão é do banco
+// (fn_study_*), chamado com o cliente do PROFESSOR — empresa do tipo Estudo,
+// Administrador dela, grupo da própria turma. O professor recebe só
+// contagens dos grupos, nunca os dados deles.
+
+const ok = (data: unknown, status = 200) => NextResponse.json({ success: true, data }, { status, headers: { "Cache-Control": "no-store" } });
+
+// GET /api/admin/study — contexto da turma e grupos com contagens.
+export async function getStudyOverview() {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const ctx = await supabase.rpc("fn_study_context");
+    if (ctx.error) throw dbError(ctx.error);
+    const context = ctx.data as { is_study: boolean; can_manage: boolean; parent_name: string | null };
+    if (!context.can_manage) return ok({ context, groups: [] });
+    const groups = await supabase.rpc("fn_study_groups");
+    if (groups.error) throw dbError(groups.error);
+    return ok({ context, groups: groups.data ?? [] });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+const groupSchema = z.object({ name: z.string().trim().min(1, "Informe o nome do grupo.").max(160) }).strict();
+
+// POST /api/admin/study/groups { name }
+export async function createStudyGroup(request: NextRequest) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const body = await parseJson(request, groupSchema);
+    const { data, error } = await supabase.rpc("fn_study_create_group", { p_name: body.name });
+    if (error) throw dbError(error);
+    return ok(data, 201);
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+// GET /api/admin/study/groups/:id — papéis e alunos do grupo.
+export async function getStudyGroup(_request: NextRequest, context: IdRouteContext) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const { id } = await context.params;
+    const [roles, members] = await Promise.all([
+      supabase.rpc("fn_study_group_roles", { p_group_id: id }),
+      supabase.rpc("fn_study_group_members", { p_group_id: id }),
+    ]);
+    if (roles.error) throw dbError(roles.error);
+    if (members.error) throw dbError(members.error);
+    return ok({ roles: roles.data ?? [], members: members.data ?? [] });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+const memberSchema = z
+  .object({
+    name: z.string().trim().min(1, "Informe o nome do aluno.").max(160),
+    email: z.string().trim().toLowerCase().email("Informe um e-mail válido.").max(254),
+    roleId: z.string().uuid("Escolha o papel."),
+  })
+  .strict();
+
+// POST /api/admin/study/groups/:id/members { name, email, roleId }
+export async function addStudyGroupMember(request: NextRequest, context: IdRouteContext) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const { id } = await context.params;
+    const body = await parseJson(request, memberSchema);
+    const { data, error } = await supabase.rpc("fn_study_add_member", { p_group_id: id, p_name: body.name, p_email: body.email, p_role_id: body.roleId });
+    if (error) throw dbError(error);
+    return ok(data, 201);
+  } catch (error) {
+    return jsonError(error);
+  }
+}

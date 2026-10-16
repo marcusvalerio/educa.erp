@@ -58,6 +58,8 @@ export const createCompanySchema = strict({
     zipCode: optionalText(16),
     planCode: optionalText(64),
     lifecycleStatus: z.enum(["TRIAL", "ACTIVE"]).optional(),
+    // Estudo = turma: o Administrador (professor) cria grupos (0096).
+    kind: z.enum(["business", "study"]).optional(),
     branchCode: optionalText(16),
     branchName: optionalText(120),
   })

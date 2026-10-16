@@ -168,6 +168,68 @@ export async function revokeTemporaryPassword(_request: NextRequest, context: Id
   }
 }
 
+// ------------------------------------------------------------ professor (Modo Estudo, 0096)
+// Mesmo fluxo, com o convite emitido pelas funções da turma: o banco confere
+// que o aluno é de um grupo da turma de quem chama.
+
+type StudyInvitation = { invitation_id: string; token: string; email: string; user_id: string; user_name: string; expires_at: string };
+
+// POST /api/admin/study/members/:id/temporary-password
+export async function issueStudyMemberTemporaryPassword(_request: NextRequest, context: IdRouteContext) {
+  try {
+    requireSupabaseAuth();
+    const { supabase } = await requireCompanyUser();
+    const { id } = await context.params;
+    const result = await issueTemporaryPasswordFlow({
+      createInvitation: async () => {
+        const { data, error } = await supabase.rpc("fn_study_create_member_invitation", { p_user_id: id, p_ttl_hours: TEMPORARY_PASSWORD_TTL_HOURS });
+        if (error) throw dbError(error);
+        const r = data as StudyInvitation;
+        return { invitationId: r.invitation_id, token: r.token, email: r.email, userId: r.user_id, userName: r.user_name, expiresAt: r.expires_at };
+      },
+      revokeInvitation: async (invitationId) => {
+        await supabase.rpc("fn_study_revoke_member_invitation", { p_invitation_id: invitationId });
+      },
+      findLogin,
+      loginInUse,
+      createLogin: async (email, password, appMetadata) => {
+        const { error } = await createAdminClient().auth.admin.createUser({ email, password, email_confirm: true, app_metadata: appMetadata, user_metadata: {} });
+        if (error) throw new Error("Não foi possível criar o login.");
+      },
+      updateLogin: (authUserId, change) => updateLogin(authUserId, change),
+    });
+    return ok(result, 201);
+  } catch (error) {
+    return jsonError(toApiError(error));
+  }
+}
+
+// DELETE /api/admin/study/members/:id/temporary-password
+export async function revokeStudyMemberTemporaryPassword(_request: NextRequest, context: IdRouteContext) {
+  try {
+    requireSupabaseAuth();
+    const { supabase } = await requireCompanyUser();
+    const { id } = await context.params;
+    const result = await revokeTemporaryPasswordFlow({
+      pendingInvitation: async () => {
+        const { data, error } = await supabase.rpc("fn_study_member_pending_invitation", { p_user_id: id });
+        if (error) throw dbError(error);
+        const r = data as { id: string; email: string; user_id: string } | null;
+        return r ? { id: r.id, email: r.email, userId: r.user_id } : null;
+      },
+      revokeInvitation: async (invitationId) => {
+        const { error } = await supabase.rpc("fn_study_revoke_member_invitation", { p_invitation_id: invitationId });
+        if (error) throw dbError(error);
+      },
+      findLogin,
+      updateLogin: (authUserId, change) => updateLogin(authUserId, change),
+    });
+    return ok(result);
+  } catch (error) {
+    return jsonError(toApiError(error));
+  }
+}
+
 // ------------------------------------------------------------ pessoa (primeiro acesso)
 
 const changeSchema = z.object({

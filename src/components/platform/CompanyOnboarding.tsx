@@ -170,6 +170,7 @@ type CompanyForm = {
   address: string;
   planCode: string;
   lifecycleStatus: "TRIAL" | "ACTIVE";
+  kind: "business" | "study";
   withBranch: boolean;
   branchCode: string;
   branchName: string;
@@ -187,6 +188,7 @@ const EMPTY_COMPANY: CompanyForm = {
   address: "",
   planCode: "",
   lifecycleStatus: "TRIAL",
+  kind: "business",
   withBranch: true,
   branchCode: "MATRIZ",
   branchName: "Matriz",
@@ -309,7 +311,17 @@ export function NewCompanyDialog({ open, onClose, onCreated }: { open: boolean; 
               </FormField>
             </div>
           </div>
-          <div className="grid gap-3 border-t border-border pt-4 sm:grid-cols-2">
+          <div className="grid gap-3 border-t border-border pt-4 sm:grid-cols-3">
+            <FormField label="Tipo" help={form.kind === "study" ? "Turma: o administrador (professor) cria grupos isolados para os alunos." : "Empresa comum."}>
+              <Select
+                value={form.kind}
+                onValueChange={(v) => set("kind", (v || "business") as CompanyForm["kind"])}
+                options={[
+                  { value: "business", label: "Empresa" },
+                  { value: "study", label: "Estudo (turma)" },
+                ]}
+              />
+            </FormField>
             <FormField label="Situação inicial">
               <Select
                 value={form.lifecycleStatus}

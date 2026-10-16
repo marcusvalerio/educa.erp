@@ -2,18 +2,36 @@
 
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, textCol, dateCol, moneyCol, statusCol, refCol, statusFilter, overdueView, isRowOverdue, statusViews, combineViews } from "@/components/data-table/columns";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { toast } from "@/components/ui/Toast";
+import { useSession } from "@/components/shell/SessionProvider";
+import { NewSalesOrderDialog } from "@/components/commercial/NewSalesOrderDialog";
 import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import type { SalesOrderRow } from "@/lib/database/schema";
 
 export default function PedidosVendaPage() {
   const customers = useIdNameLookup("/api/customers");
+  const { can } = useSession();
+  const router = useRouter();
+  const [creating, setCreating] = useState(false);
 
   return (
+    <>
     <ResourceListPage<SalesOrderRow>
       title="Pedidos de venda"
       description="Pedidos confirmados com clientes — da aprovação à expedição e conclusão."
       apiPath="/api/sales-orders"
       searchPlaceholder="Buscar pedido ou cliente..."
+      actions={
+        can("sales_orders.create") ? (
+          <Button size="sm" onClick={() => setCreating(true)}>
+            <Plus size={14} aria-hidden /> Novo pedido
+          </Button>
+        ) : undefined
+      }
       columns={[
         codeCol<SalesOrderRow>("code", "Pedido"),
         refCol<SalesOrderRow>("customer_id", "Cliente", customers, { mobile: "meta" }),
@@ -36,5 +54,15 @@ export default function PedidosVendaPage() {
       rowHref={(row) => `/app/comercial/pedidos-venda/${row.id}`}
       emptyDescription="Quando houver registros, eles aparecem aqui."
     />
+    <NewSalesOrderDialog
+      open={creating}
+      onOpenChange={setCreating}
+      onCreated={(id) => {
+        setCreating(false);
+        toast.success("Pedido criado como rascunho.");
+        router.push(`/app/comercial/pedidos-venda/${id}`);
+      }}
+    />
+    </>
   );
 }

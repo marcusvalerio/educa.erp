@@ -1,3 +1,4 @@
+import { invalidateCache } from "@/lib/dashboard/client";
 import type { BaseEntity } from "./types";
 import type {
   Produto,
@@ -61,6 +62,9 @@ export function createRepository<T extends BaseEntity>(resourcePath: string): Re
   const listeners = new Set<() => void>();
 
   function notify() {
+    // Outras telas (pedido, movimentação, ordem de produção) leem a mesma
+    // coleção pelo cache curto de cachedGet: cadastro novo aparece nelas já.
+    invalidateCache(`/api/${resourcePath}`);
     listeners.forEach((listener) => listener());
   }
 

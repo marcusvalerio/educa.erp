@@ -8,7 +8,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { toast } from "@/components/ui/Toast";
 import { useSession } from "@/components/shell/SessionProvider";
-import { NewSalesOrderDialog } from "@/components/commercial/NewSalesOrderDialog";
+import { NewOrderDialog } from "@/components/commercial/NewOrderDialog";
 import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import type { SalesOrderRow } from "@/lib/database/schema";
 
@@ -54,7 +54,8 @@ export default function PedidosVendaPage() {
       rowHref={(row) => `/app/comercial/pedidos-venda/${row.id}`}
       emptyDescription="Quando houver registros, eles aparecem aqui."
     />
-    <NewSalesOrderDialog
+    <NewOrderDialog
+      kind="sale"
       open={creating}
       onOpenChange={setCreating}
       onCreated={(id) => {

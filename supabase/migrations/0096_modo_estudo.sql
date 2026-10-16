@@ -102,6 +102,25 @@ begin
 end;
 $$;
 
+/** Tipo e turma de cada empresa, para a lista da plataforma (sem nome: a Central só vê códigos). */
+create or replace function public.fn_platform_company_kinds()
+returns table (company_id uuid, company_kind text, parent_company_id uuid, groups bigint)
+language plpgsql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if not public.has_platform_permission('platform.companies.view') then
+    raise exception 'Permissão negada (platform.companies.view).' using errcode = '42501';
+  end if;
+  return query
+  select c.id, c.company_kind, c.parent_company_id,
+    (select count(*) from public.companies g where g.parent_company_id = c.id)
+  from public.companies c;
+end;
+$$;
+
 -- ------------------------------------------------------------------ professor
 -- Quem chama precisa ser usuário ativo de uma TURMA, com users.create,
 -- users.update e roles.manage nela (o Administrador da turma).
@@ -479,6 +498,7 @@ $$;
 -- ------------------------------------------------------------------ privilégios
 revoke all on function public.fn_guard_company_kind() from public, anon, authenticated;
 revoke all on function public.fn_platform_set_company_kind(uuid, text) from public, anon;
+revoke all on function public.fn_platform_company_kinds() from public, anon;
 revoke all on function public.fn_study_actor() from public, anon, authenticated;
 revoke all on function public.fn_study_group_of_actor(uuid, public.users) from public, anon, authenticated;
 revoke all on function public.fn_study_member_of_actor(uuid, public.users) from public, anon, authenticated;
@@ -493,6 +513,7 @@ revoke all on function public.fn_study_member_pending_invitation(uuid) from publ
 revoke all on function public.fn_study_revoke_member_invitation(uuid) from public, anon;
 
 grant execute on function public.fn_platform_set_company_kind(uuid, text) to authenticated;
+grant execute on function public.fn_platform_company_kinds() to authenticated;
 grant execute on function public.fn_study_context() to authenticated;
 grant execute on function public.fn_study_create_group(text) to authenticated;
 grant execute on function public.fn_study_groups() to authenticated;

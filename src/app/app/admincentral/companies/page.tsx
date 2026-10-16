@@ -50,6 +50,7 @@ export default function PlatformCompaniesPage() {
       }
       columns={[
         textCol<PlatformCompany>("company_id", "Empresa", { mono: true, mobile: "title", cell: (row) => companyRef(row.company_id), exportValue: (row) => row.company_id }),
+        textCol<PlatformCompany>("company_kind", "Tipo", { cell: (row) => (row.parent_company_id ? "Grupo de turma" : row.company_kind === "study" ? "Estudo (turma)" : "Empresa"), mobile: "meta" }),
         statusCol<PlatformCompany>("company_lifecycle", "lifecycle_status", "Ciclo de vida"),
         textCol<PlatformCompany>("plan_code", "Plano", { mono: true }),
         dateCol<PlatformCompany>("contracted_at", "Contratada em"),
@@ -79,6 +80,9 @@ function CompanyGovernance({ company, onChanged }: { company: PlatformCompany; o
   const canContract = canPlatform("platform.company_modules.manage");
   const modules = useCached<PlatformCompanyModule[]>(`/api/platform/companies/${company.company_id}/modules`, canPlatform("platform.company_modules.view"));
   const [status, setStatus] = useState<LifecycleStatus>(company.lifecycle_status);
+  const canKind = canPlatform("platform.companies.create");
+  const [kind, setKind] = useState<"business" | "study">(company.company_kind ?? "business");
+  const [confirmKind, setConfirmKind] = useState(false);
   const [notes, setNotes] = useState("");
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -93,6 +97,20 @@ function CompanyGovernance({ company, onChanged }: { company: PlatformCompany; o
       onChanged();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível alterar o ciclo de vida.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function applyKind() {
+    setBusy("kind");
+    try {
+      await platformSend(`/api/platform/companies/${company.company_id}/kind`, "POST", { kind });
+      toast.success(kind === "study" ? "Empresa agora é uma turma (Estudo)." : "Empresa voltou a ser empresa comum.");
+      setConfirmKind(false);
+      onChanged();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível alterar o tipo.");
     } finally {
       setBusy(null);
     }
@@ -123,6 +141,27 @@ function CompanyGovernance({ company, onChanged }: { company: PlatformCompany; o
       </dl>
 
       <CompanyAdminSection companyId={company.company_id} />
+
+      <section className="flex flex-col gap-3 border-t border-border pt-4">
+        <h3 className="text-sm font-semibold">Tipo</h3>
+        {company.parent_company_id ? (
+          <p className="text-sm text-muted-foreground">Grupo da turma <strong className="code">{companyRef(company.parent_company_id)}</strong>. Grupos não mudam de tipo.</p>
+        ) : canKind ? (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FormField label="Tipo da empresa" help={kind === "study" ? "Turma: o administrador (professor) cria grupos isolados em Administração → Grupos da turma." : "Empresa comum."}>
+                <Select value={kind} onValueChange={(v) => setKind((v || "business") as "business" | "study")} options={[{ value: "business", label: "Empresa" }, { value: "study", label: "Estudo (turma)" }]} />
+              </FormField>
+            </div>
+            {company.company_kind === "study" && company.study_groups > 0 && <p className="text-xs text-muted-foreground">{company.study_groups} {company.study_groups === 1 ? "grupo criado" : "grupos criados"}: a turma não pode voltar a ser empresa.</p>}
+            <div className="flex justify-end">
+              <Button size="sm" disabled={kind === company.company_kind} onClick={() => setConfirmKind(true)}>Aplicar tipo</Button>
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground">{company.company_kind === "study" ? "Estudo (turma)" : "Empresa"}</p>
+        )}
+      </section>
 
       <section className="flex flex-col gap-3 border-t border-border pt-4">
         <h3 className="text-sm font-semibold">Ciclo de vida</h3>
@@ -180,6 +219,22 @@ function CompanyGovernance({ company, onChanged }: { company: PlatformCompany; o
           </ul>
         )}
       </section>
+
+      {confirmKind && (
+        <ConfirmDialog
+          open
+          title={kind === "study" ? "Transformar em turma (Estudo)?" : "Voltar a ser empresa comum?"}
+          description={
+            kind === "study"
+              ? "Os dados da empresa continuam iguais. O administrador dela passa a poder criar grupos isolados para os alunos."
+              : "O administrador deixa de criar grupos. Os dados da empresa continuam iguais."
+          }
+          confirmLabel="Aplicar tipo"
+          loading={busy === "kind"}
+          onConfirm={applyKind}
+          onCancel={() => setConfirmKind(false)}
+        />
+      )}
 
       {confirm && (
         <ConfirmDialog

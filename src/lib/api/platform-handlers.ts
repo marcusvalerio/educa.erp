@@ -63,14 +63,18 @@ export async function getPlatformOverview() {
 export async function listPlatformCompanies() {
   try {
     const { supabase } = await requirePlatformMember();
-    const [profiles, companyModules] = await Promise.all([
+    const [profiles, companyModules, kinds] = await Promise.all([
       supabase
         .from("company_platform_profiles")
         .select("company_id, lifecycle_status, plan_code, contracted_at, suspended_at, cancelled_at, notes, created_at, updated_at")
         .order("created_at", { ascending: true }),
       supabase.from("company_modules").select("company_id, contracted, enabled_by_company"),
+      supabase.rpc("fn_platform_company_kinds"),
     ]);
     if (profiles.error) throw dbError(profiles.error);
+    // Tipo/turma (0096): sem a migration, a lista segue funcionando (tudo "empresa").
+    type Kind = { company_id: string; company_kind: string; parent_company_id: string | null; groups: number };
+    const kindById = new Map(((kinds.error ? [] : kinds.data) as Kind[] | null ?? []).map((k) => [k.company_id, k]));
     const counts = new Map<string, { contracted: number; enabled: number }>();
     for (const row of companyModules.data ?? []) {
       const entry = counts.get(row.company_id as string) ?? { contracted: 0, enabled: 0 };
@@ -83,8 +87,27 @@ export async function listPlatformCompanies() {
         ...row,
         modules_contracted: counts.get(row.company_id as string)?.contracted ?? 0,
         modules_enabled: counts.get(row.company_id as string)?.enabled ?? 0,
+        company_kind: kindById.get(row.company_id as string)?.company_kind ?? "business",
+        parent_company_id: kindById.get(row.company_id as string)?.parent_company_id ?? null,
+        study_groups: Number(kindById.get(row.company_id as string)?.groups ?? 0),
       }))
     );
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+const kindBody = z.object({ kind: z.enum(["business", "study"]) }).strict();
+
+// POST /api/platform/companies/:id/kind { kind } — Empresa ou Estudo (0096).
+export async function setPlatformCompanyKind(request: NextRequest, context: IdRouteContext) {
+  try {
+    const { supabase } = await requirePlatformMember();
+    const { id } = await context.params;
+    const body = await parseJson(request, kindBody);
+    const { data, error } = await supabase.rpc("fn_platform_set_company_kind", { p_company_id: id, p_kind: body.kind });
+    if (error) throw dbError(error);
+    return ok(data);
   } catch (error) {
     return jsonError(error);
   }

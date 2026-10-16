@@ -21,6 +21,10 @@ export type PlatformCompany = {
   updated_at: string;
   modules_contracted: number;
   modules_enabled: number;
+  /** 0096: business = empresa; study = turma. Grupo = empresa com parent. */
+  company_kind: "business" | "study";
+  parent_company_id: string | null;
+  study_groups: number;
 };
 
 export type PlatformCompanyModule = {

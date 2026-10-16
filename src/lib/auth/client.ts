@@ -14,15 +14,23 @@ import { authProvider } from "./provider";
 
 const neon = () => authProvider() === "neon";
 
-async function postJson(url: string, body: unknown): Promise<{ ok: boolean; status: number; data: unknown; message: string | null }> {
+async function postJson(url: string, body: unknown): Promise<{ ok: boolean; status: number; data: unknown; message: string | null; code: string | null }> {
   const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), cache: "no-store" });
-  const json = (await res.json().catch(() => null)) as { success?: boolean; data?: unknown; error?: { message?: string } } | null;
-  return { ok: res.ok && !!json?.success, status: res.status, data: json?.data ?? null, message: json?.error?.message ?? null };
+  const json = (await res.json().catch(() => null)) as { success?: boolean; data?: unknown; error?: { message?: string; code?: string } } | null;
+  return { ok: res.ok && !!json?.success, status: res.status, data: json?.data ?? null, message: json?.error?.message ?? null, code: json?.error?.code ?? null };
 }
 
 // ------------------------------------------------------------ login
 
-export type SignInResult = { ok: true } | { ok: false; message: string };
+/** `newPasswordRequired`: senha certa, mas provisória — a tela pede a senha nova. */
+export type SignInResult = { ok: true } | { ok: false; message: string; newPasswordRequired?: boolean };
+
+/** Marca da senha provisória no app_metadata (escrita só pelo servidor). */
+function temporaryState(appMetadata: Record<string, unknown> | undefined): "change_required" | "expired" | null {
+  const meta = appMetadata?.educa_temp_password as { expires_at?: string } | null | undefined;
+  if (!meta || typeof meta !== "object" || !meta.expires_at) return null;
+  return new Date(meta.expires_at) < new Date() ? "expired" : "change_required";
+}
 
 export async function signInWithPassword(email: string, password: string): Promise<SignInResult> {
   if (neon()) {
@@ -30,8 +38,16 @@ export async function signInWithPassword(email: string, password: string): Promi
     return res.ok ? { ok: true } : { ok: false, message: res.message ?? "E-mail ou senha inválidos. Confira os dados e tente novamente." };
   }
   const supabase = createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (!error) return { ok: true };
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (!error) {
+    // Senha provisória: a sessão não fica; a troca acontece no servidor.
+    const temporary = temporaryState(data.user?.app_metadata);
+    if (!temporary) return { ok: true };
+    await supabase.auth.signOut({ scope: "local" });
+    return temporary === "expired"
+      ? { ok: false, message: "A senha provisória expirou. Peça uma nova ao administrador." }
+      : { ok: false, message: "", newPasswordRequired: true };
+  }
   return {
     ok: false,
     message:
@@ -39,6 +55,17 @@ export async function signInWithPassword(email: string, password: string): Promi
         ? "Confirme o seu e-mail pelo link recebido antes de entrar."
         : "E-mail ou senha inválidos. Confira os dados e tente novamente.",
   };
+}
+
+/** A Administração pode gerar senha provisória (Supabase Auth). */
+export const temporaryPasswordAvailable = () => !neon();
+
+/** Primeiro login com a senha provisória: o servidor troca a senha; depois o navegador entra com a nova. */
+export async function changeTemporaryPassword(email: string, temporaryPassword: string, newPassword: string): Promise<SignInResult> {
+  if (neon()) return { ok: false, message: "Senha provisória indisponível neste ambiente." };
+  const res = await postJson("/api/auth/password/temporary", { email, temporaryPassword, newPassword });
+  if (!res.ok) return { ok: false, message: res.message ?? "Não foi possível criar a senha. Tente novamente." };
+  return signInWithPassword(email, newPassword);
 }
 
 // ------------------------------------------------------------ esqueci minha senha

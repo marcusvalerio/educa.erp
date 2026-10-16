@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Ban, Copy, MailPlus, Power, RotateCcw } from "lucide-react";
+import { Ban, Copy, KeyRound, MailPlus, Power, RotateCcw } from "lucide-react";
 import { Badge, type Tone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -11,6 +11,7 @@ import { toast } from "@/components/ui/Toast";
 import { useSession } from "@/components/shell/SessionProvider";
 import { formatDateTime } from "@/lib/format";
 import { userAccessStatus, type UserAccessStatus } from "@/lib/onboarding/invitations";
+import { temporaryPasswordAvailable } from "@/lib/auth/client";
 import { adminSend, type AdminInvitation, type AdminUser } from "./data";
 
 // Acesso ao sistema de um cadastro: convite (enviar, reenviar, cancelar),
@@ -30,6 +31,7 @@ export const ACCESS_STATUS_META: Record<UserAccessStatus, { label: string; tone:
 };
 
 type InviteResult = { email: string; expiresAt: string; inviteUrl: string; emailSent: boolean; deliveryNote: string | null };
+type TemporaryPasswordResult = { password: string; email: string; expiresAt: string };
 
 export function AccessStatusBadge({ status }: { status: UserAccessStatus }) {
   const meta = ACCESS_STATUS_META[status];
@@ -47,7 +49,41 @@ export function UserLoginPanel({ user, invitation, onChanged }: { user: AdminUse
   const status = userAccessStatus(user, invitation);
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<InviteResult | null>(null);
-  const [confirm, setConfirm] = useState<"revoke" | "deactivate" | "activate" | null>(null);
+  const [confirm, setConfirm] = useState<"revoke" | "deactivate" | "activate" | "temporary" | "revokeTemporary" | null>(null);
+  // Senha provisória: mostrada uma única vez, nunca guardada. Só para quem
+  // ainda não tem acesso (conta ativa troca a senha por "Esqueci minha senha").
+  const [temporary, setTemporary] = useState<TemporaryPasswordResult | null>(null);
+  const canTemporary = temporaryPasswordAvailable() && canUpdate && !isSelf && user.status === "active" && status !== "active";
+
+  async function issueTemporary() {
+    setBusy("temporary");
+    try {
+      const res = await adminSend<TemporaryPasswordResult>(`/api/admin/users/${user.id}/temporary-password`, "POST", {});
+      setTemporary(res);
+      setResult(null);
+      setConfirm(null);
+      toast.success("Senha provisória gerada.");
+      onChanged();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível gerar a senha provisória.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function revokeTemporary() {
+    setBusy("revokeTemporary");
+    try {
+      const res = await adminSend<{ revoked: boolean }>(`/api/admin/users/${user.id}/temporary-password`, "DELETE");
+      setTemporary(null);
+      setConfirm(null);
+      toast.success(res.revoked ? "Senha provisória revogada." : "Não havia senha provisória pendente.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível revogar.");
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function invite() {
     setBusy("invite");
@@ -80,10 +116,10 @@ export function UserLoginPanel({ user, invitation, onChanged }: { user: AdminUse
     }
   }
 
-  async function copy(url: string) {
+  async function copy(url: string, what = "Link") {
     try {
       await navigator.clipboard.writeText(url);
-      toast.success("Link copiado.");
+      toast.success(`${what} copiado.`);
     } catch {
       toast.error("Não foi possível copiar. Selecione o link e copie manualmente.");
     }
@@ -119,8 +155,33 @@ export function UserLoginPanel({ user, invitation, onChanged }: { user: AdminUse
         </Alert>
       )}
 
+      {temporary && (
+        <Alert tone="warning" title="Senha provisória — anote agora">
+          <p>
+            Entregue esta senha a {user.name} por um canal seguro (pessoalmente ou mensagem direta). Ela vale até {formatDateTime(temporary.expiresAt)}, só
+            serve para o primeiro acesso de {temporary.email} e <strong>não será mostrada de novo</strong>. No primeiro login a pessoa cria a própria senha.
+          </p>
+          <div className="mt-2 flex gap-2">
+            <Input readOnly value={temporary.password} aria-label="Senha provisória" className="code text-sm tracking-wide" onFocus={(e) => e.currentTarget.select()} />
+            <Button size="sm" variant="secondary" onClick={() => copy(temporary.password, "Senha")}>
+              <Copy size={14} aria-hidden /> Copiar
+            </Button>
+          </div>
+        </Alert>
+      )}
+
       {canUpdate ? (
         <div className="flex flex-wrap gap-2">
+          {canTemporary && (
+            <Button size="sm" variant="secondary" loading={busy === "temporary"} disabled={busy !== null} onClick={() => setConfirm("temporary")}>
+              <KeyRound size={14} aria-hidden /> Gerar senha provisória
+            </Button>
+          )}
+          {canTemporary && (
+            <Button size="sm" variant="ghost" loading={busy === "revokeTemporary"} disabled={busy !== null} onClick={() => setConfirm("revokeTemporary")}>
+              <Ban size={14} aria-hidden /> Revogar senha provisória
+            </Button>
+          )}
           {(status === "no_login" || status === "invite_expired" || status === "invite_pending") && (
             <Button size="sm" loading={busy === "invite"} disabled={busy !== null} onClick={invite}>
               {status === "invite_pending" ? <RotateCcw size={14} aria-hidden /> : <MailPlus size={14} aria-hidden />}
@@ -143,10 +204,27 @@ export function UserLoginPanel({ user, invitation, onChanged }: { user: AdminUse
           )}
         </div>
       ) : (
-        <p className="text-xs text-subtle-foreground">Convidar, desativar e reativar exigem a permissão de edição de usuários.</p>
+        <p className="text-xs text-subtle-foreground">Convidar, gerar senha provisória, desativar e reativar exigem a permissão de edição de usuários.</p>
       )}
 
-      {confirm && (
+      {(confirm === "temporary" || confirm === "revokeTemporary") && (
+        <ConfirmDialog
+          open
+          title={confirm === "temporary" ? `Gerar senha provisória para ${user.name}?` : "Revogar a senha provisória?"}
+          description={
+            confirm === "temporary"
+              ? "A senha aparece uma única vez para você entregar. No primeiro login a pessoa cria a própria senha. Uma senha provisória ou convite anterior deixa de valer."
+              : "A senha provisória deixa de funcionar imediatamente. Você pode gerar outra quando quiser."
+          }
+          confirmLabel={confirm === "temporary" ? "Gerar senha" : "Revogar"}
+          tone="danger"
+          loading={busy === confirm}
+          onConfirm={() => (confirm === "temporary" ? issueTemporary() : revokeTemporary())}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
+
+      {confirm && confirm !== "temporary" && confirm !== "revokeTemporary" && (
         <ConfirmDialog
           open
           title={confirm === "revoke" ? "Cancelar convite?" : confirm === "deactivate" ? `Desativar ${user.name}?` : `Reativar ${user.name}?`}

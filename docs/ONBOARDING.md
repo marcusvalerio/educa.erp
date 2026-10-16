@@ -325,6 +325,25 @@ exigir mais (senhas vazadas, por exemplo).
 
 ---
 
+## 3.1 Senha provisória (Supabase Auth)
+
+Alternativa ao convite por e-mail, na mesma tela (Administração → Usuários → cadastro → Acesso):
+
+1. O Administrador toca em **Gerar senha provisória**. O servidor chama `fn_create_user_invitation` com a sessão DELE, e o banco aplica as mesmas regras do convite: `users.update` na empresa do cadastro, `roles.manage` se o cadastro tiver papéis, cadastro ativo e sem login.
+2. O servidor gera 10 caracteres (letras maiúsculas e minúsculas e números, sem 0/O/o/1/l/I) e cria ou atualiza o login no Supabase Auth com e-mail confirmado e a marca `app_metadata.educa_temp_password` (convite, cadastro, validade de 72 h). A senha aparece **uma vez** para o Administrador e não é gravada no banco nem em log.
+3. A senha provisória nunca é aplicada a um login ligado a um cadastro (de qualquer empresa) ou à plataforma, nem a uma conta que já entrou com senha própria.
+4. No primeiro login, a tela pede a senha nova. A sessão do navegador é descartada e `POST /api/auth/password/temporary` faz, nesta ordem:
+   - entra com a provisória num cliente sem cookies;
+   - confere o convite;
+   - grava a senha nova;
+   - aceita o convite **como a pessoa** (`fn_accept_user_invitation`), o que liga `users.auth_user_id`;
+   - tira a marca.
+   Só então o navegador entra com a senha nova.
+5. Enquanto a marca existir, `getSessionIdentity` não reconhece a sessão. Sem o aceite, o login também não está ligado a cadastro nenhum, então a troca é obrigatória por construção.
+6. **Revogar senha provisória** revoga o convite pendente (pelo banco, com a sessão do Administrador) e troca a provisória por uma senha que ninguém conhece. Gerar de novo substitui a anterior.
+
+Não há migration: a autorização é a do convite (0071/0072). Para uma conta já ativa, a pessoa usa "Esqueci minha senha".
+
 ## 4. Proteção de rotas
 
 | Rota | Regra |

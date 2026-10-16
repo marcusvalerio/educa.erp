@@ -6,6 +6,7 @@ import { forgetNeonSession, neonConfig, SESSION_COOKIE, SESSION_MAX_AGE_SECONDS 
 import { signOut as neonSignOut } from "./neon/client";
 import { requestHints, resolveCurrentNeonSession } from "./neon/request";
 import { createSupabaseSessionClient } from "@/lib/supabase/server";
+import { readTemporaryMeta } from "./temporary-password";
 
 // Sessão do usuário, independente do provedor de identidade.
 //
@@ -32,6 +33,8 @@ export async function getSessionIdentity(): Promise<SessionIdentity | null> {
   const supabase = await createSupabaseSessionClient();
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return null;
+  // Senha provisória ainda não trocada: o login não vale como sessão.
+  if (readTemporaryMeta(data.user.app_metadata)) return null;
   return { authUserId: data.user.id, email: data.user.email ?? null };
 }
 

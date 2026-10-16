@@ -8,7 +8,7 @@ import { Select } from "@/components/ui/Controls";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
 import { ConfirmDialog } from "@/components/ui/Dialog";
-import { SkeletonRows } from "@/components/ui/Feedback";
+import { Alert, SkeletonRows } from "@/components/ui/Feedback";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { toast } from "@/components/ui/Toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/Menu";
@@ -66,6 +66,7 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [dependencyWarning, setDependencyWarning] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
   const [drawer, setDrawer] = useState<DrawerState | null>(null);
   const [saving, setSaving] = useState(false);
@@ -76,11 +77,18 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
   const [searchDraft, setSearchDraft] = useState<string | null>(null);
 
   // Carrega a entidade e os cadastros dos quais ela depende (ex.: nome da
-  // transportadora na lista de motoristas) antes de mostrar a tela.
+  // transportadora na lista de motoristas) antes de mostrar a tela. Só a
+  // falha da própria entidade bloqueia a lista; a de um cadastro auxiliar
+  // (ex.: unidades na tela de produtos) vira aviso e a lista aparece mesmo
+  // assim — antes, uma permissão faltando num auxiliar escondia tudo.
   useEffect(() => {
     let cancelled = false;
-    Promise.all([config.repository.hydrate(), ...(config.dependsOn ?? []).map((repo) => repo.hydrate())])
-      .then(() => !cancelled && setLoadError(null))
+    Promise.all([config.repository.hydrate(), Promise.allSettled((config.dependsOn ?? []).map((repo) => repo.hydrate()))])
+      .then(([, deps]) => {
+        if (cancelled) return;
+        setLoadError(null);
+        setDependencyWarning(deps.some((d) => d.status === "rejected"));
+      })
       .catch((error: unknown) => !cancelled && setLoadError(errorMessage(error, "Não foi possível carregar os dados.")))
       .finally(() => !cancelled && setLoading(false));
     return () => {
@@ -301,6 +309,13 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
               Limpar seleção
             </Button>
           </div>
+        )}
+
+        {dependencyWarning && !loadError && (
+          <Alert tone="warning" title="Algumas informações complementares não foram carregadas">
+            A lista está completa, mas nomes vinculados (como categoria, marca ou unidade) e as opções desses campos no formulário podem aparecer em branco.
+            Se o problema continuar, peça ao administrador da empresa para revisar as permissões do seu papel.
+          </Alert>
         )}
 
         {loading && all.length === 0 ? (

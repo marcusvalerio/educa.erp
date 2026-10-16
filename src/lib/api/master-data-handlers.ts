@@ -53,7 +53,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 // ---------------------------------------------------------------- unit conversion
 export async function convertUnitQuantity(request: NextRequest) {
   try {
-    await requireAccess("unit_conversions.read");
+    await requireAccess("categories.read");
     const body = await parseBody(request, convertUnitQuantitySchema);
     const ctx = await getAuthContext();
     if (!ctx) throw unauthorizedError();

@@ -32,11 +32,18 @@ const PERMISSION_MODULE: Record<EntityRoute, string> = {
   vehicles: "vehicles",
   users: "users",
   "warehouse-locations": "warehouse_locations",
-  "product-categories": "product_categories",
-  "product-brands": "product_brands",
-  units: "units",
-  "unit-conversions": "unit_conversions",
-  "product-suppliers": "product_suppliers",
+  // Categorias e marcas: o catálogo de permissões de produção tem
+  // categories.* e brands.* (não product_categories.*/product_brands.*,
+  // que nunca existiram lá — a lista de produtos falhava com 403).
+  "product-categories": "categories",
+  "product-brands": "brands",
+  // Unidades e conversões ainda não têm código próprio em produção (units.*
+  // e unit_conversions.* chegam com a 0091): seguem a família do catálogo,
+  // a mesma regra de concessão da 0091.
+  units: "categories",
+  "unit-conversions": "categories",
+  // Fornecedores do produto seguem o produto (vincular/remover = editar).
+  "product-suppliers": "products",
   warehouses: "warehouses",
   "product-lots": "product_lots",
   "sales-representatives": "sales_representatives",
@@ -57,7 +64,8 @@ async function requireAccess(entity: EntityRoute, action: "read" | "create" | "u
   const ctx = await getAuthContext();
   if (!ctx) throw unauthorizedError();
 
-  const permissionCode = `${PERMISSION_MODULE[entity]}.${action}`;
+  const mapped = entity === "product-suppliers" && action !== "read" ? "update" : action;
+  const permissionCode = `${PERMISSION_MODULE[entity]}.${mapped}`;
   const allowed = await hasPermission(ctx.companyId, permissionCode);
   if (!allowed) throw forbiddenError(permissionCode);
 

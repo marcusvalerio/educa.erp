@@ -58,7 +58,8 @@ export function WorkflowActions({ base, id, status, actions, onDone, extra }: { 
       {extra}
       {list.map((a, i) => (
         <Button key={a.id} size="sm" variant={a.tone === "danger" ? "ghost" : i === 0 && !extra ? "primary" : "secondary"} className={a.tone === "danger" ? "text-danger-fg" : undefined} onClick={() => setPending(a)}>
-          {a.icon} {a.label}
+          {a.icon}
+          {a.label}
         </Button>
       ))}
       {pending && (

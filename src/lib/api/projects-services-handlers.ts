@@ -1,4 +1,5 @@
 import "server-only";
+import { assertSameCompany } from "./same-company";
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -301,6 +302,11 @@ export async function createServiceOrder(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("service_orders.create");
     const body = await parseBody(request, serviceOrderSchema);
+    await assertSameCompany(companyId, [
+      ["customers", body.customerId, "Cliente"],
+      ["projects", body.projectId, "Projeto"],
+      ["users", body.responsibleUserId, "Responsável"],
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("service_orders")
@@ -330,6 +336,7 @@ export async function updateServiceOrder(request: NextRequest, context: RouteCon
     const { companyId } = await requireAccess("service_orders.update");
     const { id } = await context.params;
     const body = await parseBody(request, updateServiceOrderSchema);
+    await assertSameCompany(companyId, [["users", body.responsibleUserId, "Responsável"]]);
     const { data, error } = await createAdminClient()
       .from("service_orders")
       .update({

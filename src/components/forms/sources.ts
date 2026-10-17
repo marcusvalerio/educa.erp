@@ -20,6 +20,9 @@ export const SOURCES = {
   costCenters: { path: "/api/cost-centers", filter: ativo, label: (r: Row) => [s(r.code), s(r.name)].filter(Boolean).join(" — ") } as LookupSource,
   financialCategories: { path: "/api/financial-categories", filter: ativo, label: (r: Row) => [s(r.code), s(r.name)].filter(Boolean).join(" — ") } as LookupSource,
   financialAccounts: { path: "/api/financial-accounts", filter: ativo, label: (r: Row) => s(r.name) || String(r.id) } as LookupSource,
+  assets: { path: "/api/assets", filter: (r: Row) => !["DECOMMISSIONED", "INACTIVE"].includes(String(r.status ?? "")), label: (r: Row) => [s(r.code), s(r.description)].filter(Boolean).join(" — ") || String(r.id) } as LookupSource,
+  projects: { path: "/api/projects", filter: (r: Row) => !["COMPLETED", "CANCELLED"].includes(String(r.status ?? "")), label: (r: Row) => [s(r.code), s(r.name)].filter(Boolean).join(" — ") || String(r.id) } as LookupSource,
+  maintenancePlans: { path: "/api/maintenance-plans", filter: (r: Row) => (r.status ?? "active") === "active", label: (r: Row) => [s(r.code), s(r.description)].filter(Boolean).join(" — ") || String(r.id) } as LookupSource,
   users: { path: "/api/users", filter: ativo, label: (r: Row) => s(r.nome) || s(r.email) || String(r.id) } as LookupSource,
 };
 

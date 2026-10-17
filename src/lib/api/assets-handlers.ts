@@ -1,4 +1,5 @@
 import "server-only";
+import { assertSameCompany } from "./same-company";
 import { providedPartial } from "@/lib/validations/partial-update";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -357,6 +358,12 @@ export async function createMaintenanceOrder(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("maintenance_orders.create");
     const body = await parseBody(request, maintenanceOrderSchema);
+    await assertSameCompany(companyId, [
+      ["assets", body.assetId, "Ativo"],
+      ["maintenance_plans", body.planId, "Plano de manutenção"],
+      ["users", body.requestedBy, "Solicitante"],
+      ["users", body.assignedTo, "Responsável"],
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("maintenance_orders")
@@ -387,6 +394,7 @@ export async function updateMaintenanceOrder(request: NextRequest, context: Rout
     const { companyId } = await requireAccess("maintenance_orders.update");
     const { id } = await context.params;
     const body = await parseBody(request, updateMaintenanceOrderSchema);
+    await assertSameCompany(companyId, [["users", body.assignedTo, "Responsável"]]);
     const { data, error } = await createAdminClient()
       .from("maintenance_orders")
       .update({ cause: body.cause, solution: body.solution, priority: body.priority, scheduled_date: body.scheduledDate || undefined, assigned_to: body.assignedTo, notes: body.notes })

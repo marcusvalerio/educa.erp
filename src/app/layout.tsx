@@ -62,11 +62,18 @@ export const viewport: Viewport = {
 // só por CSS (prefers-color-scheme), sem atributo.
 const NO_FLASH_THEME_SCRIPT = `(function(){try{var v=window.localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(v==="dark"||v==="light")document.documentElement.setAttribute("data-theme",v);}catch(e){}})();`;
 
+// Anel de foco só para quem navega pelo teclado: toque e clique marcam
+// data-input="pointer" e o anel some (globals.css); Tab volta a mostrar.
+// Sem isso, alguns navegadores de celular deixavam o contorno no item do
+// menu depois de um toque.
+const INPUT_MODALITY_SCRIPT = `(function(){var d=document.documentElement;function s(v){if(d.getAttribute("data-input")!==v)d.setAttribute("data-input",v)}d.setAttribute("data-input","pointer");addEventListener("pointerdown",function(){s("pointer")},true);addEventListener("keydown",function(e){if(e.key==="Tab"||e.key.indexOf("Arrow")===0)s("keyboard")},true)})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={`${sans.variable} ${serif.variable} ${jetbrains.variable} h-full`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_THEME_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: INPUT_MODALITY_SCRIPT }} />
       </head>
       <body className="h-full">
         <ThemeProvider>

@@ -505,3 +505,10 @@
   scrollbar-width: thin;
   scrollbar-color: var(--color-border-strong) transparent;
 }
+
+/* Toque/clique: sem anel de foco (layout.tsx marca data-input). Fora das
+   camadas e com !important para valer também sobre os utilitários
+   focus-visible:outline-* dos componentes; o teclado (Tab) mantém o anel. */
+:root[data-input="pointer"] :focus-visible {
+  outline: none !important;
+}

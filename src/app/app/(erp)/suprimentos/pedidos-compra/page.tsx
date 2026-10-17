@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Ban, CheckCircle2, Lock, Plus, Send, Truck } from "lucide-react";
+import { Ban, CheckCircle2, Lock, PackagePlus, Plus, Send, Truck } from "lucide-react";
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, dateCol, moneyCol, statusCol, refCol, statusFilter, overdueView, isRowOverdue, statusViews, combineViews } from "@/components/data-table/columns";
 import { MiniTable } from "@/components/resource/DetailLayout";
@@ -11,6 +11,7 @@ import { ConfirmDialog } from "@/components/ui/Dialog";
 import { toast } from "@/components/ui/Toast";
 import { useSession } from "@/components/shell/SessionProvider";
 import { NewOrderDialog } from "@/components/commercial/NewOrderDialog";
+import { ReceiveOrderDialog } from "@/components/forms/ReceiveOrderDialog";
 import { useCached, invalidateCache } from "@/lib/dashboard/client";
 import { apiSend } from "@/lib/api-client";
 import { useIdNameLookup } from "@/lib/useIdNameLookup";
@@ -59,6 +60,7 @@ export default function PedidosCompraPage() {
   const [refresh, setRefresh] = useState(0);
   const [pending, setPending] = useState<{ action: ActionId; row: PurchaseOrderRow } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [receiving, setReceiving] = useState<string | null>(null);
 
   function reload() {
     invalidateCache("/api/purchase-orders");
@@ -123,9 +125,15 @@ export default function PedidosCompraPage() {
           render: (row) => <OrderItems key={`${row.id}-${refresh}`} id={row.id} />,
           actions: (row) => {
             const list = available(row);
-            if (list.length === 0) return null;
+            const canReceive = ["sent", "partially_received"].includes(dbStatusCode("purchase_orders", String(row.status ?? "")).toLowerCase()) && can("purchase_receipts.create");
+            if (list.length === 0 && !canReceive) return null;
             return (
               <div className="flex flex-wrap gap-2">
+                {canReceive && (
+                  <Button size="sm" onClick={() => setReceiving(row.id)}>
+                    <PackagePlus size={14} aria-hidden /> Receber mercadoria
+                  </Button>
+                )}
                 {list.map((key) => {
                   const a = ACTIONS[key];
                   const Icon = a.icon;
@@ -148,6 +156,17 @@ export default function PedidosCompraPage() {
         onCreated={() => {
           setCreating(false);
           toast.success("Pedido de compra criado como rascunho.", "Abra o pedido na lista para enviar para aprovação.");
+          reload();
+        }}
+      />
+      <ReceiveOrderDialog
+        key={receiving ?? "none"}
+        open={receiving !== null}
+        orderId={receiving}
+        onOpenChange={(o) => !o && setReceiving(null)}
+        onDone={() => {
+          setReceiving(null);
+          toast.success("Recebimento registrado.");
           reload();
         }}
       />

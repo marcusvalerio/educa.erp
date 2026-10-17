@@ -1,4 +1,5 @@
 import "server-only";
+import { providedPartial } from "@/lib/validations/partial-update";
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -153,7 +154,7 @@ export async function updateFiscalEstablishment(request: NextRequest, context: R
   try {
     const { companyId } = await requireAccess("fiscal_establishments.update");
     const { id } = await context.params;
-    const body = await parseBody(request, fiscalEstablishmentSchema.partial());
+    const body = await parseBody(request, providedPartial(fiscalEstablishmentSchema));
     if (Object.keys(body).length === 0) throw validationError("Nenhum dado para atualizar.");
     const { stateRegistration, municipalRegistration, addressNumber, zipCode, taxRegime, ...rest } = body;
     const { data, error } = await createAdminClient().from("fiscal_establishments")
@@ -201,7 +202,7 @@ export async function updateFiscalNcm(request: NextRequest, context: RouteContex
   try {
     const { companyId } = await requireAccess("fiscal_ncms.update");
     const { id } = await context.params;
-    const body = await parseBody(request, fiscalNcmSchema.partial());
+    const body = await parseBody(request, providedPartial(fiscalNcmSchema));
     if (Object.keys(body).length === 0) throw validationError("Nenhum dado para atualizar.");
     const { validFrom, validUntil, ...rest } = body;
     const { data, error } = await createAdminClient().from("fiscal_ncms")
@@ -244,7 +245,7 @@ export async function updateFiscalCfop(request: NextRequest, context: RouteConte
   try {
     const { companyId } = await requireAccess("fiscal_cfops.update");
     const { id } = await context.params;
-    const body = await parseBody(request, fiscalCfopSchema.partial());
+    const body = await parseBody(request, providedPartial(fiscalCfopSchema));
     if (Object.keys(body).length === 0) throw validationError("Nenhum dado para atualizar.");
     const { validFrom, validUntil, ...rest } = body;
     const { data, error } = await createAdminClient().from("fiscal_cfops")
@@ -286,7 +287,7 @@ export async function updateFiscalOperationNature(request: NextRequest, context:
   try {
     const { companyId } = await requireAccess("fiscal_operation_natures.update");
     const { id } = await context.params;
-    const body = await parseBody(request, fiscalOperationNatureSchema.partial());
+    const body = await parseBody(request, providedPartial(fiscalOperationNatureSchema));
     if (Object.keys(body).length === 0) throw validationError("Nenhum dado para atualizar.");
     const { defaultCfopId, ...rest } = body;
     const { data, error } = await createAdminClient().from("fiscal_operation_natures")
@@ -326,7 +327,7 @@ export async function updateFiscalCstCode(request: NextRequest, context: RouteCo
   try {
     const { companyId } = await requireAccess("fiscal_tax_codes.update");
     const { id } = await context.params;
-    const body = await parseBody(request, fiscalCstCodeSchema.partial());
+    const body = await parseBody(request, providedPartial(fiscalCstCodeSchema));
     if (Object.keys(body).length === 0) throw validationError("Nenhum dado para atualizar.");
     const { taxType, ...rest } = body;
     const { data, error } = await createAdminClient().from("fiscal_cst_codes")
@@ -365,7 +366,7 @@ export async function updateFiscalCsosnCode(request: NextRequest, context: Route
   try {
     const { companyId } = await requireAccess("fiscal_tax_codes.update");
     const { id } = await context.params;
-    const body = await parseBody(request, fiscalCsosnCodeSchema.partial());
+    const body = await parseBody(request, providedPartial(fiscalCsosnCodeSchema));
     if (Object.keys(body).length === 0) throw validationError("Nenhum dado para atualizar.");
     const { data, error } = await createAdminClient().from("fiscal_csosn_codes")
       .update(body).eq("company_id", companyId).eq("id", id).select("*").maybeSingle();

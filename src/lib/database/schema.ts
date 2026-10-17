@@ -31,6 +31,7 @@ export type ProductRow = {
   category_id: string | null;
   brand_id: string | null;
   unit_id: string | null;
+  production_type?: "purchased" | "manufactured" | "both";
   cost_price: number | null;
   sale_price: number | null;
   min_price: number | null;
@@ -255,6 +256,7 @@ export type WarehouseLocationRow = {
   code: string;
   name: string | null;
   warehouse: string | null;
+  warehouse_id?: string;
   purpose: LocationPurpose;
   zone: string | null;
   aisle: string | null;

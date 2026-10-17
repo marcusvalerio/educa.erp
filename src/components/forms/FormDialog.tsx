@@ -144,7 +144,7 @@ export type FormDialogProps = {
   toBody: (values: FormValues) => unknown;
   /** Validação simples antes de enviar (mensagem ou null). */
   validate?: (values: FormValues) => string | null;
-  onCreated: (created: Row) => void;
+  onCreated: (created: Row, values: FormValues) => void | Promise<void>;
   /** Coleções a invalidar depois de criar. */
   invalidate?: string[];
   size?: "sm" | "md" | "lg" | "xl";
@@ -171,8 +171,9 @@ export function FormDialog({ open, onOpenChange, title, description, submitLabel
     try {
       const created = await apiSend<Row>(path, "POST", toBody(values));
       for (const p of [path, ...invalidate]) invalidateCache(p);
+      const submitted = values;
       setValues(initialValues(fields));
-      onCreated(created ?? {});
+      await onCreated(created ?? {}, submitted);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível salvar.");
     } finally {

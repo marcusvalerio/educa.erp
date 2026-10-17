@@ -1,4 +1,5 @@
 import "server-only";
+import { providedPartial } from "@/lib/validations/partial-update";
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -764,7 +765,7 @@ export async function updateSerialNumber(request: NextRequest, context: RouteCon
   try {
     const { companyId } = await requireStockAccess(`${SERIAL_MODULE}.update`);
     const { id } = await context.params;
-    const body = await parseBody(request, productSerialNumberSchema.partial());
+    const body = await parseBody(request, providedPartial(productSerialNumberSchema));
 
     const patch: Record<string, unknown> = {};
     if (body.produtoId !== undefined) patch.product_id = body.produtoId;

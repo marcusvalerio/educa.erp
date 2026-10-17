@@ -176,6 +176,7 @@ export const produtoCadastroConfig: CadastroConfig<Produto> = {
     categoriaId: "",
     marcaId: "",
     unidadeId: "",
+    origem: "Comprado",
     precoCusto: 0,
     precoVenda: 0,
     precoMinimo: 0,

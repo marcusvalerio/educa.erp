@@ -36,6 +36,7 @@ export const productSchema = z.object({
   categoriaId: optionalText,
   marcaId: optionalText,
   unidadeId: optionalText,
+  origem: z.enum(["Comprado", "Fabricado", "Comprado e fabricado"]).optional(),
   precoCusto: optionalNumber,
   precoVenda: optionalNumber,
   precoMinimo: optionalNumber,

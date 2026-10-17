@@ -1,4 +1,5 @@
 import "server-only";
+import { providedPartial } from "@/lib/validations/partial-update";
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -84,7 +85,7 @@ export async function updateAssetCategory(request: NextRequest, context: RouteCo
   try {
     const { companyId } = await requireAccess("asset_categories.update");
     const { id } = await context.params;
-    const body = await parseBody(request, assetCategorySchema.partial());
+    const body = await parseBody(request, providedPartial(assetCategorySchema));
     const { data, error } = await createAdminClient().from("asset_categories").update(body).eq("id", id).eq("company_id", companyId).select("*").maybeSingle();
     if (error) throw translatePostgresError(error);
     if (!data) throw notFoundError("Categoria de ativo");
@@ -127,7 +128,7 @@ export async function updateAssetLocation(request: NextRequest, context: RouteCo
   try {
     const { companyId } = await requireAccess("asset_locations.update");
     const { id } = await context.params;
-    const body = await parseBody(request, assetLocationSchema.partial());
+    const body = await parseBody(request, providedPartial(assetLocationSchema));
     const { data, error } = await createAdminClient()
       .from("asset_locations")
       .update({ code: body.code, name: body.name, parent_id: body.parentId, description: body.description, status: body.status })
@@ -299,7 +300,7 @@ export async function updateMaintenancePlan(request: NextRequest, context: Route
   try {
     const { companyId } = await requireAccess("maintenance_plans.update");
     const { id } = await context.params;
-    const body = await parseBody(request, maintenancePlanSchema.partial());
+    const body = await parseBody(request, providedPartial(maintenancePlanSchema));
     const { data, error } = await createAdminClient()
       .from("maintenance_plans")
       .update({

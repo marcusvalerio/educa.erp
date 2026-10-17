@@ -1,5 +1,7 @@
 export type StatusCadastro = "Ativo" | "Inativo";
 
+export type OrigemProduto = "Comprado" | "Fabricado" | "Comprado e fabricado";
+
 export type BaseEntity = {
   id: string;
   status: StatusCadastro;
@@ -33,6 +35,8 @@ export type Produto = BaseEntity & {
   categoriaId: string;
   marcaId: string;
   unidadeId: string;
+  /** Comprado, fabricado ou ambos (products.production_type, 0026). */
+  origem: OrigemProduto;
   precoCusto: number;
   precoVenda: number;
   precoMinimo: number;
@@ -234,6 +238,8 @@ export type LocalEstoque = BaseEntity & {
   codigoLocal: string;
   descricao: string;
   armazem: string;
+  /** Depósito (warehouses.id) do local; só leitura. */
+  depositoId?: string;
   finalidade: FinalidadeLocal;
   area: string;
   rua: string;

@@ -1,4 +1,5 @@
 import "server-only";
+import { providedPartial } from "@/lib/validations/partial-update";
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -136,7 +137,7 @@ export async function updateFinancialCategory(request: NextRequest, context: Rou
   try {
     const { companyId } = await requireAccess("financial_categories.update");
     const { id } = await context.params;
-    const body = await parseBody(request, financialCategorySchema.partial());
+    const body = await parseBody(request, providedPartial(financialCategorySchema));
     if (Object.keys(body).length === 0) throw validationError("Nenhum dado para atualizar.");
     const { parentId, ...rest } = body;
     const { data, error } = await createAdminClient().from("financial_categories")
@@ -202,7 +203,7 @@ export async function updateCostCenter(request: NextRequest, context: RouteConte
   try {
     const { companyId } = await requireAccess("cost_centers.update");
     const { id } = await context.params;
-    const body = await parseBody(request, costCenterSchema.partial());
+    const body = await parseBody(request, providedPartial(costCenterSchema));
     if (Object.keys(body).length === 0) throw validationError("Nenhum dado para atualizar.");
     const { parentId, ...rest } = body;
     const { data, error } = await createAdminClient().from("cost_centers")

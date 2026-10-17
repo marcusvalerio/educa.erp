@@ -1,4 +1,5 @@
 import "server-only";
+import { providedPartial } from "@/lib/validations/partial-update";
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -86,7 +87,7 @@ export async function updateQualityChecklist(request: NextRequest, context: Rout
   try {
     const { companyId } = await requireAccess("quality_checklists.update");
     const { id } = await context.params;
-    const body = await parseBody(request, qualityChecklistSchema.partial());
+    const body = await parseBody(request, providedPartial(qualityChecklistSchema));
     const { data, error } = await createAdminClient().from("quality_checklists").update(body).eq("id", id).eq("company_id", companyId).select("*").maybeSingle();
     if (error) throw translatePostgresError(error);
     if (!data) throw notFoundError("Checklist de qualidade");

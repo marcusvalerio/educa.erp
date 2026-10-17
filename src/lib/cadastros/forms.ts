@@ -52,7 +52,15 @@ export const produtoForm: FormSection[] = [
         helpText: "Substitui gradualmente o campo Categoria acima.",
       },
       { key: "marcaId", label: "Marca", type: "select", optionsSource: "marcas-produto", span: 1 },
-      { key: "unidadeId", label: "Unidade (catálogo)", type: "select", optionsSource: "unidades-medida", span: 1 },
+      { key: "unidadeId", label: "Unidade (catálogo)", type: "select", optionsSource: "unidades-medida", span: 1, helpText: "Em branco, o sistema usa a unidade de medida acima." },
+      {
+        key: "origem",
+        label: "Origem",
+        type: "select",
+        options: ["Comprado", "Fabricado", "Comprado e fabricado"],
+        span: 1,
+        helpText: "Fabricado permite estrutura (BOM) e ordem de produção.",
+      },
     ],
   },
   {

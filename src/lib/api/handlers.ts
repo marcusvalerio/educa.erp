@@ -8,6 +8,8 @@ import { ApiError, notFoundError, unauthorizedError, forbiddenError, validationE
 import { getAuthContext, hasPermission } from "@/lib/auth/context";
 import type { ActorContext } from "@/lib/database/table";
 import { jsonError } from "./response";
+import { onlyProvided } from "@/lib/validations/partial-update";
+import { withCatalogUnit } from "./product-units";
 import type { StatusCadastro } from "@/lib/cadastros/types";
 
 // Handlers genéricos reutilizados pelas rotas de cadastro
@@ -115,7 +117,8 @@ export function createCollectionHandlers(entity: EntityRoute) {
       if (!body || typeof body !== "object") throw validationError("Corpo da requisição inválido.");
       const parsed = schema.safeParse(body);
       if (!parsed.success) throw validationError(firstIssueMessage(parsed.error));
-      const created = await table.create(companyId, parsed.data as never, actor);
+      const input = entity === "products" ? await withCatalogUnit(companyId, parsed.data as Record<string, unknown>) : parsed.data;
+      const created = await table.create(companyId, input as never, actor);
       return NextResponse.json({ success: true, data: created }, { status: 201 });
     } catch (error) {
       return jsonError(error);
@@ -151,8 +154,11 @@ export function createItemHandlers(entity: EntityRoute) {
       if (!body || typeof body !== "object") throw validationError("Corpo da requisição inválido.");
       const parsed = schema.partial().safeParse(body);
       if (!parsed.success) throw validationError(firstIssueMessage(parsed.error));
-      if (Object.keys(parsed.data).length === 0) throw validationError("Nenhum dado para atualizar.");
-      const updated = await table.update(companyId, id, parsed.data as never, actor);
+      // Só os campos enviados (o .partial() do zod 4 preencheria os ausentes com defaults).
+      const changes = onlyProvided(parsed.data as Record<string, unknown>, body);
+      if (Object.keys(changes).length === 0) throw validationError("Nenhum dado para atualizar.");
+      const finalChanges = entity === "products" && "unidade" in changes ? await withCatalogUnit(companyId, changes) : changes;
+      const updated = await table.update(companyId, id, finalChanges as never, actor);
       return NextResponse.json({ success: true, data: updated });
     } catch (error) {
       return jsonError(error);

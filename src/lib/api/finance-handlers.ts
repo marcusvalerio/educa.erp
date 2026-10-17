@@ -1,4 +1,5 @@
 import "server-only";
+import { assertSameCompany } from "./same-company";
 import { providedPartial } from "@/lib/validations/partial-update";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -171,6 +172,9 @@ export async function createCostCenter(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("cost_centers.create");
     const body = await parseBody(request, costCenterSchema);
+    await assertSameCompany(companyId, [
+      ["cost_centers", body.parentId, "Centro de custo superior"],
+    ]);
     const { data, error } = await createAdminClient().from("cost_centers").insert({
       company_id: companyId,
       code: body.code,

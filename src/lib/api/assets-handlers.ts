@@ -112,6 +112,9 @@ export async function createAssetLocation(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("asset_locations.create");
     const body = await parseBody(request, assetLocationSchema);
+    await assertSameCompany(companyId, [
+      ["asset_locations", body.parentId, "Local superior"],
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("asset_locations")
@@ -178,6 +181,13 @@ export async function createAsset(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("assets.create");
     const body = await parseBody(request, assetSchema);
+    await assertSameCompany(companyId, [
+      ["asset_categories", body.categoryId, "Categoria"],
+      ["cost_centers", body.costCenterId, "Centro de custo"],
+      ["asset_locations", body.locationId, "Local"],
+      ["assets", body.parentAssetId, "Ativo superior"],
+      ["suppliers", body.supplierId, "Fornecedor"],
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("assets")
@@ -272,6 +282,10 @@ export async function createMaintenancePlan(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("maintenance_plans.create");
     const body = await parseBody(request, maintenancePlanSchema);
+    await assertSameCompany(companyId, [
+      ["asset_categories", body.assetCategoryId, "Categoria"],
+      ["assets", body.assetId, "Ativo"],
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("maintenance_plans")

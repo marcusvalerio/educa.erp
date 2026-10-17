@@ -23,6 +23,17 @@ export const SOURCES = {
   assets: { path: "/api/assets", filter: (r: Row) => !["DECOMMISSIONED", "INACTIVE"].includes(String(r.status ?? "")), label: (r: Row) => [s(r.code), s(r.description)].filter(Boolean).join(" — ") || String(r.id) } as LookupSource,
   projects: { path: "/api/projects", filter: (r: Row) => !["COMPLETED", "CANCELLED"].includes(String(r.status ?? "")), label: (r: Row) => [s(r.code), s(r.name)].filter(Boolean).join(" — ") || String(r.id) } as LookupSource,
   maintenancePlans: { path: "/api/maintenance-plans", filter: (r: Row) => (r.status ?? "active") === "active", label: (r: Row) => [s(r.code), s(r.description)].filter(Boolean).join(" — ") || String(r.id) } as LookupSource,
+  assetCategories: { path: "/api/asset-categories", filter: (r: Row) => (r.status ?? "active") === "active", label: (r: Row) => [s(r.code), s(r.name)].filter(Boolean).join(" — ") } as LookupSource,
+  assetLocations: { path: "/api/asset-locations", filter: (r: Row) => (r.status ?? "active") === "active", label: (r: Row) => [s(r.code), s(r.name)].filter(Boolean).join(" — ") } as LookupSource,
+  checklists: { path: "/api/quality-checklists", filter: (r: Row) => (r.status ?? "active") === "active", label: (r: Row) => [s(r.code), s(r.name)].filter(Boolean).join(" — ") } as LookupSource,
+  inspections: { path: "/api/quality-inspections", label: (r: Row) => s(r.code) || String(r.id) } as LookupSource,
+  nonconformities: { path: "/api/nonconformities", filter: (r: Row) => !["CLOSED", "CANCELLED"].includes(String(r.status ?? "")), label: (r: Row) => [s(r.code), s(r.description)].filter(Boolean).join(" — ") } as LookupSource,
+  projectTasks: { path: "/api/project-tasks", filter: (r: Row) => !["DONE", "CANCELLED"].includes(String(r.status ?? "")), label: (r: Row) => [s(r.code), s(r.name)].filter(Boolean).join(" — ") } as LookupSource,
+  serviceOrders: { path: "/api/service-orders", filter: (r: Row) => !["COMPLETED", "CANCELLED"].includes(String(r.status ?? "")), label: (r: Row) => [s(r.code), s(r.title)].filter(Boolean).join(" — ") } as LookupSource,
+  purchaseRequests: { path: "/api/purchase-requests", filter: (r: Row) => ["approved", "partially_ordered"].includes(String(r.status ?? "").toLowerCase()), label: (r: Row) => s(r.code) || String(r.id) } as LookupSource,
+  ncms: { path: "/api/fiscal-ncms", filter: (r: Row) => (r.status ?? "active") === "active", label: (r: Row) => [s(r.code), s(r.description)].filter(Boolean).join(" — ") } as LookupSource,
+  cfops: { path: "/api/fiscal-cfops", filter: (r: Row) => (r.status ?? "active") === "active", label: (r: Row) => [s(r.code), s(r.description)].filter(Boolean).join(" — ") } as LookupSource,
+  depots: { path: "/api/warehouses", filter: ativo, label: (r: Row) => [s(r.codigo), s(r.nome)].filter(Boolean).join(" — ") || String(r.id) } as LookupSource,
   users: { path: "/api/users", filter: ativo, label: (r: Row) => s(r.nome) || s(r.email) || String(r.id) } as LookupSource,
 };
 

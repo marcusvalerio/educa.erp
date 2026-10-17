@@ -90,6 +90,10 @@ export async function createProject(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("projects.create");
     const body = await parseBody(request, projectSchema);
+    await assertSameCompany(companyId, [
+      ["customers", body.customerId, "Cliente"],
+      ["users", body.responsibleUserId, "Responsável"],
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("projects")
@@ -165,6 +169,10 @@ export async function createProjectTask(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("project_tasks.create");
     const body = await parseBody(request, projectTaskSchema);
+    await assertSameCompany(companyId, [
+      ["projects", body.projectId, "Projeto"],
+      ["project_tasks", body.parentTaskId, "Tarefa superior"],
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("project_tasks")
@@ -246,6 +254,12 @@ export async function createTimeEntry(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("time_entries.create");
     const body = await parseBody(request, timeEntrySchema);
+    await assertSameCompany(companyId, [
+      ["projects", body.projectId, "Projeto"],
+      ["project_tasks", body.taskId, "Tarefa"],
+      ["service_orders", body.serviceOrderId, "Ordem de serviço"],
+      ["users", body.userId, "Usuário"],
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("time_entries")

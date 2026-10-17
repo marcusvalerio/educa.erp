@@ -1,4 +1,5 @@
 import "server-only";
+import { assertSameCompany } from "./same-company";
 import { providedPartial } from "@/lib/validations/partial-update";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -166,6 +167,11 @@ export async function createQualityInspection(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("quality_inspections.create");
     const body = await parseBody(request, qualityInspectionSchema);
+    await assertSameCompany(companyId, [
+      ["quality_checklists", body.checklistId, "Checklist"],
+      ["products", body.productId, "Produto"],
+      ["product_lots", body.lotId, "Lote"],
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("quality_inspections")
@@ -284,6 +290,10 @@ export async function createNonconformity(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("nonconformities.create");
     const body = await parseBody(request, nonconformitySchema);
+    await assertSameCompany(companyId, [
+      ["quality_inspections", body.inspectionId, "Inspeção"],
+      ["users", body.responsibleUserId, "Responsável"],
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("nonconformities")
@@ -342,6 +352,10 @@ export async function createQualityAction(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("quality_actions.create");
     const body = await parseBody(request, qualityActionSchema);
+    await assertSameCompany(companyId, [
+      ["nonconformities", body.nonconformityId, "Não conformidade"],
+      ["users", body.responsibleUserId, "Responsável"],
+    ]);
     const ctx = await getAuthContext();
     const { data, error } = await createAdminClient()
       .from("quality_actions")

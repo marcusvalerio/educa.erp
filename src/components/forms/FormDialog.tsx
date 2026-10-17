@@ -43,6 +43,8 @@ export type FieldDef =
       required?: boolean;
       help?: string;
       source: LookupSource;
+      /** Rótulo do campo de cada linha (padrão: Produto). */
+      itemLabel?: string;
       /** Colunas numéricas por item além do produto (ex.: quantidade, preço). */
       columns: { key: string; label: string; default?: string; money?: boolean; fill?: (row: Row) => string }[];
     };
@@ -102,7 +104,7 @@ function ItemsField({ field, value, onChange, open }: { field: Extract<FieldDef,
       {lines.map((l) => (
         <div key={l.id} className="grid grid-cols-2 items-end gap-2 rounded-lg border border-border-subtle p-2 sm:flex sm:flex-wrap">
           <div className="col-span-2 sm:min-w-[14rem] sm:flex-1">
-            <FormField label="Produto">
+            <FormField label={field.itemLabel ?? "Produto"}>
               <Combobox value={l.ref} onValueChange={(v) => pick(l.id, v)} options={options} placeholder="Selecione" searchPlaceholder="Buscar por código ou nome..." emptyText="Nada encontrado." />
             </FormField>
           </div>

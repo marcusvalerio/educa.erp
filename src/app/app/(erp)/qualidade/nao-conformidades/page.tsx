@@ -1,17 +1,39 @@
 "use client";
 
+import { useState } from "react";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { useSession } from "@/components/shell/SessionProvider";
+import { invalidateCache } from "@/lib/dashboard/client";
+import { SimpleCreateDialog } from "@/components/forms/simple-forms";
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, textCol, dateCol, statusCol, statusFilter, enumFilter, statusViews } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { NonconformityRow } from "@/lib/database/schema";
 
 export default function NaoConformidadesPage() {
+  const { can } = useSession();
+  const [creating, setCreating] = useState(false);
+  const [refresh, setRefresh] = useState(0);
+  const reload = () => {
+    invalidateCache("/api/nonconformities");
+    setRefresh((n) => n + 1);
+  };
 
   return (
+    <>
     <ResourceListPage<NonconformityRow>
       title="Não conformidades"
       description="Desvios identificados em inspeções ou abertos diretamente, da análise ao tratamento."
       apiPath="/api/nonconformities"
+      refreshToken={refresh}
+      actions={
+        can("nonconformities.create") ? (
+          <Button size="sm" onClick={() => setCreating(true)}>
+            <Plus size={14} aria-hidden /> Nova não conformidade
+          </Button>
+        ) : undefined
+      }
       searchPlaceholder="Buscar NC ou descrição..."
       columns={[
         codeCol<NonconformityRow>("code", "NC"),
@@ -33,7 +55,9 @@ export default function NaoConformidadesPage() {
         subtitle: (row) => row.description,
         badges: (row) => <StatusBadge entity="nonconformities" status={row.status} />,
       }}
-      emptyDescription="Quando houver registros, eles aparecem aqui."
+      emptyDescription="Crie o primeiro pelo botão Nova não conformidade."
     />
+    <SimpleCreateDialog form="nonconformities" open={creating} onOpenChange={setCreating} onCreated={() => { setCreating(false); reload(); }} />
+    </>
   );
 }

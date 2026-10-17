@@ -1,5 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { useSession } from "@/components/shell/SessionProvider";
+import { invalidateCache } from "@/lib/dashboard/client";
+import { SimpleCreateDialog } from "@/components/forms/simple-forms";
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, dateTimeCol, statusCol, refCol, statusFilter, statusViews } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -7,13 +13,29 @@ import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import type { StockTransferRow } from "@/lib/database/schema";
 
 export default function TransferenciasPage() {
+  const { can } = useSession();
+  const [creating, setCreating] = useState(false);
+  const [refresh, setRefresh] = useState(0);
+  const reload = () => {
+    invalidateCache("/api/stock-transfers");
+    setRefresh((n) => n + 1);
+  };
   const locations = useIdNameLookup("/api/warehouse-locations");
 
   return (
+    <>
     <ResourceListPage<StockTransferRow>
       title="Transferências entre locais"
       description="Transferências de estoque entre locais, do envio à confirmação de recebimento."
       apiPath="/api/stock-transfers"
+      refreshToken={refresh}
+      actions={
+        can("stock.create") ? (
+          <Button size="sm" onClick={() => setCreating(true)}>
+            <Plus size={14} aria-hidden /> Nova transferência
+          </Button>
+        ) : undefined
+      }
       searchPlaceholder="Buscar transferência ou local..."
       columns={[
         codeCol<StockTransferRow>("code", "Transferência"),
@@ -31,7 +53,9 @@ export default function TransferenciasPage() {
         title: (row) => row.code,
         badges: (row) => <StatusBadge entity="stock_transfers" status={row.status} />,
       }}
-      emptyDescription="Quando houver registros, eles aparecem aqui."
+      emptyDescription="Crie o primeiro pelo botão Nova transferência."
     />
+    <SimpleCreateDialog form="transfers" open={creating} onOpenChange={setCreating} onCreated={() => { setCreating(false); reload(); }} />
+    </>
   );
 }

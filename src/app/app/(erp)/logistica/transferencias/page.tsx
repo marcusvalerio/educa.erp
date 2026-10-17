@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/Button";
 import { useSession } from "@/components/shell/SessionProvider";
 import { invalidateCache } from "@/lib/dashboard/client";
 import { SimpleCreateDialog } from "@/components/forms/simple-forms";
+import { WorkflowActions, type WorkflowAction } from "@/components/forms/WorkflowActions";
+import { dbStatusCode } from "@/lib/status";
+
+const ACTIONS: WorkflowAction[] = [
+  { id: "ship", label: "Despachar", path: "ship", permission: "stock.transfer", statuses: ["draft"], confirm: "Os produtos saem do local de origem e ficam em trânsito.", success: "Transferência despachada." },
+  { id: "receive", label: "Receber no destino", path: "receive", permission: "stock.transfer", statuses: ["in_transit"], confirm: "Os produtos entram no local de destino.", success: "Transferência recebida." },
+  { id: "cancel", label: "Cancelar", path: "cancel", permission: "stock.transfer", statuses: ["draft"], confirm: "A transferência é cancelada.", success: "Transferência cancelada.", tone: "danger" },
+];
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, dateTimeCol, statusCol, refCol, statusFilter, statusViews } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -50,6 +58,7 @@ export default function TransferenciasPage() {
         statusFilter<StockTransferRow>("stock_transfers", "status", { server: true }),
       ]}
       detail={{
+        actions: (row) => <WorkflowActions base="/api/stock-transfers" id={String(row.id)} status={dbStatusCode("stock_transfers", String(row.status ?? ""))} actions={ACTIONS} onDone={reload} />,
         title: (row) => row.code,
         badges: (row) => <StatusBadge entity="stock_transfers" status={row.status} />,
       }}

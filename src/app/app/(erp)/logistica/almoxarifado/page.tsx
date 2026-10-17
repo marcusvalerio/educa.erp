@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/Button";
 import { useSession } from "@/components/shell/SessionProvider";
 import { invalidateCache } from "@/lib/dashboard/client";
 import { SimpleCreateDialog } from "@/components/forms/simple-forms";
+import { WorkflowActions, type WorkflowAction } from "@/components/forms/WorkflowActions";
+import { dbStatusCode } from "@/lib/status";
+
+const ACTIONS: WorkflowAction[] = [
+  { id: "deliver", label: "Entregar material", path: "deliver", permission: "stock.transfer", statuses: ["requested"], confirm: "O material sai do almoxarifado e é baixado do estoque como consumo (não entra em outro local).", success: "Material entregue." },
+  { id: "cancel", label: "Cancelar", path: "cancel", permission: "stock.request", statuses: ["requested"], confirm: "A requisição é cancelada.", success: "Requisição cancelada.", tone: "danger" },
+];
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, dateCol, dateTimeCol, statusCol, refCol, statusFilter, statusViews } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -50,6 +57,7 @@ export default function AlmoxarifadoPage() {
         statusFilter<MaterialRequestRow>("material_requests", "status", { server: true }),
       ]}
       detail={{
+        actions: (row) => <WorkflowActions base="/api/material-requests" id={String(row.id)} status={dbStatusCode("material_requests", String(row.status ?? ""))} actions={ACTIONS} onDone={reload} />,
         title: (row) => row.code,
         badges: (row) => <StatusBadge entity="material_requests" status={row.status} />,
       }}

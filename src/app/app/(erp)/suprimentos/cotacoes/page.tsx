@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/Button";
 import { useSession } from "@/components/shell/SessionProvider";
 import { invalidateCache } from "@/lib/dashboard/client";
 import { SimpleCreateDialog } from "@/components/forms/simple-forms";
+import { WorkflowActions, type WorkflowAction } from "@/components/forms/WorkflowActions";
+import { QuoteSuppliers } from "@/components/forms/StepPanels";
+import { dbStatusCode } from "@/lib/status";
+
+const ACTIONS: WorkflowAction[] = [
+  { id: "cancel", label: "Cancelar cotação", path: "cancel", permission: "purchase_quotes.update", statuses: ["draft", "sent"], confirm: "A cotação é cancelada.", success: "Cotação cancelada.", tone: "danger" },
+];
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, dateCol, statusCol, statusFilter } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -43,6 +50,8 @@ export default function CotacoesPage() {
       ]}
       filters={[statusFilter<PurchaseQuoteRow>("purchase_quotes", "status", { server: true })]}
       detail={{
+        render: (row) => <QuoteSuppliers key={`${String(row.id)}-${refresh}`} quoteId={String(row.id)} status={dbStatusCode("purchase_quotes", String(row.status ?? "")).toLowerCase()} onChanged={reload} />,
+        actions: (row) => <WorkflowActions base="/api/purchase-quotes" id={String(row.id)} status={dbStatusCode("purchase_quotes", String(row.status ?? ""))} actions={ACTIONS} onDone={reload} />,
         title: (row) => row.code,
         badges: (row) => <StatusBadge entity="purchase_quotes" status={row.status} />,
       }}

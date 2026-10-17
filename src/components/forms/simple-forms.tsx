@@ -262,7 +262,7 @@ export const SIMPLE_FORMS = {
   },
   materialRequests: {
     title: "Nova requisição de material",
-    description: "Pede material do almoxarifado para um local de uso (ex.: produção).",
+    description: "Pede material do almoxarifado para uso (ex.: produção). Na entrega, o material é baixado do estoque como consumo.",
     submitLabel: "Requisitar",
     path: "/api/material-requests",
     success: "Requisição criada.",

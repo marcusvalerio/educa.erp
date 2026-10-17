@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/Button";
 import { useSession } from "@/components/shell/SessionProvider";
 import { invalidateCache } from "@/lib/dashboard/client";
 import { SimpleCreateDialog } from "@/components/forms/simple-forms";
+import { WorkflowActions, type WorkflowAction } from "@/components/forms/WorkflowActions";
+import { CountItems } from "@/components/forms/StepPanels";
+import { dbStatusCode } from "@/lib/status";
+
+const ACTIONS: WorkflowAction[] = [
+  { id: "close", label: "Encerrar e ajustar estoque", path: "close", permission: "stock.approve", statuses: ["counting"], confirm: "As diferenças contadas viram ajustes de estoque. Itens não contados ficam como estão.", success: "Contagem encerrada." },
+  { id: "cancel", label: "Cancelar contagem", path: "cancel", permission: "stock.count", statuses: ["counting"], confirm: "Nada é ajustado.", success: "Contagem cancelada.", tone: "danger" },
+];
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, dateTimeCol, statusCol, refCol, statusFilter } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -45,6 +53,8 @@ export default function InventarioPage() {
       ]}
       filters={[statusFilter<StockCountRow>("stock_counts", "status", { server: true })]}
       detail={{
+        render: (row) => <CountItems key={`${String(row.id)}-${refresh}`} countId={String(row.id)} status={dbStatusCode("stock_counts", String(row.status ?? "")).toLowerCase()} onChanged={reload} />,
+        actions: (row) => <WorkflowActions base="/api/stock-counts" id={String(row.id)} status={dbStatusCode("stock_counts", String(row.status ?? ""))} actions={ACTIONS} onDone={reload} />,
         title: (row) => row.code,
         badges: (row) => <StatusBadge entity="stock_counts" status={row.status} />,
       }}

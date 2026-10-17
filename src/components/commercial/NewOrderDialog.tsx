@@ -33,6 +33,17 @@ const KINDS = {
     toParty: (c: Cliente): Party => ({ id: c.id, status: c.status, label: c.nome }),
     priceOf: (p: Produto) => p.precoVenda,
   },
+  quote: {
+    title: "Novo orçamento",
+    description: "O orçamento nasce como rascunho. Envie ao cliente e, aprovado, gere o pedido de venda pelo detalhe.",
+    partyPath: "/api/customers",
+    partyLabel: "Cliente",
+    partyEmpty: "Nenhum cliente ativo.",
+    partyKey: "customerId",
+    apiPath: "/api/sales-quotes",
+    toParty: (c: Cliente): Party => ({ id: c.id, status: c.status, label: c.nome }),
+    priceOf: (p: Produto) => p.precoVenda,
+  },
   purchase: {
     title: "Novo pedido de compra",
     description: "O pedido nasce como rascunho. Depois, envie para aprovação e, aprovado, envie ao fornecedor.",
@@ -150,7 +161,7 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
         }),
         discount: toNumber(discount),
         freightCost: toNumber(freight),
-        expectedDeliveryAt: expected || undefined,
+        ...(kind === "quote" ? { validUntil: expected || undefined } : { expectedDeliveryAt: expected || undefined }),
         notes: notes.trim() || undefined,
       });
       invalidateCache(cfg.apiPath);
@@ -179,7 +190,7 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
             Cancelar
           </Button>
           <Button onClick={submit} loading={busy} disabled={!!loadError}>
-            Criar pedido
+            {kind === "quote" ? "Criar orçamento" : "Criar pedido"}
           </Button>
         </>
       }
@@ -232,7 +243,7 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
           <FormField label="Frete (R$)">
             <Input type="number" inputMode="decimal" min={0} step="0.01" value={freight} onChange={(e) => setFreight(e.target.value)} />
           </FormField>
-          <FormField label="Entrega prevista">
+          <FormField label={kind === "quote" ? "Válido até" : "Entrega prevista"}>
             <Input type="date" value={expected} onChange={(e) => setExpected(e.target.value)} />
           </FormField>
         </div>

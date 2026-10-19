@@ -492,6 +492,7 @@ export function warehouseLocationToRowFields(data: Partial<LocalEstoque>): Parti
     code: data.codigoLocal,
     name: nullableText(data.descricao),
     warehouse: nullableText(data.armazem),
+    warehouse_id: data.depositoId || undefined,
     purpose: finalidadeToDb(data.finalidade),
     zone: nullableText(data.area),
     aisle: nullableText(data.rua),

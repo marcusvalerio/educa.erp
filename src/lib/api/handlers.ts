@@ -10,6 +10,7 @@ import type { ActorContext } from "@/lib/database/table";
 import { jsonError } from "./response";
 import { onlyProvided } from "@/lib/validations/partial-update";
 import { withCatalogUnit } from "./product-units";
+import { withWarehouse } from "./warehouse-link";
 import type { StatusCadastro } from "@/lib/cadastros/types";
 
 // Handlers genéricos reutilizados pelas rotas de cadastro
@@ -117,7 +118,8 @@ export function createCollectionHandlers(entity: EntityRoute) {
       if (!body || typeof body !== "object") throw validationError("Corpo da requisição inválido.");
       const parsed = schema.safeParse(body);
       if (!parsed.success) throw validationError(firstIssueMessage(parsed.error));
-      const input = entity === "products" ? await withCatalogUnit(companyId, parsed.data as Record<string, unknown>) : parsed.data;
+      const data = parsed.data as Record<string, unknown>;
+      const input = entity === "products" ? await withCatalogUnit(companyId, data) : entity === "warehouse-locations" ? await withWarehouse(companyId, data) : data;
       const created = await table.create(companyId, input as never, actor);
       return NextResponse.json({ success: true, data: created }, { status: 201 });
     } catch (error) {
@@ -157,7 +159,12 @@ export function createItemHandlers(entity: EntityRoute) {
       // Só os campos enviados (o .partial() do zod 4 preencheria os ausentes com defaults).
       const changes = onlyProvided(parsed.data as Record<string, unknown>, body);
       if (Object.keys(changes).length === 0) throw validationError("Nenhum dado para atualizar.");
-      const finalChanges = entity === "products" && "unidade" in changes ? await withCatalogUnit(companyId, changes) : changes;
+      const finalChanges =
+        entity === "products" && "unidade" in changes
+          ? await withCatalogUnit(companyId, changes)
+          : entity === "warehouse-locations" && "armazem" in changes
+            ? await withWarehouse(companyId, changes)
+            : changes;
       const updated = await table.update(companyId, id, finalChanges as never, actor);
       return NextResponse.json({ success: true, data: updated });
     } catch (error) {

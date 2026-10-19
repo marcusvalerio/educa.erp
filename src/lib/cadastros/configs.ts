@@ -18,6 +18,7 @@ import {
   veiculosRepository,
   usuariosRepository,
   locaisEstoqueRepository,
+  depositosRepository,
   categoriasProdutoRepository,
   marcasProdutoRepository,
   unidadesMedidaRepository,
@@ -506,5 +507,5 @@ export const localEstoqueCadastroConfig: CadastroConfig<LocalEstoque> = {
         .map((p) => ({ label: p.descricao, sublabel: p.codigo })),
     },
   ],
-  dependsOn: [produtosRepository],
+  dependsOn: [produtosRepository, depositosRepository],
 };

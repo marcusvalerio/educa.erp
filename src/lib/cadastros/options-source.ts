@@ -6,6 +6,7 @@ import {
   categoriasProdutoRepository,
   marcasProdutoRepository,
   unidadesMedidaRepository,
+  depositosRepository,
 } from "./repository";
 
 export type OptionsSourceKey =
@@ -15,7 +16,8 @@ export type OptionsSourceKey =
   | "motoristas"
   | "categorias-produto"
   | "marcas-produto"
-  | "unidades-medida";
+  | "unidades-medida"
+  | "depositos";
 
 export type SelectOption = { value: string; label: string };
 
@@ -61,6 +63,12 @@ export function resolveOptionsSource(key: OptionsSourceKey): SelectOption[] {
         .list()
         .filter((u) => u.status === "Ativo")
         .map((u) => ({ value: u.id, label: `${u.codigo} — ${u.nome}` }));
+    case "depositos":
+      // Valor = código (é o que o local guarda); o servidor liga ao depósito.
+      return depositosRepository
+        .list()
+        .filter((d) => d.status === "Ativo")
+        .map((d) => ({ value: d.codigo, label: d.nome ? `${d.codigo} — ${d.nome}` : d.codigo }));
     default:
       return [];
   }

@@ -123,3 +123,15 @@ describe("warehouseLocationFromRow / warehouseLocationToRowFields — finalidade
     assert.equal(fields.purpose, "OPERATIONAL_WAREHOUSE");
   });
 });
+
+describe("warehouseLocationToRowFields — vínculo com o depósito", () => {
+  test("grava warehouse_id quando o depósito foi resolvido", () => {
+    const fields = warehouseLocationToRowFields({ codigoLocal: "A-01", armazem: "CD01", depositoId: "11111111-1111-1111-1111-111111111111", tipo: "Prateleira" });
+    assert.equal(fields.warehouse, "CD01");
+    assert.equal(fields.warehouse_id, "11111111-1111-1111-1111-111111111111");
+  });
+  test("sem depósito resolvido não envia warehouse_id vazio", () => {
+    const fields = warehouseLocationToRowFields({ descricao: "Só a descrição" });
+    assert.equal("warehouse_id" in fields, false);
+  });
+});

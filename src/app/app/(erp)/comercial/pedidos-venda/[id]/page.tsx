@@ -22,7 +22,8 @@ import { reservationFeedback } from "@/lib/reservation-feedback";
 import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import { dbStatusCode } from "@/lib/status";
 import { formatCurrencyBRL, formatDate } from "@/lib/format";
-import type { AccountsReceivableRow, SalesOrderItemRow, SalesOrderRow, ShipmentRow } from "@/lib/database/schema";
+import type { AccountsReceivableRow, FiscalDocumentRow, SalesOrderItemRow, SalesOrderRow, ShipmentRow } from "@/lib/database/schema";
+import { IssueOrderNfeButton, NfeOutputLinks } from "@/components/fiscal/NfeActions";
 
 // Detalhe do pedido de venda. As ações mostradas dependem do status
 // atual E da permissão do usuário; a regra de transição continua no
@@ -48,6 +49,8 @@ export default function PedidoVendaDetailPage() {
   const shipments = useCached<ShipmentRow[]>(`/api/shipments?salesOrderId=${id}`, shipmentsOk);
   const receivables = useCached<AccountsReceivableRow[]>(receivablesOk && order.data ? `/api/accounts-receivable?customerId=${order.data.customer_id}` : null, receivablesOk);
   const customers = useIdNameLookup("/api/customers");
+  const fiscalOk = can("fiscal_documents.view");
+  const fiscalDocs = useCached<FiscalDocumentRow[]>(fiscalOk ? `/api/fiscal-documents?sourceId=${id}` : null, fiscalOk);
   const locations = useIdNameLookup("/api/warehouse-locations");
   const [pending, setPending] = useState<ActionId | null>(null);
   const [busy, setBusy] = useState(false);
@@ -70,6 +73,8 @@ export default function PedidoVendaDetailPage() {
     order.reload();
     shipments.reload();
     receivables.reload();
+    invalidateCache(`/api/fiscal-documents`);
+    fiscalDocs.reload();
   }
 
   async function run(action: ActionId) {
@@ -127,6 +132,9 @@ export default function PedidoVendaDetailPage() {
   const address = [o.delivery_address, o.delivery_address_number, o.delivery_address_complement, o.delivery_neighborhood, o.delivery_city, o.delivery_state].filter(Boolean).join(", ");
   const orderReceivables = (receivables.data ?? []).filter((r) => r.origin_id === o.id);
   const customerName = customers.get(o.customer_id);
+  // NF-e do pedido: a autorizada abre DANFE/XML; sem nota, pedido aprovado pode emitir.
+  const nfe = (fiscalDocs.data ?? []).find((d) => d.type === "NFE" && d.status !== "CANCELLED");
+  const canIssueNfe = !o.fiscal_access_key && !["draft", "pending_approval", "cancelled"].includes(status) && (!nfe || nfe.status !== "AUTHORIZED");
 
   return (
     <div className="flex flex-col gap-4">
@@ -144,6 +152,8 @@ export default function PedidoVendaDetailPage() {
         }
         actions={
           <>
+            {nfe?.status === "AUTHORIZED" && <NfeOutputLinks documentId={nfe.id} />}
+            {canIssueNfe && <IssueOrderNfeButton orderId={o.id} onDone={refresh} />}
             {canReserve && (
               <Button size="sm" onClick={() => { setReserveError(null); setReserveOpen(true); }}>
                 <PackageCheck size={14} aria-hidden />

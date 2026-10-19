@@ -624,6 +624,8 @@ export async function listFiscalDocuments(request: NextRequest) {
     if (status) query = query.eq("status", status);
     if (type) query = query.eq("type", type);
     if (fiscalEstablishmentId) query = query.eq("fiscal_establishment_id", fiscalEstablishmentId);
+    const sourceId = searchParams.get("sourceId");
+    if (sourceId) query = query.eq("source_id", sourceId);
     const { data, error } = await query.order("created_at", { ascending: false });
     if (error) throw translatePostgresError(error);
     return NextResponse.json({ success: true, data: data ?? [] });

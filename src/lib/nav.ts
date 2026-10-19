@@ -201,6 +201,7 @@ export const ERP_NAV: NavSection[] = [
       { label: "NCM", href: "/app/fiscal/ncm", permission: "fiscal_ncms.view" },
       { label: "CFOP", href: "/app/fiscal/cfop", permission: "fiscal_cfops.view" },
       { label: "Regras tributárias", href: "/app/fiscal/impostos", permission: "tax_rules.view", keywords: ["impostos"] },
+      { label: "Configuração NF-e", href: "/app/fiscal/configuracao", permission: "fiscal_establishments.view", keywords: ["emitente", "danfe", "nota", "ensino"] },
     ],
   },
   {

@@ -415,7 +415,7 @@ export function protocolNumber(ufCode: string, at: Date, seed: string): string {
  * Conferência antes de emitir, nos moldes das rejeições da SEFAZ e dos
  * limites do schema. Devolve mensagens em linguagem de usuário.
  */
-export function validateNfeInput(input: NfeInput, checks: { isValidCnpj: (v: string) => boolean; isValidCpf: (v: string) => boolean }): string[] {
+export function validateNfeInput(input: NfeInput): string[] {
   const problems: string[] = [];
   const min2 = (v: string | undefined) => xmlText(v).length >= 2;
   const addr = (who: string, a: NfeAddress) => {
@@ -427,14 +427,16 @@ export function validateNfeInput(input: NfeInput, checks: { isValidCnpj: (v: str
     if (onlyDigits(a.zip).length !== 8) problems.push(`${who}: CEP precisa ter 8 dígitos.`);
   };
   const emitDoc = onlyDigits(input.emitter.document);
-  if (!checks.isValidCnpj(emitDoc)) problems.push("Emitente: CNPJ inválido (confira os dígitos verificadores).");
+  // Modo ensino: confere só a quantidade de números (14 no CNPJ, 11 no CPF),
+  // sem os dígitos verificadores — dados fictícios de aula não travam a nota.
+  if (emitDoc.length !== 14) problems.push(`Emitente: o CNPJ precisa ter 14 números (tem ${emitDoc.length}).`);
   if (!min2(input.emitter.name)) problems.push("Emitente: informe a razão social.");
   const ie = onlyDigits(input.emitter.stateRegistration);
   if (ie && (ie.length < 2 || ie.length > 14)) problems.push("Emitente: inscrição estadual com tamanho inválido.");
   addr("Emitente", input.emitter.address);
 
   const destDoc = onlyDigits(input.recipient.document);
-  if (destDoc.length === 11 ? !checks.isValidCpf(destDoc) : !checks.isValidCnpj(destDoc)) problems.push("Destinatário: CPF/CNPJ inválido.");
+  if (destDoc.length !== 11 && destDoc.length !== 14) problems.push(`Destinatário: informe o CNPJ (14 números) ou o CPF (11 números) no cadastro do cliente (tem ${destDoc.length}).`);
   if (!min2(input.recipient.name)) problems.push("Destinatário: informe o nome.");
   addr("Destinatário", input.recipient.address);
 

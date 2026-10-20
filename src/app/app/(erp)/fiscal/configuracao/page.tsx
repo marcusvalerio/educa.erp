@@ -14,7 +14,6 @@ import { DetailSection } from "@/components/resource/DetailLayout";
 import { useSession } from "@/components/shell/SessionProvider";
 import { apiSend } from "@/lib/api-client";
 import { invalidateCache, useCached } from "@/lib/dashboard/client";
-import { isValidCnpj } from "@/lib/fiscal/nfe/access-key";
 import { onlyDigits } from "@/lib/fiscal/nfe/uf";
 
 // Configuração mínima para emitir NF-e no modo ensino: emitente, naturezas
@@ -79,7 +78,7 @@ function EmitterForm({ current, onSaved }: { current: Row | undefined; onSaved: 
 
   async function save() {
     if (form.name.trim().length < 2) return setError("Informe a razão social.");
-    if (!isValidCnpj(form.cnpj)) return setError("CNPJ inválido — confira os dígitos verificadores.");
+    if (onlyDigits(form.cnpj).length !== 14) return setError("O CNPJ precisa ter 14 números.");
     if (onlyDigits(form.zipCode).length !== 8) return setError("Informe o CEP com 8 dígitos.");
     if (!form.address.trim() || !form.neighborhood.trim() || !form.city.trim() || !form.state) return setError("Preencha endereço, bairro, cidade e UF.");
     setBusy(true);

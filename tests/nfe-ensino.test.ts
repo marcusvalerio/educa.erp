@@ -182,24 +182,31 @@ describe("máscaras da DANFE", () => {
 });
 
 describe("conferência antes de emitir", () => {
-  const checks = { isValidCnpj, isValidCpf };
   test("dados corretos passam", () => {
-    assert.deepEqual(validateNfeInput(input({ items: [item({ cfop: "6102" })] }), checks), []);
+    assert.deepEqual(validateNfeInput(input({ items: [item({ cfop: "6102" })] })), []);
   });
   test("CFOP interno para outra UF, NCM curto e bairro vazio são apontados", () => {
     const data = input({ items: [item({ cfop: "5102", ncm: "9608" })] });
     data.recipient.address.district = "";
     data.recipient.address.cityCode = "";
-    const msgs = validateNfeInput(data, checks).join(" | ");
+    const msgs = validateNfeInput(data).join(" | ");
     assert.match(msgs, /CFOP 5102 é de operação dentro do estado/);
     assert.match(msgs, /NCM precisa ter 8 dígitos/);
     assert.match(msgs, /Destinatário: informe o bairro/);
     assert.match(msgs, /Destinatário: município sem código IBGE/);
   });
-  test("CNPJ do emitente inválido", () => {
+  test("modo ensino: CNPJ/CPF com dígito verificador errado passa; quantidade errada não", () => {
     const data = input({ items: [item({ cfop: "6102" })] });
-    data.emitter.document = "11222333000182";
-    assert.match(validateNfeInput(data, checks).join(), /Emitente: CNPJ inválido/);
+    data.emitter.document = "11.222.333/0001-82";
+    data.recipient.document = "12.345.678/0001-00";
+    assert.deepEqual(validateNfeInput(data), []);
+    data.recipient.document = "123.456.789-00";
+    assert.deepEqual(validateNfeInput(data), []);
+    data.emitter.document = "1122233300018";
+    data.recipient.document = "12345";
+    const msgs = validateNfeInput(data).join(" | ");
+    assert.match(msgs, /Emitente: o CNPJ precisa ter 14 números \(tem 13\)/);
+    assert.match(msgs, /Destinatário: informe o CNPJ \(14 números\) ou o CPF \(11 números\).*tem 5/);
   });
 });
 

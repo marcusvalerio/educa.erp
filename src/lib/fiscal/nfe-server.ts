@@ -3,7 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notFoundError, translatePostgresError, validationError } from "@/lib/database/errors";
-import { buildAccessKey, isValidCnpj, isValidCpf, numericCode } from "./nfe/access-key";
+import { buildAccessKey, numericCode } from "./nfe/access-key";
 import { onlyDigits, ufCode } from "./nfe/uf";
 import { apportion, buildNfeXml, protocolNumber, validateNfeInput, wrapNfeProc, type NfeInput, type NfeItem, type NfeTax } from "./nfe/xml";
 
@@ -225,7 +225,7 @@ export async function loadNfe(companyId: string, documentId: string, issuedAt: D
     appVersion: APP_VERSION,
   };
 
-  const problems = validateNfeInput(input, { isValidCnpj, isValidCpf });
+  const problems = validateNfeInput(input);
   if (!uf) problems.unshift("Emitente: informe a UF do estabelecimento.");
   return { input, problems, document };
 }

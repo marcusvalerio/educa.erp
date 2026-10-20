@@ -21,15 +21,30 @@ describe("NF-e de ensino (PostgreSQL real)", { skip: !url && "POC_DATABASE_OWNER
   let doc = "";
 
   const one = async <T = Record<string, unknown>>(sql: string, params: unknown[] = []) => (await db.query(sql, params)).rows[0] as T;
+  const GERENTE_AUTH = randomUUID();
+  // Emissão como o Gerente de produção: todas as permissões do Administrador
+  // menos configurar sequências de numeração (document_sequences.*).
   const asAdmin = async () => {
     await db.query("set local role authenticated");
-    await db.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: ADMIN_AUTH, role: "authenticated" })]);
+    await db.query("select set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: GERENTE_AUTH, role: "authenticated" })]);
   };
   const asOwner = () => db.query("reset role");
 
   before(async () => {
     await db.connect();
     await db.query("begin");
+    const role = await one<{ id: string }>("insert into roles (company_id, code, name) values ($1, 'GERENTE-NFE-T', 'Gerente teste NF-e') returning id", [COMPANY]);
+    await db.query(
+      `insert into role_permissions (role_id, permission_id)
+       select distinct $1::uuid, rp.permission_id from role_permissions rp join permissions p on p.id = rp.permission_id
+        join user_roles ur on ur.role_id = rp.role_id join users u on u.id = ur.user_id
+       where u.auth_user_id = $2 and p.code not like 'document_sequences.%'`,
+      [role.id, ADMIN_AUTH],
+    );
+    await db.query("insert into auth.users (id, email, email_confirmed_at) values ($1, 'gerente.nfe@example.com', now())", [GERENTE_AUTH]);
+    await db.query("select set_config('educa.auth_link', 'invitation', true)");
+    const user = await one<{ id: string }>("insert into users (company_id, auth_user_id, name, email, login, status) values ($1, $2, 'Gerente NF-e', 'gerente.nfe@example.com', 'gerente.nfe', 'active') returning id", [COMPANY, GERENTE_AUTH]);
+    await db.query("insert into user_roles (user_id, role_id) values ($1, $2)", [user.id, role.id]);
     await db.query(
       `insert into fiscal_establishments (id, company_id, code, name, cnpj, state_registration, tax_regime, address, address_number, neighborhood, city, state, zip_code)
        values ($1, $2, 'EST-T', 'Escola Teste Ltda', '11222333000181', '123456789012', 'LUCRO_PRESUMIDO', 'Praça da Sé', '100', 'Sé', 'São Paulo', 'SP', '01001000')`,
@@ -75,11 +90,26 @@ describe("NF-e de ensino (PostgreSQL real)", { skip: !url && "POC_DATABASE_OWNER
     await asOwner();
   });
 
-  test("numera, calcula (ICMS por dentro, IPI por fora) e confere", async () => {
+  test("numera sem a permissão de configurar sequências (caso do Gerente) e cria a série", async () => {
     await asAdmin();
-    await db.query("select fn_create_document_sequence($1, 'FISCAL_DOCUMENT', '1', null, 9, $2, 'teste')", [COMPANY, ids.est]);
+    await db.query("savepoint seq_cfg");
+    await assert.rejects(db.query("select fn_create_document_sequence($1, 'FISCAL_DOCUMENT', '9', null, 9, $2, 'x')", [COMPANY, ids.est]), /Permissão negada/);
+    await db.query("rollback to savepoint seq_cfg");
     const numbered = await one<{ number: number; series: string }>("select * from fn_assign_fiscal_document_number($1, '1')", [doc]);
     assert.equal(numbered.number, 1);
+    assert.equal(numbered.series, "1");
+    await db.query("savepoint renum");
+    await assert.rejects(db.query("select fn_assign_fiscal_document_number($1, '1')", [doc]), /não é trocado/);
+    await db.query("rollback to savepoint renum");
+    await assert.rejects(db.query("select * from fn_next_document_number_internal($1, 'FISCAL_DOCUMENT', '1', $2)", [COMPANY, ids.est]), /permission denied/);
+    await db.query("rollback to savepoint renum");
+    await asOwner();
+    const seq = await one<{ current_number: string; padding: number }>("select current_number, padding from document_sequences where company_id = $1 and establishment_id = $2 and document_type = 'FISCAL_DOCUMENT'", [COMPANY, ids.est]);
+    assert.deepEqual([Number(seq.current_number), seq.padding], [1, 9]);
+  });
+
+  test("calcula (ICMS por dentro, IPI por fora) e confere", async () => {
+    await asAdmin();
     const calc = await one<{ products_amount: string; taxes_amount: string; total_amount: string; status: string }>("select * from fn_calculate_fiscal_document($1)", [doc]);
     assert.equal(calc.status, "CALCULATED");
     assert.equal(Number(calc.products_amount), 100);

@@ -43,24 +43,10 @@ async function documentRow(companyId: string, id: string): Promise<Row> {
   return data as Row;
 }
 
-/** Numera a nota; cria a sequência (série 1) do estabelecimento na primeira vez. */
-async function assignNumber(companyId: string, doc: Row) {
+/** Numera a nota (série 1); o banco cria a série do estabelecimento na primeira nota. */
+async function assignNumber(id: string) {
   const supabase = await createClient();
-  const call = () => supabase.rpc("fn_assign_fiscal_document_number", { p_fiscal_document_id: doc.id, p_series_code: "1" });
-  let { error } = await call();
-  if (error && /sequência documental não configurada/i.test(error.message ?? "")) {
-    const created = await supabase.rpc("fn_create_document_sequence", {
-      p_company_id: companyId,
-      p_document_type: "FISCAL_DOCUMENT",
-      p_series_code: "1",
-      p_prefix: null,
-      p_padding: 9,
-      p_establishment_id: doc.fiscal_establishment_id,
-      p_description: "NF-e série 1 (ensino)",
-    });
-    if (created.error) throw rpcFailure(created.error);
-    ({ error } = await call());
-  }
+  const { error } = await supabase.rpc("fn_assign_fiscal_document_number", { p_fiscal_document_id: id, p_series_code: "1" });
   if (error) throw rpcFailure(error);
 }
 
@@ -74,14 +60,16 @@ export async function issueEducation(companyId: string, id: string): Promise<Row
   if (pre.problems.length > 0) throw problemsError(pre.problems);
 
   const supabase = await createClient();
+  if (doc.number === null || doc.number === undefined) {
+    await assignNumber(id);
+    doc = await documentRow(companyId, id);
+  }
   if (doc.status === "DRAFT") {
-    if (doc.number === null || doc.number === undefined) await assignNumber(companyId, doc);
     const calc = await supabase.rpc("fn_calculate_fiscal_document", { p_fiscal_document_id: id });
     if (calc.error) throw rpcFailure(calc.error);
     doc = await documentRow(companyId, id);
   }
   if (doc.status === "CALCULATED") {
-    if (doc.number === null || doc.number === undefined) throw validationError("Esta nota foi calculada sem número. Cancele-a e gere outra a partir do pedido.");
     const ready = await supabase.rpc("fn_mark_fiscal_document_ready", { p_fiscal_document_id: id });
     if (ready.error) throw rpcFailure(ready.error);
   }

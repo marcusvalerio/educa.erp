@@ -35,7 +35,7 @@ export default function PlatformCompaniesPage() {
       tableId="platform-companies"
       rowId={(row) => row.company_id}
       refreshToken={refresh}
-      searchPlaceholder="Buscar por identificador ou plano..."
+      searchPlaceholder="Buscar por nome, e-mail ou plano..."
       actions={
         canPlatform("platform.companies.create") ? (
           <Button size="sm" onClick={() => setCreating(true)}>
@@ -44,12 +44,17 @@ export default function PlatformCompaniesPage() {
         ) : undefined
       }
       summary={
-        <Alert tone="info" title="Identificação por código">
-          As empresas aparecem pelo identificador: a Administração Central não lê o cadastro (nome, documento) das empresas.
+        <Alert tone="info" title="O que a Central vê">
+          Nome da empresa e quem é o Administrador (e-mail e situação do acesso). Clientes, vendas e documentos da empresa ficam fora da Central.
         </Alert>
       }
       columns={[
-        textCol<PlatformCompany>("company_id", "Empresa", { mono: true, mobile: "title", cell: (row) => companyRef(row.company_id), exportValue: (row) => row.company_id }),
+        textCol<PlatformCompany>("company_id", "Empresa", { mono: true, mobile: "title", cell: (row) => companyRef(row.company_id, row.display_name), exportValue: (row) => row.display_name ?? row.company_id }),
+        textCol<PlatformCompany>("admins", "Administrador", {
+          cell: (row) => (row.admins.length ? row.admins.map((a) => `${a.email}${a.situation !== "ativo" ? ` (${a.situation})` : ""}`).join(", ") : "—"),
+          exportValue: (row) => row.admins.map((a) => a.email).join(", "),
+          mobile: "meta",
+        }),
         textCol<PlatformCompany>("company_kind", "Tipo", { cell: (row) => (row.parent_company_id ? "Grupo de turma" : row.company_kind === "study" ? "Estudo (turma)" : "Empresa"), mobile: "meta" }),
         statusCol<PlatformCompany>("company_lifecycle", "lifecycle_status", "Ciclo de vida"),
         textCol<PlatformCompany>("plan_code", "Plano", { mono: true }),
@@ -60,12 +65,30 @@ export default function PlatformCompaniesPage() {
       ]}
       filters={[enumFilter<PlatformCompany>("lifecycle_status", "Ciclo de vida", (Object.keys(LIFECYCLE_LABEL) as LifecycleStatus[]).map((k) => [k, LIFECYCLE_LABEL[k]]))]}
       detail={{
-        title: (row) => companyRef(row.company_id),
+        title: (row) => companyRef(row.company_id, row.display_name),
         subtitle: (row) => <span className="code">{row.company_id}</span>,
         badges: (row) => <StatusBadge entity="company_lifecycle" status={row.lifecycle_status} />,
         sections: [],
         history: false,
-        render: (row) => <CompanyGovernance company={row} onChanged={() => setRefresh((n) => n + 1)} />,
+        render: (row) => (
+          <>
+            <div className="border-b border-border-subtle px-4 py-3 text-sm">
+              <p className="mb-1 font-medium">Administrador</p>
+              {row.admins.length === 0 ? (
+                <p className="text-muted-foreground">Nenhum administrador cadastrado.</p>
+              ) : (
+                <ul className="flex flex-col gap-1">
+                  {row.admins.map((a) => (
+                    <li key={a.email}>
+                      {a.name} · <span className="select-all font-mono text-xs">{a.email}</span> <span className="text-muted-foreground">({a.situation})</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <CompanyGovernance company={row} onChanged={() => setRefresh((n) => n + 1)} />
+          </>
+        ),
       }}
       emptyDescription="Nenhuma empresa cadastrada na plataforma."
     />

@@ -63,15 +63,21 @@ export async function getPlatformOverview() {
 export async function listPlatformCompanies() {
   try {
     const { supabase } = await requirePlatformMember();
-    const [profiles, companyModules, kinds] = await Promise.all([
-      supabase
-        .from("company_platform_profiles")
-        .select("company_id, lifecycle_status, plan_code, contracted_at, suspended_at, cancelled_at, notes, created_at, updated_at")
-        .order("created_at", { ascending: true }),
+    const columns = "company_id, lifecycle_status, plan_code, contracted_at, suspended_at, cancelled_at, notes, created_at, updated_at";
+    const [named, companyModules, kinds, admins] = await Promise.all([
+      supabase.from("company_platform_profiles").select(`${columns}, display_name`).order("created_at", { ascending: true }),
       supabase.from("company_modules").select("company_id, contracted, enabled_by_company"),
       supabase.rpc("fn_platform_company_kinds"),
+      supabase.rpc("fn_platform_company_admins"),
     ]);
+    // Nome e administrador (0101): sem a migration, a lista segue só com o código.
+    const profiles = named.error ? await supabase.from("company_platform_profiles").select(columns).order("created_at", { ascending: true }) : named;
     if (profiles.error) throw dbError(profiles.error);
+    type Admin = { company_id: string; name: string; email: string; situation: string };
+    const adminsById = new Map<string, Admin[]>();
+    for (const a of ((admins.error ? [] : admins.data) as Admin[] | null) ?? []) {
+      adminsById.set(a.company_id, [...(adminsById.get(a.company_id) ?? []), a]);
+    }
     // Tipo/turma (0096): sem a migration, a lista segue funcionando (tudo "empresa").
     type Kind = { company_id: string; company_kind: string; parent_company_id: string | null; groups: number };
     const kindById = new Map(((kinds.error ? [] : kinds.data) as Kind[] | null ?? []).map((k) => [k.company_id, k]));
@@ -90,6 +96,8 @@ export async function listPlatformCompanies() {
         company_kind: kindById.get(row.company_id as string)?.company_kind ?? "business",
         parent_company_id: kindById.get(row.company_id as string)?.parent_company_id ?? null,
         study_groups: Number(kindById.get(row.company_id as string)?.groups ?? 0),
+        display_name: ((row as { display_name?: string | null }).display_name ?? null) || null,
+        admins: (adminsById.get(row.company_id as string) ?? []).map(({ name, email, situation }) => ({ name, email, situation })),
       }))
     );
   } catch (error) {

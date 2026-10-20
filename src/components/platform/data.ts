@@ -25,6 +25,9 @@ export type PlatformCompany = {
   company_kind: "business" | "study";
   parent_company_id: string | null;
   study_groups: number;
+  /** 0101: nome de exibição e quem tem o papel Administrador na empresa. */
+  display_name: string | null;
+  admins: { name: string; email: string; situation: string }[];
 };
 
 export type PlatformCompanyModule = {
@@ -76,8 +79,8 @@ export type PlatformOverview = {
 export const LIFECYCLE_LABEL: Record<LifecycleStatus, string> = { TRIAL: "Avaliação", ACTIVE: "Ativa", SUSPENDED: "Suspensa", CANCELLED: "Cancelada" };
 
 /** Identificação possível da empresa na plataforma (a RLS não expõe o nome — ver docs/UI.md). */
-export function companyRef(id: string) {
-  return `Empresa ${id.slice(0, 8)}`;
+export function companyRef(id: string, name?: string | null) {
+  return name || `Empresa ${id.slice(0, 8)}`;
 }
 
 export async function platformSend<T>(path: string, method: "POST" | "PATCH", body?: unknown): Promise<T> {

@@ -1,4 +1,6 @@
 import "server-only";
+
+import { z } from "zod";
 import { providedPartial } from "@/lib/validations/partial-update";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -802,6 +804,35 @@ export async function deleteSerialNumber(_request: NextRequest, context: RouteCo
     if (error) throw translatePostgresError(error);
     if (!count) throw notFoundError("Número de série");
     return NextResponse.json({ success: true, data: null });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+const returnSchema = z.object({
+  productId: z.string().uuid("Selecione o produto."),
+  locationId: z.string().uuid("Selecione o local."),
+  quantity: z.coerce.number().positive("A quantidade deve ser maior que zero."),
+  direction: z.enum(["IN", "OUT"]),
+  notes: z.string().trim().min(1, "Informe o motivo da devolução.").max(500),
+});
+
+// POST /api/stock-movements/return — devolução de cliente (IN) ou a fornecedor (OUT), 0108.
+export async function registerStockReturn(request: NextRequest) {
+  try {
+    const body = await parseBody(request, returnSchema);
+    const { companyId } = await requireStockAccess(body.direction === "IN" ? "stock.create" : "stock.adjust");
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_register_stock_return", {
+      p_company_id: companyId,
+      p_product_id: body.productId,
+      p_location_id: body.locationId,
+      p_quantity: body.quantity,
+      p_direction: body.direction,
+      p_notes: body.notes,
+    });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     return jsonError(error);
   }

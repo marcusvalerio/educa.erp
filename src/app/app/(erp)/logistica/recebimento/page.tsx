@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Ban, CheckCircle2, PackagePlus } from "lucide-react";
+import { PackagePlus } from "lucide-react";
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, textCol, dateCol, statusCol, refCol, statusFilter, statusViews } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -9,16 +9,14 @@ import { Button } from "@/components/ui/Button";
 import { toast } from "@/components/ui/Toast";
 import { useSession } from "@/components/shell/SessionProvider";
 import { ReceiveOrderDialog } from "@/components/forms/ReceiveOrderDialog";
-import { WorkflowActions, type WorkflowAction } from "@/components/forms/WorkflowActions";
+import { WorkflowActions } from "@/components/forms/WorkflowActions";
+import { RECEIPT_ACTIONS } from "@/components/forms/receipt-actions";
 import { invalidateCache } from "@/lib/dashboard/client";
 import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import { dbStatusCode } from "@/lib/status";
 import type { PurchaseReceiptRow } from "@/lib/database/schema";
 
-const ACTIONS: WorkflowAction[] = [
-  { id: "confirm", label: "Confirmar entrada no estoque", path: "confirm", permission: "purchase_receipts.confirm", statuses: ["draft"], confirm: "As quantidades aceitas entram no estoque, no local indicado.", success: "Entrada no estoque confirmada.", icon: <CheckCircle2 size={14} aria-hidden /> },
-  { id: "reject", label: "Recusar recebimento", path: "reject", permission: "purchase_receipts.reject", statuses: ["draft"], confirm: "Nada entra no estoque e o pedido continua aguardando.", success: "Recebimento recusado.", tone: "danger", icon: <Ban size={14} aria-hidden /> },
-];
+
 
 export default function RecebimentoPage() {
   const suppliers = useIdNameLookup("/api/suppliers", "legal_name");
@@ -61,7 +59,7 @@ export default function RecebimentoPage() {
           subtitle: (row) => suppliers.get(row.supplier_id) ?? undefined,
           badges: (row) => <StatusBadge entity="purchase_receipts" status={row.status} />,
           actions: (row) => (
-            <WorkflowActions base="/api/purchase-receipts" id={row.id} status={dbStatusCode("purchase_receipts", String(row.status ?? ""))} actions={ACTIONS} onDone={reload} />
+            <WorkflowActions base="/api/purchase-receipts" id={row.id} status={dbStatusCode("purchase_receipts", String(row.status ?? ""))} actions={RECEIPT_ACTIONS} onDone={reload} />
           ),
         }}
         emptyDescription="Receba a mercadoria de um pedido de compra pelo botão Receber mercadoria."

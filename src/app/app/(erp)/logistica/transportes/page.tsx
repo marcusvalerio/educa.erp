@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { invalidateCache } from "@/lib/dashboard/client";
+import { ShipmentActions } from "@/components/logistics/FulfillmentActions";
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, textCol, dateCol, statusCol, refCol, statusFilter, overdueView, isRowOverdue, statusViews, combineViews } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -7,6 +10,12 @@ import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import type { ShipmentRow } from "@/lib/database/schema";
 
 export default function TransportesPage() {
+  const [refresh, setRefresh] = useState(0);
+  const reload = () => {
+    invalidateCache("/api/shipments");
+    invalidateCache("/api/sales-orders");
+    setRefresh((n) => n + 1);
+  };
   const customers = useIdNameLookup("/api/customers");
   const carriers = useIdNameLookup("/api/carriers", "legal_name");
 
@@ -15,6 +24,7 @@ export default function TransportesPage() {
       title="Transportes"
       description="Expedições sob a ótica do transporte: transportadora, despacho e entrega."
       apiPath="/api/shipments"
+      refreshToken={refresh}
       searchPlaceholder="Buscar expedição, cliente ou cidade..."
       columns={[
         codeCol<ShipmentRow>("code", "Expedição"),
@@ -36,6 +46,7 @@ export default function TransportesPage() {
         title: (row) => row.code,
         subtitle: (row) => customers.get(row.customer_id) ?? undefined,
         badges: (row) => <StatusBadge entity="shipments" status={row.status} />,
+        actions: (row) => <ShipmentActions id={row.id} status={String(row.status ?? "")} onDone={reload} transport />,
       }}
       emptyDescription="Quando houver registros, eles aparecem aqui."
     />

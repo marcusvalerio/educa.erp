@@ -59,7 +59,7 @@ describe("NF-e de ensino (PostgreSQL real)", { skip: !url && "POC_DATABASE_OWNER
     );
     const unit = await one<{ code: string }>("select code from units where company_id = $1 order by code limit 1", [COMPANY]);
     await db.query(`insert into products (id, company_id, code, name, unit, ncm, sale_price) values ($1, $2, 'PRD-NFE-T', 'Caderno 96 folhas', $3, '4820.20.00', 20)`, [ids.prod, COMPANY, unit.code]);
-    await db.query(`insert into sales_orders (id, company_id, code, customer_id, status, freight_cost) values ($1, $2, 'PV-NFE-T', $3, 'approved', 10)`, [ids.order, COMPANY, ids.cust]);
+    await db.query(`insert into sales_orders (id, company_id, code, customer_id, status, freight_cost) values ($1, $2, 'PV-NFE-T', $3, 'reserved', 10)`, [ids.order, COMPANY, ids.cust]);
     await db.query(
       `insert into sales_order_items (company_id, order_id, product_id, description, unit, ordered_quantity, unit_price) values ($1, $2, $3, 'Caderno 96 folhas', $4, 5, 20)`,
       [COMPANY, ids.order, ids.prod, unit.code],

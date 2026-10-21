@@ -24,6 +24,7 @@ import { dbStatusCode } from "@/lib/status";
 import { formatCurrencyBRL, formatDate } from "@/lib/format";
 import type { AccountsReceivableRow, FiscalDocumentRow, SalesOrderItemRow, SalesOrderRow, ShipmentRow } from "@/lib/database/schema";
 import { IssueOrderNfeButton, NfeOutputLinks } from "@/components/fiscal/NfeActions";
+import { OrderFulfillmentButtons } from "@/components/logistics/FulfillmentActions";
 
 // Detalhe do pedido de venda. As ações mostradas dependem do status
 // atual E da permissão do usuário; a regra de transição continua no
@@ -134,7 +135,8 @@ export default function PedidoVendaDetailPage() {
   const customerName = customers.get(o.customer_id);
   // NF-e do pedido: a autorizada abre DANFE/XML; sem nota, pedido aprovado pode emitir.
   const nfe = (fiscalDocs.data ?? []).find((d) => d.type === "NFE" && d.status !== "CANCELLED");
-  const canIssueNfe = !o.fiscal_access_key && !["draft", "pending_approval", "cancelled"].includes(status) && (!nfe || nfe.status !== "AUTHORIZED");
+  // Faturar só com estoque reservado (0108): o banco recusa antes disso.
+  const canIssueNfe = !o.fiscal_access_key && ["reserved", "picking", "ready_to_ship", "partially_shipped", "shipped", "completed"].includes(status) && (!nfe || nfe.status !== "AUTHORIZED");
 
   return (
     <div className="flex flex-col gap-4">
@@ -153,6 +155,7 @@ export default function PedidoVendaDetailPage() {
         actions={
           <>
             {nfe?.status === "AUTHORIZED" && <NfeOutputLinks documentId={nfe.id} />}
+            <OrderFulfillmentButtons orderId={o.id} status={status} onDone={refresh} />
             {canIssueNfe && <IssueOrderNfeButton orderId={o.id} onDone={refresh} />}
             {canReserve && (
               <Button size="sm" onClick={() => { setReserveError(null); setReserveOpen(true); }}>
@@ -203,7 +206,7 @@ export default function PedidoVendaDetailPage() {
             <ProgressRow label="Reserva" value={reserved} total={ordered} />
             <ProgressRow label="Expedição" value={shipped} total={ordered} />
             <p className="text-xs text-muted-foreground">
-              Separação e expedição são registradas em{" "}
+              Separe e gere a expedição pelos botões do pedido; os passos seguintes ficam em{" "}
               <Link href="/app/logistica/picking" className="font-medium text-foreground underline underline-offset-2">Logística</Link>.
             </p>
           </div>

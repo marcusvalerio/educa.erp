@@ -13,6 +13,7 @@ import { authProvider } from "./provider";
 import {
   changeTemporaryPasswordFlow,
   issueTemporaryPasswordFlow,
+  resetPasswordFlow,
   revokeTemporaryPasswordFlow,
   TEMPORARY_PASSWORD_META,
   TEMPORARY_PASSWORD_TTL_HOURS,
@@ -225,6 +226,51 @@ export async function revokeStudyMemberTemporaryPassword(_request: NextRequest, 
       updateLogin: (authUserId, change) => updateLogin(authUserId, change),
     });
     return ok(result);
+  } catch (error) {
+    return jsonError(toApiError(error));
+  }
+}
+
+// ------------------------------------------------------------ nova senha (quem já tem acesso)
+
+async function getLogin(authUserId: string): Promise<AuthLogin | null> {
+  const { data, error } = await createAdminClient().auth.admin.getUserById(authUserId);
+  if (error || !data.user) return null;
+  return toLogin(data.user);
+}
+
+type ResetTarget = { user_id: string; auth_user_id: string; email: string; name: string };
+
+async function resetWith(rpc: string, id: string) {
+  requireSupabaseAuth();
+  const { supabase } = await requireCompanyUser();
+  return resetPasswordFlow({
+    authorize: async () => {
+      const { data, error } = await supabase.rpc(rpc, { p_user_id: id });
+      if (error) throw dbError(error);
+      const r = data as ResetTarget;
+      return { userId: r.user_id, authUserId: r.auth_user_id, email: r.email, name: r.name };
+    },
+    getLogin,
+    updateLogin: (authUserId, change) => updateLogin(authUserId, change),
+  });
+}
+
+// POST /api/admin/users/:id/password-reset — Administrador da empresa.
+export async function resetUserPassword(_request: NextRequest, context: IdRouteContext) {
+  try {
+    const { id } = await context.params;
+    return ok(await resetWith("fn_authorize_password_reset", id), 201);
+  } catch (error) {
+    return jsonError(toApiError(error));
+  }
+}
+
+// POST /api/admin/study/members/:id/password-reset — professor da turma.
+export async function resetStudyMemberPassword(_request: NextRequest, context: IdRouteContext) {
+  try {
+    const { id } = await context.params;
+    return ok(await resetWith("fn_study_authorize_member_password_reset", id), 201);
   } catch (error) {
     return jsonError(toApiError(error));
   }

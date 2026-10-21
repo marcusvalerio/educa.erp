@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Ban, Copy, KeyRound, Plus, UserPlus, Users } from "lucide-react";
+import { Ban, Copy, KeyRound, Plus, RotateCcw, UserPlus, Users } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel, PanelHeader } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
@@ -17,13 +17,28 @@ import { apiGet, apiSend } from "@/lib/api-client";
 import { formatDate, formatDateTime } from "@/lib/format";
 
 // Grupos da turma (Modo Estudo, 0096). Cada grupo é uma empresa isolada; o
-// professor cria grupos, cadastra alunos e gera/revoga senhas provisórias.
+// professor cria grupos, cadastra alunos, define o setor de cada um (o setor
+// traz as permissões, 0102) e gera/revoga senhas provisórias — inclusive uma
+// nova para quem já tem acesso e esqueceu a senha.
 // Ele vê só contagens do grupo, nunca os dados. O banco decide tudo.
 
 type Context = { is_study: boolean; can_manage: boolean; parent_name: string | null };
 type Group = { id: string; name: string; created_at: string; members: number; logins: number; pending_invitations: number; products: number; sales_orders: number; purchase_orders: number };
 type Role = { id: string; code: string; name: string };
-type Member = { id: string; name: string; email: string; status: string; has_login: boolean; roles: string | null; invitation_status: string | null; invitation_expires_at: string | null };
+type Member = {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  has_login: boolean;
+  roles: string | null;
+  invitation_status: string | null;
+  invitation_expires_at: string | null;
+  sector_code: string | null;
+  sector_name: string | null;
+  is_admin: boolean;
+};
+type Sector = { code: string; name: string };
 type Issued = { password: string; email: string; expiresAt: string };
 
 function memberState(m: Member): { label: string; tone: "success" | "warning" | "neutral" | "danger" } {
@@ -38,15 +53,20 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
   const [roles, setRoles] = useState<Role[]>([]);
   const [members, setMembers] = useState<Member[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", roleId: "" });
+  const [form, setForm] = useState({ name: "", email: "", roleId: "", sector: "" });
+  const [sectors, setSectors] = useState<Sector[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
   const [issued, setIssued] = useState<(Issued & { name: string }) | null>(null);
-  const [confirm, setConfirm] = useState<{ kind: "issue" | "revoke"; member: Member } | null>(null);
+  const [confirm, setConfirm] = useState<{ kind: "issue" | "revoke" | "reset"; member: Member } | null>(null);
 
   const load = useCallback(async () => {
     if (!group) return;
     try {
-      const data = await apiGet<{ roles: Role[]; members: Member[] }>(`/api/admin/study/groups/${group.id}`);
+      const [data, list] = await Promise.all([
+        apiGet<{ roles: Role[]; members: Member[] }>(`/api/admin/study/groups/${group.id}`),
+        apiGet<Sector[]>("/api/admin/sectors").catch(() => [] as Sector[]),
+      ]);
+      setSectors(list);
       setRoles(data.roles);
       setMembers(data.members);
       setError(null);
@@ -67,13 +87,28 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
     if (!form.name.trim() || !form.email.trim() || !form.roleId) return toast.error("Informe nome, e-mail e papel do aluno.");
     setBusy("add");
     try {
-      await apiSend(`/api/admin/study/groups/${group.id}/members`, "POST", { name: form.name.trim(), email: form.email.trim(), roleId: form.roleId });
+      const created = await apiSend<{ user_id: string }>(`/api/admin/study/groups/${group.id}/members`, "POST", { name: form.name.trim(), email: form.email.trim(), roleId: form.roleId });
+      if (form.sector && created?.user_id) await apiSend(`/api/admin/study/members/${created.user_id}/sector`, "POST", { sector: form.sector });
       toast.success("Aluno cadastrado.", "Agora gere a senha provisória dele.");
-      setForm((f) => ({ ...f, name: "", email: "" }));
+      setForm((f) => ({ ...f, name: "", email: "", sector: "" }));
       await load();
       onChanged();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível cadastrar o aluno.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function changeSector(member: Member, sector: string) {
+    if (!sector || sector === member.sector_code) return;
+    setBusy(`sector-${member.id}`);
+    try {
+      await apiSend(`/api/admin/study/members/${member.id}/sector`, "POST", { sector });
+      toast.success(`${member.name}: setor atualizado.`, "As permissões passam a ser as do setor.");
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível mudar o setor.");
     } finally {
       setBusy(null);
     }
@@ -84,8 +119,9 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
     const { kind, member } = confirm;
     setBusy(kind);
     try {
-      if (kind === "issue") {
-        const res = await apiSend<Issued>(`/api/admin/study/members/${member.id}/temporary-password`, "POST", {});
+      if (kind === "issue" || kind === "reset") {
+        const path = kind === "issue" ? "temporary-password" : "password-reset";
+        const res = await apiSend<Issued>(`/api/admin/study/members/${member.id}/${path}`, "POST", {});
         setIssued({ ...res, name: member.name });
         toast.success("Senha provisória gerada.");
       } else {
@@ -120,8 +156,8 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
         {issued && (
           <Alert tone="warning" title="Senha provisória — anote agora">
             <p>
-              Entregue esta senha a {issued.name} por um canal seguro. Ela vale até {formatDateTime(issued.expiresAt)}, serve só para o primeiro acesso de {issued.email}{" "}
-              e <strong>não será mostrada de novo</strong>. No primeiro login o aluno cria a própria senha.
+              Entregue esta senha a {issued.name} por um canal seguro. Ela vale até {formatDateTime(issued.expiresAt)} para o login {issued.email}{" "}
+              e <strong>não será mostrada de novo</strong>. No próximo acesso o aluno cria a própria senha.
             </p>
             <div className="mt-2 flex gap-2">
               <Input readOnly value={issued.password} aria-label="Senha provisória" className="code text-sm tracking-wide" onFocus={(e) => e.currentTarget.select()} />
@@ -149,11 +185,29 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
                       <p className="truncate text-sm font-medium">{m.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
                         {m.email}
+                        {m.sector_name ? ` · ${m.sector_name}` : ""}
                         {m.roles ? ` · ${m.roles}` : ""}
                         {m.invitation_status === "pending" && m.invitation_expires_at ? ` · vale até ${formatDateTime(m.invitation_expires_at)}` : ""}
                       </p>
                     </div>
                     <Badge tone={state.tone}>{state.label}</Badge>
+                    {!m.is_admin && sectors.length > 0 && (
+                      <div className="w-full sm:w-52">
+                        <Select
+                          value={m.sector_code ?? ""}
+                          onValueChange={(v) => changeSector(m, v)}
+                          options={sectors.map((x) => ({ value: x.code, label: x.name }))}
+                          placeholder="Escolher setor"
+                          disabled={busy !== null}
+                          aria-label={`Setor de ${m.name}`}
+                        />
+                      </div>
+                    )}
+                    {m.status === "active" && m.has_login && (
+                      <Button size="sm" variant="secondary" disabled={busy !== null} onClick={() => setConfirm({ kind: "reset", member: m })}>
+                        <RotateCcw size={14} aria-hidden /> Nova senha provisória
+                      </Button>
+                    )}
                     {canIssue && (
                       <Button size="sm" variant="secondary" disabled={busy !== null} onClick={() => setConfirm({ kind: "issue", member: m })}>
                         <KeyRound size={14} aria-hidden /> {m.invitation_status === "pending" ? "Gerar outra" : "Gerar senha provisória"}
@@ -181,9 +235,14 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
               <Input type="email" inputMode="email" autoComplete="off" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} maxLength={254} />
             </FormField>
           </div>
-          <FormField label="Papel no grupo" required help="Gerente faz quase tudo; Operador cria e edita; Somente leitura só consulta.">
-            <Select value={form.roleId} onValueChange={(v) => setForm((f) => ({ ...f, roleId: v }))} options={roles.map((r) => ({ value: r.id, label: r.name }))} placeholder="Escolha o papel" />
-          </FormField>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <FormField label="Setor" help="O setor define o que o aluno pode fazer. Diretoria = Gerente (líder).">
+              <Select value={form.sector} onValueChange={(v) => setForm((f) => ({ ...f, sector: v }))} options={sectors.map((x) => ({ value: x.code, label: x.name }))} placeholder="Escolha o setor" />
+            </FormField>
+            <FormField label="Papel no grupo" required help={form.sector ? "Com setor escolhido, o perfil passa a ser o do setor." : "Gerente faz quase tudo; Operador cria e edita; Somente leitura só consulta."}>
+              <Select value={form.roleId} onValueChange={(v) => setForm((f) => ({ ...f, roleId: v }))} options={roles.map((r) => ({ value: r.id, label: r.name }))} placeholder="Escolha o papel" />
+            </FormField>
+          </div>
           <div>
             <Button size="sm" onClick={addMember} loading={busy === "add"} disabled={busy !== null}>
               <UserPlus size={14} aria-hidden /> Cadastrar aluno
@@ -195,13 +254,21 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
       {confirm && (
         <ConfirmDialog
           open
-          title={confirm.kind === "issue" ? `Gerar senha provisória para ${confirm.member.name}?` : "Revogar a senha provisória?"}
+          title={
+            confirm.kind === "issue"
+              ? `Gerar senha provisória para ${confirm.member.name}?`
+              : confirm.kind === "reset"
+                ? `Nova senha provisória para ${confirm.member.name}?`
+                : "Revogar a senha provisória?"
+          }
           description={
             confirm.kind === "issue"
               ? "A senha aparece uma única vez para você entregar. No primeiro login o aluno cria a própria senha. Uma senha provisória anterior deixa de valer."
-              : "A senha provisória deixa de funcionar imediatamente. Você pode gerar outra quando quiser."
+              : confirm.kind === "reset"
+                ? "Para quem esqueceu a senha: a senha atual do aluno deixa de valer agora. A provisória aparece uma única vez e, no próximo acesso, ele cria uma senha nova."
+                : "A senha provisória deixa de funcionar imediatamente. Você pode gerar outra quando quiser."
           }
-          confirmLabel={confirm.kind === "issue" ? "Gerar senha" : "Revogar"}
+          confirmLabel={confirm.kind === "revoke" ? "Revogar" : "Gerar senha"}
           tone="danger"
           loading={busy === confirm.kind}
           onConfirm={runConfirm}

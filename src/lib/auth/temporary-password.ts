@@ -53,13 +53,19 @@ export class TemporaryPasswordError extends Error {
   }
 }
 
-/** O que fica no app_metadata do login enquanto a troca não acontece. */
-export type TemporaryMeta = { invitation_id: string; invitation_token: string; user_id: string; expires_at: string };
+/**
+ * O que fica no app_metadata do login enquanto a troca não acontece:
+ * primeiro acesso (convite) ou nova senha de quem já tinha acesso (reset).
+ */
+export type TemporaryMeta =
+  | { mode?: "invite"; invitation_id: string; invitation_token: string; user_id: string; expires_at: string }
+  | { mode: "reset"; user_id: string; expires_at: string };
 
 export function readTemporaryMeta(appMetadata: Record<string, unknown> | null | undefined): TemporaryMeta | null {
   const raw = appMetadata?.[TEMPORARY_PASSWORD_META];
   if (!raw || typeof raw !== "object") return null;
-  const m = raw as Partial<TemporaryMeta>;
+  const m = raw as Record<string, unknown>;
+  if (m.mode === "reset") return typeof m.user_id === "string" && typeof m.expires_at === "string" ? (m as TemporaryMeta) : null;
   return m.invitation_token && m.user_id && m.expires_at && m.invitation_id ? (m as TemporaryMeta) : null;
 }
 
@@ -144,6 +150,34 @@ export async function revokeTemporaryPasswordFlow(deps: RevokeDeps): Promise<{ r
   return { revoked: true };
 }
 
+// ------------------------------------------------------------ nova senha (quem já tem acesso)
+
+export type ResetDeps = {
+  /** fn_authorize_password_reset / fn_study_authorize_member_password_reset com o cliente de quem pede. */
+  authorize: () => Promise<{ userId: string; authUserId: string; email: string; name: string }>;
+  getLogin: (authUserId: string) => Promise<AuthLogin | null>;
+  updateLogin: (authUserId: string, change: { password: string; appMetadata: Record<string, unknown> }) => Promise<void>;
+  generate?: () => string;
+  now?: () => Date;
+  ttlHours?: number;
+};
+
+/**
+ * Esqueceu a senha: o banco autoriza (quem administra a pessoa) e o login
+ * recebe uma provisória com troca obrigatória no próximo acesso. A senha
+ * antiga deixa de valer na hora.
+ */
+export async function resetPasswordFlow(deps: ResetDeps): Promise<IssueResult> {
+  const target = await deps.authorize();
+  const login = await deps.getLogin(target.authUserId);
+  if (!login) throw new TemporaryPasswordError("NOT_PENDING", "Login desta pessoa não encontrado.");
+  const expiresAt = new Date((deps.now ?? (() => new Date()))().getTime() + (deps.ttlHours ?? TEMPORARY_PASSWORD_TTL_HOURS) * 3600_000).toISOString();
+  const password = (deps.generate ?? generateTemporaryPassword)();
+  const meta: TemporaryMeta = { mode: "reset", user_id: target.userId, expires_at: expiresAt };
+  await deps.updateLogin(login.id, { password, appMetadata: { ...withoutTemporaryMeta(login.appMetadata), [TEMPORARY_PASSWORD_META]: meta } });
+  return { password, email: target.email, userName: target.name, expiresAt };
+}
+
 // ------------------------------------------------------------ troca obrigatória (pessoa)
 
 export type ChangeDeps = {
@@ -177,6 +211,16 @@ export async function changeTemporaryPasswordFlow(input: { email: string; tempor
     const meta = readTemporaryMeta(session.login.appMetadata);
     if (!meta) throw new TemporaryPasswordError("NOT_PENDING", "Não há senha provisória pendente para esta conta. Entre com a sua senha.");
     const already = await deps.linkedTo(session.login.id, meta.user_id);
+    if (meta.mode === "reset") {
+      // Nova senha de quem já tinha acesso: o login continua ligado ao cadastro.
+      if (!already) throw new TemporaryPasswordError("NOT_PENDING", "Esta senha provisória não vale mais para esta conta. Peça uma nova ao administrador.");
+      if (new Date(meta.expires_at) < (deps.now ?? (() => new Date()))()) {
+        throw new TemporaryPasswordError("EXPIRED", "A senha provisória expirou. Peça uma nova ao administrador.");
+      }
+      await deps.setPassword(session.login.id, input.newPassword);
+      await deps.clearMeta(session.login.id, withoutTemporaryMeta(session.login.appMetadata));
+      return;
+    }
     if (!already) {
       const status = await deps.invitationStatus(meta.invitation_token);
       if (status !== "pending" || new Date(meta.expires_at) < (deps.now ?? (() => new Date()))()) {

@@ -81,3 +81,46 @@ export async function addStudyGroupMember(request: NextRequest, context: IdRoute
     return jsonError(error);
   }
 }
+
+// ------------------------------------------------------------ setores (0102)
+const sectorSchema = z.object({ sector: z.string().trim().min(2).max(40) }).strict();
+
+// GET /api/admin/sectors — catálogo de setores (código e nome).
+export async function listSectors() {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const { data, error } = await supabase.rpc("fn_sectors");
+    if (error) throw dbError(error);
+    return ok(data ?? []);
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+// POST /api/admin/study/members/:id/sector { sector } — professor.
+export async function setStudyMemberSector(request: NextRequest, context: IdRouteContext) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const { id } = await context.params;
+    const body = await parseJson(request, sectorSchema);
+    const { data, error } = await supabase.rpc("fn_study_set_member_sector", { p_user_id: id, p_code: body.sector });
+    if (error) throw dbError(error);
+    return ok(data);
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+// POST /api/admin/users/:id/sector { sector } — Administrador da empresa.
+export async function setUserSector(request: NextRequest, context: IdRouteContext) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const { id } = await context.params;
+    const body = await parseJson(request, sectorSchema);
+    const { data, error } = await supabase.rpc("fn_set_user_sector", { p_user_id: id, p_code: body.sector });
+    if (error) throw dbError(error);
+    return ok(data);
+  } catch (error) {
+    return jsonError(error);
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -9,6 +9,7 @@ import { FormField } from "@/components/ui/FormField";
 import { Alert } from "@/components/ui/Feedback";
 import { toast } from "@/components/ui/Toast";
 import { useSession } from "@/components/shell/SessionProvider";
+import { apiGet } from "@/lib/api-client";
 import { adminSend, useAdminCollections, type AdminUser } from "./data";
 
 // Vínculos de acesso de um usuário. Cada alteração chama a função do
@@ -37,6 +38,19 @@ export function UserAccessPanel({ user, onChanged }: { user: AdminUser; onChange
   const [org, setOrg] = useState({ branchId: user.branch_id ?? "", departmentId: user.department_id ?? "", positionId: user.position_id ?? "" });
   const [savingOrg, setSavingOrg] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  // Setor com permissões (0102): coloca a pessoa no setor e no perfil do setor.
+  const [sectors, setSectors] = useState<{ code: string; name: string }[]>([]);
+  const [sector, setSector] = useState("");
+  useEffect(() => {
+    if (!canManageRoles) return;
+    let cancelled = false;
+    apiGet<{ code: string; name: string }[]>("/api/admin/sectors")
+      .then((list) => !cancelled && setSectors(list))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [canManageRoles]);
   const orgDirty = org.branchId !== (user.branch_id ?? "") || org.departmentId !== (user.department_id ?? "") || org.positionId !== (user.position_id ?? "");
 
   async function saveOrg() {
@@ -120,6 +134,26 @@ export function UserAccessPanel({ user, onChanged }: { user: AdminUser; onChange
           <p className="text-xs text-subtle-foreground">Alterar o contexto exige a permissão de atribuição organizacional.</p>
         )}
       </Section>
+
+      {canManageRoles && can("users.update") && sectors.length > 0 && !isSelf && (
+        <Section title="Setor com permissões" description="Coloca a pessoa num setor e troca os papéis dela pelo perfil do setor (ex.: Compras libera fornecedores e pedidos de compra). Diretoria = Gerente.">
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="w-full sm:w-64">
+              <FormField label="Setor">
+                <Select value={sector} onValueChange={setSector} options={sectors.map((x) => ({ value: x.code, label: x.name }))} placeholder="Escolher setor" />
+              </FormField>
+            </div>
+            <Button
+              size="sm"
+              disabled={!sector || busyKey !== null}
+              loading={busyKey === "sector"}
+              onClick={() => run("sector", () => adminSend(`/api/admin/users/${user.id}/sector`, "POST", { sector }), "Setor aplicado: as permissões agora são as do setor.")}
+            >
+              Aplicar setor
+            </Button>
+          </div>
+        </Section>
+      )}
 
       <Section title="Papéis" description="O conjunto de permissões do usuário é a soma dos papéis atribuídos.">
         {!user.links_visible ? (

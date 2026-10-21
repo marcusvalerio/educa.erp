@@ -49,11 +49,28 @@ export function UserLoginPanel({ user, invitation, onChanged }: { user: AdminUse
   const status = userAccessStatus(user, invitation);
   const [busy, setBusy] = useState<string | null>(null);
   const [result, setResult] = useState<InviteResult | null>(null);
-  const [confirm, setConfirm] = useState<"revoke" | "deactivate" | "activate" | "temporary" | "revokeTemporary" | null>(null);
-  // Senha provisória: mostrada uma única vez, nunca guardada. Só para quem
-  // ainda não tem acesso (conta ativa troca a senha por "Esqueci minha senha").
+  const [confirm, setConfirm] = useState<"revoke" | "deactivate" | "activate" | "temporary" | "revokeTemporary" | "reset" | null>(null);
+  // Senha provisória: mostrada uma única vez, nunca guardada. Primeiro acesso
+  // (sem login) ou nova senha para quem já tem acesso e esqueceu (0102).
   const [temporary, setTemporary] = useState<TemporaryPasswordResult | null>(null);
   const canTemporary = temporaryPasswordAvailable() && canUpdate && !isSelf && user.status === "active" && status !== "active";
+  const canReset = temporaryPasswordAvailable() && canUpdate && !isSelf && user.status === "active" && status === "active";
+
+  async function resetPassword() {
+    setBusy("reset");
+    try {
+      const res = await adminSend<TemporaryPasswordResult>(`/api/admin/users/${user.id}/password-reset`, "POST", {});
+      setTemporary(res);
+      setResult(null);
+      setConfirm(null);
+      toast.success("Nova senha provisória gerada.");
+      onChanged();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível gerar a nova senha.");
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function issueTemporary() {
     setBusy("temporary");
@@ -158,8 +175,8 @@ export function UserLoginPanel({ user, invitation, onChanged }: { user: AdminUse
       {temporary && (
         <Alert tone="warning" title="Senha provisória — anote agora">
           <p>
-            Entregue esta senha a {user.name} por um canal seguro (pessoalmente ou mensagem direta). Ela vale até {formatDateTime(temporary.expiresAt)}, só
-            serve para o primeiro acesso de {temporary.email} e <strong>não será mostrada de novo</strong>. No primeiro login a pessoa cria a própria senha.
+            Entregue esta senha a {user.name} por um canal seguro (pessoalmente ou mensagem direta). Ela vale até {formatDateTime(temporary.expiresAt)} para o
+            login {temporary.email} e <strong>não será mostrada de novo</strong>. No próximo acesso a pessoa cria a própria senha.
           </p>
           <div className="mt-2 flex gap-2">
             <Input readOnly value={temporary.password} aria-label="Senha provisória" className="code text-sm tracking-wide" onFocus={(e) => e.currentTarget.select()} />
@@ -175,6 +192,11 @@ export function UserLoginPanel({ user, invitation, onChanged }: { user: AdminUse
           {canTemporary && (
             <Button size="sm" variant="secondary" loading={busy === "temporary"} disabled={busy !== null} onClick={() => setConfirm("temporary")}>
               <KeyRound size={14} aria-hidden /> Gerar senha provisória
+            </Button>
+          )}
+          {canReset && (
+            <Button size="sm" variant="secondary" loading={busy === "reset"} disabled={busy !== null} onClick={() => setConfirm("reset")}>
+              <RotateCcw size={14} aria-hidden /> Nova senha provisória
             </Button>
           )}
           {canTemporary && (
@@ -207,6 +229,19 @@ export function UserLoginPanel({ user, invitation, onChanged }: { user: AdminUse
         <p className="text-xs text-subtle-foreground">Convidar, gerar senha provisória, desativar e reativar exigem a permissão de edição de usuários.</p>
       )}
 
+      {confirm === "reset" && (
+        <ConfirmDialog
+          open
+          title={`Nova senha provisória para ${user.name}?`}
+          description="Para quem esqueceu a senha: a senha atual deixa de valer agora. A provisória aparece uma única vez para você entregar e, no próximo acesso, a pessoa cria uma senha nova."
+          confirmLabel="Gerar senha"
+          tone="danger"
+          loading={busy === "reset"}
+          onConfirm={resetPassword}
+          onCancel={() => setConfirm(null)}
+        />
+      )}
+
       {(confirm === "temporary" || confirm === "revokeTemporary") && (
         <ConfirmDialog
           open
@@ -224,7 +259,7 @@ export function UserLoginPanel({ user, invitation, onChanged }: { user: AdminUse
         />
       )}
 
-      {confirm && confirm !== "temporary" && confirm !== "revokeTemporary" && (
+      {confirm && confirm !== "temporary" && confirm !== "revokeTemporary" && confirm !== "reset" && (
         <ConfirmDialog
           open
           title={confirm === "revoke" ? "Cancelar convite?" : confirm === "deactivate" ? `Desativar ${user.name}?` : `Reativar ${user.name}?`}

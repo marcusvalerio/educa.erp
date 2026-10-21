@@ -9,6 +9,7 @@ import {
   generateTemporaryPassword,
   issueTemporaryPasswordFlow,
   readTemporaryMeta,
+  resetPasswordFlow,
   revokeTemporaryPasswordFlow,
   temporaryPasswordBlock,
   TemporaryPasswordError,
@@ -256,5 +257,71 @@ describe("troca obrigatória no primeiro login", () => {
     assert.equal(temporaryPasswordBlock(withMeta(), new Date("2026-10-17T00:00:00Z")), "change_required");
     assert.equal(temporaryPasswordBlock(withMeta(), new Date("2026-10-30T00:00:00Z")), "expired");
     assert.equal(temporaryPasswordBlock({ provider: "email" }), null);
+  });
+});
+
+describe("nova senha para quem já tem acesso (esqueceu a senha)", () => {
+  const resetMeta = (expires = "2026-10-20T00:00:00Z") => ({ provider: "email", [TEMPORARY_PASSWORD_META]: { mode: "reset", user_id: "user-1", expires_at: expires } });
+
+  test("o banco autoriza antes; a senha atual é trocada e o login fica marcado para troca", async () => {
+    const calls: string[] = [];
+    const r = await resetPasswordFlow({
+      authorize: async () => (calls.push("authorize"), { userId: "user-1", authUserId: "auth-1", email: "a@b.com", name: "Aluno" }),
+      getLogin: async (id) => (calls.push(`get:${id}`), { id, appMetadata: { provider: "email" }, lastSignInAt: "2026-10-01" }),
+      updateLogin: async (id, change) => {
+        calls.push(`update:${id}:${change.password}`);
+        const meta = readTemporaryMeta(change.appMetadata);
+        assert.equal(meta?.mode, "reset");
+        assert.equal(change.appMetadata.provider, "email");
+      },
+      generate: () => "Nova7Senha",
+      now: () => new Date("2026-10-21T00:00:00Z"),
+    });
+    assert.deepEqual(calls, ["authorize", "get:auth-1", "update:auth-1:Nova7Senha"]);
+    assert.equal(r.password, "Nova7Senha");
+    assert.equal(r.expiresAt, "2026-10-24T00:00:00.000Z");
+  });
+
+  test("sem autorização do banco nada muda no login", async () => {
+    let touched = false;
+    await assert.rejects(
+      resetPasswordFlow({
+        authorize: async () => {
+          throw new Error("Permissão negada");
+        },
+        getLogin: async () => ((touched = true), null),
+        updateLogin: async () => void (touched = true),
+      }),
+      /Permissão negada/
+    );
+    assert.equal(touched, false);
+  });
+
+  test("no próximo login: troca a senha e tira a marca, sem convite", async () => {
+    const { calls, deps } = changeWorld({
+      signIn: async (e, p) => (calls.push(`signIn:${e}:${p}`), { accessToken: `at-${p}`, login: { id: "auth-1", appMetadata: resetMeta(), lastSignInAt: "x" } }),
+      linkedTo: async (a, u) => (calls.push(`linked:${a}:${u}`), true),
+    });
+    await changeTemporaryPasswordFlow(input, deps);
+    assert.deepEqual(calls, ["signIn:pessoa@empresa.com:K7mP4xR9tQ", "linked:auth-1:user-1", "setPassword:auth-1:MinhaSenha2026", "clear:auth-1:false:email", "signOut:at-K7mP4xR9tQ"]);
+  });
+
+  test("vencida ou de outro cadastro não troca", async () => {
+    const expired = changeWorld({
+      signIn: async () => ({ accessToken: "at", login: { id: "auth-1", appMetadata: resetMeta("2026-10-01T00:00:00Z"), lastSignInAt: "x" } }),
+      linkedTo: async () => true,
+    });
+    await assert.rejects(changeTemporaryPasswordFlow(input, expired.deps), (e) => e instanceof TemporaryPasswordError && e.code === "EXPIRED");
+    assert.ok(!expired.calls.some((c) => c.startsWith("setPassword")));
+    const other = changeWorld({
+      signIn: async () => ({ accessToken: "at", login: { id: "auth-1", appMetadata: resetMeta(), lastSignInAt: "x" } }),
+      linkedTo: async () => false,
+    });
+    await assert.rejects(changeTemporaryPasswordFlow(input, other.deps), (e) => e instanceof TemporaryPasswordError && e.code === "NOT_PENDING");
+  });
+
+  test("a sessão de quem está marcado continua bloqueada até trocar", () => {
+    assert.equal(temporaryPasswordBlock(resetMeta(), new Date("2026-10-19T00:00:00Z")), "change_required");
+    assert.equal(temporaryPasswordBlock(resetMeta(), new Date("2026-10-21T00:00:00Z")), "expired");
   });
 });

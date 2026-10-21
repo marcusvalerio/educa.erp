@@ -124,3 +124,19 @@ export async function setUserSector(request: NextRequest, context: IdRouteContex
     return jsonError(error);
   }
 }
+
+const roleSchema = z.object({ roleId: z.string().uuid("Papel inválido.") }).strict();
+
+// POST /api/admin/study/members/:id/role { roleId } — professor troca o papel do aluno.
+export async function setStudyMemberRole(request: NextRequest, context: IdRouteContext) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const { id } = await context.params;
+    const body = await parseJson(request, roleSchema);
+    const { data, error } = await supabase.rpc("fn_study_set_member_role", { p_user_id: id, p_role_id: body.roleId });
+    if (error) throw dbError(error);
+    return ok(data);
+  } catch (error) {
+    return jsonError(error);
+  }
+}

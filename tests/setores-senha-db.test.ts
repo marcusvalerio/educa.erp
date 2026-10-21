@@ -201,4 +201,26 @@ describe("Setores com permissões e nova senha (PostgreSQL real)", { skip: !url 
     await as(adminEmpresa);
     assert.match((await attempt("select public.fn_authorize_password_reset($1)", [dono.id])).error, /administração da plataforma/);
   });
+
+  test("papel do aluno: professor troca (substitui os anteriores); outra turma não; último Administrador não perde", async () => {
+    await as(prof);
+    const vend = (await one<{ id: string }>("select id from public.fn_study_group_roles($1) where code = 'vendedor'", [grupo])).id;
+    const r = await attempt("select public.fn_study_set_member_role($1, $2) as r", [alunoId, vend]);
+    assert.ok(r.ok, r.error);
+    await asOwner();
+    const roles = (await db.query("select r.code from public.user_roles ur join public.roles r on r.id = ur.role_id where ur.user_id = $1", [alunoId])).rows.map((x) => x.code);
+    assert.deepEqual(roles, ["vendedor"]);
+    assert.equal(await holds(aluno, grupo, "sales_orders.create"), true);
+    await as(prof2);
+    assert.match((await attempt("select public.fn_study_set_member_role($1, $2)", [alunoId, vend])).error, /não encontrado/);
+    // Papel de outra empresa não vale.
+    await asOwner();
+    const turmaVend = (await one<{ id: string }>("select id from public.roles where company_id = $1 and code = 'vendedor'", [turma])).id;
+    await as(prof);
+    assert.match((await attempt("select public.fn_study_set_member_role($1, $2)", [alunoId, turmaVend])).error, /Papel não encontrado/);
+    // Administrador do grupo: com um só, ele não perde o papel.
+    const admRole = (await one<{ id: string }>("select id from public.fn_study_group_roles($1) where code = 'admin'", [grupo])).id;
+    assert.ok((await attempt("select public.fn_study_set_member_role($1, $2)", [liderId, admRole])).ok);
+    assert.match((await attempt("select public.fn_study_set_member_role($1, $2)", [liderId, vend])).error, /administrador/i);
+  });
 });

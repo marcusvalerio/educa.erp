@@ -102,6 +102,21 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
     }
   }
 
+  async function changeRole(member: Member, roleId: string) {
+    const current = roles.find((r) => r.name === member.roles)?.id;
+    if (!roleId || roleId === current) return;
+    setBusy(`role-${member.id}`);
+    try {
+      await apiSend(`/api/admin/study/members/${member.id}/role`, "POST", { roleId });
+      toast.success(`${member.name}: papel atualizado.`);
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível mudar o papel.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function changeSector(member: Member, sector: string) {
     if (!sector || sector === member.sector_code) return;
     setBusy(`sector-${member.id}`);
@@ -194,6 +209,18 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
                       </p>
                     </div>
                     <Badge tone={state.tone}>{state.label}</Badge>
+                    {roles.length > 0 && (
+                      <div className="w-full sm:w-48">
+                        <Select
+                          value={roles.find((r) => r.name === m.roles)?.id ?? ""}
+                          onValueChange={(v) => changeRole(m, v)}
+                          options={roles.map((r) => ({ value: r.id, label: r.name }))}
+                          placeholder={m.roles ?? "Escolher papel"}
+                          disabled={busy !== null}
+                          aria-label={`Papel de ${m.name}`}
+                        />
+                      </div>
+                    )}
                     {!m.is_admin && sectors.length > 0 && (
                       <div className="w-full sm:w-52">
                         <Select

@@ -329,18 +329,12 @@ export const ADMIN_ICONS: Record<string, LucideIcon> = {
   "/app/admin/audit": ScrollText,
 };
 
-/** Permissões que dão acesso a ALGUMA página de /admin. */
-export const ADMIN_ENTRY_PERMISSIONS = [
-  "users.read",
-  "roles.read",
-  "departments.view",
-  "positions.view",
-  "branches.read",
-  "company_modules.view",
-  "settings.view",
-  "dashboard.configure",
-  "audit_logs.read",
-];
+/**
+ * Quem entra na Administração da Empresa: só quem ADMINISTRA (cadastra ou
+ * edita pessoas, papéis, módulos ou unidades). Só consultar usuários,
+ * setores ou auditoria — como o Gerente — não abre a área administrativa.
+ */
+export const ADMIN_ENTRY_PERMISSIONS = ["users.create", "users.update", "roles.manage", "company_modules.manage", "branches.manage"];
 
 // ------------------------------------------------------------------ /admincentral
 // Administração Central: governança da PLATAFORMA. Permissões aqui são

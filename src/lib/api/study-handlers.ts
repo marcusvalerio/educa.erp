@@ -176,3 +176,17 @@ export async function saveStudyProfile(request: NextRequest, context: IdRouteCon
     return jsonError(error);
   }
 }
+
+// POST /api/admin/study/members/:id/department { sector } — só o setor do organograma (0106).
+export async function setStudyMemberDepartment(request: NextRequest, context: IdRouteContext) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const { id } = await context.params;
+    const body = await parseJson(request, sectorSchema);
+    const { data, error } = await supabase.rpc("fn_study_set_member_department", { p_user_id: id, p_code: body.sector });
+    if (error) throw dbError(error);
+    return ok(data);
+  } catch (error) {
+    return jsonError(error);
+  }
+}

@@ -173,7 +173,7 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
     setBusy("add");
     try {
       const created = await apiSend<{ user_id: string }>(`/api/admin/study/groups/${group.id}/members`, "POST", { name: form.name.trim(), email: form.email.trim(), roleId: form.roleId });
-      if (form.sector && created?.user_id) await apiSend(`/api/admin/study/members/${created.user_id}/sector`, "POST", { sector: form.sector });
+      if (form.sector && created?.user_id) await apiSend(`/api/admin/study/members/${created.user_id}/department`, "POST", { sector: form.sector });
       toast.success("Aluno cadastrado.", "Agora gere a senha provisória dele.");
       setForm((f) => ({ ...f, name: "", email: "", sector: "" }));
       await load();
@@ -185,12 +185,23 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
     }
   }
 
-  async function changeRole(member: Member, roleId: string) {
-    const current = roles.find((r) => r.name === member.roles)?.id;
-    if (!roleId || roleId === current) return;
+  // Papel: perfis de sempre e com telas + perfis de setor (criados ao escolher).
+  const roleOptions = [
+    ...roles.filter((r) => !r.code.startsWith("setor_")).map((r) => ({ value: r.id, label: r.name })),
+    ...sectors.filter((x) => x.code !== "DIRETORIA").map((x) => ({ value: `sector:${x.code}`, label: `Setor: ${x.name}` })),
+  ];
+  const roleValue = (m: Member) => {
+    const role = roles.find((r) => r.name === m.roles);
+    if (!role) return "";
+    return role.code.startsWith("setor_") ? `sector:${role.code.slice(6).toUpperCase()}` : role.id;
+  };
+
+  async function changeRole(member: Member, value: string) {
+    if (!value || value === roleValue(member)) return;
     setBusy(`role-${member.id}`);
     try {
-      await apiSend(`/api/admin/study/members/${member.id}/role`, "POST", { roleId });
+      if (value.startsWith("sector:")) await apiSend(`/api/admin/study/members/${member.id}/sector`, "POST", { sector: value.slice(7) });
+      else await apiSend(`/api/admin/study/members/${member.id}/role`, "POST", { roleId: value });
       toast.success(`${member.name}: papel atualizado.`);
       await load();
     } catch (e) {
@@ -204,8 +215,8 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
     if (!sector || sector === member.sector_code) return;
     setBusy(`sector-${member.id}`);
     try {
-      await apiSend(`/api/admin/study/members/${member.id}/sector`, "POST", { sector });
-      toast.success(`${member.name}: setor atualizado.`, "As permissões passam a ser as do setor.");
+      await apiSend(`/api/admin/study/members/${member.id}/department`, "POST", { sector });
+      toast.success(`${member.name}: setor atualizado.`, "O papel (o que pode fazer) não muda.");
       await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível mudar o setor.");
@@ -292,20 +303,22 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
                       </p>
                     </div>
                     <Badge tone={state.tone}>{state.label}</Badge>
-                    {roles.length > 0 && (
+                    {roleOptions.length > 0 && (
                       <div className="w-full sm:w-48">
+                        <span className="mb-1 block text-xs text-muted-foreground">Papel (o que pode fazer)</span>
                         <Select
-                          value={roles.find((r) => r.name === m.roles)?.id ?? ""}
+                          value={roleValue(m)}
                           onValueChange={(v) => changeRole(m, v)}
-                          options={roles.map((r) => ({ value: r.id, label: r.name }))}
+                          options={roleOptions}
                           placeholder={m.roles ?? "Escolher papel"}
                           disabled={busy !== null}
                           aria-label={`Papel de ${m.name}`}
                         />
                       </div>
                     )}
-                    {!m.is_admin && sectors.length > 0 && (
+                    {sectors.length > 0 && (
                       <div className="w-full sm:w-52">
+                        <span className="mb-1 block text-xs text-muted-foreground">Setor (onde fica)</span>
                         <Select
                           value={m.sector_code ?? ""}
                           onValueChange={(v) => changeSector(m, v)}
@@ -384,11 +397,11 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
             </FormField>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FormField label="Setor" help="O setor define o que o aluno pode fazer. Diretoria = Gerente (líder).">
+            <FormField label="Setor (onde fica)" help="Organograma: não muda o que o aluno pode fazer.">
               <Select value={form.sector} onValueChange={(v) => setForm((f) => ({ ...f, sector: v }))} options={sectors.map((x) => ({ value: x.code, label: x.name }))} placeholder="Escolha o setor" />
             </FormField>
-            <FormField label="Papel no grupo" required help={form.sector ? "Com setor escolhido, o perfil passa a ser o do setor." : "Gerente faz quase tudo; Operador cria e edita; Somente leitura só consulta."}>
-              <Select value={form.roleId} onValueChange={(v) => setForm((f) => ({ ...f, roleId: v }))} options={roles.map((r) => ({ value: r.id, label: r.name }))} placeholder="Escolha o papel" />
+            <FormField label="Papel (o que pode fazer)" required help="Gerente faz quase tudo; perfis com telas mostram só as telas marcadas.">
+              <Select value={form.roleId} onValueChange={(v) => setForm((f) => ({ ...f, roleId: v }))} options={roles.filter((r) => !r.code.startsWith("setor_")).map((r) => ({ value: r.id, label: r.name }))} placeholder="Escolha o papel" />
             </FormField>
           </div>
           <div>

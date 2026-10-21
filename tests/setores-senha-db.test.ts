@@ -253,4 +253,20 @@ describe("Setores com permissões e nova senha (PostgreSQL real)", { skip: !url 
     await as(prof2);
     assert.match((await attempt("select public.fn_study_save_profile($1, null, 'Outro', array['/app/suprimentos/cotacoes'])", [grupo])).error, /não encontrado|não é desta turma|Grupo/);
   });
+
+  test("setor do organograma: muda só o setor, nunca as permissões", async () => {
+    await as(prof);
+    const ger = (await one<{ id: string }>("select id from public.fn_study_group_roles($1) where code = 'gerente'", [grupo])).id;
+    assert.ok((await attempt("select public.fn_study_set_member_role($1, $2)", [alunoId, ger])).ok);
+    const r = await attempt("select public.fn_study_set_member_department($1, 'comercial') as r", [alunoId]);
+    assert.ok(r.ok, r.error);
+    await asOwner();
+    const u = await one<{ code: string; roles: string }>(
+      "select d.code, (select string_agg(r.code, ',') from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = u.id) roles from users u join departments d on d.id = u.department_id where u.id = $1",
+      [alunoId]
+    );
+    assert.deepEqual(u, { code: "COMERCIAL", roles: "gerente" }, "continua Gerente, agora no setor Comercial");
+    await as(prof2);
+    assert.match((await attempt("select public.fn_study_set_member_department($1, 'FISCAL')", [alunoId])).error, /não encontrado/);
+  });
 });

@@ -10,7 +10,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { NoAccess } from "@/components/shell/ShellFrame";
 import { useSession } from "@/components/shell/SessionProvider";
 import { ERP_NAV } from "@/lib/nav";
-import { canAccess } from "@/lib/navigation/access";
+import { canAccess, screenAllowed } from "@/lib/navigation/access";
 import { REPORTS } from "@/lib/dashboard/metrics";
 import { useCached } from "@/lib/dashboard/client";
 import { formatCurrencyBRL, formatDate } from "@/lib/format";
@@ -265,13 +265,14 @@ function RecentPanel({ def }: { def: RecentDef }) {
 }
 
 export function ModuleWorkspace({ section: sectionId }: { section: string }) {
-  const { can } = useSession();
+  const { can, data } = useSession();
+  const screens = data?.tenant?.screens ?? null;
   const { range, previous } = usePeriod();
   const section = ERP_NAV.find((s) => s.id === sectionId);
   const def = WORKSPACES[sectionId] ?? {};
   if (!section) return null;
 
-  const items = section.items.filter((item) => canAccess(item.permission, can));
+  const items = section.items.filter((item) => canAccess(item.permission, can) && screenAllowed(item, screens));
   if (items.length === 0) return <NoAccess />;
 
   const report = def.report ? REPORTS[def.report] : undefined;

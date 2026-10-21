@@ -13,6 +13,8 @@ export type TenantContext = {
   roles: Array<{ id: string; code: string; name: string; is_system: boolean }>;
   permissions: string[];
   modules: string[];
+  /** Telas do menu quando TODOS os perfis da pessoa têm lista de telas (0105); nulo = menu pelas permissões. */
+  screens?: string[] | null;
 };
 
 export type FocusArea = {

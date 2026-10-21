@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { ADMIN_NAV, ERP_NAV, PLATFORM_NAV } from "@/lib/nav";
-import { breadcrumbFor, canAccess, initials, isPathActive, matchLeaf, routeRequirement, safeNextPath, visibleSections } from "@/lib/navigation/access";
+import { breadcrumbFor, canAccess, initials, isPathActive, matchLeaf, routeRequirement, safeNextPath, screenAllowed, visibleSections } from "@/lib/navigation/access";
 
 const only = (...perms: string[]) => (p: string) => perms.includes(p);
 
@@ -117,5 +117,25 @@ describe("mapa de navegação", () => {
         assert.ok(candidates.some((c) => existsSync(c)), `sem página para ${href}`);
       }
     }
+  });
+});
+
+describe("perfis com telas (0105)", () => {
+  const all = () => true;
+  test("com lista: só as telas marcadas (e itens sem permissão) aparecem", () => {
+    const screens = ["/app/comercial/orcamentos", "/app/financeiro/contas-pagar"];
+    const sections = visibleSections(ERP_NAV, all, screens);
+    const hrefs = sections.flatMap((s) => s.items.map((i) => i.href));
+    assert.ok(hrefs.includes("/app/comercial/orcamentos"));
+    assert.ok(hrefs.includes("/app/financeiro/contas-pagar"));
+    assert.ok(!hrefs.includes("/app/comercial/pedidos-venda"));
+    assert.ok(!hrefs.includes("/app/logistica/estoque"));
+    assert.ok(!sections.some((s) => s.id === "fiscal"), "área sem tela marcada some");
+  });
+  test("sem lista: menu pelas permissões, como antes", () => {
+    assert.deepEqual(visibleSections(ERP_NAV, all, null), visibleSections(ERP_NAV, all));
+    assert.equal(screenAllowed({ href: "/app/x", permission: "a.view" }, null), true);
+    assert.equal(screenAllowed({ href: "/app/x" }, ["/app/y"]), true, "item sem permissão sempre");
+    assert.equal(screenAllowed({ href: "/app/x", permission: "a.view" }, ["/app/y"]), false);
   });
 });

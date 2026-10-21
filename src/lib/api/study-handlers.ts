@@ -140,3 +140,39 @@ export async function setStudyMemberRole(request: NextRequest, context: IdRouteC
     return jsonError(error);
   }
 }
+
+// ------------------------------------------------------------ perfis com telas (0105)
+
+// GET /api/admin/screens — telas que um perfil pode ter.
+export async function listScreens() {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const { data, error } = await supabase.rpc("fn_screens");
+    if (error) throw dbError(error);
+    return ok(data ?? []);
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+const profileSchema = z
+  .object({
+    roleId: z.string().uuid().optional(),
+    name: z.string().trim().min(1, "Informe o nome do perfil.").max(80),
+    screens: z.array(z.string().max(120)).min(1, "Marque ao menos uma tela.").max(100),
+  })
+  .strict();
+
+// POST /api/admin/study/groups/:id/profiles { roleId?, name, screens } — cria ou altera.
+export async function saveStudyProfile(request: NextRequest, context: IdRouteContext) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const { id } = await context.params;
+    const body = await parseJson(request, profileSchema);
+    const { data, error } = await supabase.rpc("fn_study_save_profile", { p_group_id: id, p_role_id: body.roleId ?? null, p_name: body.name, p_screens: body.screens });
+    if (error) throw dbError(error);
+    return ok(data, body.roleId ? 200 : 201);
+  } catch (error) {
+    return jsonError(error);
+  }
+}

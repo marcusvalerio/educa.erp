@@ -34,15 +34,24 @@ export function canAccess(permission: NavLeaf["permission"], can: Can): boolean 
   return can(permission);
 }
 
+/**
+ * Perfis com lista de telas (0105): item com permissão só aparece se a tela
+ * estiver na lista. Itens sem permissão (Início, Aparência) sempre.
+ */
+export function screenAllowed(item: Pick<NavLeaf, "href" | "permission">, screens?: string[] | null): boolean {
+  if (!screens || !item.permission) return true;
+  return screens.includes(item.href);
+}
+
 /** Seções e itens visíveis para as permissões do usuário. */
-export function visibleSections(sections: NavSection[], can: Can): NavSection[] {
+export function visibleSections(sections: NavSection[], can: Can, screens?: string[] | null): NavSection[] {
   const result: NavSection[] = [];
   for (const section of sections) {
     if (section.items.length === 0) {
       result.push(section);
       continue;
     }
-    const items = section.items.filter((item) => canAccess(item.permission, can));
+    const items = section.items.filter((item) => canAccess(item.permission, can) && screenAllowed(item, screens));
     if (items.length > 0) result.push({ ...section, items });
   }
   return result;

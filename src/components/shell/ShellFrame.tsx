@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState, Skeleton } from "@/components/ui/Feedback";
 import { Badge } from "@/components/ui/Badge";
 import { ADMIN_ENTRY_PERMISSIONS, ADMIN_ICONS, ADMIN_NAV, ERP_NAV, PLATFORM_ICONS, PLATFORM_NAV, type NavSection } from "@/lib/nav";
-import { breadcrumbFor, canAccess, routeRequirement, visibleSections } from "@/lib/navigation/access";
+import { breadcrumbFor, canAccess, matchLeaf, routeRequirement, screenAllowed, visibleSections } from "@/lib/navigation/access";
 import { statusMeta } from "@/lib/status";
 import { SessionProvider, useSession } from "./SessionProvider";
 import { Sidebar } from "./Sidebar";
@@ -152,7 +152,8 @@ function ShellInner({ environment, children }: { environment: Environment; child
     if (status === "ready" && environment === "erp" && !data?.tenant && data?.platform) router.replace("/app/admincentral");
   }, [status, environment, data, router]);
 
-  const sections: NavSection[] = useMemo(() => visibleSections(env.nav, permissionCheck), [env.nav, permissionCheck]);
+  const screens = environment === "erp" ? (data?.tenant?.screens ?? null) : null;
+  const sections: NavSection[] = useMemo(() => visibleSections(env.nav, permissionCheck, screens), [env.nav, permissionCheck, screens]);
 
   const adminHref = data?.tenant && canAny(ADMIN_ENTRY_PERMISSIONS) ? "/app/admin" : null;
   const platformHref = data?.platform ? "/app/admincentral" : null;
@@ -229,7 +230,8 @@ function ShellInner({ environment, children }: { environment: Environment; child
   if (environment === "erp" && !data?.tenant) return <ShellSkeleton />;
 
   const requirement = routeRequirement(env.nav, pathname);
-  const allowed = canAccess(requirement, permissionCheck);
+  const leaf = screens ? matchLeaf(env.nav, pathname)?.leaf : null;
+  const allowed = canAccess(requirement, permissionCheck) && (!leaf || screenAllowed(leaf, screens));
   const crumbs = [...breadcrumbFor(env.nav, pathname, env.rootLabel, env.rootHref), ...tail];
   // Módulo da página (sobrelinha do PageHeader): no ERP o 2º nível da
   // trilha (Início › Comercial › …); nos ambientes administrativos, o

@@ -11,7 +11,7 @@ import { EYEBROW_CLASS } from "@/components/ui/PageHeader";
 import { AutoEyebrow } from "@/components/shell/Breadcrumbs";
 import { useSession } from "@/components/shell/SessionProvider";
 import { ERP_NAV } from "@/lib/nav";
-import { canAccess } from "@/lib/navigation/access";
+import { canAccess, screenAllowed } from "@/lib/navigation/access";
 import { PERIOD_LABELS, formatRange, periodRange, previousRange, type PeriodKey } from "@/lib/dashboard/periods";
 
 // CONTEXTO do dashboard: quem, onde, qual recorte. E AÇÃO: o foco do
@@ -122,6 +122,7 @@ export function DashboardHeader({ title, description, actions, hero = false }: {
 export function FocusPanel() {
   const { data, can } = useSession();
   const focus = useMemo(() => data?.focus ?? [], [data]);
+  const screens = data?.tenant?.screens ?? null;
   const shortcuts = useMemo(() => {
     const seen = new Set<string>();
     const out: Array<{ label: string; href: string; section: string }> = [];
@@ -130,12 +131,12 @@ export function FocusPanel() {
       const section = ERP_NAV.find((s) => s.id === sectionId);
       if (!section || seen.has(section.id)) continue;
       seen.add(section.id);
-      for (const item of section.items.filter((i) => canAccess(i.permission, can)).slice(0, 3)) {
+      for (const item of section.items.filter((i) => canAccess(i.permission, can) && screenAllowed(i, screens)).slice(0, 3)) {
         out.push({ label: item.label, href: item.href, section: section.label });
       }
     }
     return out.slice(0, 9);
-  }, [focus, can]);
+  }, [focus, can, screens]);
 
   return (
     <Panel>

@@ -5,6 +5,7 @@ import { jsonError } from "./response";
 import { dbError, requireSession } from "./governance";
 import type { FocusArea, PlatformContext, SessionContext, TenantContext } from "@/lib/session/types";
 import { resolveAccessState } from "@/lib/onboarding/access";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // GET /api/session/context
 //
@@ -22,6 +23,17 @@ import { resolveAccessState } from "@/lib/onboarding/access";
 //     sem detalhe técnico.
 // Os dois contextos são independentes de propósito: ser Platform Owner
 // não produz tenant, e ser Company Admin não produz platform.
+/** Telas do menu: só quando todos os perfis da pessoa têm lista de telas (0105). */
+async function screensOf(companyId: string, roleIds: string[]): Promise<string[] | null> {
+  if (roleIds.length === 0) return null;
+  const { data, error } = await createAdminClient().from("roles").select("screens").eq("company_id", companyId).in("id", roleIds);
+  // Sem a coluna (migration ainda não aplicada) ou erro: menu pelas permissões.
+  if (error || !data || data.length !== roleIds.length) return null;
+  const lists = data.map((r) => (r as { screens: string[] | null }).screens);
+  if (lists.some((l) => !Array.isArray(l))) return null;
+  return [...new Set(lists.flat() as string[])].sort();
+}
+
 export async function getSessionContext() {
   try {
     const { supabase, authUserId, email } = await requireSession();
@@ -43,6 +55,7 @@ export async function getSessionContext() {
       ]);
       if (ctxResult.error) throw dbError(ctxResult.error);
       tenant = (ctxResult.data as TenantContext | null) ?? null;
+      if (tenant) tenant.screens = await screensOf(companyId, tenant.roles.map((r) => r.id));
       // Foco de dashboard é enriquecimento: falha aqui não derruba a sessão.
       focus = focusResult.error ? [] : ((focusResult.data as FocusArea[] | null) ?? []);
     }

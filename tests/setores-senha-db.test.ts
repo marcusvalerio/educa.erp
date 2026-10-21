@@ -223,4 +223,34 @@ describe("Setores com permissões e nova senha (PostgreSQL real)", { skip: !url 
     assert.ok((await attempt("select public.fn_study_set_member_role($1, $2)", [liderId, admRole])).ok);
     assert.match((await attempt("select public.fn_study_set_member_role($1, $2)", [liderId, vend])).error, /administrador/i);
   });
+
+  test("perfil com telas: professor cria; telas viram permissões; editar troca; nome repetido e tela inválida recusados", async () => {
+    await as(prof);
+    const r = await attempt(
+      "select public.fn_study_save_profile($1, null, 'Comercial e Financeiro', array['/app/comercial/orcamentos','/app/financeiro/contas-pagar','/app/nao-existe']) as r",
+      [grupo]
+    );
+    assert.ok(r.ok, r.error);
+    const roleId = r.rows[0].r.role_id;
+    assert.deepEqual([...r.rows[0].r.screens].sort(), ["/app/comercial/orcamentos", "/app/financeiro/contas-pagar"], "tela desconhecida é ignorada");
+    assert.ok((await attempt("select public.fn_study_set_member_role($1, $2)", [alunoId, roleId])).ok);
+    assert.equal(await holds(aluno, grupo, "sales_quotes.create"), true);
+    assert.equal(await holds(aluno, grupo, "accounts_payable.create"), true);
+    assert.equal(await holds(aluno, grupo, "purchase_orders.create"), false);
+    assert.equal(await holds(aluno, grupo, "products.read"), true, "consulta comum");
+    await as(prof);
+    const roles = (await db.query("select name, screens from public.fn_study_group_roles($1) where id = $2", [grupo, roleId])).rows;
+    assert.equal(roles[0].name, "Comercial e Financeiro");
+    // Editar: passa a ser só Compras.
+    assert.ok((await attempt("select public.fn_study_save_profile($1, $2, 'Compras', array['/app/suprimentos/pedidos-compra'])", [grupo, roleId])).ok);
+    assert.equal(await holds(aluno, grupo, "purchase_orders.create"), true);
+    assert.equal(await holds(aluno, grupo, "accounts_payable.create"), false);
+    await as(prof);
+    assert.match((await attempt("select public.fn_study_save_profile($1, null, 'compras', array['/app/suprimentos/cotacoes'])", [grupo])).error, /Já existe um perfil/);
+    assert.match((await attempt("select public.fn_study_save_profile($1, null, 'Vazio', array['/app/x'])", [grupo])).error, /ao menos uma tela/);
+    const gerente = (await one<{ id: string }>("select id from public.fn_study_group_roles($1) where code = 'gerente'", [grupo])).id;
+    assert.match((await attempt("select public.fn_study_save_profile($1, $2, 'Gerente 2', array['/app/suprimentos/cotacoes'])", [grupo, gerente])).error, /Só perfis com telas/);
+    await as(prof2);
+    assert.match((await attempt("select public.fn_study_save_profile($1, null, 'Outro', array['/app/suprimentos/cotacoes'])", [grupo])).error, /não encontrado|não é desta turma|Grupo/);
+  });
 });

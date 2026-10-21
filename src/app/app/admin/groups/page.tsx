@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Ban, Copy, KeyRound, Plus, RotateCcw, UserPlus, Users } from "lucide-react";
+import { Ban, Copy, KeyRound, LayoutList, Pencil, Plus, RotateCcw, UserPlus, Users } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel, PanelHeader } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
@@ -10,7 +10,7 @@ import { Dialog, ConfirmDialog } from "@/components/ui/Dialog";
 import { Drawer } from "@/components/ui/Drawer";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Controls";
+import { Checkbox, Select } from "@/components/ui/Controls";
 import { Alert, EmptyState, SkeletonRows } from "@/components/ui/Feedback";
 import { toast } from "@/components/ui/Toast";
 import { apiGet, apiSend } from "@/lib/api-client";
@@ -24,7 +24,8 @@ import { formatDate, formatDateTime } from "@/lib/format";
 
 type Context = { is_study: boolean; can_manage: boolean; parent_name: string | null };
 type Group = { id: string; name: string; created_at: string; members: number; logins: number; pending_invitations: number; products: number; sales_orders: number; purchase_orders: number };
-type Role = { id: string; code: string; name: string };
+type Role = { id: string; code: string; name: string; screens: string[] | null };
+type Screen = { href: string; area: string; label: string };
 type Member = {
   id: string;
   name: string;
@@ -49,6 +50,84 @@ function memberState(m: Member): { label: string; tone: "success" | "warning" | 
   return { label: "Sem acesso", tone: "neutral" };
 }
 
+/** Perfil com telas (0105): nome + telas marcadas, agrupadas por área do menu. */
+function ProfileDialog({ groupId, profile, screens, onClose, onSaved }: { groupId: string; profile: Role | null; screens: Screen[]; onClose: () => void; onSaved: () => void }) {
+  const [name, setName] = useState(profile?.name ?? "");
+  const [picked, setPicked] = useState<Set<string>>(() => new Set(profile?.screens ?? []));
+  const [busy, setBusy] = useState(false);
+  const areas = [...new Set(screens.map((x) => x.area))];
+
+  const toggle = (href: string, on: boolean) =>
+    setPicked((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(href);
+      else next.delete(href);
+      return next;
+    });
+
+  async function save() {
+    if (!name.trim()) return toast.error("Informe o nome do perfil.");
+    if (picked.size === 0) return toast.error("Marque ao menos uma tela.");
+    setBusy(true);
+    try {
+      await apiSend(`/api/admin/study/groups/${groupId}/profiles`, "POST", { ...(profile ? { roleId: profile.id } : {}), name: name.trim(), screens: [...picked] });
+      toast.success(profile ? "Perfil atualizado." : "Perfil criado.", "Escolha o perfil no campo Papel de cada aluno.");
+      onSaved();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível salvar o perfil.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog
+      open
+      onOpenChange={(o) => !o && !busy && onClose()}
+      title={profile ? `Editar perfil ${profile.name}` : "Novo perfil com telas"}
+      description="Quem tiver este perfil vê no menu só as telas marcadas e recebe as permissões para trabalhar nelas."
+      size="lg"
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose} disabled={busy}>
+            Cancelar
+          </Button>
+          <Button onClick={save} loading={busy}>
+            Salvar perfil
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <FormField label="Nome do perfil" required>
+          <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} placeholder="Ex.: Comercial e Financeiro" />
+        </FormField>
+        {areas.map((area) => {
+          const list = screens.filter((x) => x.area === area);
+          const all = list.every((x) => picked.has(x.href));
+          return (
+            <fieldset key={area} className="flex flex-col gap-2 rounded-lg border border-border-subtle p-3">
+              <legend className="flex items-center gap-2 px-1 text-sm font-semibold">
+                <Checkbox id={`area-${area}`} checked={all} onCheckedChange={(v) => list.forEach((x) => toggle(x.href, v === true))} aria-label={`Todas as telas de ${area}`} />
+                <label htmlFor={`area-${area}`}>{area}</label>
+              </legend>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {list.map((x) => (
+                  <label key={x.href} className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={picked.has(x.href)} onCheckedChange={(v) => toggle(x.href, v === true)} />
+                    {x.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          );
+        })}
+        <p className="text-xs text-muted-foreground">{picked.size} tela(s) marcada(s). Início e Aparência aparecem sempre.</p>
+      </div>
+    </Dialog>
+  );
+}
+
 function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClose: () => void; onChanged: () => void }) {
   const [roles, setRoles] = useState<Role[]>([]);
   const [members, setMembers] = useState<Member[] | null>(null);
@@ -56,6 +135,8 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
   const [form, setForm] = useState({ name: "", email: "", roleId: "", sector: "" });
   const [sectors, setSectors] = useState<Sector[]>([]);
   const [sectorsError, setSectorsError] = useState(false);
+  const [screens, setScreens] = useState<Screen[]>([]);
+  const [editing, setEditing] = useState<Role | "new" | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [issued, setIssued] = useState<(Issued & { name: string }) | null>(null);
   const [confirm, setConfirm] = useState<{ kind: "issue" | "revoke" | "reset"; member: Member } | null>(null);
@@ -63,10 +144,12 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
   const load = useCallback(async () => {
     if (!group) return;
     try {
-      const [data, list] = await Promise.all([
+      const [data, list, screenList] = await Promise.all([
         apiGet<{ roles: Role[]; members: Member[] }>(`/api/admin/study/groups/${group.id}`),
         apiGet<Sector[]>("/api/admin/sectors").catch(() => null),
+        apiGet<Screen[]>("/api/admin/screens").catch(() => [] as Screen[]),
       ]);
+      setScreens(screenList);
       setSectors(list ?? []);
       setSectorsError(list === null);
       setRoles(data.roles);
@@ -255,6 +338,41 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
           )}
         </section>
 
+        {screens.length > 0 && (
+          <section className="flex flex-col gap-2 rounded-lg border border-border-subtle p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-semibold">Perfis com telas</h3>
+                <p className="text-xs text-muted-foreground">Monte perfis escolhendo as telas; depois escolha o perfil no campo Papel de cada aluno.</p>
+              </div>
+              <Button size="sm" variant="secondary" onClick={() => setEditing("new")} disabled={busy !== null}>
+                <LayoutList size={14} aria-hidden /> Novo perfil
+              </Button>
+            </div>
+            {roles.filter((r) => r.screens).length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum perfil com telas ainda.</p>
+            ) : (
+              <ul className="flex flex-col divide-y divide-border-subtle">
+                {roles
+                  .filter((r) => r.screens)
+                  .map((r) => (
+                    <li key={r.id} className="flex flex-wrap items-center gap-2 py-2">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">{r.name}</span>
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {(r.screens ?? []).map((h) => screens.find((x) => x.href === h)?.label ?? h).join(", ")}
+                        </span>
+                      </span>
+                      <Button size="sm" variant="ghost" onClick={() => setEditing(r)} disabled={busy !== null}>
+                        <Pencil size={14} aria-hidden /> Editar
+                      </Button>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </section>
+        )}
+
         <section className="flex flex-col gap-3 rounded-lg border border-border-subtle p-3">
           <h3 className="text-sm font-semibold">Cadastrar aluno</h3>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -280,6 +398,20 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
           </div>
         </section>
       </div>
+
+      {editing && group && (
+        <ProfileDialog
+          key={editing === "new" ? "new" : editing.id}
+          groupId={group.id}
+          profile={editing === "new" ? null : editing}
+          screens={screens}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            void load();
+          }}
+        />
+      )}
 
       {confirm && (
         <ConfirmDialog

@@ -55,6 +55,7 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", roleId: "", sector: "" });
   const [sectors, setSectors] = useState<Sector[]>([]);
+  const [sectorsError, setSectorsError] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [issued, setIssued] = useState<(Issued & { name: string }) | null>(null);
   const [confirm, setConfirm] = useState<{ kind: "issue" | "revoke" | "reset"; member: Member } | null>(null);
@@ -64,9 +65,10 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
     try {
       const [data, list] = await Promise.all([
         apiGet<{ roles: Role[]; members: Member[] }>(`/api/admin/study/groups/${group.id}`),
-        apiGet<Sector[]>("/api/admin/sectors").catch(() => [] as Sector[]),
+        apiGet<Sector[]>("/api/admin/sectors").catch(() => null),
       ]);
-      setSectors(list);
+      setSectors(list ?? []);
+      setSectorsError(list === null);
       setRoles(data.roles);
       setMembers(data.members);
       setError(null);
@@ -152,6 +154,7 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
     <Drawer open={group !== null} onClose={onClose} size="lg" title={group?.name ?? ""} subtitle="Alunos do grupo e acesso">
       <div className="flex flex-col gap-4">
         {error && <Alert tone="danger">{error}</Alert>}
+        {sectorsError && <Alert tone="warning">A lista de setores não carregou. Atualize a página; se continuar, avise o administrador da plataforma.</Alert>}
 
         {issued && (
           <Alert tone="warning" title="Senha provisória — anote agora">

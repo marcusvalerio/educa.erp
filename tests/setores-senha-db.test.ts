@@ -117,6 +117,18 @@ describe("Setores com permissões e nova senha (PostgreSQL real)", { skip: !url 
     assert.deepEqual(zerado, { p: 0, s: 0, c: 0 }, "grupo continua sem cadastros");
   });
 
+  test("lista de setores: quem está logado lê (código e nome); anon não", async () => {
+    await as(prof);
+    const r = await attempt("select code, name from public.fn_sectors()");
+    assert.ok(r.ok, r.error);
+    assert.equal(r.rows.length, 11);
+    await as(aluno);
+    assert.ok((await attempt("select * from public.fn_sectors()")).ok);
+    await db.query("reset role");
+    await db.query("set local role anon");
+    assert.match((await attempt("select * from public.fn_sectors()")).error, /permission denied/);
+  });
+
   test("trocar de setor: Financeiro tira compras; lista de membros mostra o setor", async () => {
     await as(prof);
     assert.ok((await attempt("select public.fn_study_set_member_sector($1, 'FINANCEIRO')", [alunoId])).ok);

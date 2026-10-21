@@ -23,15 +23,19 @@ import { createAdminClient } from "@/lib/supabase/admin";
 //     sem detalhe técnico.
 // Os dois contextos são independentes de propósito: ser Platform Owner
 // não produz tenant, e ser Company Admin não produz platform.
-/** Telas do menu: só quando todos os perfis da pessoa têm lista de telas (0105). */
+/**
+ * Telas do menu (0105/0107): com algum setor (perfil com telas), o menu
+ * mostra só as telas dos setores, mesmo com um papel de nível (Gerente...).
+ * Sem setor: nulo, menu pelas permissões.
+ */
 async function screensOf(companyId: string, roleIds: string[]): Promise<string[] | null> {
   if (roleIds.length === 0) return null;
   const { data, error } = await createAdminClient().from("roles").select("screens").eq("company_id", companyId).in("id", roleIds);
   // Sem a coluna (migration ainda não aplicada) ou erro: menu pelas permissões.
-  if (error || !data || data.length !== roleIds.length) return null;
-  const lists = data.map((r) => (r as { screens: string[] | null }).screens);
-  if (lists.some((l) => !Array.isArray(l))) return null;
-  return [...new Set(lists.flat() as string[])].sort();
+  if (error || !data) return null;
+  const lists = data.map((r) => (r as { screens: string[] | null }).screens).filter((l): l is string[] => Array.isArray(l));
+  if (lists.length === 0) return null;
+  return [...new Set(lists.flat())].sort();
 }
 
 export async function getSessionContext() {

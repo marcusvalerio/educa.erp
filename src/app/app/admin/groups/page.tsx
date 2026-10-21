@@ -38,8 +38,9 @@ type Member = {
   sector_code: string | null;
   sector_name: string | null;
   is_admin: boolean;
+  level_role_id: string | null;
+  profile_role_id: string | null;
 };
-type Sector = { code: string; name: string };
 type Issued = { password: string; email: string; expiresAt: string };
 
 function memberState(m: Member): { label: string; tone: "success" | "warning" | "neutral" | "danger" } {
@@ -133,8 +134,6 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
   const [members, setMembers] = useState<Member[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", roleId: "", sector: "" });
-  const [sectors, setSectors] = useState<Sector[]>([]);
-  const [sectorsError, setSectorsError] = useState(false);
   const [screens, setScreens] = useState<Screen[]>([]);
   const [editing, setEditing] = useState<Role | "new" | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -144,14 +143,11 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
   const load = useCallback(async () => {
     if (!group) return;
     try {
-      const [data, list, screenList] = await Promise.all([
+      const [data, screenList] = await Promise.all([
         apiGet<{ roles: Role[]; members: Member[] }>(`/api/admin/study/groups/${group.id}`),
-        apiGet<Sector[]>("/api/admin/sectors").catch(() => null),
         apiGet<Screen[]>("/api/admin/screens").catch(() => [] as Screen[]),
       ]);
       setScreens(screenList);
-      setSectors(list ?? []);
-      setSectorsError(list === null);
       setRoles(data.roles);
       setMembers(data.members);
       setError(null);
@@ -173,7 +169,7 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
     setBusy("add");
     try {
       const created = await apiSend<{ user_id: string }>(`/api/admin/study/groups/${group.id}/members`, "POST", { name: form.name.trim(), email: form.email.trim(), roleId: form.roleId });
-      if (form.sector && created?.user_id) await apiSend(`/api/admin/study/members/${created.user_id}/department`, "POST", { sector: form.sector });
+      if (form.sector && created?.user_id) await apiSend(`/api/admin/study/members/${created.user_id}/role`, "POST", { roleId: form.sector });
       toast.success("Aluno cadastrado.", "Agora gere a senha provisória dele.");
       setForm((f) => ({ ...f, name: "", email: "", sector: "" }));
       await load();
@@ -185,24 +181,16 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
     }
   }
 
-  // Papel: perfis de sempre e com telas + perfis de setor (criados ao escolher).
-  const roleOptions = [
-    ...roles.filter((r) => !r.code.startsWith("setor_")).map((r) => ({ value: r.id, label: r.name })),
-    ...sectors.filter((x) => x.code !== "DIRETORIA").map((x) => ({ value: `sector:${x.code}`, label: `Setor: ${x.name}` })),
-  ];
-  const roleValue = (m: Member) => {
-    const role = roles.find((r) => r.name === m.roles);
-    if (!role) return "";
-    return role.code.startsWith("setor_") ? `sector:${role.code.slice(6).toUpperCase()}` : role.id;
-  };
+  // Papel = nível (perfis sem telas); Setor = perfil com telas do professor (0107).
+  const levelRoles = roles.filter((r) => !r.screens && !r.code.startsWith("setor_"));
+  const profiles = roles.filter((r) => r.screens);
 
-  async function changeRole(member: Member, value: string) {
-    if (!value || value === roleValue(member)) return;
+  async function changeRole(member: Member, roleId: string) {
+    if (!roleId || roleId === member.level_role_id) return;
     setBusy(`role-${member.id}`);
     try {
-      if (value.startsWith("sector:")) await apiSend(`/api/admin/study/members/${member.id}/sector`, "POST", { sector: value.slice(7) });
-      else await apiSend(`/api/admin/study/members/${member.id}/role`, "POST", { roleId: value });
-      toast.success(`${member.name}: papel atualizado.`);
+      await apiSend(`/api/admin/study/members/${member.id}/role`, "POST", { roleId });
+      toast.success(`${member.name}: papel atualizado.`, "O setor continua o mesmo.");
       await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível mudar o papel.");
@@ -211,12 +199,13 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
     }
   }
 
-  async function changeSector(member: Member, sector: string) {
-    if (!sector || sector === member.sector_code) return;
-    setBusy(`sector-${member.id}`);
+  async function changeProfile(member: Member, value: string) {
+    if (!value || value === (member.profile_role_id ?? "none")) return;
+    setBusy(`profile-${member.id}`);
     try {
-      await apiSend(`/api/admin/study/members/${member.id}/department`, "POST", { sector });
-      toast.success(`${member.name}: setor atualizado.`, "O papel (o que pode fazer) não muda.");
+      if (value === "none") await apiSend(`/api/admin/study/members/${member.id}/profile`, "DELETE");
+      else await apiSend(`/api/admin/study/members/${member.id}/role`, "POST", { roleId: value });
+      toast.success(`${member.name}: setor atualizado.`, value === "none" ? "O menu volta a seguir o papel." : "O menu mostra só as telas do setor.");
       await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível mudar o setor.");
@@ -263,7 +252,6 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
     <Drawer open={group !== null} onClose={onClose} size="lg" title={group?.name ?? ""} subtitle="Alunos do grupo e acesso">
       <div className="flex flex-col gap-4">
         {error && <Alert tone="danger">{error}</Alert>}
-        {sectorsError && <Alert tone="warning">A lista de setores não carregou. Atualize a página; se continuar, avise o administrador da plataforma.</Alert>}
 
         {issued && (
           <Alert tone="warning" title="Senha provisória — anote agora">
@@ -303,32 +291,29 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
                       </p>
                     </div>
                     <Badge tone={state.tone}>{state.label}</Badge>
-                    {roleOptions.length > 0 && (
+                    {levelRoles.length > 0 && (
                       <div className="w-full sm:w-48">
-                        <span className="mb-1 block text-xs text-muted-foreground">Papel (o que pode fazer)</span>
+                        <span className="mb-1 block text-xs text-muted-foreground">Papel (nível)</span>
                         <Select
-                          value={roleValue(m)}
+                          value={m.level_role_id ?? ""}
                           onValueChange={(v) => changeRole(m, v)}
-                          options={roleOptions}
-                          placeholder={m.roles ?? "Escolher papel"}
+                          options={levelRoles.map((r) => ({ value: r.id, label: r.name }))}
+                          placeholder="Escolher papel"
                           disabled={busy !== null}
                           aria-label={`Papel de ${m.name}`}
                         />
                       </div>
                     )}
-                    {sectors.length > 0 && (
-                      <div className="w-full sm:w-52">
-                        <span className="mb-1 block text-xs text-muted-foreground">Setor (onde fica)</span>
-                        <Select
-                          value={m.sector_code ?? ""}
-                          onValueChange={(v) => changeSector(m, v)}
-                          options={sectors.map((x) => ({ value: x.code, label: x.name }))}
-                          placeholder="Escolher setor"
-                          disabled={busy !== null}
-                          aria-label={`Setor de ${m.name}`}
-                        />
-                      </div>
-                    )}
+                    <div className="w-full sm:w-52">
+                      <span className="mb-1 block text-xs text-muted-foreground">Setor (telas que cuida)</span>
+                      <Select
+                        value={m.profile_role_id ?? "none"}
+                        onValueChange={(v) => changeProfile(m, v)}
+                        options={[{ value: "none", label: "Todas as telas do papel" }, ...profiles.map((r) => ({ value: r.id, label: r.name }))]}
+                        disabled={busy !== null}
+                        aria-label={`Setor de ${m.name}`}
+                      />
+                    </div>
                     {m.status === "active" && m.has_login && (
                       <Button size="sm" variant="secondary" disabled={busy !== null} onClick={() => setConfirm({ kind: "reset", member: m })}>
                         <RotateCcw size={14} aria-hidden /> Nova senha provisória
@@ -397,11 +382,11 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
             </FormField>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <FormField label="Setor (onde fica)" help="Organograma: não muda o que o aluno pode fazer.">
-              <Select value={form.sector} onValueChange={(v) => setForm((f) => ({ ...f, sector: v }))} options={sectors.map((x) => ({ value: x.code, label: x.name }))} placeholder="Escolha o setor" />
+            <FormField label="Setor (telas que cuida)" help="Seus perfis com telas. Em branco: todas as telas do papel.">
+              <Select value={form.sector} onValueChange={(v) => setForm((f) => ({ ...f, sector: v }))} options={profiles.map((r) => ({ value: r.id, label: r.name }))} placeholder="Escolha o setor" />
             </FormField>
-            <FormField label="Papel (o que pode fazer)" required help="Gerente faz quase tudo; perfis com telas mostram só as telas marcadas.">
-              <Select value={form.roleId} onValueChange={(v) => setForm((f) => ({ ...f, roleId: v }))} options={roles.filter((r) => !r.code.startsWith("setor_")).map((r) => ({ value: r.id, label: r.name }))} placeholder="Escolha o papel" />
+            <FormField label="Papel (nível)" required help="Gerente faz quase tudo; Operador cria e edita; Somente leitura só consulta.">
+              <Select value={form.roleId} onValueChange={(v) => setForm((f) => ({ ...f, roleId: v }))} options={levelRoles.map((r) => ({ value: r.id, label: r.name }))} placeholder="Escolha o papel" />
             </FormField>
           </div>
           <div>

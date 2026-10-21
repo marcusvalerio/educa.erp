@@ -265,8 +265,28 @@ describe("Setores com permissões e nova senha (PostgreSQL real)", { skip: !url 
       "select d.code, (select string_agg(r.code, ',') from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = u.id) roles from users u join departments d on d.id = u.department_id where u.id = $1",
       [alunoId]
     );
-    assert.deepEqual(u, { code: "COMERCIAL", roles: "gerente" }, "continua Gerente, agora no setor Comercial");
+    assert.equal(u.code, "COMERCIAL");
+    assert.ok(u.roles.split(",").includes("gerente"), "continua Gerente, agora no setor Comercial");
     await as(prof2);
     assert.match((await attempt("select public.fn_study_set_member_department($1, 'FISCAL')", [alunoId])).error, /não encontrado/);
+  });
+
+  test("papel (nível) e setor (perfil com telas) convivem: trocar um não tira o outro; tirar o setor volta ao papel", async () => {
+    await as(prof);
+    const ger = (await one<{ id: string }>("select id from public.fn_study_group_roles($1) where code = 'gerente'", [grupo])).id;
+    const perfil = (await one<{ r: { role_id: string } }>("select public.fn_study_save_profile($1, null, 'Fiscal T', array['/app/fiscal/nfe']) as r", [grupo])).r.role_id;
+    assert.ok((await attempt("select public.fn_study_set_member_role($1, $2)", [alunoId, ger])).ok);
+    assert.ok((await attempt("select public.fn_study_set_member_role($1, $2)", [alunoId, perfil])).ok);
+    const m = await one<{ level_role_id: string; profile_role_id: string }>("select level_role_id, profile_role_id from public.fn_study_group_members($1) where id = $2", [grupo, alunoId]);
+    assert.deepEqual(m, { level_role_id: ger, profile_role_id: perfil });
+    const op = (await one<{ id: string }>("select id from public.fn_study_group_roles($1) where code = 'operador'", [grupo])).id;
+    assert.ok((await attempt("select public.fn_study_set_member_role($1, $2)", [alunoId, op])).ok);
+    const m2 = await one<{ level_role_id: string; profile_role_id: string }>("select level_role_id, profile_role_id from public.fn_study_group_members($1) where id = $2", [grupo, alunoId]);
+    assert.deepEqual(m2, { level_role_id: op, profile_role_id: perfil }, "trocar o papel mantém o setor");
+    assert.ok((await attempt("select public.fn_study_clear_member_profile($1)", [alunoId])).ok);
+    const m3 = await one<{ profile_role_id: string | null }>("select profile_role_id from public.fn_study_group_members($1) where id = $2", [grupo, alunoId]);
+    assert.equal(m3.profile_role_id, null);
+    await as(prof2);
+    assert.match((await attempt("select public.fn_study_clear_member_profile($1)", [alunoId])).error, /não encontrado/);
   });
 });

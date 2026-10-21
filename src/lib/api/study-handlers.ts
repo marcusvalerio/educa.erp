@@ -190,3 +190,16 @@ export async function setStudyMemberDepartment(request: NextRequest, context: Id
     return jsonError(error);
   }
 }
+
+// DELETE /api/admin/study/members/:id/profile — tira o setor (perfil com telas) (0107).
+export async function clearStudyMemberProfile(_request: NextRequest, context: IdRouteContext) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const { id } = await context.params;
+    const { data, error } = await supabase.rpc("fn_study_clear_member_profile", { p_user_id: id });
+    if (error) throw dbError(error);
+    return ok(data);
+  } catch (error) {
+    return jsonError(error);
+  }
+}

@@ -534,6 +534,16 @@ export function OperationalCenter() {
         </section>
       )}
 
+      <section aria-label="Gráficos" className="flex flex-col gap-2">
+        <SectionTitle title="Gráficos" description="Tendências e situações dos seus módulos. Painéis por área em Dashboards." />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <ProjectedTrend report={REPORTS.executive} metricKey="net_revenue" title="Receita líquida por mês, com projeção" />
+          <RateGauge report={REPORTS.executive} range={range} title="Margem bruta" label="Margem bruta no período" valueKey="gross_margin_pct" />
+          <StatusDistribution title="Pedidos de venda do período por situação" source="/api/sales-orders" permission="sales_orders.view" groups={SO_OPEN_GROUPS} dateKey="order_date" range={range} variant="donut" />
+          <AgingBuckets title="A receber por vencimento" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/app/financeiro/contas-receber" />
+        </div>
+      </section>
+
       <div className="grid gap-4 lg:grid-cols-5">
         <div className="min-w-0 lg:col-span-3">
           <ProblemsPanel limit={10} />
@@ -546,13 +556,6 @@ export function OperationalCenter() {
 
       <ErpFlows range={range} />
 
-      <section aria-label="Investigação" className="flex flex-col gap-2">
-        <SectionTitle title="Investigação" description="Tendências dos seus módulos. Painéis por área em Dashboards." />
-        <div className="grid gap-4 lg:grid-cols-2">
-          <MonthlyTrend report={REPORTS.executive} metricKey="net_revenue" title="Receita líquida por mês" />
-          <AgingBuckets title="A receber por vencimento" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/app/financeiro/contas-receber" />
-        </div>
-      </section>
     </div>
   );
 }

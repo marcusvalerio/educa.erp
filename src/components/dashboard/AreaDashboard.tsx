@@ -488,6 +488,13 @@ export function AreaDashboard({ area }: { area: AreaId }) {
         </section>
       )}
 
+      {def.insights && (
+        <section aria-label="Gráficos" className="flex flex-col gap-2">
+          <SectionTitle title="Gráficos" description="Tendências, indicadores e situações com os dados registrados. Toque num item para abrir a lista filtrada." />
+          <div className="grid gap-4 lg:grid-cols-2">{def.insights(range)}</div>
+        </section>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-5">
         <div className={reportOk ? "min-w-0 lg:col-span-3" : "min-w-0 lg:col-span-5"}>
           <ProblemsPanel modules={problemModules} />
@@ -500,13 +507,6 @@ export function AreaDashboard({ area }: { area: AreaId }) {
       </div>
 
       {def.flows && <ErpFlows range={range} flows={def.flows} />}
-
-      {def.insights && (
-        <section aria-label="Investigação" className="flex flex-col gap-2">
-          <SectionTitle title="Investigação" description="Tendências e distribuições com os dados registrados. Clique para abrir a lista filtrada." />
-          <div className="grid gap-4 lg:grid-cols-2">{def.insights(range)}</div>
-        </section>
-      )}
 
       <ActionLinks sections={def.sections} />
     </div>

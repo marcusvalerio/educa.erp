@@ -33,16 +33,19 @@ const ok = (data: unknown, status = 200) => NextResponse.json({ success: true, d
 export async function listAdminUsers() {
   try {
     const { supabase, companyId } = await requireCompanyUser();
-    const [users, userRoles, access] = await Promise.all([
+    const [users, access] = await Promise.all([
       supabase
         .from("users")
         .select("id, code, name, email, login, status, branch_id, department_id, position_id, auth_user_id, created_at")
         .eq("company_id", companyId)
         .order("name"),
-      supabase.from("user_roles").select("user_id, role_id"),
       supabase.from("user_branch_access").select("user_id, branch_id, is_primary").eq("company_id", companyId),
     ]);
     if (users.error) throw dbError(users.error);
+    const userIds = (users.data ?? []).map((u) => u.id as string);
+    const userRoles = userIds.length
+      ? await supabase.from("user_roles").select("user_id, role_id").in("user_id", userIds)
+      : { data: [] as { user_id: string; role_id: string }[], error: null };
     // user_roles/user_branch_access dependem de roles.read/org.view: sem
     // essas permissões a lista de usuários ainda aparece, sem os vínculos.
     const rolesByUser = new Map<string, string[]>();
@@ -182,17 +185,22 @@ export async function revokeAdminUserBranch(request: NextRequest, context: IdRou
 export async function listAdminRoles() {
   try {
     const { supabase, companyId } = await requireCompanyUser();
-    const [roles, rolePerms, userRoles] = await Promise.all([
-      supabase
-        .from("roles")
-        .select("id, code, name, description, is_system, status, department_id, created_at, updated_at")
-        .eq("company_id", companyId)
-        .order("is_system", { ascending: false })
-        .order("name"),
-      supabase.from("role_permissions").select("role_id, permissions(code)"),
-      supabase.from("user_roles").select("role_id"),
-    ]);
+    const roles = await supabase
+      .from("roles")
+      .select("id, code, name, description, is_system, status, department_id, created_at, updated_at")
+      .eq("company_id", companyId)
+      .order("is_system", { ascending: false })
+      .order("name");
     if (roles.error) throw dbError(roles.error);
+    // Só os vínculos dos papéis desta empresa: ler a tabela inteira (todas
+    // as empresas) passava a RLS em milhares de linhas e estourava o tempo.
+    const roleIds = (roles.data ?? []).map((r) => r.id as string);
+    const [rolePerms, userRoles] = roleIds.length
+      ? await Promise.all([
+          supabase.from("role_permissions").select("role_id, permissions(code)").in("role_id", roleIds),
+          supabase.from("user_roles").select("role_id").in("role_id", roleIds),
+        ])
+      : [{ data: [] }, { data: [] }];
     const permsByRole = new Map<string, string[]>();
     for (const row of (rolePerms.data ?? []) as Array<{ role_id: string; permissions: { code: string } | { code: string }[] | null }>) {
       const perm = Array.isArray(row.permissions) ? row.permissions[0] : row.permissions;

@@ -127,4 +127,18 @@ describe("Professor nos ERPs dos grupos (PostgreSQL real)", { skip: !url && "POC
     const g = await one<{ name: string }>("select name from public.fn_study_groups() where id = $1", [grupoA]);
     assert.equal(g.name, "Grupo A — Elétrica Faísca Ltda");
   });
+
+  test("0110: aluno não exclui; o professor (Administrador do grupo) exclui", async () => {
+    await as(aluno);
+    assert.equal((await one<{ ok: boolean }>("select public.has_permission($1, 'products.delete') ok", [grupoA])).ok, false);
+    assert.equal((await one<{ ok: boolean }>("select public.has_permission($1, 'products.update') ok", [grupoA])).ok, true);
+    await as(prof);
+    await db.query("select public.fn_study_enter_workspace($1)", [grupoA]);
+    assert.equal((await one<{ ok: boolean }>("select public.has_permission($1, 'products.delete') ok", [grupoA])).ok, true);
+    // devolver a exclusão a um papel de aluno é ignorado
+    await asOwner();
+    await db.query("insert into public.role_permissions (role_id, permission_id) select r.id, p.id from public.roles r, public.permissions p where r.company_id = $1 and r.code = 'gerente' and p.code = 'products.delete' on conflict do nothing", [grupoA]);
+    await as(aluno);
+    assert.equal((await one<{ ok: boolean }>("select public.has_permission($1, 'products.delete') ok", [grupoA])).ok, false);
+  });
 });

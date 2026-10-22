@@ -119,7 +119,8 @@ describe("Venda com estoque e conta a pagar da compra (PostgreSQL real)", { skip
       [COMPANY, order, prod, unit]
     )).id;
     await asAdmin();
-    await db.query("select fn_receive_stock($1, $2, $3, 10, null, 5, 'entrada teste', null)", [COMPANY, prod, ids.loc]);
+    // 0115: estoque exatamente igual ao pedido (4) — expedir não pode travar na própria reserva.
+    await db.query("select fn_receive_stock($1, $2, $3, 4, null, 5, 'entrada teste', null)", [COMPANY, prod, ids.loc]);
     const r = await attempt("select fn_reserve_sales_order_stock($1, $2, null)", [order, ids.loc]);
     assert.ok(r.ok, r.error);
     const wh = (await one<{ warehouse_id: string }>("select warehouse_id from warehouse_locations where id = $1", [ids.loc])).warehouse_id;
@@ -136,7 +137,7 @@ describe("Venda com estoque e conta a pagar da compra (PostgreSQL real)", { skip
     await db.query("select fn_ship_shipment($1, null)", [ship]);
     await asOwner();
     const bal = await one<{ on_hand: string; reserved: string }>("select on_hand, reserved from stock_balances where product_id = $1 and location_id = $2", [prod, ids.loc]);
-    assert.deepEqual([Number(bal.on_hand), Number(bal.reserved)], [6, 0], "10 entraram, 4 saíram na expedição, reserva liberada");
+    assert.deepEqual([Number(bal.on_hand), Number(bal.reserved)], [0, 0], "4 entraram, 4 saíram na expedição, reserva liberada");
     const st = await one<{ status: string }>("select status from sales_orders where id = $1", [order]);
     assert.equal(st.status, "shipped");
   });

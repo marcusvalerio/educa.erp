@@ -19,6 +19,7 @@ import { NotificationsButton, SearchTrigger, SidebarSearch, ThemeToggle, UnitSwi
 import { BrandMark, BrandWordmark } from "./Brand";
 import { PRODUCT_NAME } from "@/lib/brand";
 import { BranchPrompt } from "./BranchPrompt";
+import { StudyWorkspaceBar } from "./StudyWorkspaceBar";
 import { AuthFrame } from "@/components/auth/AuthFrame";
 import { AccessStateCard } from "@/components/auth/AccessStateCard";
 import { LogoutButton } from "@/components/auth/LogoutButton";
@@ -333,6 +334,7 @@ function ShellInner({ environment, children }: { environment: Environment; child
               </Link>
             </div>
           )}
+          {environment !== "platform" && tenant && <StudyWorkspaceBar />}
           <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle bg-background/85 px-3 backdrop-blur-md sm:px-5 lg:px-8">
             <button
               type="button"

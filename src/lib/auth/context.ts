@@ -22,16 +22,37 @@ export type AuthContext = {
   actorLabel: string;
 };
 
+type ActiveAppUser = { id: string; company_id: string; name: string | null; email: string | null; status: string };
+
+/**
+ * Cadastro do login na empresa ativa. Um login pode ter um cadastro por
+ * empresa (o professor, nos ERPs dos grupos — 0109); a empresa escolhida
+ * fica em user_active_company, a mesma regra de current_app_user_id().
+ */
+export async function resolveActiveAppUser(authUserId: string): Promise<{ data: ActiveAppUser | null; error: { message: string } | null }> {
+  const admin = createAdminClient();
+  const [rows, active] = await Promise.all([
+    admin.from("users").select("*").eq("auth_user_id", authUserId).eq("status", "active"),
+    admin.from("user_active_company").select("company_id").eq("auth_user_id", authUserId).maybeSingle(),
+  ]);
+  if (rows.error) return { data: null, error: rows.error };
+  const list = (rows.data ?? []) as (ActiveAppUser & { is_supervisor: boolean | null; created_at: string })[];
+  const activeCompany = active.data?.company_id as string | undefined;
+  const sorted = [...list].sort(
+    (a, b) =>
+      Number(b.company_id === activeCompany) - Number(a.company_id === activeCompany) ||
+      Number(Boolean(a.is_supervisor)) - Number(Boolean(b.is_supervisor)) ||
+      a.created_at.localeCompare(b.created_at) ||
+      a.id.localeCompare(b.id)
+  );
+  return { data: sorted[0] ?? null, error: null };
+}
+
 export async function getAuthContext(): Promise<AuthContext | null> {
   const identity = await getSessionIdentity();
   if (!identity) return null;
 
-  const admin = createAdminClient();
-  const { data: appUser, error: userError } = await admin
-    .from("users")
-    .select("id, company_id, name, email, status")
-    .eq("auth_user_id", identity.authUserId)
-    .maybeSingle();
+  const { data: appUser, error: userError } = await resolveActiveAppUser(identity.authUserId);
 
   if (userError || !appUser || appUser.status !== "active") return null;
 

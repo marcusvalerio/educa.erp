@@ -259,4 +259,8 @@ export type AuditEntry = {
   entidade: string;
   registro: string;
   acao: AuditAcao;
+  /** Campos que mudaram (antes → depois); no cadastro, os valores informados. */
+  mudancas?: AuditChange[];
 };
+
+export type AuditChange = { campo: string; antes: string | null; depois: string | null };

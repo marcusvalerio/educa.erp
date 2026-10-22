@@ -7,7 +7,7 @@ import { useSession } from "@/components/shell/SessionProvider";
 import { apiGet } from "@/lib/api-client";
 import { statusMeta } from "@/lib/status";
 
-type AuditEntry = { id: string; data: string; usuario: string | null; entidade: string; registro: string | null; acao?: string };
+type AuditEntry = { id: string; data: string; usuario: string | null; entidade: string; registro: string | null; acao?: string; mudancas?: { campo: string; antes: string | null; depois: string | null }[] };
 
 // Histórico real do registro (audit_logs via /api/audit-logs). Sem
 // permissão audit_logs.read, a seção explica o motivo em vez de sumir.
@@ -50,6 +50,22 @@ export function RecordHistory({ entityId }: { entityId: string }) {
           at: entry.data,
           actor: entry.usuario,
           tone: meta?.tone ?? "neutral",
+          description: entry.mudancas && entry.mudancas.length > 0 ? (
+            <ul className="mt-1 flex flex-col gap-0.5 text-xs text-muted-foreground">
+              {entry.mudancas.map((m) => (
+                <li key={m.campo} className="break-words">
+                  <span className="font-medium text-foreground">{m.campo}:</span>{" "}
+                  {entry.acao === "Criado" ? (
+                    m.depois
+                  ) : (
+                    <>
+                      <span className="line-through">{m.antes ?? "(vazio)"}</span> → {m.depois ?? "(vazio)"}
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : undefined,
         };
       })}
     />

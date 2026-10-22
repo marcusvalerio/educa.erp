@@ -203,3 +203,32 @@ export async function clearStudyMemberProfile(_request: NextRequest, context: Id
     return jsonError(error);
   }
 }
+
+// GET /api/study/workspaces — turma e grupos onde o professor pode entrar
+// (lista vazia para quem não é Administrador de uma turma).
+export async function listStudyWorkspaces() {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const { data, error } = await supabase.rpc("fn_study_workspaces");
+    // Antes da 0109 a função não existe: ninguém troca de ERP.
+    if (error) return ok([]);
+    return ok(data ?? []);
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+const workspaceSchema = z.object({ companyId: z.string().uuid("Escolha o grupo.") }).strict();
+
+// POST /api/study/workspaces { companyId } — entra no ERP do grupo (ou volta à turma).
+export async function enterStudyWorkspace(request: NextRequest) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const body = await parseJson(request, workspaceSchema);
+    const { data, error } = await supabase.rpc("fn_study_enter_workspace", { p_company_id: body.companyId });
+    if (error) throw dbError(error);
+    return ok(data);
+  } catch (error) {
+    return jsonError(error);
+  }
+}

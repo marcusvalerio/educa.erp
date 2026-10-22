@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import type { ZodType } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionIdentity } from "@/lib/auth/session";
+import { resolveActiveAppUser } from "@/lib/auth/context";
 import { ApiError, translatePostgresError, unauthorizedError, validationError } from "@/lib/database/errors";
 
 // Base comum das rotas de governança (sessão, /admin, /admincentral).
@@ -30,11 +31,7 @@ export async function requireSession(): Promise<{ supabase: UserClient; authUser
 // aceita company_id vindo do cliente.
 export async function requireCompanyUser() {
   const session = await requireSession();
-  const { data, error } = await session.supabase
-    .from("users")
-    .select("id, company_id, status")
-    .eq("auth_user_id", session.authUserId)
-    .maybeSingle();
+  const { data, error } = await resolveActiveAppUser(session.authUserId);
   if (error) throw dbError(error);
   if (!data || data.status !== "active") {
     throw new ApiError("NO_COMPANY", "Seu usuário não está vinculado a uma empresa ativa.", 403);

@@ -4,6 +4,7 @@ import { getAuthContext, hasPermission } from "@/lib/auth/context";
 import { unauthorizedError, forbiddenError } from "@/lib/database/errors";
 import { jsonError } from "@/lib/api/response";
 import type { AuditAcao, AuditEntry } from "@/lib/cadastros/types";
+import { auditChanges } from "@/lib/audit/changes";
 import type { AuditLogRow } from "@/lib/database/schema";
 
 const ACTION_LABELS: Record<AuditLogRow["action"], AuditAcao> = {
@@ -21,7 +22,8 @@ function toAuditEntry(row: AuditLogRow): AuditEntry {
     usuario: row.actor_label,
     entidade: row.entity,
     registro: row.entity_id,
-    acao: ACTION_LABELS[row.action],
+    acao: ACTION_LABELS[row.action] ?? (row.action as AuditAcao),
+    mudancas: auditChanges(row.old_data as Record<string, unknown> | null, row.new_data as Record<string, unknown> | null),
   };
 }
 

@@ -84,6 +84,15 @@ async function writeAuditLog(
 // resolvido em src/lib/auth/context.ts — nunca de uma constante fixa nem
 // de um valor enviado pelo cliente. Isso é o que torna o isolamento por
 // empresa real também na camada de aplicação (além do RLS no banco).
+async function isStudyGroupStudent(companyId: string, userId: string | null): Promise<boolean> {
+  const admin = createAdminClient();
+  const { data: company } = await admin.from("companies").select("parent_company_id").eq("id", companyId).maybeSingle();
+  if (!company?.parent_company_id) return false;
+  if (!userId) return true;
+  const { data: user } = await admin.from("users").select("is_supervisor").eq("id", userId).maybeSingle();
+  return !(user as { is_supervisor?: boolean } | null)?.is_supervisor;
+}
+
 export function createTableRepository<Entity extends BaseEntity, Row extends { id: string; status: string }>(
   config: TableConfig<Entity, Row>
 ) {
@@ -214,6 +223,12 @@ export function createTableRepository<Entity extends BaseEntity, Row extends { i
   async function remove(companyId: string, id: string, actor: ActorContext = DEFAULT_ACTOR): Promise<void> {
     const current = await get(companyId, id);
     if (!current) throw notFoundError(config.entityLabel);
+
+    // Grupos de turma (0112): aluno só exclui cadastro já inativo; o
+    // professor (usuário supervisor do grupo) exclui sempre.
+    if (current.status === "Ativo" && (await isStudyGroupStudent(companyId, actor.userId))) {
+      throw blockedByDependentsError("Inative o cadastro antes de excluir. Nos grupos da turma só se exclui o que já está inativo.");
+    }
 
     const blockedReason = await checkDependents(companyId, current);
     if (blockedReason) throw blockedByDependentsError(blockedReason);

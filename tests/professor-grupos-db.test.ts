@@ -128,18 +128,26 @@ describe("Professor nos ERPs dos grupos (PostgreSQL real)", { skip: !url && "POC
     assert.equal(g.name, "Grupo A — Elétrica Faísca Ltda");
   });
 
-  test("0110: aluno não exclui; o professor (Administrador do grupo) exclui", async () => {
+  test("0110/0112: Operador não exclui; Gerente só exclui inativo; professor exclui sempre", async () => {
+    await asOwner();
+    const produto = (await one<{ id: string }>("insert into public.products (company_id, code, name, unit) select $1, 'PRD-DEL', 'Produto del', code from public.units where company_id = $1 limit 1 returning id", [grupoA])).id;
+    const operadorTem = await one<{ n: number }>("select count(*)::int n from public.role_permissions rp join public.roles r on r.id = rp.role_id join public.permissions p on p.id = rp.permission_id where r.company_id = $1 and r.code = 'operador' and p.code like '%.delete'", [grupoA]);
+    assert.equal(operadorTem.n, 0);
     await as(aluno);
-    assert.equal((await one<{ ok: boolean }>("select public.has_permission($1, 'products.delete') ok", [grupoA])).ok, false);
+    assert.equal((await one<{ ok: boolean }>("select public.has_permission($1, 'products.delete') ok", [grupoA])).ok, true);
+    assert.match((await attempt("delete from public.products where id = $1", [produto])).error, /Inative o cadastro antes de excluir/);
+    await asOwner();
+    await db.query("update public.products set status = 'inactive' where id = $1", [produto]);
+    await as(aluno);
+    assert.ok((await attempt("delete from public.products where id = $1", [produto])).ok);
     assert.equal((await one<{ ok: boolean }>("select public.has_permission($1, 'products.update') ok", [grupoA])).ok, true);
     await as(prof);
     await db.query("select public.fn_study_enter_workspace($1)", [grupoA]);
     assert.equal((await one<{ ok: boolean }>("select public.has_permission($1, 'products.delete') ok", [grupoA])).ok, true);
-    // devolver a exclusão a um papel de aluno é ignorado
+    // devolver a exclusão a outro papel de aluno é ignorado
     await asOwner();
-    await db.query("insert into public.role_permissions (role_id, permission_id) select r.id, p.id from public.roles r, public.permissions p where r.company_id = $1 and r.code = 'gerente' and p.code = 'products.delete' on conflict do nothing", [grupoA]);
-    await as(aluno);
-    assert.equal((await one<{ ok: boolean }>("select public.has_permission($1, 'products.delete') ok", [grupoA])).ok, false);
+    await db.query("insert into public.role_permissions (role_id, permission_id) select r.id, p.id from public.roles r, public.permissions p where r.company_id = $1 and r.code = 'operador' and p.code = 'products.delete' on conflict do nothing", [grupoA]);
+    assert.equal((await one<{ n: number }>("select count(*)::int n from public.role_permissions rp join public.roles r on r.id = rp.role_id join public.permissions p on p.id = rp.permission_id where r.company_id = $1 and r.code = 'operador' and p.code = 'products.delete'", [grupoA])).n, 0);
   });
 
   test("0111: professor vê os movimentos dos grupos da turma; aluno e outra turma não", async () => {

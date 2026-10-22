@@ -3,6 +3,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { jsonError } from "./response";
 import { dbError, requireSession } from "./governance";
+import { resolveActiveAppUser } from "@/lib/auth/context";
 import type { FocusArea, PlatformContext, SessionContext, TenantContext } from "@/lib/session/types";
 import { resolveAccessState } from "@/lib/onboarding/access";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -42,11 +43,9 @@ export async function getSessionContext() {
   try {
     const { supabase, authUserId, email } = await requireSession();
 
-    const { data: appUser, error: userError } = await supabase
-      .from("users")
-      .select("company_id, status")
-      .eq("auth_user_id", authUserId)
-      .maybeSingle();
+    // Um login pode ter um cadastro por empresa (professor nos grupos, 0109):
+    // vale o da empresa ativa.
+    const { data: appUser, error: userError } = await resolveActiveAppUser(authUserId);
     if (userError) throw dbError(userError);
 
     let tenant: TenantContext | null = null;

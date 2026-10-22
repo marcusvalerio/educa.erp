@@ -19,7 +19,7 @@ export const SUBCATEGORIAS_PRODUTO = [
   "Consumível",
 ] as const;
 
-export const UNIDADES_PRODUTO = ["UN", "KG", "G", "L", "ML", "M", "CX", "PC", "KIT", "T"] as const;
+export const UNIDADES_PRODUTO = ["UN", "PC", "PAR", "KIT", "CX", "PCT", "FD", "PAL", "KG", "G", "T", "L", "ML", "M", "CM", "RL"] as const;
 
 export const TIPOS_PESSOA = ["Pessoa Física", "Pessoa Jurídica"] as const;
 

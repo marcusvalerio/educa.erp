@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { jsonError } from "./response";
 import { dbError, parseJson, requireCompanyUser, type IdRouteContext } from "./governance";
+import { auditChanges } from "@/lib/audit/changes";
 
 // Modo Estudo (0096): a turma e seus grupos. Toda decisão é do banco
 // (fn_study_*), chamado com o cliente do PROFESSOR — empresa do tipo Estudo,
@@ -228,6 +229,70 @@ export async function enterStudyWorkspace(request: NextRequest) {
     const { data, error } = await supabase.rpc("fn_study_enter_workspace", { p_company_id: body.companyId });
     if (error) throw dbError(error);
     return ok(data);
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+const ENTITY_LABELS: Record<string, string> = {
+  sales_orders: "Pedido de venda",
+  purchase_orders: "Pedido de compra",
+  purchase_requests: "Solicitação de compra",
+  purchase_receipts: "Recebimento",
+  accounts_payable: "Conta a pagar",
+  accounts_receivable: "Conta a receber",
+  fiscal_documents: "Nota fiscal",
+  fiscal_authorization_attempts: "Envio da NF-e",
+  stock_counts: "Inventário",
+  stock_reservations: "Reserva de estoque",
+  users: "Usuário",
+  user_roles: "Papel do usuário",
+  user_invitations: "Convite",
+  roles: "Papel",
+  shipments: "Expedição",
+  pick_lists: "Separação",
+};
+
+const MOVEMENT_LABELS: Record<string, string> = {
+  RECEIPT: "Entrada",
+  ISSUE: "Saída",
+  ADJUSTMENT_IN: "Ajuste (entrada)",
+  ADJUSTMENT_OUT: "Ajuste (saída)",
+  TRANSFER_IN: "Transferência (entrada)",
+  TRANSFER_OUT: "Transferência (saída)",
+  RETURN_IN: "Devolução de cliente",
+  RETURN_OUT: "Devolução a fornecedor",
+  RESERVE: "Reserva",
+  RELEASE: "Liberação de reserva",
+};
+
+const groupIdSchema = z.string().uuid();
+
+// GET /api/admin/study/activity?groupId= — movimentos dos grupos da turma,
+// com o que mudou em cada registro.
+export async function listStudyActivity(request: NextRequest) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const raw = new URL(request.url).searchParams.get("groupId");
+    const groupId = raw && groupIdSchema.safeParse(raw).success ? raw : null;
+    const { data, error } = await supabase.rpc("fn_study_activity", { p_group_id: groupId, p_limit: 300 });
+    if (error) throw dbError(error);
+    type Row = { at: string; group_id: string; group_name: string; actor: string | null; entity: string; entity_id: string | null; action: string; old_data: Record<string, unknown> | null; new_data: Record<string, unknown> | null };
+    const rows = ((data ?? []) as Row[]).map((r, i) => {
+      const stock = r.entity === "Movimento de estoque";
+      return {
+        id: `${r.entity_id ?? "x"}-${i}`,
+        at: r.at,
+        groupId: r.group_id,
+        groupName: r.group_name,
+        actor: r.actor,
+        entity: ENTITY_LABELS[r.entity] ?? r.entity,
+        action: stock ? (MOVEMENT_LABELS[r.action] ?? r.action) : r.action,
+        stock,
+        changes: auditChanges(r.old_data, r.new_data, 12),
+      };
+    });
+    return ok(rows);
   } catch (error) {
     return jsonError(error);
   }

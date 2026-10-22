@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { NewActivityButton, NewOpportunityButton } from "@/components/crm/CrmActions";
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, textCol, dateCol, moneyCol, numberCol, statusCol, refCol, statusFilter, overdueView, isRowOverdue, statusViews, combineViews } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -8,9 +10,13 @@ import type { OpportunityRow } from "@/lib/database/schema";
 
 export default function OportunidadesPage() {
   const customers = useIdNameLookup("/api/customers");
+  const [refresh, setRefresh] = useState(0);
+  const done = () => setRefresh((n) => n + 1);
 
   return (
     <ResourceListPage<OpportunityRow>
+      refreshToken={refresh}
+      actions={<NewOpportunityButton onDone={done} />}
       title="Oportunidades"
       description="Oportunidades comerciais em lista — use o Pipeline para a visão por estágio."
       apiPath="/api/opportunities"
@@ -35,8 +41,9 @@ export default function OportunidadesPage() {
         title: (row) => row.title,
         subtitle: (row) => row.customer_id ? customers.get(row.customer_id) : undefined,
         badges: (row) => <StatusBadge entity="opportunities" status={row.status} />,
+        actions: (row) => <NewActivityButton relatedType="opportunity" relatedId={row.id} onDone={done} />,
       }}
-      emptyDescription="Quando houver registros, eles aparecem aqui."
+      emptyDescription="Cadastre a primeira oportunidade pelo botão Nova oportunidade."
     />
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { LeadActions, NewLeadButton } from "@/components/crm/CrmActions";
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, textCol, dateCol, statusCol, refCol, statusFilter, statusViews } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -8,9 +10,13 @@ import type { LeadRow } from "@/lib/database/schema";
 
 export default function LeadsPage() {
   const origins = useIdNameLookup("/api/lead-origins");
+  const [refresh, setRefresh] = useState(0);
+  const done = () => setRefresh((n) => n + 1);
 
   return (
     <ResourceListPage<LeadRow>
+      refreshToken={refresh}
+      actions={<NewLeadButton onDone={done} />}
       title="Leads"
       description="Leads comerciais — da captação à conversão em cliente ou oportunidade."
       apiPath="/api/leads"
@@ -32,8 +38,9 @@ export default function LeadsPage() {
         title: (row) => row.name,
         subtitle: (row) => row.company_name ?? undefined,
         badges: (row) => <StatusBadge entity="leads" status={row.status} />,
+        actions: (row) => <LeadActions id={row.id} status={row.status} name={row.name} onDone={done} />,
       }}
-      emptyDescription="Quando houver registros, eles aparecem aqui."
+      emptyDescription="Cadastre o primeiro lead pelo botão Novo lead."
     />
   );
 }

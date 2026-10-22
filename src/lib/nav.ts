@@ -27,6 +27,7 @@ import {
   BadgeCheck,
   UserCog,
   BarChart3,
+  Activity,
 } from "lucide-react";
 
 // Registro único de navegação do ATLAS.ERP.
@@ -309,6 +310,7 @@ export const ADMIN_NAV: NavSection[] = [
       { label: "Cargos", href: "/app/admin/positions", permission: "positions.view" },
       { label: "Unidades", href: "/app/admin/branches", permission: "branches.read", keywords: ["filial"] },
       { label: "Grupos da turma", href: "/app/admin/groups", permission: "roles.manage", keywords: ["estudo", "turma", "alunos"] },
+      { label: "Movimentos dos grupos", href: "/app/admin/movimentos", permission: "roles.manage", keywords: ["estudo", "turma", "atividade", "histórico"] },
       { label: "Módulos", href: "/app/admin/modules", permission: "company_modules.view" },
       { label: "Configurações", href: "/app/admin/settings", permission: ["settings.view", "dashboard.configure"] },
       { label: "Auditoria", href: "/app/admin/audit", permission: "audit_logs.read" },
@@ -324,6 +326,7 @@ export const ADMIN_ICONS: Record<string, LucideIcon> = {
   "/app/admin/positions": BadgeCheck,
   "/app/admin/branches": Building2,
   "/app/admin/groups": Users,
+  "/app/admin/movimentos": Activity,
   "/app/admin/modules": Blocks,
   "/app/admin/settings": SlidersHorizontal,
   "/app/admin/audit": ScrollText,

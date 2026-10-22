@@ -141,4 +141,18 @@ describe("Professor nos ERPs dos grupos (PostgreSQL real)", { skip: !url && "POC
     await as(aluno);
     assert.equal((await one<{ ok: boolean }>("select public.has_permission($1, 'products.delete') ok", [grupoA])).ok, false);
   });
+
+  test("0111: professor vê os movimentos dos grupos da turma; aluno e outra turma não", async () => {
+    await asOwner();
+    await db.query("insert into public.audit_logs (company_id, actor_label, entity, entity_id, action, old_data, new_data) values ($1, 'aluno.p', 'Produto', gen_random_uuid(), 'UPDATE', '{\"nome\":\"A\"}', '{\"nome\":\"B\"}')", [grupoA]);
+    const n = await one<{ n: number }>("select count(*)::int n from public.pipelines where company_id = $1", [grupoB]);
+    assert.equal(n.n, 1, "grupo nasce com funil de vendas");
+    await as(prof);
+    const rows = (await db.query("select group_id, actor, entity, action from public.fn_study_activity(null, 50)")).rows;
+    assert.ok(rows.some((r) => r.group_id === grupoA && r.entity === "Produto" && r.actor === "aluno.p"));
+    assert.ok(rows.every((r) => [grupoA, grupoB].includes(r.group_id)));
+    assert.match((await attempt("select * from public.fn_study_activity($1, 10)", [grupoOutro])).error, /Grupo não encontrado/);
+    await as(aluno);
+    assert.match((await attempt("select * from public.fn_study_activity(null, 10)")).error, /Só o Administrador da turma/);
+  });
 });

@@ -18,7 +18,7 @@ import { formatInteger } from "@/lib/format";
 import { DashboardHeader, FocusPanel, usePeriod } from "./Context";
 import { ChangesPanel, SummaryStrip } from "./ReportBlocks";
 import { ProblemsPanel } from "./Problems";
-import { AgingBuckets, CommercialFunnel, DailyHeatmap, ErpFlows, MonthlyTrend, StatusDistribution, TopRanking } from "./Insights";
+import { AgingBuckets, CommercialFunnel, DailyHeatmap, ErpFlows, MonthlyTrend, ProjectedTrend, RateGauge, StatusDistribution, TopRanking } from "./Insights";
 
 // Painéis contextuais por área. Todos seguem a mesma leitura:
 // CONTEXTO → RESUMO → MUDANÇAS/PROBLEMAS → OPERAÇÕES (fluxo) →
@@ -105,9 +105,10 @@ export const AREAS: Record<AreaId, AreaDef> = {
     sections: ["comercial", "financeiro", "logistica", "gestao"],
     insights: (range) => (
       <>
-        <MonthlyTrend report={REPORTS.executive} metricKey="net_revenue" title="Receita líquida por mês" />
+        <ProjectedTrend report={REPORTS.executive} metricKey="net_revenue" title="Receita líquida por mês, com projeção" />
+        <RateGauge report={REPORTS.executive} range={range} title="Margem bruta" label="Margem bruta no período" valueKey="gross_margin_pct" />
         <AgingBuckets title="Carteira a receber por vencimento" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/app/financeiro/contas-receber" />
-        <StatusDistribution title="Pedidos de venda do período por situação" source="/api/sales-orders" permission="sales_orders.view" groups={SO_OPEN_GROUPS} dateKey="order_date" range={range} />
+        <StatusDistribution title="Pedidos de venda do período por situação" source="/api/sales-orders" permission="sales_orders.view" groups={SO_OPEN_GROUPS} dateKey="order_date" range={range} variant="donut" />
         <TopRanking title="Maiores clientes no período" description="Valor em pedidos não cancelados." source="/api/sales-orders" permission="sales_orders.view" groupKey="customer_id" valueKey="total_amount" lookupPath="/api/customers?pageSize=500" lookupField="nome" dateKey="order_date" range={range} excludeStatuses={["cancelled"]} />
       </>
     ),
@@ -123,7 +124,9 @@ export const AREAS: Record<AreaId, AreaDef> = {
     sections: ["comercial", "crm"],
     insights: (range) => (
       <>
-        <MonthlyTrend report={REPORTS.commercial} metricKey="orders_amount" title="Valor em pedidos por mês" />
+        <ProjectedTrend report={REPORTS.commercial} metricKey="orders_amount" title="Valor em pedidos por mês, com projeção" />
+        <RateGauge report={REPORTS.commercial} range={range} title="Conversão de orçamentos" label="Orçamentos que viraram pedido" valueKey="quote_conversion_pct" />
+        <StatusDistribution title="Pedidos de venda do período por situação" source="/api/sales-orders" permission="sales_orders.view" groups={SO_OPEN_GROUPS} dateKey="order_date" range={range} variant="donut" />
         <CommercialFunnel range={range} />
         <TopRanking title="Maiores clientes no período" description="Valor em pedidos não cancelados." source="/api/sales-orders" permission="sales_orders.view" groupKey="customer_id" valueKey="total_amount" lookupPath="/api/customers?pageSize=500" lookupField="nome" dateKey="order_date" range={range} excludeStatuses={["cancelled"]} />
         <DailyHeatmap title="Pedidos por dia" description="Últimas 12 semanas, pela data do pedido." source="/api/sales-orders" permission="sales_orders.view" dateKey="order_date" />
@@ -141,8 +144,8 @@ export const AREAS: Record<AreaId, AreaDef> = {
     sections: ["suprimentos"],
     insights: (range) => (
       <>
-        <MonthlyTrend report={REPORTS.purchases} metricKey="orders_amount" title="Valor comprado por mês" />
-        <StatusDistribution title="Pedidos de compra do período por situação" source="/api/purchase-orders" permission="purchase_orders.view" groups={PO_GROUPS} dateKey="issued_at" range={range} />
+        <ProjectedTrend report={REPORTS.purchases} metricKey="orders_amount" title="Valor comprado por mês, com projeção" />
+        <StatusDistribution title="Pedidos de compra do período por situação" source="/api/purchase-orders" permission="purchase_orders.view" groups={PO_GROUPS} dateKey="issued_at" range={range} variant="donut" />
         <TopRanking title="Maiores fornecedores no período" description="Valor em pedidos não cancelados." source="/api/purchase-orders" permission="purchase_orders.view" groupKey="supplier_id" valueKey="total_amount" lookupPath="/api/suppliers?pageSize=500" lookupField="razaoSocial" dateKey="issued_at" range={range} excludeStatuses={["cancelled"]} />
         <DailyHeatmap title="Recebimentos por dia" description="Últimas 12 semanas, pela data de recebimento." source="/api/purchase-receipts" permission="purchase_receipts.view" dateKey="received_at" />
       </>
@@ -165,6 +168,7 @@ export const AREAS: Record<AreaId, AreaDef> = {
           title="Requisições de material"
           source="/api/material-requests"
           permission="stock.view"
+          variant="donut"
           groups={[
             { label: "Solicitadas", statuses: ["requested"], tone: "warning", href: "/app/logistica/almoxarifado?view=pendentes" },
             { label: "Entregues", statuses: ["delivered"], tone: "success" },
@@ -185,8 +189,9 @@ export const AREAS: Record<AreaId, AreaDef> = {
     sections: ["logistica"],
     insights: (range) => (
       <>
+        <RateGauge report={REPORTS.logistics} range={range} title="Taxa de entrega" label="Expedições entregues" partKey="delivered_count" wholeKey="shipments_count" />
+        <StatusDistribution title="Expedições do período por situação" source="/api/shipments" permission="shipments.view" groups={SHIPMENT_GROUPS} dateKey="created_at" range={range} variant="donut" />
         <MonthlyTrend report={REPORTS.logistics} metricKey="delivered_count" title="Entregas por mês" />
-        <StatusDistribution title="Expedições do período por situação" source="/api/shipments" permission="shipments.view" groups={SHIPMENT_GROUPS} dateKey="created_at" range={range} />
         <DailyHeatmap title="Expedições por dia de saída" description="Últimas 12 semanas." source="/api/shipments" permission="shipments.view" dateKey="shipped_at" />
       </>
     ),
@@ -202,8 +207,9 @@ export const AREAS: Record<AreaId, AreaDef> = {
     sections: ["producao"],
     insights: (range) => (
       <>
-        <MonthlyTrend report={REPORTS.production} metricKey="produced_quantity" title="Quantidade produzida por mês" />
-        <StatusDistribution title="Ordens do período por situação" source="/api/production-orders" permission="production_orders.view" groups={PRODUCTION_GROUPS} dateKey="created_at" range={range} />
+        <ProjectedTrend report={REPORTS.production} metricKey="produced_quantity" title="Quantidade produzida por mês, com projeção" />
+        <RateGauge report={REPORTS.production} range={range} title="Ordens concluídas" label="OPs do período já concluídas" partKey="completed_orders" wholeKey="orders_count" />
+        <StatusDistribution title="Ordens do período por situação" source="/api/production-orders" permission="production_orders.view" groups={PRODUCTION_GROUPS} dateKey="created_at" range={range} variant="donut" />
         <DailyHeatmap title="Ordens concluídas por dia" description="Últimas 12 semanas." source="/api/production-orders" permission="production_orders.view" dateKey="finished_at" />
       </>
     ),
@@ -218,7 +224,7 @@ export const AREAS: Record<AreaId, AreaDef> = {
     sections: ["financeiro"],
     insights: () => (
       <>
-        <MonthlyTrend report={REPORTS.finance} metricKey="received_in_period" title="Recebido por mês" />
+        <ProjectedTrend report={REPORTS.finance} metricKey="received_in_period" title="Recebido por mês, com projeção" />
         <MonthlyTrend report={REPORTS.finance} metricKey="paid_in_period" title="Pago por mês" />
         <AgingBuckets title="A receber por vencimento" source="/api/accounts-receivable" permission="accounts_receivable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={RECEIVABLE_OPEN} href="/app/financeiro/contas-receber" />
         <AgingBuckets title="A pagar por vencimento" source="/api/accounts-payable" permission="accounts_payable.view" dueKey="due_date" amountKey="updated_amount" openStatuses={PAYABLE_OPEN} href="/app/financeiro/contas-pagar" />
@@ -236,8 +242,10 @@ export const AREAS: Record<AreaId, AreaDef> = {
     sections: ["fiscal"],
     insights: (range) => (
       <>
+        <RateGauge report={REPORTS.fiscal} range={range} title="Notas autorizadas" label="Documentos do período autorizados" partKey="authorized_count" wholeKey="documents_count" />
         <MonthlyTrend report={REPORTS.fiscal} metricKey="documents_count" title="Documentos por mês" />
         <StatusDistribution
+          variant="donut"
           title="Documentos do período por situação"
           source="/api/fiscal-documents"
           permission="fiscal_documents.view"
@@ -296,6 +304,7 @@ export const AREAS: Record<AreaId, AreaDef> = {
           source="/api/nonconformities"
           permission="nonconformities.view"
           field="severity"
+          variant="donut"
           groups={[
             { label: "Crítica", statuses: ["CRITICAL"], tone: "critical", href: "/app/qualidade/nao-conformidades?severity=CRITICAL" },
             { label: "Alta", statuses: ["HIGH"], tone: "danger", href: "/app/qualidade/nao-conformidades?severity=HIGH" },

@@ -9,6 +9,7 @@ import { useSession } from "@/components/shell/SessionProvider";
 import { ChartPanel } from "@/components/charts/ChartPanel";
 import { CalendarHeatmap, ColumnTrend, DistributionBar, FunnelBars, RankingBars } from "@/components/charts/Charts";
 import { FlowSankey } from "@/components/charts/FlowSankey";
+import { buildProjection, HalfDonut, HalfGauge, ProjectionTrend } from "@/components/charts/Gauges";
 import { cachedGet, reportPath, useCached } from "@/lib/dashboard/client";
 import { buildOrderToDeliveryFlow, buildProcureToReceiveFlow, buildProductionFlow, type Flow } from "@/lib/dashboard/flows";
 import { formatMetric, type ReportDef } from "@/lib/dashboard/metrics";
@@ -58,6 +59,111 @@ export function MonthlyTrend({ report, metricKey, title, description }: { report
   );
 }
 
+// ------------------------------------------------------------ tendência com projeção
+function futureMonthLabels(count: number, today = new Date()): string[] {
+  return Array.from({ length: count }, (_, i) =>
+    new Date(today.getFullYear(), today.getMonth() + i + 1, 1).toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")
+  );
+}
+
+export function ProjectedTrend({ report, metricKey, title, ahead = 3 }: { report: ReportDef; metricKey: string; title: string; ahead?: number }) {
+  const { can } = useSession();
+  const allowed = can(report.permission);
+  const months = useMemo(() => lastMonths(6), []);
+  const future = useMemo(() => futureMonthLabels(ahead), [ahead]);
+  const [state, setState] = useState<{ data: Array<{ label: string; value: number }> | null; error: string | null }>({ data: null, error: null });
+
+  useEffect(() => {
+    if (!allowed) return;
+    let cancelled = false;
+    Promise.all(months.map((m) => cachedGet<AnyRow | null>(reportPath(report.endpoint, m))))
+      .then((rows) => !cancelled && setState({ data: rows.map((row, i) => ({ label: months[i].label, value: Number(row?.[metricKey] ?? 0) })), error: null }))
+      .catch((error: unknown) => !cancelled && setState({ data: null, error: error instanceof Error ? error.message : "Falha ao carregar." }));
+    return () => {
+      cancelled = true;
+    };
+  }, [allowed, months, report.endpoint, metricKey]);
+
+  const points = useMemo(() => (state.data ? buildProjection(state.data, future) : []), [state.data, future]);
+  if (!allowed) return null;
+  const metric = report.metrics.find((m) => m.key === metricKey);
+  const format = (v: number) => formatMetric(v, metric?.format ?? "int");
+  return (
+    <ChartPanel
+      title={title}
+      description={`Últimos 6 meses e projeção para os próximos ${ahead}, pela tendência dos meses fechados. É uma estimativa, não uma meta.`}
+      loading={!state.data && !state.error}
+      error={state.error}
+      empty={!!state.data && state.data.every((d) => d.value === 0)}
+      height={268}
+      table={{
+        columns: [{ label: "Mês" }, { label: "Realizado", align: "right" }, { label: "Projeção", align: "right" }, { label: "Faixa provável", align: "right" }],
+        rows: points.map((p) => [
+          p.label,
+          p.actual !== undefined ? format(p.actual) : p.partial !== undefined ? `${format(p.partial)} (até hoje)` : "—",
+          p.projected !== undefined ? format(p.projected) : "—",
+          p.range && p.range[1] > p.range[0] ? `${format(p.range[0])} a ${format(p.range[1])}` : "—",
+        ]),
+      }}
+    >
+      <ProjectionTrend data={points} format={format} />
+    </ChartPanel>
+  );
+}
+
+// ------------------------------------------------------------ indicador em meia rosca
+/**
+ * Um percentual do período escolhido: direto do relatório (valueKey, já em %)
+ * ou a razão entre duas métricas (part/whole).
+ */
+export function RateGauge({
+  report,
+  range,
+  title,
+  label,
+  valueKey,
+  partKey,
+  wholeKey,
+  target,
+  goodWhen = "up",
+}: {
+  report: ReportDef;
+  range: DateRange;
+  title: string;
+  label: string;
+  valueKey?: string;
+  partKey?: string;
+  wholeKey?: string;
+  target?: number;
+  goodWhen?: "up" | "down";
+}) {
+  const { can } = useSession();
+  const allowed = can(report.permission);
+  const res = useCached<AnyRow | null>(reportPath(report.endpoint, range), allowed);
+  if (!allowed) return null;
+  const row = res.data ?? null;
+  const whole = wholeKey ? Number(row?.[wholeKey] ?? 0) : 0;
+  const part = partKey ? Number(row?.[partKey] ?? 0) : 0;
+  const value = valueKey ? Number(row?.[valueKey] ?? 0) : whole > 0 ? (part / whole) * 100 : 0;
+  const empty = res.data === null ? false : valueKey ? row?.[valueKey] === null || row?.[valueKey] === undefined : whole === 0;
+  const tone: Tone = target === undefined ? "neutral" : (goodWhen === "up" ? value >= target : value <= target) ? "success" : "warning";
+  const caption = !valueKey && wholeKey ? `${formatInteger(part)} de ${formatInteger(whole)}` : undefined;
+  return (
+    <ChartPanel
+      title={title}
+      description="No período escolhido no topo."
+      loading={res.loading}
+      error={res.error}
+      onRetry={res.reload}
+      empty={empty}
+      height={200}
+      table={{ columns: [{ label: "Indicador" }, { label: "Valor", align: "right" }], rows: [[label, `${value.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`], ...(caption ? [["Base", caption]] : []), ...(target !== undefined ? [["Meta", `${target}%`]] : [])] }}
+    >
+      <HalfGauge value={value} label={label} target={target} tone={tone} caption={caption} />
+    </ChartPanel>
+  );
+}
+
 // ------------------------------------------------------------ distribuição por status
 export type StatusGroup = { label: string; statuses: string[]; tone: Tone; href?: string };
 
@@ -70,6 +176,7 @@ export function StatusDistribution({
   dateKey,
   range,
   field = "status",
+  variant = "bar",
 }: {
   title: string;
   description?: string;
@@ -80,6 +187,8 @@ export function StatusDistribution({
   range?: DateRange;
   /** Coluna agrupada (padrão: status; ex.: severity). */
   field?: string;
+  /** "donut": meia rosca com o total no centro; "bar": barra empilhada. */
+  variant?: "bar" | "donut";
 }) {
   const { can } = useSession();
   const allowed = can(permission);
@@ -101,10 +210,10 @@ export function StatusDistribution({
       error={res.error}
       onRetry={res.reload}
       empty={!!res.data && rows.length === 0}
-      height={96}
+      height={variant === "donut" ? 220 : 96}
       table={{ columns: [{ label: "Situação" }, { label: "Quantidade", align: "right" }], rows: parts.map((p) => [p.label, formatInteger(p.value)]) }}
     >
-      <DistributionBar parts={parts} format={formatInteger} />
+      {variant === "donut" ? <HalfDonut parts={parts} format={formatInteger} totalLabel="no total" /> : <DistributionBar parts={parts} format={formatInteger} />}
     </ChartPanel>
   );
 }

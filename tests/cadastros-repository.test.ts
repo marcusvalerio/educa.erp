@@ -28,7 +28,7 @@ describe("repositório de cadastros — hydrate e 'Tentar novamente'", () => {
     }) as typeof fetch;
 
     const repo = createRepository<BaseEntity>("teste-retry");
-    await assert.rejects(repo.hydrate(), /Failed to fetch/);
+    await assert.rejects(repo.hydrate(), /Sem resposta do servidor/);
     assert.equal(calls.length, 1);
     assert.deepEqual(repo.list(), []);
 

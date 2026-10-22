@@ -1,3 +1,4 @@
+import { safeFetch } from "@/lib/api-client";
 import { invalidateCache } from "@/lib/dashboard/client";
 import type { BaseEntity } from "./types";
 import type {
@@ -81,7 +82,7 @@ export function createRepository<T extends BaseEntity>(resourcePath: string): Re
   }
 
   async function fetchAll(): Promise<void> {
-    const res = await fetch(`/api/${resourcePath}?pageSize=500&sort=created_at&order=desc`, {
+    const res = await safeFetch(`/api/${resourcePath}?pageSize=500&sort=created_at&order=desc`, {
       cache: "no-store",
     });
     items = await parseEnvelope<T[]>(res);
@@ -110,10 +111,14 @@ export function createRepository<T extends BaseEntity>(resourcePath: string): Re
   }
 
   async function create(data: Partial<T>): Promise<T> {
-    const res = await fetch(`/api/${resourcePath}`, {
+    const res = await safeFetch(`/api/${resourcePath}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
+    }).catch(async (error: unknown) => {
+      // Sem resposta: o registro pode ter sido gravado — recarrega a lista.
+      await fetchAll().catch(() => undefined);
+      throw error;
     });
     const created = await parseEnvelope<T>(res);
     items = [created, ...items];
@@ -122,7 +127,7 @@ export function createRepository<T extends BaseEntity>(resourcePath: string): Re
   }
 
   async function update(id: string, patch: Partial<T>): Promise<T> {
-    const res = await fetch(`/api/${resourcePath}/${id}`, {
+    const res = await safeFetch(`/api/${resourcePath}/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
@@ -141,7 +146,7 @@ export function createRepository<T extends BaseEntity>(resourcePath: string): Re
   }
 
   async function remove(id: string): Promise<DeleteResult> {
-    const res = await fetch(`/api/${resourcePath}/${id}`, { method: "DELETE" });
+    const res = await safeFetch(`/api/${resourcePath}/${id}`, { method: "DELETE" });
     const body = (await res.json().catch(() => null)) as ApiEnvelope<null> | null;
     if (!body || body.success === false) {
       const message = body && !body.success ? body.error.message : `Erro ${res.status} ao excluir.`;

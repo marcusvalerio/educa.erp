@@ -7,7 +7,10 @@ import { ConfirmDialog } from "@/components/ui/Dialog";
 import { toast } from "@/components/ui/Toast";
 import { useSession } from "@/components/shell/SessionProvider";
 import { WorkflowActions, type WorkflowAction } from "@/components/forms/WorkflowActions";
-import { FormDialog } from "@/components/forms/FormDialog";
+import { Dialog } from "@/components/ui/Dialog";
+import { FormField } from "@/components/ui/FormField";
+import { Select } from "@/components/ui/Controls";
+import { useCached } from "@/lib/dashboard/client";
 import { apiSend } from "@/lib/api-client";
 import { invalidateCache } from "@/lib/dashboard/client";
 
@@ -64,29 +67,112 @@ export function ShipmentActions({ id, status, onDone, transport = false }: { id:
         }
       />
       {assigning && (
-        <FormDialog
-          open
-          onOpenChange={(o) => !o && setAssigning(false)}
-          title="Transporte da expedição"
-          description="Transportadora, motorista e veículo (todos opcionais)."
-          submitLabel="Salvar transporte"
-          fields={[
-            { key: "carrierId", label: "Transportadora", type: "lookup", source: { path: "/api/carriers", label: (r) => String(r.razaoSocial ?? r.nomeFantasia ?? r.id) } },
-            { key: "driverId", label: "Motorista", type: "lookup", source: { path: "/api/drivers", label: (r) => String(r.nome ?? r.id) } },
-            { key: "vehicleId", label: "Veículo", type: "lookup", source: { path: "/api/vehicles", label: (r) => String(r.placa ?? r.modelo ?? r.id) } },
-          ]}
-          path={`/api/shipments/${id}/transport`}
-          toBody={(v) => ({ carrierId: v.carrierId || undefined, driverId: v.driverId || undefined, vehicleId: v.vehicleId || undefined })}
-          invalidate={["/api/shipments"]}
-          onCreated={() => {
-            toast.success("Transporte definido.");
+        <TransportDialog
+          shipmentId={id}
+          onClose={() => setAssigning(false)}
+          onSaved={() => {
             setAssigning(false);
             onDone();
           }}
-          size="md"
         />
       )}
     </>
+  );
+}
+
+type Row = Record<string, unknown>;
+const str = (v: unknown) => (typeof v === "string" ? v : "");
+const active = (r: Row) => r.status === undefined || r.status === "Ativo" || r.status === "active";
+
+/**
+ * Transporte da expedição. Motorista e veículo dependem da transportadora:
+ * com transportadora escolhida, só aparecem os dela; sem transportadora,
+ * só os da frota própria (sem transportadora). O banco confere de novo.
+ */
+function TransportDialog({ shipmentId, onClose, onSaved }: { shipmentId: string; onClose: () => void; onSaved: () => void }) {
+  const carriers = useCached<Row[]>("/api/carriers");
+  const drivers = useCached<Row[]>("/api/drivers");
+  const vehicles = useCached<Row[]>("/api/vehicles");
+  const [carrierId, setCarrierId] = useState("");
+  const [driverId, setDriverId] = useState("");
+  const [vehicleId, setVehicleId] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const ofCarrier = (r: Row) => active(r) && str(r.transportadoraId) === carrierId;
+  const driverOptions = (drivers.data ?? []).filter(ofCarrier).map((r) => ({ value: String(r.id), label: str(r.nome) || String(r.id) }));
+  const vehicleOptions = (vehicles.data ?? [])
+    .filter((r) => ofCarrier(r) && (!driverId || !str(r.motoristaPrincipalId) || str(r.motoristaPrincipalId) === driverId))
+    .map((r) => ({ value: String(r.id), label: [str(r.placa), str(r.modelo)].filter(Boolean).join(" — ") || String(r.id) }));
+  const carrierOptions = [
+    { value: "", label: "Frota própria (sem transportadora)" },
+    ...(carriers.data ?? []).filter(active).map((r) => ({ value: String(r.id), label: str(r.nomeFantasia) || str(r.razaoSocial) || String(r.id) })),
+  ];
+  const scope = carrierId ? "desta transportadora" : "da frota própria";
+
+  async function save() {
+    setBusy(true);
+    setError(null);
+    try {
+      await apiSend(`/api/shipments/${shipmentId}/transport`, "POST", { carrierId: carrierId || undefined, driverId: driverId || undefined, vehicleId: vehicleId || undefined });
+      invalidateCache("/api/shipments");
+      toast.success("Transporte definido.");
+      onSaved();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível salvar.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Dialog
+      open
+      onOpenChange={(o) => !o && onClose()}
+      title="Transporte da expedição"
+      description="Escolha a transportadora; motorista e veículo mostram só os dela."
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose} disabled={busy}>
+            Cancelar
+          </Button>
+          <Button onClick={save} loading={busy}>
+            Salvar transporte
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-4">
+        <FormField label="Transportadora">
+          <Select
+            value={carrierId}
+            onValueChange={(v) => {
+              setCarrierId(v);
+              setDriverId("");
+              setVehicleId("");
+            }}
+            options={carrierOptions}
+            placeholder="Frota própria (sem transportadora)"
+          />
+        </FormField>
+        <FormField label="Motorista" help={driverOptions.length === 0 ? `Nenhum motorista ${scope}. Cadastre em Cadastros › Motoristas.` : undefined}>
+          <Select
+            value={driverId}
+            onValueChange={(v) => {
+              setDriverId(v);
+              setVehicleId("");
+            }}
+            options={driverOptions}
+            placeholder={driverOptions.length ? "Selecione" : "Nenhum disponível"}
+            disabled={driverOptions.length === 0}
+          />
+        </FormField>
+        <FormField label="Veículo" help={vehicleOptions.length === 0 ? `Nenhum veículo ${scope}${driverId ? " para este motorista" : ""}.` : undefined}>
+          <Select value={vehicleId} onValueChange={setVehicleId} options={vehicleOptions} placeholder={vehicleOptions.length ? "Selecione" : "Nenhum disponível"} disabled={vehicleOptions.length === 0} />
+        </FormField>
+        {error && <p className="text-sm text-danger-fg">{error}</p>}
+      </div>
+    </Dialog>
   );
 }
 

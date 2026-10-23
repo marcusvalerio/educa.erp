@@ -150,6 +150,18 @@ describe("Venda com estoque e conta a pagar da compra (PostgreSQL real)", { skip
     const ship = (await one<{ id: string }>("select id from fn_create_shipment($1, $2, $3, $4::jsonb, $5)", [
       COMPANY, order, wh, JSON.stringify([{ sales_order_item_id: item, location_id: ids.loc, quantity: 4 }]), pick,
     ])).id;
+    // 0117: motorista travado na transportadora (e frota própria sem transportadora).
+    await asOwner();
+    const carA = (await one<{ id: string }>("insert into carriers (company_id, code, legal_name, document) values ($1, 'TR-A', 'Transp A', '11444777000161') returning id", [COMPANY])).id;
+    const carB = (await one<{ id: string }>("insert into carriers (company_id, code, legal_name, document) values ($1, 'TR-B', 'Transp B', '04252011000110') returning id", [COMPANY])).id;
+    const drvA = (await one<{ id: string }>("insert into drivers (company_id, code, carrier_id, name, document, cnh_number, cnh_category) values ($1, 'MOT-A', $2, 'Motorista A', '52998224725', '123', 'D') returning id", [COMPANY, carA])).id;
+    const drvOwn = (await one<{ id: string }>("insert into drivers (company_id, code, name, document, cnh_number, cnh_category) values ($1, 'MOT-P', 'Motorista próprio', '11144477735', '456', 'D') returning id", [COMPANY])).id;
+    await asAdmin();
+    assert.match((await attempt("select fn_assign_shipment_transport($1, $2, $3, null)", [ship, carB, drvA])).error, /não pertence à transportadora/);
+    assert.match((await attempt("select fn_assign_shipment_transport($1, null, $2, null)", [ship, drvA])).error, /escolha a transportadora dele/);
+    assert.match((await attempt("select fn_assign_shipment_transport($1, $2, $3, null)", [ship, carA, drvOwn])).error, /frota própria/);
+    assert.ok((await attempt("select fn_assign_shipment_transport($1, $2, $3, null)", [ship, carA, drvA])).ok);
+    assert.ok((await attempt("select fn_assign_shipment_transport($1, null, $2, null)", [ship, drvOwn])).ok);
     for (const f of ["fn_mark_shipment_ready", "fn_pack_shipment", "fn_approve_shipment"]) await db.query(`select ${f}($1)`, [ship]);
     await db.query("select fn_ship_shipment($1, null)", [ship]);
     await asOwner();

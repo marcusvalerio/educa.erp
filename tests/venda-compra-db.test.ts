@@ -85,6 +85,23 @@ describe("Venda com estoque e conta a pagar da compra (PostgreSQL real)", { skip
     assert.equal(n.n, 1);
   });
 
+  test("0116: NF de entrada do recebimento (itens do recebimento, conferida, uma só)", async () => {
+    await asAdmin();
+    const doc = await one<{ id: string; direction: string; status: string; supplier_id: string; source_type: string }>(
+      "select id, direction, status, supplier_id, source_type from fn_register_purchase_entry_invoice($1)",
+      [ids.receipt]
+    );
+    assert.equal(doc.direction, "ENTRADA");
+    assert.equal(doc.status, "READY");
+    assert.equal(doc.supplier_id, ids.supplier);
+    assert.equal(doc.source_type, "purchase_receipt");
+    const again = await one<{ id: string }>("select id from fn_register_purchase_entry_invoice($1)", [ids.receipt]);
+    assert.equal(again.id, doc.id);
+    await asOwner();
+    const tot = await one<{ q: string; v: string }>("select sum(quantity) q, sum(quantity * unit_price) v from fiscal_document_items where fiscal_document_id = $1", [doc.id]);
+    assert.deepEqual([Number(tot.q), Number(tot.v)], [10, 125]);
+  });
+
   test("a função interna não é chamável por usuários", async () => {
     await asAdmin();
     assert.match((await attempt("select public.fn_payable_from_receipt_internal($1)", [ids.receipt])).error, /permission denied/);

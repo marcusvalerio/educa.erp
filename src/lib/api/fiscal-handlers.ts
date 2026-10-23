@@ -965,3 +965,18 @@ export async function createFiscalDocumentFromSalesOrder(request: NextRequest, c
     return jsonError(error);
   }
 }
+
+// POST /api/purchase-receipts/:id/entry-invoice — NF de entrada do recebimento
+// (estabelecimento e natureza de entrada padrão da empresa; 0116).
+export async function registerPurchaseEntryInvoice(_request: NextRequest, context: RouteContext) {
+  try {
+    await requireAccess("fiscal_documents.create");
+    const { id } = await context.params;
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_register_purchase_entry_invoice", { p_receipt_id: id });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data }, { status: 201 });
+  } catch (error) {
+    return jsonError(error);
+  }
+}

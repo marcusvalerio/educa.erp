@@ -134,8 +134,8 @@ export const REPORTS: Record<string, ReportDef> = {
     module: "financeiro",
     metrics: [
       { key: "cash_balance", label: "Saldo em caixa", format: "money", goodWhen: "up", href: "/app/financeiro/fluxo-caixa", position: true },
-      { key: "received_in_period", label: "Recebido no período", format: "money", goodWhen: "up", href: "/app/financeiro/contas-receber" },
-      { key: "paid_in_period", label: "Pago no período", format: "money", href: "/app/financeiro/contas-pagar" },
+      { key: "received_in_period", label: "Recebido no período (entradas)", format: "money", goodWhen: "up", href: "/app/financeiro/contas-receber" },
+      { key: "paid_in_period", label: "Pago no período (saídas)", format: "money", goodWhen: "down", href: "/app/financeiro/contas-pagar" },
       { key: "overdue_receivable", label: "Recebíveis vencidos", format: "money", goodWhen: "down", href: "/app/financeiro/contas-receber?view=atrasados", position: true },
       { key: "overdue_payable", label: "Pagamentos vencidos", format: "money", goodWhen: "down", href: "/app/financeiro/contas-pagar?view=atrasados", position: true },
       { key: "accounts_receivable_open", label: "A receber em aberto", format: "money", href: "/app/financeiro/contas-receber?view=abertos", position: true },

@@ -488,6 +488,8 @@ export function AreaDashboard({ area }: { area: AreaId }) {
         </section>
       )}
 
+      {area === "executivo" && <CashFlowStrip range={range} previous={previous} />}
+
       {def.insights && (
         <section aria-label="Gráficos" className="flex flex-col gap-2">
           <SectionTitle title="Gráficos" description="Tendências, indicadores e situações com os dados registrados. Toque num item para abrir a lista filtrada." />
@@ -513,6 +515,24 @@ export function AreaDashboard({ area }: { area: AreaId }) {
   );
 }
 
+const CASH_KEYS = ["received_in_period", "paid_in_period", "accounts_payable_open", "overdue_payable"];
+
+/** Entradas e saídas de dinheiro no período (relatório financeiro). */
+function CashFlowStrip({ range, previous }: { range: DateRange; previous: DateRange }) {
+  const { can } = useSession();
+  if (!can(REPORTS.finance.permission)) return null;
+  return (
+    <section aria-label="Entradas e saídas" className="flex flex-col gap-2">
+      <SectionTitle
+        title="Entradas e saídas de dinheiro"
+        description="O que entrou (recebimentos) e o que saiu (pagamentos) no período, e o que ainda falta pagar."
+        actions={<Link href="/app/financeiro/fluxo-caixa" className="text-xs font-medium text-muted-foreground hover:text-foreground">Fluxo de caixa →</Link>}
+      />
+      <SummaryStrip report={REPORTS.finance} range={range} previous={previous} enabled keys={CASH_KEYS} />
+    </section>
+  );
+}
+
 /** Centro operacional (página inicial): contexto do usuário primeiro, depois o que exige ação. */
 export function OperationalCenter() {
   const { data, can } = useSession();
@@ -533,6 +553,8 @@ export function OperationalCenter() {
           <SummaryStrip report={REPORTS.executive} range={range} previous={previous} enabled keys={["net_revenue", "gross_margin_pct", "cash_balance", "open_sales_orders"]} lead />
         </section>
       )}
+
+      <CashFlowStrip range={range} previous={previous} />
 
       <section aria-label="Gráficos" className="flex flex-col gap-2">
         <SectionTitle title="Gráficos" description="Tendências e situações dos seus módulos. Painéis por área em Dashboards." />

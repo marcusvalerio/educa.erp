@@ -17,7 +17,7 @@ import type { ProductionOrderRow } from "@/lib/database/schema";
 const OP_ACTIONS: WorkflowAction[] = [
   { id: "plan", label: "Planejar", path: "plan", permission: "production_orders.update", statuses: ["draft"], confirm: "A ordem passa para planejada.", success: "Ordem planejada." },
   { id: "release", label: "Liberar e reservar materiais", path: "release", permission: "production_orders.release", statuses: ["draft", "planned", "released"], confirm: "Reserva os componentes no local dos materiais. Falta de saldo impede a liberação.", success: "Materiais reservados." },
-  { id: "start", label: "Iniciar produção", path: "start", permission: "production_orders.start", statuses: ["materials_reserved"], confirm: "Os materiais reservados são consumidos e a ordem entra em produção.", success: "Produção iniciada." },
+  { id: "start", label: "Iniciar produção", path: "start", permission: "production_orders.start", statuses: ["materials_reserved"], confirm: "A ordem entra em produção. Depois: consumir os materiais (baixa do estoque) e apontar a produção (produto pronto entra no estoque).", success: "Produção iniciada." },
   { id: "complete", label: "Concluir", path: "complete", permission: "production_orders.complete", statuses: ["in_progress"], confirm: "Encerra a ordem com o que foi apontado.", success: "Ordem concluída." },
   { id: "hold", label: "Pausar", path: "hold", permission: "production_orders.update", statuses: ["in_progress"], confirm: "A ordem fica em espera.", success: "Ordem em espera." },
   { id: "resume", label: "Retomar", path: "resume", permission: "production_orders.update", statuses: ["on_hold"], confirm: "A ordem volta para produção.", success: "Ordem retomada." },

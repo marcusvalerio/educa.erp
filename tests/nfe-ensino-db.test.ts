@@ -50,7 +50,12 @@ describe("NF-e de ensino (PostgreSQL real)", { skip: !url && "POC_DATABASE_OWNER
        values ($1, $2, 'EST-T', 'Escola Teste Ltda', '11222333000181', '123456789012', 'LUCRO_PRESUMIDO', 'Praça da Sé', '100', 'Sé', 'São Paulo', 'SP', '01001000')`,
       [ids.est, COMPANY],
     );
-    await db.query(`insert into fiscal_cfops (id, company_id, code, description, direction, scope) values ($1, $2, '6102', 'Venda fora do estado', 'SAIDA', 'INTERSTATE')`, [ids.cfop, COMPANY]);
+    // 0116 já semeia o 6102 em toda empresa: reaproveita.
+    ids.cfop = (await one<{ id: ReturnType<typeof randomUUID> }>(
+      `insert into fiscal_cfops (id, company_id, code, description, direction, scope) values ($1, $2, '6102', 'Venda fora do estado', 'SAIDA', 'INTERSTATE')
+       on conflict (company_id, code) do update set direction = 'SAIDA' returning id`,
+      [ids.cfop, COMPANY],
+    )).id;
     await db.query(`insert into fiscal_operation_natures (id, company_id, code, name, direction, default_cfop_id) values ($1, $2, 'VENDA-FORA-T', 'Venda de mercadoria (fora do estado)', 'SAIDA', $3)`, [ids.nature, COMPANY, ids.cfop]);
     await db.query(
       `insert into customers (id, company_id, code, name, document, state_registration, zip_code, state, city, neighborhood, address, address_number)

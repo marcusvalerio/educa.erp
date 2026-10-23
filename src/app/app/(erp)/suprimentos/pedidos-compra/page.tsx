@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Ban, CheckCircle2, Lock, PackagePlus, Plus, Send, Truck } from "lucide-react";
+import { Ban, CheckCircle2, FileText, Lock, PackagePlus, Send, Truck } from "lucide-react";
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, dateCol, moneyCol, statusCol, refCol, statusFilter, overdueView, isRowOverdue, statusViews, combineViews } from "@/components/data-table/columns";
 import { MiniTable } from "@/components/resource/DetailLayout";
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/Dialog";
 import { toast } from "@/components/ui/Toast";
 import { useSession } from "@/components/shell/SessionProvider";
-import { NewOrderDialog } from "@/components/commercial/NewOrderDialog";
 import { ReceiveOrderDialog } from "@/components/forms/ReceiveOrderDialog";
 import { useCached, invalidateCache } from "@/lib/dashboard/client";
 import { apiSend } from "@/lib/api-client";
@@ -19,16 +18,19 @@ import { dbStatusCode } from "@/lib/status";
 import { formatCurrencyBRL } from "@/lib/format";
 import type { PurchaseOrderItemRow, PurchaseOrderRow } from "@/lib/database/schema";
 
-// Pedidos de compra: criar (rascunho) e conduzir o fluxo. As ações
+// Pedidos de compra: conduzir o fluxo. O pedido nasce da solicitação
+// aprovada ("Gerar pedido de compra") ou da cotação com vencedor — não há
+// pedido avulso, para manter a sequência solicitação → cotação → pedido. As ações
 // mostradas dependem do status e da permissão; a transição em si é do banco
 // (fn_*_purchase_order), que recusa qualquer passo inválido.
 
-type ActionId = "submit" | "approve" | "send" | "close" | "cancel";
+type ActionId = "submit" | "approve" | "send" | "invoice" | "close" | "cancel";
 
 const ACTIONS: Record<ActionId, { label: string; path: string; permission: string; statuses: string[]; confirm: string; tone?: "danger"; icon: typeof Send; success: string }> = {
   submit: { label: "Enviar para aprovação", path: "submit", permission: "purchase_orders.update", statuses: ["draft"], confirm: "O pedido segue para aprovação e deixa de ser rascunho.", icon: Send, success: "Pedido enviado para aprovação." },
   approve: { label: "Aprovar", path: "approve", permission: "purchase_orders.approve", statuses: ["pending_approval"], confirm: "Aprovar libera o pedido para ser enviado ao fornecedor.", icon: CheckCircle2, success: "Pedido aprovado." },
   send: { label: "Marcar como enviado ao fornecedor", path: "send", permission: "purchase_orders.update", statuses: ["approved"], confirm: "Registra que o pedido foi enviado ao fornecedor. A partir daí ele aguarda o recebimento.", icon: Truck, success: "Pedido marcado como enviado." },
+  invoice: { label: "Lançar NF de entrada", path: "entry-invoices", permission: "fiscal_documents.create", statuses: ["partially_received", "received", "closed"], confirm: "Lança no Fiscal a NF de entrada de cada recebimento confirmado deste pedido (a nota do fornecedor). O que já foi lançado não é duplicado.", icon: FileText, success: "NF de entrada em Fiscal › Notas fiscais." },
   close: { label: "Encerrar", path: "close", permission: "purchase_orders.update", statuses: ["received"], confirm: "Encerra o pedido totalmente recebido.", icon: Lock, success: "Pedido encerrado." },
   cancel: { label: "Cancelar pedido", path: "cancel", permission: "purchase_orders.cancel", statuses: ["draft", "pending_approval", "approved", "sent", "partially_received"], confirm: "O cancelamento não pode ser desfeito. Se algo já foi recebido, o pedido é encerrado.", tone: "danger", icon: Ban, success: "Pedido cancelado." },
 };
@@ -56,7 +58,6 @@ function OrderItems({ id }: { id: string }) {
 export default function PedidosCompraPage() {
   const suppliers = useIdNameLookup("/api/suppliers", "legal_name");
   const { can } = useSession();
-  const [creating, setCreating] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [pending, setPending] = useState<{ action: ActionId; row: PurchaseOrderRow } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -96,13 +97,6 @@ export default function PedidosCompraPage() {
         apiPath="/api/purchase-orders"
         searchPlaceholder="Buscar pedido ou fornecedor..."
         refreshToken={refresh}
-        actions={
-          can("purchase_orders.create") ? (
-            <Button size="sm" onClick={() => setCreating(true)}>
-              <Plus size={14} aria-hidden /> Novo pedido
-            </Button>
-          ) : undefined
-        }
         columns={[
           codeCol<PurchaseOrderRow>("code", "Pedido"),
           refCol<PurchaseOrderRow>("supplier_id", "Fornecedor", suppliers, { mobile: "meta" }),
@@ -147,17 +141,7 @@ export default function PedidosCompraPage() {
             );
           },
         }}
-        emptyDescription="Crie o primeiro pedido de compra pelo botão Novo pedido."
-      />
-      <NewOrderDialog
-        kind="purchase"
-        open={creating}
-        onOpenChange={setCreating}
-        onCreated={() => {
-          setCreating(false);
-          toast.success("Pedido de compra criado como rascunho.", "Abra o pedido na lista para enviar para aprovação.");
-          reload();
-        }}
+        emptyDescription="O pedido nasce em Suprimentos › Solicitação de compra (Gerar pedido de compra) ou em Cotações, depois de escolher o fornecedor vencedor."
       />
       <ReceiveOrderDialog
         key={receiving ?? "none"}

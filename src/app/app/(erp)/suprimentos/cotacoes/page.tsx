@@ -11,6 +11,7 @@ import { QuoteSuppliers } from "@/components/forms/StepPanels";
 import { dbStatusCode } from "@/lib/status";
 
 const ACTIONS: WorkflowAction[] = [
+  { id: "order", label: "Gerar pedido de compra", path: "generate-order", permission: "purchase_orders.create", statuses: ["closed"], confirm: "Cria o pedido de compra com o fornecedor vencedor: itens, preços, condição e frete da proposta escolhida. Se já existir, nada é duplicado.", success: "Pedido de compra criado: siga em Suprimentos › Pedidos de compra." },
   { id: "cancel", label: "Cancelar cotação", path: "cancel", permission: "purchase_quotes.update", statuses: ["draft", "sent"], confirm: "A cotação é cancelada.", success: "Cotação cancelada.", tone: "danger" },
 ];
 import { ResourceListPage } from "@/components/resource/ResourceListPage";

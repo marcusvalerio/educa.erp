@@ -553,3 +553,33 @@ export async function rejectPurchaseReceipt(request: NextRequest, context: Route
     return jsonError(error);
   }
 }
+
+// POST /api/purchase-quotes/:id/generate-order — pedido de compra a partir
+// da proposta vencedora da cotação (0119).
+export async function createPurchaseOrderFromQuote(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    await requirePurchasingAccess("purchase_orders.create");
+    const { id } = await context.params;
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_create_purchase_order_from_quote", { p_quote_id: id });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data }, { status: 201 });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+// POST /api/purchase-orders/:id/entry-invoices — NF de entrada dos
+// recebimentos confirmados do pedido (0119).
+export async function registerPurchaseOrderEntryInvoices(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    await requirePurchasingAccess("fiscal_documents.create");
+    const { id } = await context.params;
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_register_purchase_order_entry_invoices", { p_order_id: id });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data: { invoices: data } });
+  } catch (error) {
+    return jsonError(error);
+  }
+}

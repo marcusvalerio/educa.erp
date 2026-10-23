@@ -132,7 +132,7 @@ export async function createShipmentFromOrder(_request: NextRequest, context: Ro
         const left = remaining.get(String(p.sales_order_item_id)) ?? 0;
         const qty = Math.min(Number(p.picked_quantity ?? 0), left);
         if (qty > 0) {
-          items.push({ sales_order_item_id: p.sales_order_item_id, location_id: p.location_id, quantity: qty, lot_id: p.lot_id ?? null, serial_numbers: p.serial_numbers ?? null });
+          items.push({ sales_order_item_id: p.sales_order_item_id, location_id: p.location_id, quantity: qty, lot_id: p.lot_id ?? null, ...(Array.isArray(p.serial_numbers) && p.serial_numbers.length ? { serial_numbers: p.serial_numbers } : {}) });
           remaining.set(String(p.sales_order_item_id), left - qty);
         }
       }
@@ -148,7 +148,7 @@ export async function createShipmentFromOrder(_request: NextRequest, context: Ro
         const left = remaining.get(String(orderItem.id)) ?? 0;
         const qty = Math.min(Number(r.quantity ?? 0), left);
         if (qty > 0) {
-          items.push({ sales_order_item_id: orderItem.id, location_id: locationOf.get(String(r.reservation_id)), quantity: qty, lot_id: r.lot_id ?? null, serial_numbers: null });
+          items.push({ sales_order_item_id: orderItem.id, location_id: locationOf.get(String(r.reservation_id)), quantity: qty, lot_id: r.lot_id ?? null });
           remaining.set(String(orderItem.id), left - qty);
         }
       }

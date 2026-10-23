@@ -148,7 +148,8 @@ describe("Venda com estoque e conta a pagar da compra (PostgreSQL real)", { skip
     }
     await db.query("select fn_complete_pick_list($1)", [pick]);
     const ship = (await one<{ id: string }>("select id from fn_create_shipment($1, $2, $3, $4::jsonb, $5)", [
-      COMPANY, order, wh, JSON.stringify([{ sales_order_item_id: item, location_id: ids.loc, quantity: 4 }]), pick,
+      COMPANY, order, wh, // 0118: séries como JSON null (como a tela gravava) não podem travar a expedição.
+      JSON.stringify([{ sales_order_item_id: item, location_id: ids.loc, quantity: 4, serial_numbers: null }]), pick,
     ])).id;
     // 0117: motorista travado na transportadora (e frota própria sem transportadora).
     await asOwner();
@@ -169,5 +170,23 @@ describe("Venda com estoque e conta a pagar da compra (PostgreSQL real)", { skip
     assert.deepEqual([Number(bal.on_hand), Number(bal.reserved)], [0, 0], "4 entraram, 4 saíram na expedição, reserva liberada");
     const st = await one<{ status: string }>("select status from sales_orders where id = $1", [order]);
     assert.equal(st.status, "shipped");
+  });
+
+  test("0119: cotação com vencedor gera o pedido de compra (um só) e o pedido lança a NF de entrada", async () => {
+    await asAdmin();
+    const quote = (await one<{ id: string }>("select id from fn_create_purchase_quote($1, array[$2]::uuid[], null, 'teste')", [COMPANY, ids.supplier])).id;
+    assert.match((await attempt("select fn_create_purchase_order_from_quote($1)", [quote])).error, /fornecedor vencedor/);
+    const qs = (await one<{ id: string }>("select id from purchase_quote_suppliers where quote_id = $1", [quote])).id;
+    await db.query("select fn_add_quote_supplier_response($1, '30', 15, 7, null, $2::jsonb)", [qs, JSON.stringify([{ product_id: ids.product, description: "Produto VC", quantity: 8, unit_price: 11, discount: 0 }])]);
+    await db.query("select fn_select_purchase_quote_supplier($1)", [qs]);
+    const po = await one<{ id: string; supplier_id: string; purchase_quote_id: string; payment_terms: string; total_amount: string }>("select * from fn_create_purchase_order_from_quote($1)", [quote]);
+    assert.equal(po.supplier_id, ids.supplier);
+    assert.equal(po.purchase_quote_id, quote);
+    assert.equal(po.payment_terms, "30");
+    assert.equal(Number(po.total_amount), 8 * 11 + 15);
+    assert.equal((await one<{ id: string }>("select id from fn_create_purchase_order_from_quote($1)", [quote])).id, po.id);
+    assert.match((await attempt("select fn_register_purchase_order_entry_invoices($1)", [po.id])).error, /ainda não tem recebimento confirmado/);
+    assert.equal((await one<{ n: number }>("select fn_register_purchase_order_entry_invoices($1) n", [ids.po])).n, 1);
+    await asOwner();
   });
 });

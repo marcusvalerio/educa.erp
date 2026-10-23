@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient as createSupabaseJsClient } from "@supabase/supabase-js";
 import { jsonError } from "@/lib/api/response";
-import { dbError, parseJson, requireCompanyUser, type IdRouteContext } from "@/lib/api/governance";
+import { dbError, parseJson, requireCompanyUser, requirePlatformMember, type IdRouteContext } from "@/lib/api/governance";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/env";
 import { ApiError } from "@/lib/database/errors";
@@ -271,6 +271,29 @@ export async function resetStudyMemberPassword(_request: NextRequest, context: I
   try {
     const { id } = await context.params;
     return ok(await resetWith("fn_study_authorize_member_password_reset", id), 201);
+  } catch (error) {
+    return jsonError(toApiError(error));
+  }
+}
+
+// POST /api/platform/companies/:id/admin-password-reset — Administração
+// Central: nova senha provisória do administrador da empresa (0122).
+export async function resetCompanyAdminPassword(_request: NextRequest, context: IdRouteContext) {
+  try {
+    requireSupabaseAuth();
+    const { id } = await context.params;
+    const { supabase } = await requirePlatformMember();
+    const result = await resetPasswordFlow({
+      authorize: async () => {
+        const { data, error } = await supabase.rpc("fn_platform_authorize_company_admin_password_reset", { p_company_id: id });
+        if (error) throw dbError(error);
+        const r = data as ResetTarget;
+        return { userId: r.user_id, authUserId: r.auth_user_id, email: r.email, name: r.name };
+      },
+      getLogin,
+      updateLogin: (authUserId, change) => updateLogin(authUserId, change),
+    });
+    return ok(result, 201);
   } catch (error) {
     return jsonError(toApiError(error));
   }

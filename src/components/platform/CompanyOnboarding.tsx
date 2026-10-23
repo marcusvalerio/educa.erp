@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { CheckCircle2, Copy, MailPlus, UserCog } from "lucide-react";
+import { CheckCircle2, Copy, KeyRound, MailPlus, UserCog } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select, Switch } from "@/components/ui/Controls";
-import { Dialog } from "@/components/ui/Dialog";
+import { ConfirmDialog, Dialog } from "@/components/ui/Dialog";
 import { FormField } from "@/components/ui/FormField";
 import { Alert } from "@/components/ui/Feedback";
 import { toast } from "@/components/ui/Toast";
@@ -135,9 +135,12 @@ export function CompanyAdminSection({ companyId }: { companyId: string }) {
       ) : status.loading || !status.data ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : status.data.admin_with_access ? (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <CheckCircle2 size={15} className="text-success-fg" aria-hidden /> A empresa já tem um administrador com acesso e gerencia os próprios usuários.
-        </p>
+        <>
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <CheckCircle2 size={15} className="text-success-fg" aria-hidden /> A empresa já tem um administrador com acesso e gerencia os próprios usuários.
+          </p>
+          {canPlatform("platform.companies.update") && <AdminPasswordReset companyId={companyId} />}
+        </>
       ) : (
         <>
           {pending && (
@@ -358,5 +361,74 @@ export function NewCompanyDialog({ open, onClose, onCreated }: { open: boolean; 
         </div>
       )}
     </Dialog>
+  );
+}
+
+type ResetResult = { password: string; email: string; userName: string; expiresAt: string };
+
+/** Nova senha provisória do administrador da empresa (0122). */
+function AdminPasswordReset({ companyId }: { companyId: string }) {
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<ResetResult | null>(null);
+
+  async function run() {
+    setBusy(true);
+    try {
+      const res = await platformSend<ResetResult>(`/api/platform/companies/${companyId}/admin-password-reset`, "POST", {});
+      setResult(res);
+      setConfirm(false);
+      toast.success("Nova senha provisória gerada.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível gerar a nova senha.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copy() {
+    if (!result) return;
+    try {
+      await navigator.clipboard.writeText(result.password);
+      toast.success("Senha copiada.");
+    } catch {
+      toast.error("Não foi possível copiar. Selecione a senha e copie manualmente.");
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {result ? (
+        <Alert tone="warning" title="Senha provisória — anote agora">
+          <p>
+            Entregue esta senha a {result.userName} por um canal seguro. Ela vale até {formatDateTime(result.expiresAt)} para o login {result.email} e{" "}
+            <strong>não será mostrada de novo</strong>. No próximo acesso a pessoa cria a própria senha.
+          </p>
+          <div className="mt-2 flex gap-2">
+            <Input readOnly value={result.password} aria-label="Senha provisória" className="code text-sm tracking-wide" onFocus={(e) => e.currentTarget.select()} />
+            <Button size="sm" variant="secondary" onClick={copy}>
+              <Copy size={14} aria-hidden /> Copiar
+            </Button>
+          </div>
+        </Alert>
+      ) : (
+        <div>
+          <Button size="sm" variant="secondary" onClick={() => setConfirm(true)}>
+            <KeyRound size={14} aria-hidden /> Gerar nova senha do administrador
+          </Button>
+        </div>
+      )}
+      {confirm && (
+        <ConfirmDialog
+          open
+          title="Gerar nova senha do administrador?"
+          description="A senha atual do administrador desta empresa deixa de valer. Você recebe uma senha provisória para entregar a ele; no próximo acesso ele cria a própria senha."
+          confirmLabel="Gerar nova senha"
+          loading={busy}
+          onConfirm={run}
+          onCancel={() => setConfirm(false)}
+        />
+      )}
+    </div>
   );
 }

@@ -163,4 +163,13 @@ describe("Professor nos ERPs dos grupos (PostgreSQL real)", { skip: !url && "POC
     await as(aluno);
     assert.match((await attempt("select * from public.fn_study_activity(null, 10)")).error, /Só o Administrador da turma/);
   });
+
+  test("0122: a Administração Central gera a nova senha do administrador de cada empresa", async () => {
+    await as(owner);
+    const r = await one<{ t: { email: string; user_id: string } }>("select public.fn_platform_authorize_company_admin_password_reset($1) t", [turma]);
+    assert.equal(r.t.email, "prof.p@example.com");
+    assert.match((await attempt("select public.fn_platform_authorize_company_admin_password_reset($1)", [grupoB])).error, /ainda não tem administrador com acesso/);
+    await as(prof);
+    assert.match((await attempt("select public.fn_platform_authorize_company_admin_password_reset($1)", [turma])).error, /Permissão negada/);
+  });
 });

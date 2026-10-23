@@ -148,7 +148,7 @@ export default function EmpresaPage() {
             <div className="flex flex-col gap-6 p-4">
               <FormSection title="Identificação">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {field("name", "Nome", { required: true, help: "Nome exibido no sistema." })}
+                  {field("name", "Nome da empresa (nome fantasia)", { required: true, help: "É o nome que aparece no topo do sistema e nos painéis. Ex.: Elétrica Faísca." })}
                   {field("legal_name", "Razão social")}
                   {field("document", "CNPJ", { mono: true })}
                 </div>

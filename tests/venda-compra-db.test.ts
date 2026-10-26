@@ -170,6 +170,13 @@ describe("Venda com estoque e conta a pagar da compra (PostgreSQL real)", { skip
     assert.deepEqual([Number(bal.on_hand), Number(bal.reserved)], [0, 0], "4 entraram, 4 saíram na expedição, reserva liberada");
     const st = await one<{ status: string }>("select status from sales_orders where id = $1", [order]);
     assert.equal(st.status, "shipped");
+    // 0123: não cria segunda expedição de pedido já expedido
+    await asAdmin();
+    assert.match((await attempt("select fn_create_shipment($1, $2, $3, $4::jsonb, null)", [COMPANY, order, wh, JSON.stringify([{ sales_order_item_id: item, location_id: ids.loc, quantity: 1 }])])).error, /já está todo expedido|Só é possível criar expedição/);
+    await asOwner();
+    // 0123: pedido expedido encerra a reserva (não fica "ativa" na tela)
+    const res = await one<{ n: number }>("select count(*)::int n from stock_reservations where reference_id = $1 and status = 'active'", [order]);
+    assert.equal(res.n, 0);
   });
 
   test("0119: cotação com vencedor gera o pedido de compra (um só) e o pedido lança a NF de entrada", async () => {

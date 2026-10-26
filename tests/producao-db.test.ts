@@ -112,7 +112,12 @@ describe("Produção de ponta a ponta (PostgreSQL real)", { skip: !url && "POC_D
       [COMPANY, ids.fg, ids.unit, ids.wh, ids.loc, bom]
     )).id;
     for (const s of ["fn_plan_production_order($1, current_date)", "fn_release_production_order($1)", "fn_start_production_order($1)"]) await db.query(`select ${s}`, [op]);
-    await db.query("select fn_register_production_output($1, 2, 0, null, null, null)", [op]);
+    // apontar 1 de 2 sem consumir: metade do material sai e o produto pronto tem custo
+    await db.query("select fn_register_production_output($1, 1, 0, null, null, null)", [op]);
+    assert.deepEqual(await balance(ids.c1, ids.loc), [2, 2], "metade dos disjuntores baixada no apontamento");
+    const fgCost = await one<{ c: string }>("select average_unit_cost c from product_cost_balances where product_id = $1 and location_id = $2", [ids.fg, ids.loc]);
+    assert.ok(Number(fgCost.c) > 0, "produto pronto não entra com custo zero");
+    await db.query("select fn_register_production_output($1, 1, 0, null, null, null)", [op]);
     const r = await attempt("select fn_complete_production_order($1)", [op]);
     assert.ok(r.ok, r.error);
     assert.deepEqual(await balance(ids.c1, ids.loc), [0, 0], "disjuntores saíram e a reserva foi liberada");

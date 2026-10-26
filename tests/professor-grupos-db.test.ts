@@ -164,6 +164,35 @@ describe("Professor nos ERPs dos grupos (PostgreSQL real)", { skip: !url && "POC
     assert.match((await attempt("select * from public.fn_study_activity(null, 10)")).error, /Só o Administrador da turma/);
   });
 
+  test("0124: tela de grupos dentro do grupo, aluno muda de grupo e professor cria outra turma", async () => {
+    await as(prof);
+    await db.query("select public.fn_study_enter_workspace($1)", [grupoA]);
+    const ctx = await one<{ c: { is_study: boolean; can_manage: boolean; class_id: string } }>("select public.fn_study_context() c");
+    assert.deepEqual([ctx.c.is_study, ctx.c.can_manage, ctx.c.class_id], [true, true, turma]);
+    const alunoId = (await one<{ id: string }>("select id from public.fn_study_group_members($1)", [grupoA])).id;
+    { const r = await attempt("select public.fn_study_move_member($1, $2)", [alunoId, grupoB]); assert.ok(r.ok, r.error); }
+    assert.deepEqual((await db.query("select name from public.fn_study_group_members($1)", [grupoB])).rows.map((r) => r.name), ["aluno.p"]);
+    assert.equal((await db.query("select 1 from public.fn_study_group_members($1)", [grupoA])).rows.length, 0);
+    assert.match((await attempt("select public.fn_study_move_member($1, $2)", [alunoId, grupoOutro])).error, /Grupo não encontrado/);
+    await as(aluno);
+    assert.equal(await currentCompany(), grupoB);
+    assert.equal((await one<{ ok: boolean }>("select public.has_permission($1, 'products.update') ok", [grupoB])).ok, true);
+    assert.match((await attempt("select public.fn_study_create_class('Turma X')")).error, /Só o Administrador/);
+
+    await as(prof);
+    const nova = (await one<{ c: { class_id: string } }>("select public.fn_study_create_class('Turma P2') c")).c.class_id;
+    assert.equal(await currentCompany(), nova);
+    const g2 = (await one<{ g: { group_id: string } }>("select public.fn_study_create_group('Grupo Z') g")).g.group_id;
+    await asOwner();
+    assert.equal((await one<{ p: string }>("select parent_company_id p from public.companies where id = $1", [g2])).p, nova);
+    await as(prof);
+    const ws = (await db.query("select company_id from public.fn_study_workspaces()")).rows;
+    assert.deepEqual(ws.map((r) => r.company_id), [turma, grupoA, grupoB, nova, g2]);
+    assert.ok((await attempt("select public.fn_study_enter_workspace($1)", [grupoA])).ok);
+    assert.equal((await one<{ c: { class_id: string } }>("select public.fn_study_context() c")).c.class_id, turma);
+    assert.ok((await attempt("select public.fn_study_enter_workspace($1)", [turma])).ok);
+  });
+
   test("0122: a Administração Central gera a nova senha do administrador de cada empresa", async () => {
     await as(owner);
     const r = await one<{ t: { email: string; user_id: string } }>("select public.fn_platform_authorize_company_admin_password_reset($1) t", [turma]);

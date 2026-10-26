@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Ban, Copy, KeyRound, LayoutList, Pencil, Plus, RotateCcw, UserPlus, Users } from "lucide-react";
+import { Ban, Copy, GraduationCap, KeyRound, LayoutList, Pencil, Plus, RotateCcw, UserPlus, Users } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel, PanelHeader } from "@/components/ui/Panel";
 import { Button } from "@/components/ui/Button";
@@ -22,7 +22,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 // nova para quem já tem acesso e esqueceu a senha.
 // Ele vê só contagens do grupo, nunca os dados. O banco decide tudo.
 
-type Context = { is_study: boolean; can_manage: boolean; parent_name: string | null };
+type Context = { is_study: boolean; can_manage: boolean; parent_name: string | null; class_name?: string | null; classes?: number };
 type Group = { id: string; name: string; created_at: string; members: number; logins: number; pending_invitations: number; products: number; sales_orders: number; purchase_orders: number };
 type Role = { id: string; code: string; name: string; screens: string[] | null };
 type Screen = { href: string; area: string; label: string };
@@ -129,7 +129,7 @@ function ProfileDialog({ groupId, profile, screens, onClose, onSaved }: { groupI
   );
 }
 
-function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClose: () => void; onChanged: () => void }) {
+function GroupDrawer({ group, groups, onClose, onChanged }: { group: Group | null; groups: Group[]; onClose: () => void; onChanged: () => void }) {
   const [roles, setRoles] = useState<Role[]>([]);
   const [members, setMembers] = useState<Member[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -139,6 +139,8 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
   const [busy, setBusy] = useState<string | null>(null);
   const [issued, setIssued] = useState<(Issued & { name: string }) | null>(null);
   const [confirm, setConfirm] = useState<{ kind: "issue" | "revoke" | "reset"; member: Member } | null>(null);
+  const [moving, setMoving] = useState<{ member: Member; to: Group } | null>(null);
+  const otherGroups = groups.filter((g) => g.id !== group?.id);
 
   const load = useCallback(async () => {
     if (!group) return;
@@ -209,6 +211,22 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
       await load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Não foi possível mudar o setor.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function moveMember() {
+    if (!moving) return;
+    setBusy("move");
+    try {
+      await apiSend(`/api/admin/study/members/${moving.member.id}/move`, "POST", { groupId: moving.to.id });
+      toast.success(`${moving.member.name} foi para ${moving.to.name}.`, "O papel continua o mesmo; escolha o setor no grupo novo.");
+      setMoving(null);
+      await load();
+      onChanged();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível mudar o aluno de grupo.");
     } finally {
       setBusy(null);
     }
@@ -314,6 +332,22 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
                         aria-label={`Setor de ${m.name}`}
                       />
                     </div>
+                    {otherGroups.length > 0 && (
+                      <div className="w-full sm:w-52">
+                        <span className="mb-1 block text-xs text-muted-foreground">Mudar de grupo</span>
+                        <Select
+                          value=""
+                          onValueChange={(v) => {
+                            const to = otherGroups.find((g) => g.id === v);
+                            if (to) setMoving({ member: m, to });
+                          }}
+                          options={otherGroups.map((g) => ({ value: g.id, label: g.name }))}
+                          placeholder="Mover para…"
+                          disabled={busy !== null}
+                          aria-label={`Mover ${m.name} para outro grupo`}
+                        />
+                      </div>
+                    )}
                     {m.status === "active" && m.has_login && (
                       <Button size="sm" variant="secondary" disabled={busy !== null} onClick={() => setConfirm({ kind: "reset", member: m })}>
                         <RotateCcw size={14} aria-hidden /> Nova senha provisória
@@ -411,6 +445,18 @@ function GroupDrawer({ group, onClose, onChanged }: { group: Group | null; onClo
         />
       )}
 
+      {moving && (
+        <ConfirmDialog
+          open
+          title={`Mover ${moving.member.name} para ${moving.to.name}?`}
+          description="O aluno passa a entrar no ERP do novo grupo, com o mesmo papel e a mesma senha. O setor (perfil com telas) é do grupo antigo e sai. O que ele já lançou continua no grupo antigo."
+          confirmLabel="Mover aluno"
+          loading={busy === "move"}
+          onConfirm={moveMember}
+          onCancel={() => setMoving(null)}
+        />
+      )}
+
       {confirm && (
         <ConfirmDialog
           open
@@ -446,6 +492,8 @@ export default function AdminGroupsPage() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<Group | null>(null);
+  const [creatingClass, setCreatingClass] = useState(false);
+  const [className, setClassName] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -478,18 +526,36 @@ export default function AdminGroupsPage() {
     }
   }
 
+  async function createClass() {
+    if (!className.trim()) return;
+    setBusy(true);
+    try {
+      await apiSend("/api/admin/study/classes", "POST", { name: className.trim() });
+      toast.success("Turma criada.", "Você já está nela: crie os grupos da turma nova.");
+      window.location.replace(`${window.location.origin}/app/admin/groups`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível criar a turma.");
+      setBusy(false);
+    }
+  }
+
   const ctx = data?.context;
 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
-        title="Grupos da turma"
-        description="Cada grupo funciona como uma empresa separada: os alunos de um grupo não veem os dados dos outros."
+        title={ctx?.class_name ? `Grupos da turma ${ctx.class_name}` : "Grupos da turma"}
+        description={`Cada grupo funciona como uma empresa separada: os alunos de um grupo não veem os dados dos outros.${(ctx?.classes ?? 0) > 1 ? " Para ver outra turma, troque na faixa do topo." : ""}`}
         actions={
           ctx?.can_manage ? (
-            <Button onClick={() => setCreating(true)}>
-              <Plus size={15} /> Novo grupo
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" onClick={() => setCreatingClass(true)}>
+                <GraduationCap size={15} /> Nova turma
+              </Button>
+              <Button onClick={() => setCreating(true)}>
+                <Plus size={15} /> Novo grupo
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -574,7 +640,29 @@ export default function AdminGroupsPage() {
         </FormField>
       </Dialog>
 
-      <GroupDrawer key={open?.id ?? "none"} group={open} onClose={() => setOpen(null)} onChanged={load} />
+      <Dialog
+        open={creatingClass}
+        onOpenChange={(next) => !busy && setCreatingClass(next)}
+        title="Nova turma"
+        description="A turma nasce sem grupos, com o mesmo plano e os mesmos módulos desta. Você entra nela em seguida; as outras turmas continuam na faixa do topo."
+        size="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setCreatingClass(false)} disabled={busy}>
+              Cancelar
+            </Button>
+            <Button onClick={createClass} loading={busy} disabled={!className.trim()}>
+              Criar turma
+            </Button>
+          </>
+        }
+      >
+        <FormField label="Nome da turma" required>
+          <Input value={className} onChange={(e) => setClassName(e.target.value)} maxLength={160} placeholder="Ex.: LOG123 — 2º semestre" />
+        </FormField>
+      </Dialog>
+
+      <GroupDrawer key={open?.id ?? "none"} group={open} groups={data?.groups ?? []} onClose={() => setOpen(null)} onChanged={load} />
     </div>
   );
 }

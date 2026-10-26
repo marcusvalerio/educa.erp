@@ -90,7 +90,7 @@ describe("Modo Estudo: turma e grupos (PostgreSQL real)", { skip: !url && "POC_D
 
   test("contexto: professor da turma gerencia; operador da turma e empresa comum não", async () => {
     await as(prof);
-    assert.deepEqual((await one<{ r: unknown }>("select public.fn_study_context() as r")).r, { is_study: true, can_manage: true, parent_name: null });
+    assert.deepEqual((await one<{ r: unknown }>("select public.fn_study_context() as r")).r, { is_study: true, can_manage: true, parent_name: null, class_id: turma, class_name: "Turma teste", classes: 1 });
     await as(operadorTurma);
     assert.equal((await one<{ r: { can_manage: boolean } }>("select public.fn_study_context() as r")).r.can_manage, false);
     await as(adminEmpresa);

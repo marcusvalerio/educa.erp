@@ -234,6 +234,37 @@ export async function enterStudyWorkspace(request: NextRequest) {
   }
 }
 
+const moveSchema = z.object({ groupId: z.string().uuid("Escolha o grupo.") }).strict();
+
+// POST /api/admin/study/members/:id/move { groupId } — aluno muda de grupo na turma (0124).
+export async function moveStudyMember(request: NextRequest, context: IdRouteContext) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const { id } = await context.params;
+    const body = await parseJson(request, moveSchema);
+    const { data, error } = await supabase.rpc("fn_study_move_member", { p_user_id: id, p_group_id: body.groupId });
+    if (error) throw dbError(error);
+    return ok(data);
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+const classSchema = z.object({ name: z.string().trim().min(1, "Informe o nome da turma.").max(160) }).strict();
+
+// POST /api/admin/study/classes { name } — o professor cria outra turma e entra nela (0124).
+export async function createStudyClass(request: NextRequest) {
+  try {
+    const { supabase } = await requireCompanyUser();
+    const body = await parseJson(request, classSchema);
+    const { data, error } = await supabase.rpc("fn_study_create_class", { p_name: body.name });
+    if (error) throw dbError(error);
+    return ok(data, 201);
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
 const ENTITY_LABELS: Record<string, string> = {
   sales_orders: "Pedido de venda",
   purchase_orders: "Pedido de compra",

@@ -1,0 +1,256 @@
+/*
+  ATLAS ERP — Beta (design system novo, só dentro de .beta-root).
+  A versão didática (/app) não usa nada daqui.
+
+    Maui Mist     #EEF2F3  fundo
+    Blarney Stone #027944  marca: botão primário, links
+    Kuro Green    #1B2B1B  títulos e pílula ativa (no lugar do preto)
+    Havana Blue   #A5DBE5  só fundo/detalhe (hover, chip, gráfico), nunca texto
+  Status têm chips próprios (menta, âmbar, vermelho, cinza) para não
+  confundir com o verde da marca. Tema claro por decisão de produto.
+*/
+
+.beta-root {
+  --bx-bg: #eef2f3;
+  --bx-card: #ffffff;
+  --bx-line: #dfe6e8;
+  --bx-line-soft: #e9eef0;
+  --bx-ink: #1b2b1b;
+  --bx-text: #2b382c;
+  --bx-muted: #5d6b66;
+  --bx-subtle: #8a9692;
+  --bx-brand: #027944;
+  --bx-brand-hover: #01673a;
+  --bx-brand-soft: #e3f3ea;
+  --bx-havana: #a5dbe5;
+  --bx-havana-soft: #e2f3f6;
+  --bx-ok-bg: #e4f6ec;
+  --bx-ok-fg: #17663f;
+  --bx-warn-bg: #fdf1dc;
+  --bx-warn-fg: #8a5a00;
+  --bx-bad-bg: #fde7e4;
+  --bx-bad-fg: #a3271a;
+  --bx-neutral-bg: #edf0f1;
+  --bx-neutral-fg: #4c5955;
+  --bx-r-card: 22px;
+  --bx-r-inner: 14px;
+  --bx-shadow: 0 1px 2px rgb(27 43 27 / 0.04);
+  --bx-font: var(--font-beta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bx-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
+
+  color-scheme: light;
+  min-height: 100dvh;
+  background: var(--bx-bg);
+  color: var(--bx-text);
+  font-family: var(--bx-font);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.beta-root :focus-visible {
+  outline: 2px solid var(--bx-brand);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------ tipografia */
+.bx-title {
+  color: var(--bx-ink);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.bx-meta {
+  font-family: var(--bx-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bx-subtle);
+}
+.bx-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------ card */
+.bx-card {
+  background: var(--bx-card);
+  border: 1px solid var(--bx-line);
+  border-radius: var(--bx-r-card);
+  box-shadow: var(--bx-shadow);
+}
+
+/* ------------------------------------------------------------ botão (pílula) */
+.bx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding-inline: 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+}
+.bx-btn:active {
+  transform: translateY(1px);
+}
+.bx-btn-primary {
+  background: var(--bx-brand);
+  color: #fff;
+}
+.bx-btn-primary:hover {
+  background: var(--bx-brand-hover);
+}
+.bx-btn-secondary {
+  background: var(--bx-card);
+  color: var(--bx-ink);
+  border: 1px solid var(--bx-line);
+}
+.bx-btn-secondary:hover {
+  background: var(--bx-havana-soft);
+  border-color: var(--bx-havana);
+}
+.bx-btn-ghost {
+  color: var(--bx-ink);
+}
+.bx-btn-ghost:hover {
+  background: var(--bx-havana-soft);
+}
+.bx-btn-sm {
+  height: 30px;
+  padding-inline: 12px;
+  font-size: 12.5px;
+}
+.bx-link {
+  color: var(--bx-brand);
+  font-weight: 600;
+}
+.bx-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ------------------------------------------------------------ chips */
+.bx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding-inline: 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.bx-chip-ok { background: var(--bx-ok-bg); color: var(--bx-ok-fg); }
+.bx-chip-warn { background: var(--bx-warn-bg); color: var(--bx-warn-fg); }
+.bx-chip-bad { background: var(--bx-bad-bg); color: var(--bx-bad-fg); }
+.bx-chip-neutral { background: var(--bx-neutral-bg); color: var(--bx-neutral-fg); }
+.bx-chip-info { background: var(--bx-havana-soft); color: var(--bx-ink); }
+
+/* ------------------------------------------------------------ tabela */
+.bx-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.bx-table th {
+  text-align: left;
+  font-family: var(--bx-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bx-subtle);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--bx-line-soft);
+}
+.bx-table td {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--bx-line-soft);
+}
+.bx-table tr:last-child td {
+  border-bottom: 0;
+}
+.bx-table tbody tr:hover td {
+  background: var(--bx-havana-soft);
+}
+
+/* ------------------------------------------------------------ navegação em pílula */
+.bx-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding-inline: 12px;
+  border-radius: 999px;
+  color: var(--bx-text);
+  font-weight: 550;
+  transition: background-color 0.15s, color 0.15s;
+}
+.bx-nav-item:hover {
+  background: var(--bx-havana-soft);
+}
+.bx-nav-item[aria-current="page"] {
+  background: var(--bx-ink);
+  color: #fff;
+}
+
+/* ------------------------------------------------------------ gráfico */
+.bx-bar {
+  border-radius: 10px 10px 4px 4px;
+  background: repeating-linear-gradient(135deg, var(--bx-havana) 0 6px, var(--bx-havana-soft) 6px 11px);
+  transition: height 0.5s ease;
+}
+.bx-bar-current {
+  background: repeating-linear-gradient(135deg, var(--bx-brand) 0 6px, #2b9a66 6px 11px);
+}
+
+/* ------------------------------------------------------------ aurora (assinatura, com moderação) */
+.bx-aurora {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--bx-ink);
+  color: #fff;
+}
+.bx-aurora::before {
+  content: "";
+  position: absolute;
+  inset: -60%;
+  z-index: -2;
+  background:
+    radial-gradient(40% 50% at 30% 40%, #a5dbe5 0%, transparent 60%),
+    radial-gradient(45% 55% at 70% 60%, #027944 0%, transparent 65%),
+    radial-gradient(60% 60% at 50% 50%, #1b2b1b 0%, #1b2b1b 100%);
+  animation: bx-aurora 18s ease-in-out infinite alternate;
+}
+.bx-aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.18;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@keyframes bx-aurora {
+  from { transform: translate3d(-6%, -4%, 0) rotate(0deg); }
+  to { transform: translate3d(6%, 4%, 0) rotate(25deg); }
+}
+
+/* ------------------------------------------------------------ entrada suave */
+.bx-rise {
+  animation: bx-rise 0.35s ease both;
+}
+@keyframes bx-rise {
+  from { opacity: 0.6; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bx-aurora::before,
+  .bx-rise { animation: none; }
+  .bx-bar { transition: none; }
+}

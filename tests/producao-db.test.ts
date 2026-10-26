@@ -101,4 +101,24 @@ describe("Produção de ponta a ponta (PostgreSQL real)", { skip: !url && "POC_D
     assert.ok(Number(rep.completed_orders) >= 1);
     await asOwner();
   });
+
+  test("0123: concluir sem 'Consumir materiais' dá baixa no reservado (nada fica preso na reserva)", async () => {
+    await asAdmin();
+    await db.query("select fn_receive_stock($1, $2, $3, 4, null, 20, 'entrada', null)", [COMPANY, ids.c1, ids.loc]);
+    await db.query("select fn_receive_stock($1, $2, $3, 2, null, 50, 'entrada', null)", [COMPANY, ids.c2, ids.loc]);
+    const bom = (await one<{ id: string }>("select id from product_boms where product_id = $1 and status = 'active' limit 1", [ids.fg])).id;
+    const op = (await one<{ id: string }>(
+      "select id from fn_create_production_order($1, $2, 2, $3, $4, $5, $4, $5, $6, 'medium', current_date, null, null)",
+      [COMPANY, ids.fg, ids.unit, ids.wh, ids.loc, bom]
+    )).id;
+    for (const s of ["fn_plan_production_order($1, current_date)", "fn_release_production_order($1)", "fn_start_production_order($1)"]) await db.query(`select ${s}`, [op]);
+    await db.query("select fn_register_production_output($1, 2, 0, null, null, null)", [op]);
+    const r = await attempt("select fn_complete_production_order($1)", [op]);
+    assert.ok(r.ok, r.error);
+    assert.deepEqual(await balance(ids.c1, ids.loc), [0, 0], "disjuntores saíram e a reserva foi liberada");
+    assert.deepEqual(await balance(ids.c2, ids.loc), [0, 0]);
+    const o = await one<{ material_cost: string }>("select material_cost from production_orders where id = $1", [op]);
+    assert.equal(Number(o.material_cost), 4 * 20 + 2 * 50);
+    await asOwner();
+  });
 });

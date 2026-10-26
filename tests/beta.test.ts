@@ -27,3 +27,19 @@ test("beta: vence hoje / na semana, parados e série mensal", () => {
   assert.equal(variation(s), 50);
   assert.equal(summarySentence([{ count: 3, one: "título vence hoje", many: "títulos vencem hoje" }, { count: 0, one: "x", many: "y" }, { count: 1, one: "pedido parado", many: "pedidos parados" }]), "3 títulos vencem hoje · 1 pedido parado");
 });
+
+test("beta: idade da pendência mais antiga e pulso diário", async () => {
+  const { oldestAgeDays, dailySeries } = await import("../src/lib/beta/today");
+  const today = new Date(2026, 9, 26, 10);
+  const rows = [
+    { status: "OPEN", due_date: "2026-10-14" },
+    { status: "OPEN", due_date: "2026-10-20" },
+    { status: "PAID", due_date: "2026-10-01" },
+    { status: "OPEN", due_date: "2026-10-30" },
+  ];
+  assert.equal(oldestAgeDays(rows, "due_date", ["OPEN"], today), 12);
+  assert.equal(oldestAgeDays([], "due_date", ["OPEN"], today), null);
+  const s = dailySeries([{ order_date: "2026-10-26", total_amount: 10 }, { order_date: "2026-10-26", total_amount: 5 }, { order_date: "2026-09-01", total_amount: 9 }], "order_date", "total_amount", today, 30);
+  assert.equal(s.length, 30);
+  assert.deepEqual(s[29], { key: "2026-10-26", value: 15, count: 2 });
+});

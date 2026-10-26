@@ -32,8 +32,8 @@
   --bx-bad-fg: #a3271a;
   --bx-neutral-bg: #edf0f1;
   --bx-neutral-fg: #4c5955;
-  --bx-r-card: 22px;
-  --bx-r-inner: 14px;
+  --bx-r-card: 16px;
+  --bx-r-inner: 10px;
   --bx-shadow: 0 1px 2px rgb(27 43 27 / 0.04);
   --bx-font: var(--font-beta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --bx-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
@@ -44,6 +44,7 @@
   color: var(--bx-text);
   font-family: var(--bx-font);
   font-size: 14px;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -84,8 +85,8 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 36px;
-  padding-inline: 16px;
+  height: 34px;
+  padding-inline: 14px;
   border-radius: 999px;
   font-weight: 600;
   font-size: 13px;
@@ -118,9 +119,9 @@
   background: var(--bx-havana-soft);
 }
 .bx-btn-sm {
-  height: 30px;
-  padding-inline: 12px;
-  font-size: 12.5px;
+  height: 28px;
+  padding-inline: 11px;
+  font-size: 12px;
 }
 .bx-link {
   color: var(--bx-brand);
@@ -136,10 +137,10 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  height: 22px;
-  padding-inline: 8px;
+  height: 20px;
+  padding-inline: 7px;
   border-radius: 999px;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -167,7 +168,8 @@
   border-bottom: 1px solid var(--bx-line-soft);
 }
 .bx-table td {
-  padding: 11px 16px;
+  height: 44px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--bx-line-soft);
 }
 .bx-table tr:last-child td {
@@ -182,10 +184,11 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 38px;
+  height: 34px;
   padding-inline: 12px;
   border-radius: 999px;
   color: var(--bx-text);
+  font-size: 13.5px;
   font-weight: 550;
   transition: background-color 0.15s, color 0.15s;
 }
@@ -197,14 +200,18 @@
   color: #fff;
 }
 
-/* ------------------------------------------------------------ gráfico */
-.bx-bar {
-  border-radius: 10px 10px 4px 4px;
-  background: repeating-linear-gradient(135deg, var(--bx-havana) 0 6px, var(--bx-havana-soft) 6px 11px);
-  transition: height 0.5s ease;
+/* ------------------------------------------------------------ pulso (barras finas) */
+.bx-pulse-bar {
+  border-radius: 3px 3px 1px 1px;
+  background: repeating-linear-gradient(135deg, var(--bx-havana) 0 3px, var(--bx-havana-soft) 3px 5px);
+  transition: height 0.4s ease, filter 0.15s;
 }
-.bx-bar-current {
-  background: repeating-linear-gradient(135deg, var(--bx-brand) 0 6px, #2b9a66 6px 11px);
+.bx-pulse-bar:hover {
+  filter: saturate(1.6) brightness(0.92);
+}
+.bx-pulse-today {
+  background: linear-gradient(180deg, #a5dbe5 0%, #2e9a7a 55%, #1b2b1b 100%);
+  opacity: 0.92;
 }
 
 /* ------------------------------------------------------------ aurora (assinatura, com moderação) */
@@ -252,5 +259,5 @@
 @media (prefers-reduced-motion: reduce) {
   .bx-aurora::before,
   .bx-rise { animation: none; }
-  .bx-bar { transition: none; }
+  .bx-pulse-bar { transition: none; }
 }

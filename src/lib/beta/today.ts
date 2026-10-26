@@ -84,3 +84,39 @@ export function summarySentence(parts: SummaryPart[]): string {
   if (live.length === 0) return "";
   return live.map((p) => plural(p.count, p.one, p.many)).join(" · ");
 }
+
+const DAY_MS = 86_400_000;
+
+/** Dias desde a data mais antiga entre as linhas que casam (null se nenhuma). */
+export function oldestAgeDays(rows: Row[], dateKey: string, statuses: string[], today: Date, onlyPast = true): number | null {
+  const up = statuses.map((s) => s.toUpperCase());
+  const ref = isoDay(today);
+  let oldest: string | null = null;
+  for (const r of rows) {
+    if (up.length && !open(r, up)) continue;
+    const d = day(r[dateKey]);
+    if (!d || (onlyPast && d >= ref)) continue;
+    if (!oldest || d < oldest) oldest = d;
+  }
+  if (!oldest) return null;
+  const t0 = Date.UTC(Number(oldest.slice(0, 4)), Number(oldest.slice(5, 7)) - 1, Number(oldest.slice(8, 10)));
+  const t1 = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.max(0, Math.round((t1 - t0) / DAY_MS));
+}
+
+/** Soma por dia dos últimos `days` dias (hoje por último). */
+export function dailySeries(rows: Row[], dateKey: string, valueKey: string, today: Date, days = 30, exclude: string[] = []) {
+  const out: { key: string; value: number; count: number }[] = [];
+  for (let i = days - 1; i >= 0; i--) out.push({ key: isoDay(addDays(today, -i)), value: 0, count: 0 });
+  const index = new Map(out.map((o, i) => [o.key, i]));
+  const ex = exclude.map((s) => s.toUpperCase());
+  for (const r of rows) {
+    if (ex.includes(String(r.status ?? "").toUpperCase())) continue;
+    const d = day(r[dateKey]);
+    const i = d ? index.get(d) : undefined;
+    if (i === undefined) continue;
+    out[i].value += Number(r[valueKey]) || 0;
+    out[i].count += 1;
+  }
+  return out;
+}

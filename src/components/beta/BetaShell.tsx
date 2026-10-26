@@ -22,7 +22,7 @@ function SidebarNav({ sections, onNavigate }: { sections: NavSection[]; onNaviga
       <Link href="/beta" onClick={onNavigate} className="bx-nav-item" aria-current={pathname === "/beta" ? "page" : undefined}>
         <Sun size={17} aria-hidden /> Hoje
       </Link>
-      <p className="bx-meta mt-4 mb-1 px-3">Módulos</p>
+      <p className="bx-meta mt-3 mb-1 px-3">Módulos</p>
       {sections
         .filter((s) => s.href !== "/app")
         .map((s) => {
@@ -39,7 +39,7 @@ function SidebarNav({ sections, onNavigate }: { sections: NavSection[]; onNaviga
                 <ul className="mt-0.5 mb-1 ml-5 flex flex-col border-l border-[var(--bx-line)] pl-2">
                   {s.items.map((item) => (
                     <li key={item.href}>
-                      <Link href={item.href} onClick={onNavigate} className="flex h-8 items-center rounded-full px-3 text-[13px] text-[var(--bx-muted)] hover:bg-[var(--bx-havana-soft)] hover:text-[var(--bx-ink)]">
+                      <Link href={item.href} onClick={onNavigate} className="flex h-[30px] items-center rounded-full px-3 text-[13px] text-[var(--bx-muted)] hover:bg-[var(--bx-havana-soft)] hover:text-[var(--bx-ink)]">
                         {item.label}
                       </Link>
                     </li>
@@ -96,7 +96,7 @@ function Frame({ children }: { children: ReactNode }) {
   }
 
   const sidebar = (
-    <div className="flex h-full flex-col gap-5 p-4">
+    <div className="flex h-full flex-col gap-4 p-3">
       <Brand />
       <div className="min-h-0 flex-1 overflow-y-auto pr-1">
         <SidebarNav sections={sections} onNavigate={() => setMenu(false)} />

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Inter } from "next/font/google";
+import { Geist } from "next/font/google";
 import { getSessionIdentity } from "@/lib/auth/session";
 import { isBetaAllowed } from "@/lib/beta/access";
 import { BetaShell } from "@/components/beta/BetaShell";
@@ -11,7 +11,7 @@ import "./beta.css";
 // (checado aqui, no servidor). Os dados vêm das APIs atuais com a sessão
 // do usuário (RLS); os itens do menu levam às telas atuais.
 
-const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-beta", display: "swap" });
+const geist = Geist({ subsets: ["latin", "latin-ext"], variable: "--font-beta", display: "swap" });
 
 export const metadata: Metadata = { title: "Beta", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export default async function BetaLayout({ children }: { children: React.ReactNo
   if (!identity) redirect("/login?next=/beta");
   if (!isBetaAllowed(identity.email)) redirect("/app");
   return (
-    <div className={`beta-root ${inter.variable}`}>
+    <div className={`beta-root ${geist.variable}`}>
       <BetaShell>{children}</BetaShell>
     </div>
   );

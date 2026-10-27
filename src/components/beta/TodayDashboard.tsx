@@ -144,7 +144,7 @@ function Pulse({ series }: { series: { key: string; value: number; count: number
       </div>
       <div className="mt-1.5 flex justify-between">
         <span className="bx-meta">{label(series[0].key)}</span>
-        <span className="bx-meta">hoje</span>
+        <span className="bx-meta">Hoje</span>
       </div>
     </div>
   );

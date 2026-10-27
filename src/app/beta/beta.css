@@ -36,7 +36,6 @@
   --bx-r-inner: 10px;
   --bx-shadow: 0 1px 2px rgb(27 43 27 / 0.04);
   --bx-font: var(--font-beta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --bx-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", monospace;
 
   color-scheme: light;
   min-height: 100dvh;
@@ -56,15 +55,14 @@
 /* ------------------------------------------------------------ tipografia */
 .bx-title {
   color: var(--bx-ink);
-  font-weight: 650;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.025em;
   text-wrap: balance;
 }
 .bx-meta {
-  font-family: var(--bx-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
   color: var(--bx-subtle);
 }
 .bx-num {
@@ -158,11 +156,8 @@
 }
 .bx-table th {
   text-align: left;
-  font-family: var(--bx-mono);
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--bx-subtle);
   padding: 10px 16px;
   border-bottom: 1px solid var(--bx-line-soft);

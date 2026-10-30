@@ -91,7 +91,7 @@ describe("destino depois do login", () => {
 
 describe("rotas públicas (proxy)", () => {
   test("abrem sem sessão (landing só na raiz exata)", () => {
-    for (const p of ["/", "/login", "/recuperar-senha", "/redefinir-senha", `/convite/${TOKEN}`, "/auth/callback"]) assert.equal(isPublicPath(p), true, p);
+    for (const p of ["/", "/nova", "/login", "/recuperar-senha", "/redefinir-senha", `/convite/${TOKEN}`, "/auth/callback"]) assert.equal(isPublicPath(p), true, p);
   });
   test("todo o resto exige sessão — comparação por segmento", () => {
     for (const p of ["/app", "/app/comercial", "/app/admin", "/app/admincentral", "/admin", "/admincentral", "/acesso", "/comercial", "/convitex", "/login-falso", "/loginx/a", "/landing", "/x"]) assert.equal(isPublicPath(p), false, p);

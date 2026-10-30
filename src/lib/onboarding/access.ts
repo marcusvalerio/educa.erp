@@ -57,7 +57,7 @@ export function postLoginDestination(ctx: Pick<SessionContext, "access" | "tenan
 // /redefinir-senha exige a sessão de recuperação, /auth/callback troca o
 // código do Supabase por sessão. "/" é a landing pública — só a raiz
 // exata, nunca o prefixo de tudo.
-export const PUBLIC_PATHS = ["/", "/login", "/recuperar-senha", "/redefinir-senha", "/convite", "/auth/callback"] as const;
+export const PUBLIC_PATHS = ["/", "/nova", "/login", "/recuperar-senha", "/redefinir-senha", "/convite", "/auth/callback"] as const;
 
 // Rotas só para quem NÃO está autenticado: com sessão, vão para o ERP (/app).
 export const GUEST_ONLY_PATHS = ["/", "/login", "/recuperar-senha"] as const;

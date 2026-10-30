@@ -1,66 +1,70 @@
+/* eslint-disable @next/next/no-img-element -- prints estáticos da landing (/landing/img), já otimizados em webp */
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
 import "./nova.css";
 
-// Landing nova (/nova): proposta de landing comercial do Atlas, ao lado da
-// atual (/), sem substituí-la. Página estática e pública; os números são de
-// exemplo e aparecem marcados como tal.
-
-const geist = Geist({ subsets: ["latin", "latin-ext"], variable: "--font-nova", display: "swap" });
+// Landing nova (/nova): proposta comercial do ATLAS.ERP atual, ao lado da
+// landing de hoje (/), sem substituí-la. Usa as telas reais do sistema
+// (public/landing/img) e a identidade do ERP. Os valores da seção
+// "Quanto custa" são uma conta de exemplo e estão marcados como tal.
 
 export const metadata: Metadata = {
-  title: "Atlas — o ERP que já sabe o que precisa de você",
-  description: "ERP para operações de logística nacional e internacional: ele lê os seus dados, acha o que importa e entrega pronto para decidir.",
+  title: "ATLAS.ERP — a operação inteira, conectada",
+  description: "Vendas, compras, estoque, expedição, produção, financeiro e fiscal em um ERP só: um registro numa área vira trabalho na próxima, sem planilha no meio.",
   robots: { index: false, follow: false },
 };
 
+const IMG = "/landing/img/";
+
 const Mark = () => (
-  <svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true">
-    <path d="M14 3 L25 25 H3 Z" fill="none" stroke="#1b2b1b" strokeWidth="2.4" strokeLinejoin="round" />
-    <path d="M9 18 H19" stroke="#027944" strokeWidth="2.4" strokeLinecap="round" />
+  <svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true">
+    <rect x="3" y="3" width="16" height="8" rx="1.4" fill="#f3f4f5" />
+    <rect x="21" y="3" width="8" height="16" rx="1.4" fill="#f3f4f5" />
+    <rect x="13" y="21" width="16" height="8" rx="1.4" fill="#f3f4f5" />
+    <rect x="3" y="13" width="8" height="16" rx="1.4" fill="#f3f4f5" />
+    <rect x="13" y="13" width="6" height="6" rx="1.4" fill="#ff9408" />
   </svg>
 );
 
 const Arrow = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M5 12h14" />
     <path d="m13 6 6 6-6 6" />
   </svg>
 );
 
-const THINKS = [
-  { q: "O disjuntor 32A acaba em 5 dias.", p: "Saldo de 40 un. ÷ consumo médio de 8 un./dia, com fornecedor que entrega em 7.", a: "Comprar 40 un." },
-  { q: "O caixa encosta em R$ 38 mil no dia 12.", p: "Recebíveis menos pagáveis, dia a dia, nos próximos 60 dias.", a: "Antecipar R$ 40 mil" },
-  { q: "O contêiner entra em demurrage na quinta.", p: "Free time de 7 dias contado da descarga em Santos. Depois, US$ 150 por dia.", a: "Agendar retirada" },
-  { q: "A separação segura os pedidos 2,6× mais que o normal.", p: "Tempo médio em cada etapa do pedido, comparado aos últimos 90 dias.", a: "Ver o gargalo" },
+const STEPS = [
+  { h: "Orçamento", p: "O comercial monta a proposta com os produtos, preços e condições do cliente.", auto: "Vira pedido com um clique" },
+  { h: "Pedido aprovado", p: "Quem tem permissão aprova. O histórico guarda quem aprovou e quando.", auto: "Libera a reserva" },
+  { h: "Estoque reservado", p: "O sistema reserva o saldo exato no endereço do depósito. Ninguém vende o que já está prometido.", auto: "Gera a separação" },
+  { h: "Separação e expedição", p: "Logística separa, escolhe transportadora, motorista e veículo, e expede.", auto: "Baixa o estoque com custo" },
+  { h: "NF-e emitida", p: "A nota sai com CFOP, NCM e impostos do cadastro, e o XML fica guardado.", auto: "Lança no fiscal" },
+  { h: "Conta a receber", p: "O financeiro recebe o título com vencimento e parcelas, pronto para cobrar.", auto: "Entra no fluxo de caixa" },
 ];
 
-const MODS = [
-  { h: "Comercial", p: "Pedido que trava aparece sozinho, com o motivo. Cliente com atraso pede confirmação antes de vender de novo.", b: "Pedidos parados · risco de cliente · margem por pedido", wide: true },
-  { h: "Suprimentos", p: "O ponto de pedido é calculado pelo consumo real e pelo prazo de cada fornecedor.", b: "Compra sugerida em um toque" },
-  { h: "Estoque e expedição", p: "Reserva, separação e expedição com estoque exato e o próximo passo sempre na tela.", b: "Ruptura prevista · expedições atrasadas" },
-  { h: "Produção", p: "Material sai do estoque ao apontar a produção, e o custo do produto pronto entra certo.", b: "Ordens atrasadas · custo real" },
-  { h: "Financeiro", p: "Caixa dos próximos 60 dias, títulos vencendo e quem cobrar primeiro, por valor.", b: "Caixa futuro · cobrança por impacto" },
-  { h: "Comércio exterior", p: "Processo de importação com linha do tempo, Incoterm explicado, free time, documentos e custo na porta.", b: "Demurrage · landed cost · câmbio", wide: true },
-  { h: "Fiscal", p: "Nota de entrada e de saída separadas, com o erro em português e o botão para corrigir.", b: "NF-e · CFOP · NCM" },
+const AREAS = [
+  { h: "Comercial e CRM", p: "Funil, orçamentos e pedidos com aprovação, reserva e o próximo passo sempre visível.", img: "comercial-15-pedido-reservado-257-0-1183-900-760.webp", big: true },
+  { h: "Suprimentos", p: "Solicitação, cotação, pedido de compra e recebimento com NF de entrada.", img: "suprimentos-03-pedidos-compra-257-0-1183-900-760.webp" },
+  { h: "Estoque e logística", p: "Saldos por endereço, picking, expedição e transporte com estoque exato.", img: "logistica-02-estoque-257-0-1183-592-760.webp" },
+  { h: "Financeiro", p: "Contas a pagar e a receber, parcelas e fluxo de caixa a partir do que aconteceu.", img: "financeiro-03-fluxo-caixa-257-0-1183-834-760.webp" },
+  { h: "Fiscal", p: "NF-e de entrada e saída, CFOP, NCM e impostos, com o erro explicado em português.", img: "fiscal-02b-nfe-detalhe-257-0-1183-900-760.webp", big: true },
 ];
 
 export default function NovaLanding() {
   return (
-    <div className={`nv ${geist.variable}`}>
+    <div className="nv">
       <header className="nv-top">
         <div className="nv-wrap">
           <div className="nv-top-in">
-            <a className="nv-brand" href="#inicio" aria-label="Atlas, início">
-              <Mark /> Atlas
+            <a className="nv-brand" href="#inicio" aria-label="ATLAS.ERP, início">
+              <Mark /> ATLAS<span>.ERP</span>
             </a>
             <nav className="nv-nav" aria-label="Seções">
-              <a href="#pensa">Como pensa</a>
-              <a href="#custo">Quanto custa não ver</a>
-              <a href="#comex">Comércio exterior</a>
-              <a href="#modulos">Módulos</a>
+              <a href="#pedido">Siga um pedido</a>
+              <a href="#custo">Quanto custa</a>
+              <a href="#areas">Áreas</a>
+              <a href="#governanca">Governança</a>
             </nav>
-            <a className="nv-btn nv-btn-primary" href="/login">
+            <a className="nv-btn nv-btn-fire nv-btn-sm" href="/login">
               Entrar <Arrow />
             </a>
           </div>
@@ -70,234 +74,197 @@ export default function NovaLanding() {
       <main id="inicio">
         {/* ------------------------------------------------ hero */}
         <section className="nv-hero" aria-labelledby="nv-title">
-          <div className="nv-aurora" aria-hidden="true">
+          <div className="nv-glow" aria-hidden="true">
             <i />
             <i />
             <i />
-            <span className="nv-grain" />
           </div>
+          <div className="nv-grid-lines" aria-hidden="true" />
+          <div className="nv-grain" aria-hidden="true" />
           <div className="nv-wrap nv-hero-in">
-            <span className="nv-kicker">ERP para logística nacional e internacional</span>
-            <h1 id="nv-title">
-              O ERP que já sabe <em>o que precisa de você</em> hoje.
+            <span className="nv-eyebrow">ERP empresarial modular</span>
+            <h1 id="nv-title" className="nv-display">
+              A operação inteira, <em>conectada.</em>
             </h1>
             <p className="nv-lead">
-              O Atlas lê a sua operação inteira, encontra o que vai dar errado antes de acontecer e entrega cada decisão com o valor em reais e o botão para resolver.
+              Do orçamento à nota fiscal, do recebimento ao caixa. No ATLAS.ERP, cada registro de uma área já vira o trabalho da próxima, sem planilha, sem retrabalho e sem número perdido no caminho.
             </p>
             <div className="nv-ctas">
-              <a className="nv-btn nv-btn-primary" href="/login">
+              <a className="nv-btn nv-btn-fire" href="/login">
                 Começar agora <Arrow />
               </a>
-              <a className="nv-btn nv-btn-ghost" href="#pensa">
-                Ver como ele pensa
+              <a className="nv-btn nv-btn-line" href="#pedido">
+                Siga um pedido
               </a>
             </div>
-            <p className="nv-proof">Vendas, compras, estoque, expedição, produção, financeiro, fiscal e comércio exterior em um só lugar.</p>
-
-            <div className="nv-shot" role="img" aria-label="Tela do painel Hoje do Atlas: três decisões em foco, a curva de caixa e o estoque que acaba primeiro.">
-              <div className="nv-device">
-                <div className="nv-screen">
-                  <div className="nv-scr-hero">
-                    <span className="nv-scr-meta">Terça-feira, 27 de outubro · Boa tarde, Douglas</span>
-                    <p className="nv-scr-title">R$ 74 mil dependem de três decisões suas hoje.</p>
-                    <div className="nv-decisions">
-                      <div className="nv-decision">
-                        <b>R$ 48.320</b>
-                        <span>Cobrar 7 clientes em atraso. O mais antigo venceu há 12 dias.</span>
-                        <i>Cobrar todos</i>
-                      </div>
-                      <div className="nv-decision">
-                        <b>US$ 4.500</b>
-                        <span>Retirar o contêiner antes do demurrage, na quinta.</span>
-                        <i>Agendar retirada</i>
-                      </div>
-                      <div className="nv-decision">
-                        <b>R$ 21.940</b>
-                        <span>Destravar 2 pedidos parados na separação há 4 dias.</span>
-                        <i>Ver pedidos</i>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="nv-scr-row">
-                    <div className="nv-scr-card">
-                      <h4>O caixa encosta em R$ 38 mil no dia 12</h4>
-                      <svg className="nv-curve" viewBox="0 0 600 86" preserveAspectRatio="none" aria-hidden="true">
-                        <defs>
-                          <linearGradient id="nvArea" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0" stopColor="#a5dbe5" stopOpacity=".8" />
-                            <stop offset="1" stopColor="#a5dbe5" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        <path d="M0 20 L60 28 L120 40 L180 55 L230 68 L260 72 L300 62 L360 44 L420 36 L480 28 L540 20 L600 12 L600 86 L0 86 Z" fill="url(#nvArea)" />
-                        <path d="M0 20 L60 28 L120 40 L180 55 L230 68 L260 72 L300 62 L360 44 L420 36 L480 28 L540 20 L600 12" fill="none" stroke="#1b2b1b" strokeWidth="2.2" vectorEffect="non-scaling-stroke" />
-                        <line x1="0" x2="600" y1="66" y2="66" stroke="#8a5a00" strokeOpacity=".5" vectorEffect="non-scaling-stroke" />
-                      </svg>
-                      <small>Linha âmbar: mínimo seguro de R$ 50 mil</small>
-                    </div>
-                    <div className="nv-scr-card">
-                      <h4>Estoque que acaba primeiro</h4>
-                      <div className="nv-mini-list">
-                        <div><span>Disjuntor 32A</span><b>5 dias</b></div>
-                        <div><span>Cabo flexível 2,5 mm</span><b>9 dias</b></div>
-                        <div><span>Quadro 12 circuitos</span><b>14 dias</b></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="nv-trust">
+              <span><b>7 áreas</b> no mesmo sistema</span>
+              <span><b>Permissões</b> por papel e por setor</span>
+              <span><b>Multiempresa</b> com a Administração Central</span>
+            </div>
+          </div>
+          <div className="nv-wrap nv-stage">
+            <div className="nv-frame">
+              <img src={`${IMG}inicio-06-painel-executivo.webp`} width={1176} height={884} alt="Painel executivo do ATLAS.ERP com indicadores de vendas, compras, estoque e financeiro." fetchPriority="high" />
+              <figure className="nv-float a">
+                <span>Pedido reservado</span>
+                <img src={`${IMG}comercial-15-pedido-reservado-257-0-1183-900-760.webp`} width={760} height={578} alt="Pedido de venda com o estoque reservado." loading="lazy" />
+              </figure>
+              <figure className="nv-float b">
+                <span>NF-e emitida</span>
+                <img src={`${IMG}fiscal-02b-nfe-detalhe-257-0-1183-900-760.webp`} width={760} height={578} alt="Detalhe de uma NF-e emitida no ATLAS.ERP." loading="lazy" />
+              </figure>
             </div>
           </div>
         </section>
+        <div className="nv-hero-fade" aria-hidden="true" />
 
-        {/* ------------------------------------------------ como pensa */}
-        <section id="pensa" className="nv-section" aria-labelledby="nv-pensa">
+        {/* ------------------------------------------------ siga um pedido */}
+        <section id="pedido" className="nv-section" aria-labelledby="nv-pedido" style={{ paddingTop: 40 }}>
           <div className="nv-wrap">
             <div className="nv-head">
-              <span className="nv-kicker">Como ele pensa</span>
-              <h2 id="nv-pensa">Frases prontas para decidir, no lugar de relatórios para interpretar.</h2>
-              <p className="nv-lead">Cada aviso nasce de uma regra simples sobre os seus próprios dados. Você vê a conta, entende o motivo e age no mesmo lugar.</p>
+              <span className="nv-eyebrow">Siga um pedido</span>
+              <h2 id="nv-pedido" className="nv-display">Seis áreas tocam o mesmo pedido. Ninguém digita nada duas vezes.</h2>
+              <p className="nv-lead">Cada etapa termina disparando a seguinte: o estoque é reservado, a nota sai com os dados do cadastro e o título já nasce no financeiro.</p>
             </div>
-            <div className="nv-thinks">
-              {THINKS.map((t) => (
-                <article className="nv-think" key={t.q}>
-                  <q>{t.q}</q>
-                  <p>{t.p}</p>
-                  <span className="nv-act">
-                    {t.a} <Arrow />
-                  </span>
-                </article>
-              ))}
-            </div>
-            <div className="nv-noai">
-              <span><b>Sem caixa-preta.</b> Toda previsão mostra de onde veio.</span>
-              <span><b>Sem IA para configurar.</b> Funciona com os dados do dia a dia.</span>
-              <span><b>Por papel.</b> Financeiro, logística e diretoria veem o que importa para cada um.</span>
+            <div className="nv-journey">
+              <ol className="nv-steps">
+                {STEPS.map((s) => (
+                  <li key={s.h}>
+                    <h3>{s.h}</h3>
+                    <p>{s.p}</p>
+                    <span className="auto">→ {s.auto}</span>
+                  </li>
+                ))}
+              </ol>
+              <div className="nv-shots">
+                <figure className="nv-shot" style={{ margin: 0 }}>
+                  <img src={`${IMG}comercial-17-pedido-receber-gerado-0-80-1176-900.webp`} width={1176} height={900} alt="Pedido de venda com a conta a receber já gerada." loading="lazy" />
+                  <figcaption>O pedido terminou: a conta a receber já está no financeiro.</figcaption>
+                </figure>
+                <div className="nv-shots-row">
+                  <figure className="nv-shot" style={{ margin: 0 }}>
+                    <img src={`${IMG}logistica-10-expedicao-257-0-1183-592-760.webp`} width={760} height={380} alt="Lista de expedições." loading="lazy" />
+                    <figcaption>Expedição com estoque exato</figcaption>
+                  </figure>
+                  <figure className="nv-shot" style={{ margin: 0 }}>
+                    <img src={`${IMG}fiscal-02-nfe-257-0-1183-592-760.webp`} width={760} height={380} alt="Lista de notas fiscais eletrônicas." loading="lazy" />
+                    <figcaption>NF-e com XML guardado</figcaption>
+                  </figure>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* ------------------------------------------------ ancoragem */}
-        <section id="custo" className="nv-section" aria-labelledby="nv-custo" style={{ paddingTop: 0 }}>
-          <div className="nv-wrap">
-            <div className="nv-anchor">
-              <div className="nv-anchor-text">
-                <span className="nv-kicker">Quanto custa não ver</span>
-                <h2 id="nv-custo">
-                  Numa importadora média, o que passa despercebido custa <span className="nv-num">R$ 41 mil</span> por mês.
-                </h2>
-                <p className="nv-lead">Conta de exemplo, para uma empresa com faturamento de R$ 2 milhões por mês. Cada linha é um problema que o Atlas avisa antes de virar custo.</p>
-                <div className="nv-ctas" style={{ justifyContent: "flex-start" }}>
-                  <a className="nv-btn nv-btn-primary" href="/login">
-                    Parar de perder dinheiro <Arrow />
-                  </a>
-                </div>
+        <section id="custo" className="nv-section nv-dark" aria-labelledby="nv-custo">
+          <div className="nv-wrap nv-anchor">
+            <div className="nv-anchor-cta">
+              <span className="nv-eyebrow">Quanto custa operar em silos</span>
+              <h2 id="nv-custo" className="nv-display">
+                Planilha e retrabalho custam <b>R$ 38 mil</b> por mês a uma empresa média.
+              </h2>
+              <p className="nv-lead">Conta de exemplo para uma distribuidora com faturamento de R$ 1,5 milhão por mês e 25 pessoas na operação. É o dinheiro que escapa entre uma área e outra.</p>
+              <div className="nv-ctas" style={{ justifyContent: "flex-start" }}>
+                <a className="nv-btn nv-btn-fire" href="/login">
+                  Fechar esse vazamento <Arrow />
+                </a>
               </div>
-              <div className="nv-ledger" aria-label="Custo mensal de exemplo do que passa despercebido">
-                <div><span>Demurrage de 2 contêineres por 9 dias</span><b>R$ 14.850</b></div>
-                <div><span>Juros e multa de títulos pagos com atraso</span><b>R$ 6.200</b></div>
-                <div><span>Vendas perdidas por ruptura de estoque</span><b>R$ 11.300</b></div>
-                <div><span>Cobrança tardia: capital parado em vencidos</span><b>R$ 5.450</b></div>
-                <div><span>Margem errada por custo de importação mal calculado</span><b>R$ 3.200</b></div>
-                <div className="tot"><span>Por mês</span><b>R$ 41.000</b></div>
-                <small>Por ano, quase meio milhão de reais.</small>
-              </div>
+            </div>
+            <div className="nv-ledger" aria-label="Custo mensal de exemplo">
+              <div><span>Horas redigitando pedidos, notas e títulos</span><b>R$ 12.600</b></div>
+              <div><span>Vendas de produto que já estava prometido</span><b>R$ 9.800</b></div>
+              <div><span>Juros e multas de contas pagas fora do prazo</span><b>R$ 5.900</b></div>
+              <div><span>Nota fiscal refeita por erro de cadastro</span><b>R$ 4.300</b></div>
+              <div><span>Estoque parado sem ninguém ver</span><b>R$ 5.400</b></div>
+              <div className="tot"><span>Por mês</span><b>R$ 38.000</b></div>
+              <small>Mais de R$ 450 mil por ano.</small>
             </div>
           </div>
         </section>
 
-        {/* ------------------------------------------------ comex */}
-        <section id="comex" className="nv-section nv-comex" aria-labelledby="nv-comex-t">
-          <div className="nv-wrap">
-            <div className="nv-comex-grid">
-              <div>
-                <div className="nv-head" style={{ marginBottom: 28 }}>
-                  <span className="nv-kicker">Comércio exterior</span>
-                  <h2 id="nv-comex-t">Você sabe exatamente quando a carga passa a ser sua.</h2>
-                  <p className="nv-lead">Cada importação tem linha do tempo, Incoterm explicado em português, documentos que faltam, free time contando e o custo real na porta, por unidade.</p>
-                </div>
-                <div className="nv-stage" aria-hidden="true">
-                  <div className="nv-shadow" />
-                  <div className="nv-cont">
-                    <div className="nv-face f"><span>TGHU 441022 1</span><small>45G1 · MAX GROSS 32.500 KG</small></div>
-                    <div className="nv-face b" />
-                    <div className="nv-face l" />
-                    <div className="nv-face r" />
-                    <div className="nv-face t" />
-                    <div className="nv-face u" />
-                  </div>
-                </div>
-              </div>
-              <div className="nv-cargo">
-                <span className="nv-pill">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M12 3 2 20h20L12 3z" />
-                    <path d="M12 10v4" />
-                    <path d="M12 17h.01" />
-                  </svg>
-                  Responsabilidade do comprador desde 18 set
-                </span>
-                <div className="nv-glass-dark">
-                  <dl className="nv-facts">
-                    <div><dt>Contrato</dt><dd>FOB Xangai</dd></div>
-                    <div><dt>Contêiner</dt><dd>40&apos; HC · lacre íntegro</dd></div>
-                    <div><dt>Mercadoria</dt><dd>4.800 disjuntores</dd></div>
-                    <div><dt>Chegada</dt><dd>03 nov · Santos</dd></div>
-                    <div><dt>Free time</dt><dd>acaba quinta</dd></div>
-                    <div><dt>Custo na porta</dt><dd>R$ 112,22/un.</dd></div>
-                  </dl>
-                </div>
-                <div className="nv-glass-dark">
-                  <div className="nv-route">
-                    <span className="done">Fábrica</span>
-                    <span className="done">Terminal</span>
-                    <span className="done handover">A bordo</span>
-                    <span className="done">Navegando</span>
-                    <span>Santos</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ------------------------------------------------ módulos */}
-        <section id="modulos" className="nv-section" aria-labelledby="nv-mods">
+        {/* ------------------------------------------------ áreas */}
+        <section id="areas" className="nv-section" aria-labelledby="nv-areas">
           <div className="nv-wrap">
             <div className="nv-head">
-              <span className="nv-kicker">Módulos</span>
-              <h2 id="nv-mods">Um sistema só, do pedido à entrega, do porto ao caixa.</h2>
+              <span className="nv-eyebrow">As áreas</span>
+              <h2 id="nv-areas" className="nv-display">Cada área cuida de um pedaço da mesma operação.</h2>
             </div>
-            <div className="nv-mods">
-              {MODS.map((m) => (
-                <article key={m.h} className={`nv-mod${m.wide ? " wide" : ""}`}>
-                  <h3>{m.h}</h3>
-                  <p>{m.p}</p>
-                  <b>{m.b}</b>
+            <div className="nv-areas">
+              {AREAS.map((a) => (
+                <article key={a.h} className={`nv-area${a.big ? " big" : ""}`}>
+                  <div className="pic">
+                    <img src={`${IMG}${a.img}`} width={760} height={578} alt={`Tela de ${a.h} no ATLAS.ERP.`} loading="lazy" />
+                  </div>
+                  <div className="txt">
+                    <h3>{a.h}</h3>
+                    <p>{a.p}</p>
+                  </div>
                 </article>
               ))}
+              <article className="nv-area">
+                <div className="pic">
+                  <img src={`${IMG}inicio-04-fluxo-do-erp-760.webp`} width={760} height={571} alt="Mapa do fluxo do ERP." loading="lazy" />
+                </div>
+                <div className="txt">
+                  <h3>Produção, qualidade e ativos</h3>
+                  <p>Ordens de produção com consumo e custo, inspeções, não conformidades e manutenção.</p>
+                </div>
+              </article>
             </div>
-            <div className="nv-rules" style={{ marginTop: 72 }}>
-              <div><h3>Pronto para decidir</h3><p>Todo número leva a uma ação, com o valor em reais.</p></div>
-              <div><h3>Avisa antes</h3><p>Ruptura, caixa apertado e demurrage chegam com dias de antecedência.</p></div>
-              <div><h3>Preenche por você</h3><p>Cliente, produto e fornecedor trazem condição, unidade, NCM e custo.</p></div>
-              <div><h3>Seguro por papel</h3><p>Cada pessoa vê e faz só o que o papel dela permite.</p></div>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------ governança */}
+        <section id="governanca" className="nv-section" aria-labelledby="nv-gov" style={{ paddingTop: 0 }}>
+          <div className="nv-wrap">
+            <div className="nv-head">
+              <span className="nv-eyebrow">Governança</span>
+              <h2 id="nv-gov" className="nv-display">Uma base, três níveis. Cada pessoa vê só o que é dela.</h2>
+            </div>
+            <div className="nv-levels">
+              <div className="nv-level wine">
+                <span className="who">Administração Central</span>
+                <h3>A plataforma</h3>
+                <p>Cria empresas, define planos e módulos e acompanha todas sem ver os dados de nenhuma.</p>
+              </div>
+              <div className="nv-level dark">
+                <span className="who">Administração da Empresa</span>
+                <h3>A empresa</h3>
+                <p>Convida pessoas, monta papéis e setores, escolhe as telas de cada perfil e liga os módulos.</p>
+              </div>
+              <div className="nv-level">
+                <span className="who">ERP</span>
+                <h3>A operação</h3>
+                <p>Cada pessoa trabalha com o que o papel dela permite. A regra vale no banco, não só na tela.</p>
+              </div>
+            </div>
+            <div className="nv-facts" style={{ marginTop: 72 }}>
+              <div><b>7</b><span>áreas integradas</span></div>
+              <div><b>1</b><span>cadastro para tudo</span></div>
+              <div><b>0</b><span>planilhas entre as áreas</span></div>
+              <div><b>3</b><span>níveis de acesso</span></div>
             </div>
           </div>
         </section>
 
         {/* ------------------------------------------------ final */}
         <section className="nv-final" aria-labelledby="nv-final-t">
-          <div className="nv-aurora" aria-hidden="true">
+          <div className="nv-glow" aria-hidden="true">
             <i />
             <i />
             <i />
-            <span className="nv-grain" />
           </div>
+          <div className="nv-grain" aria-hidden="true" />
           <div className="nv-wrap nv-final-in">
-            <h2 id="nv-final-t">Sua operação, um passo à frente.</h2>
-            <p>Abra o Atlas amanhã de manhã e saiba, em uma frase, o que precisa de você hoje.</p>
+            <span className="nv-eyebrow">ATLAS.ERP</span>
+            <h2 id="nv-final-t" className="nv-display">
+              Sua operação não deveria funcionar <em>em silos.</em>
+            </h2>
+            <p>Comece hoje e veja o primeiro pedido passar por todas as áreas sem ninguém redigitar nada.</p>
             <div className="nv-ctas">
-              <a className="nv-btn nv-btn-light" href="/login">
+              <a className="nv-btn nv-btn-fire" href="/login">
                 Começar agora <Arrow />
               </a>
             </div>
@@ -305,9 +272,11 @@ export default function NovaLanding() {
         </section>
       </main>
 
-      <footer className="nv-wrap nv-foot">
-        <span>Atlas · ERP para logística nacional e internacional</span>
-        <span>Números desta página são exemplos.</span>
+      <footer className="nv-foot">
+        <div className="nv-wrap">
+          <span>© ATLAS.ERP</span>
+          <span>Os valores da seção &quot;Quanto custa&quot; são uma conta de exemplo.</span>
+        </div>
       </footer>
     </div>
   );

@@ -11,7 +11,7 @@ import "./globals.css";
 
 // Tipografia servida pelo próprio app (sem CDN; funciona offline após o
 // build). Instrument Sans para interface e dados (dígitos tabulares via
-// .tabular-nums/.num), Instrument Serif só nos momentos editoriais
+// .tabular-nums/.num), Geist Serif só nos momentos editoriais
 // (saudação do Início, login) e JetBrains Mono para códigos. Licenças OFL
 // em src/app/fonts/.
 const sans = localFont({
@@ -24,11 +24,9 @@ const sans = localFont({
 });
 
 const serif = localFont({
-  src: [
-    { path: "./fonts/instrument-serif-latin-400-normal.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/instrument-serif-latin-400-italic.woff2", weight: "400", style: "italic" },
-  ],
-  variable: "--font-instrument-serif",
+  src: "./fonts/geist-serif-variable.woff2",
+  weight: "100 900",
+  variable: "--font-serif",
   display: "swap",
 });
 

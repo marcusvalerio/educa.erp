@@ -43,10 +43,36 @@ export function LeakCalculator() {
   const [revenue, setRevenue] = useState(1_500_000);
   const [people, setPeople] = useState(25);
   const leak = useMemo(() => monthlyLeak(revenue, people), [revenue, people]);
+  const [copied, setCopied] = useState(false);
+
+  // Link compartilhado: /nova?fat=1500000&pessoas=25#custo abre com os números de quem mandou.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const fat = Number(q.get("fat"));
+    const ppl = Number(q.get("pessoas"));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (fat >= 200_000 && fat <= 20_000_000) setRevenue(Math.round(fat / 100_000) * 100_000);
+    if (ppl >= 3 && ppl <= 300) setPeople(Math.round(ppl));
+  }, []);
 
   useEffect(() => {
     publish(leak.total);
   }, [leak.total]);
+
+  const shareText = () => {
+    const url = `${window.location.origin}/nova?fat=${revenue}&pessoas=${people}#custo`;
+    return { url, text: `Fiz a conta: a nossa operação perde cerca de ${brl(leak.total)} por mês (${brl(leak.total * 12)} por ano) em retrabalho, venda perdida e juros. Dá uma olhada: ${url}` };
+  };
+  const whatsapp = () => `https://wa.me/?text=${encodeURIComponent(shareText().text)}`;
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(shareText().text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2400);
+    } catch {
+      setCopied(false);
+    }
+  }
 
   return (
     <div className="nv-calc">
@@ -73,6 +99,14 @@ export function LeakCalculator() {
           <li><span>Nota refeita e estoque parado</span><b className="nv-num">{brl(leak.waste)}</b></li>
         </ul>
         <small>Estimativa: 9 h por pessoa por mês a R$ 46/h, mais 1,35% do faturamento em venda perdida, juros e retrabalho.</small>
+        <div className="nv-share">
+          <a className="nv-btn nv-btn-ink nv-btn-sm" href="https://wa.me/" target="_blank" rel="noopener noreferrer" onClick={(e) => { e.currentTarget.href = whatsapp(); }}>
+            Mandar para o meu sócio
+          </a>
+          <button type="button" className="nv-btn nv-btn-sm nv-btn-ghost-ink" onClick={copy}>
+            {copied ? "Copiado" : "Copiar a mensagem"}
+          </button>
+        </div>
       </div>
     </div>
   );

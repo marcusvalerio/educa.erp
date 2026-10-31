@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- prints estáticos da landing (/landing/img), já otimizados em webp */
 import type { Metadata } from "next";
 import { LeakCalculator, LiveLeak } from "./Leak";
+import { ChaosField, Diagnostic, SilenceButton, type Noise } from "./Interactive";
 import "./nova.css";
 
 // Landing nova (/nova): proposta comercial do ATLAS.ERP atual, ao lado da
@@ -35,19 +36,19 @@ const Arrow = () => (
 );
 
 // O barulho de uma operação desconectada: o que chega no celular do gestor.
-const NOISE = [
-  { who: "Vendas", t: "Tem 40 unidades pra entregar amanhã?", at: "08:12" },
-  { who: "Financeiro", t: "Alguém lançou o boleto da Kessler?", at: "08:31" },
-  { who: "Expedição", t: "Esse pedido já pode sair?", at: "08:47" },
-  { who: "Cliente", t: "Cadê a minha nota fiscal?", at: "09:05" },
-  { who: "Compras", t: "Qual era o preço da última cotação?", at: "09:22" },
-  { who: "Estoque", t: "No sistema tem 12, aqui tem 4.", at: "09:40" },
-  { who: "Diretoria", t: "Quanto a gente tem a receber esse mês?", at: "10:03" },
-  { who: "Fiscal", t: "Esse CFOP tá certo?", at: "10:18" },
-  { who: "Vendas", t: "Vendi, mas o estoque era de outro pedido.", at: "10:44" },
-  { who: "Financeiro", t: "Venceu ontem. Ninguém avisou.", at: "11:02" },
-  { who: "Produção", t: "Faltou matéria-prima de novo.", at: "11:27" },
-  { who: "Planilha", t: "versao_final_AGORA_vai (3).xlsx", at: "11:50" },
+const NOISE: Noise[] = [
+  { who: "Vendas", t: "Tem 40 unidades pra entregar amanhã?", at: "08:12", ok: "Disponível: 40 un. reservadas" },
+  { who: "Financeiro", t: "Alguém lançou o boleto da Kessler?", at: "08:31", ok: "Boleto lançado e conciliado" },
+  { who: "Expedição", t: "Esse pedido já pode sair?", at: "08:47", ok: "Pedido liberado para expedição" },
+  { who: "Cliente", t: "Cadê a minha nota fiscal?", at: "09:05", ok: "NF-e enviada ao cliente" },
+  { who: "Compras", t: "Qual era o preço da última cotação?", at: "09:22", ok: "Última cotação: R$ 12,40" },
+  { who: "Estoque", t: "No sistema tem 12, aqui tem 4.", at: "09:40", ok: "Saldo conferido: 4 un." },
+  { who: "Diretoria", t: "Quanto a gente tem a receber esse mês?", at: "10:03", ok: "A receber no mês: R$ 412 mil" },
+  { who: "Fiscal", t: "Esse CFOP tá certo?", at: "10:18", ok: "CFOP 5102 validado" },
+  { who: "Vendas", t: "Vendi, mas o estoque era de outro pedido.", at: "10:44", ok: "Estoque reservado para o pedido certo" },
+  { who: "Financeiro", t: "Venceu ontem. Ninguém avisou.", at: "11:02", ok: "Pago em dia, sem juros" },
+  { who: "Produção", t: "Faltou matéria-prima de novo.", at: "11:27", ok: "Ordem de compra gerada" },
+  { who: "Planilha", t: "versao_final_AGORA_vai (3).xlsx", at: "11:50", ok: "Uma versão só, no sistema" },
 ];
 
 const STEPS = [
@@ -78,6 +79,7 @@ export default function NovaLanding() {
             </a>
             <nav className="nv-nav" aria-label="Seções">
               <a href="#silencio">Como é</a>
+              <a href="#diagnostico">Diagnóstico</a>
               <a href="#custo">Quanto custa</a>
               <a href="#pedido">Siga um pedido</a>
               <a href="#areas">Áreas</a>
@@ -97,15 +99,7 @@ export default function NovaLanding() {
             <i />
             <i />
           </div>
-          <div className="nv-noise" aria-hidden="true">
-            {NOISE.map((n, i) => (
-              <div key={i} className={`nv-msg m${i}`}>
-                <span className="who">{n.who}</span>
-                <span className="t">{n.t}</span>
-                <span className="at">{n.at}</span>
-              </div>
-            ))}
-          </div>
+          <ChaosField items={NOISE} />
           <div className="nv-grain" aria-hidden="true" />
           <div className="nv-wrap nv-hero-in">
             <span className="nv-eyebrow">Segunda-feira, 11h50</span>
@@ -119,9 +113,7 @@ export default function NovaLanding() {
               <a className="nv-btn nv-btn-fire" href="#custo">
                 Ver quanto isso me custa <Arrow />
               </a>
-              <a className="nv-btn nv-btn-line" href="/login">
-                Já sou cliente
-              </a>
+              <SilenceButton />
             </div>
           </div>
         </section>
@@ -149,6 +141,18 @@ export default function NovaLanding() {
                 <img src={`${IMG}fiscal-02b-nfe-detalhe-257-0-1183-900-760.webp`} width={760} height={578} alt="Detalhe de uma NF-e emitida no ATLAS.ERP." />
               </figure>
             </div>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------ diagnóstico */}
+        <section id="diagnostico" className="nv-section" aria-labelledby="nv-diag-t" style={{ paddingTop: 0 }}>
+          <div className="nv-wrap">
+            <div className="nv-head nv-head-center">
+              <span className="nv-eyebrow">Diagnóstico de 60 segundos</span>
+              <h2 id="nv-diag-t" className="nv-display">Seis perguntas. <em>Uma nota honesta.</em></h2>
+              <p className="nv-lead" style={{ textAlign: "center" }}>Responda com sinceridade. Ninguém está olhando, e o resultado aparece só para você.</p>
+            </div>
+            <Diagnostic />
           </div>
         </section>
 

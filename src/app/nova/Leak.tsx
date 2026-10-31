@@ -57,7 +57,10 @@ export function LeakCalculator() {
 
   useEffect(() => {
     publish(leak.total);
-  }, [leak.total]);
+    const detail = { revenue, people, total: leak.total };
+    (window as unknown as { __nvCalc?: typeof detail }).__nvCalc = detail;
+    window.dispatchEvent(new CustomEvent("nv:calc", { detail }));
+  }, [leak.total, revenue, people]);
 
   const shareText = () => {
     const url = `${window.location.origin}/nova?fat=${revenue}&pessoas=${people}#custo`;

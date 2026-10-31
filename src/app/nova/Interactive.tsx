@@ -77,6 +77,10 @@ export function Diagnostic() {
   const score = 100 - QUESTIONS.reduce((acc, q, i) => acc + (answers[i] ? q.weight : 0), 0);
   const pains = QUESTIONS.filter((_, i) => answers[i]).sort((a, b) => b.weight - a.weight);
   const set = (i: number, v: boolean) => setAnswers((prev) => prev.map((a, j) => (j === i ? v : a)));
+  useEffect(() => {
+    if (done) window.dispatchEvent(new CustomEvent("nv:diag", { detail: { score, pains: pains.map((p) => p.pain) } }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done, score]);
 
   return (
     <div className="nv-diag">
@@ -129,6 +133,165 @@ export function Diagnostic() {
             </a>
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------ contato
+
+type Calc = { revenue: number; people: number; total: number };
+type Diag = { score: number; pains: string[] };
+const brl = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+
+export function LeadForm() {
+  const [calc, setCalc] = useState<Calc | null>(null);
+  const [diag, setDiag] = useState<Diag | null>(null);
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const onCalc = (e: Event) => setCalc((e as CustomEvent<Calc>).detail);
+    const last = (window as unknown as { __nvCalc?: Calc }).__nvCalc;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (last) setCalc(last);
+    const onDiag = (e: Event) => setDiag((e as CustomEvent<Diag>).detail);
+    window.addEventListener("nv:calc", onCalc);
+    window.addEventListener("nv:diag", onDiag);
+    return () => {
+      window.removeEventListener("nv:calc", onCalc);
+      window.removeEventListener("nv:diag", onDiag);
+    };
+  }, []);
+
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    setState("sending");
+    setError("");
+    try {
+      const res = await fetch("/api/landing/contato", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: String(f.get("name") ?? ""),
+          email: String(f.get("email") ?? ""),
+          company: String(f.get("company") ?? ""),
+          phone: String(f.get("phone") ?? ""),
+          consent: f.get("consent") === "on",
+          website: String(f.get("website") ?? ""),
+          monthlyRevenue: calc?.revenue ?? null,
+          people: calc?.people ?? null,
+          monthlyLeak: calc ? Math.round(calc.total) : null,
+          maturityScore: diag?.score ?? null,
+          pains: diag?.pains ?? [],
+        }),
+      });
+      const json = (await res.json().catch(() => null)) as { success?: boolean; error?: { message?: string } } | null;
+      if (!res.ok || !json?.success) throw new Error(json?.error?.message ?? "Não foi possível enviar agora.");
+      setState("sent");
+    } catch (err) {
+      setState("error");
+      setError(err instanceof Error ? err.message : "Não foi possível enviar agora.");
+    }
+  }
+
+  if (state === "sent") {
+    return (
+      <div className="nv-lead-card is-sent" role="status">
+        <b className="nv-display">Recebido.</b>
+        <p>Vamos montar o diagnóstico da sua operação e falar com você em até um dia útil.</p>
+      </div>
+    );
+  }
+
+  return (
+    <form className="nv-lead-card" onSubmit={submit} noValidate={false}>
+      <div className="nv-lead-head">
+        <span className="nv-calc-label">Receba o diagnóstico completo</span>
+        <p>
+          {calc ? <>Sua conta: <b>{brl(calc.total)}</b> por mês</> : "Com a sua conta e o plano para fechar os vazamentos"}
+          {diag ? <> · nota <b>{diag.score}</b>/100</> : null}
+        </p>
+      </div>
+      <div className="nv-lead-grid">
+        <label htmlFor="nv-name"><span>Nome</span><input id="nv-name" name="name" required minLength={2} maxLength={120} autoComplete="name" /></label>
+        <label htmlFor="nv-email"><span>E-mail de trabalho</span><input id="nv-email" name="email" type="email" required maxLength={254} autoComplete="email" inputMode="email" /></label>
+        <label htmlFor="nv-company"><span>Empresa</span><input id="nv-company" name="company" maxLength={160} autoComplete="organization" /></label>
+        <label htmlFor="nv-phone"><span>WhatsApp (opcional)</span><input id="nv-phone" name="phone" maxLength={40} autoComplete="tel" inputMode="tel" /></label>
+        <input className="nv-hp" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" />
+      </div>
+      <label className="nv-consent" htmlFor="nv-consent">
+        <input id="nv-consent" name="consent" type="checkbox" required />
+        <span>Aceito receber o diagnóstico e o contato do ATLAS.ERP sobre ele.</span>
+      </label>
+      <div className="nv-lead-foot">
+        <button type="submit" className="nv-btn nv-btn-fire" disabled={state === "sending"}>
+          {state === "sending" ? "Enviando…" : "Quero o meu diagnóstico"}
+        </button>
+        {state === "error" && <span className="nv-lead-err" role="alert">{error}</span>}
+      </div>
+    </form>
+  );
+}
+
+// ------------------------------------------------------------ pedido ao vivo
+
+const STAGES = [
+  { area: "Comercial", t: "Pedido criado" },
+  { area: "Comercial", t: "Pedido aprovado" },
+  { area: "Estoque", t: "Estoque reservado" },
+  { area: "Logística", t: "Separado e expedido" },
+  { area: "Fiscal", t: "NF-e emitida" },
+  { area: "Financeiro", t: "Conta a receber lançada" },
+];
+
+export function LiveOrder() {
+  const [product, setProduct] = useState("Disjuntor 32A");
+  const [qty, setQty] = useState(50);
+  const [step, setStep] = useState(-1);
+  const price = 38.9;
+  const stockStart = 180;
+  const running = step >= 0 && step < STAGES.length;
+
+  useEffect(() => {
+    if (!running) return;
+    const id = window.setTimeout(() => setStep((s) => s + 1), 1100);
+    return () => window.clearTimeout(id);
+  }, [step, running]);
+
+  const stock = step >= 4 ? stockStart - qty : stockStart;
+  const reserved = step === 3 ? qty : 0;
+  const total = qty * price;
+  const nf = 4821;
+
+  return (
+    <div className="nv-live-order">
+      <form
+        className="nv-lo-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setStep(0);
+        }}
+      >
+        <label htmlFor="nv-lo-p"><span>Produto</span><input id="nv-lo-p" value={product} maxLength={40} onChange={(e) => setProduct(e.target.value)} /></label>
+        <label htmlFor="nv-lo-q"><span>Quantidade</span><input id="nv-lo-q" type="number" min={1} max={180} value={qty} onChange={(e) => setQty(Math.max(1, Math.min(180, Number(e.target.value) || 1)))} /></label>
+        <button type="submit" className="nv-btn nv-btn-fire" disabled={running}>{running ? "Acontecendo…" : step >= STAGES.length ? "Fazer outro pedido" : "Fazer o pedido"}</button>
+      </form>
+      <ol className="nv-lo-track">
+        {STAGES.map((s, i) => (
+          <li key={s.t} className={i < step ? "done" : i === step ? "now" : ""}>
+            <span className="area">{s.area}</span>
+            <span className="t">{s.t}</span>
+          </li>
+        ))}
+      </ol>
+      <div className="nv-lo-ledger" aria-live="polite">
+        <div><span>Pedido</span><b>{step >= 0 ? `PV-1042 · ${qty} × ${product || "produto"}` : "—"}</b></div>
+        <div><span>Estoque disponível</span><b className="nv-num">{stock - reserved} un.{reserved ? ` (${reserved} reservadas)` : ""}</b></div>
+        <div><span>Nota fiscal</span><b>{step >= 5 ? `NF-e ${nf} autorizada` : "—"}</b></div>
+        <div><span>A receber</span><b className="nv-num">{step >= 6 ? total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—"}</b></div>
+        <small>{step >= STAGES.length ? "Seis áreas, zero mensagens, nada redigitado." : "Simulação na página, com dados de exemplo."}</small>
       </div>
     </div>
   );

@@ -298,3 +298,40 @@
 .nv-btn-ghost-ink { border: 1px solid var(--cloud); background: transparent; color: var(--ink); cursor: pointer; font-family: inherit; }
 .nv-btn-ghost-ink:hover { border-color: var(--ink); }
 .nv button.nv-btn { font-family: inherit; cursor: pointer; }
+
+/* ============================================== pedido ao vivo */
+.nv-live-order { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
+@media (max-width: 1000px) { .nv-live-order { grid-template-columns: 1fr; } }
+.nv-lo-form, .nv-lo-ledger { display: grid; gap: 12px; align-content: start; padding: 24px; border-radius: 24px; background: var(--white); border: 1px solid var(--cloud); }
+.nv-lo-form label, .nv-lead-grid label { display: grid; gap: 6px; }
+.nv-lo-form span, .nv-lead-grid span { font-size: 13px; font-weight: 600; color: var(--muted); }
+.nv-lo-form input, .nv-lead-grid input { font: inherit; font-size: 16px; height: 48px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--cloud); background: var(--paper); color: var(--ink); }
+.nv-lo-form input:focus, .nv-lead-grid input:focus { outline: 2px solid var(--fire); outline-offset: 1px; }
+.nv-lo-form .nv-btn { margin-top: 6px; }
+.nv-lo-track { list-style: none; margin: 0; padding: 20px; border-radius: 24px; background: var(--ink); display: grid; gap: 8px; }
+.nv-lo-track li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: rgba(243, 244, 245, .05); color: rgba(243, 244, 245, .45); transition: background .35s, color .35s, transform .35s; }
+.nv-lo-track li .area { width: 88px; flex: none; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.nv-lo-track li .t { font-weight: 600; }
+.nv-lo-track li.now { background: var(--fire); color: var(--ink); transform: scale(1.02); }
+.nv-lo-track li.done { color: var(--on-dark); }
+.nv-lo-track li.done .t::after { content: "  ✓"; color: #7fd9a8; }
+.nv-lo-ledger div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--cloud); font-size: 15px; }
+.nv-lo-ledger span { color: var(--muted); }
+.nv-lo-ledger b { text-align: right; }
+.nv-lo-ledger small { color: var(--subtle); font-size: 13px; }
+
+/* ============================================== contato */
+.nv-lead-card { display: grid; gap: 18px; padding: 28px; border-radius: 28px; background: var(--paper); color: var(--ink); }
+.nv-lead-card.is-sent { text-align: center; justify-items: center; padding-block: 48px; }
+.nv-lead-card.is-sent b { font-size: 56px; color: var(--ink); }
+.nv-lead-head p { font-size: 18px; margin-top: 4px; }
+.nv-lead-head b { color: var(--chili); font-variant-numeric: tabular-nums; }
+.nv-lead-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 640px) { .nv-lead-grid { grid-template-columns: 1fr; } }
+.nv-lead-grid input { background: var(--white); }
+.nv-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.nv-consent { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--muted); cursor: pointer; }
+.nv-consent input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--fire); }
+.nv-lead-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.nv-lead-err { color: var(--chili); font-weight: 600; font-size: 14px; }
+.nv-btn[disabled] { opacity: .6; cursor: default; }

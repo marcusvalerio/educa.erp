@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- prints estáticos da landing (/landing/img), já otimizados em webp */
 import type { Metadata } from "next";
 import { LeakCalculator, LiveLeak } from "./Leak";
-import { ChaosField, Diagnostic, SilenceButton, type Noise } from "./Interactive";
+import { ChaosField, Diagnostic, LeadForm, LiveOrder, SilenceButton, type Noise } from "./Interactive";
 import "./nova.css";
 
 // Landing nova (/nova): proposta comercial do ATLAS.ERP atual, ao lado da
@@ -79,6 +79,7 @@ export default function NovaLanding() {
             </a>
             <nav className="nv-nav" aria-label="Seções">
               <a href="#silencio">Como é</a>
+              <a href="#ao-vivo">Ao vivo</a>
               <a href="#diagnostico">Diagnóstico</a>
               <a href="#custo">Quanto custa</a>
               <a href="#pedido">Siga um pedido</a>
@@ -144,6 +145,17 @@ export default function NovaLanding() {
           </div>
         </section>
 
+        {/* ------------------------------------------------ pedido ao vivo */}
+        <section id="ao-vivo" className="nv-section" aria-labelledby="nv-vivo-t" style={{ paddingTop: 0 }}>
+          <div className="nv-wrap">
+            <div className="nv-head nv-head-center">
+              <span className="nv-eyebrow">Faça um pedido agora</span>
+              <h2 id="nv-vivo-t" className="nv-display">Escolha um produto. <em>Veja seis áreas trabalharem sozinhas.</em></h2>
+            </div>
+            <LiveOrder />
+          </div>
+        </section>
+
         {/* ------------------------------------------------ diagnóstico */}
         <section id="diagnostico" className="nv-section" aria-labelledby="nv-diag-t" style={{ paddingTop: 0 }}>
           <div className="nv-wrap">
@@ -173,9 +185,12 @@ export default function NovaLanding() {
             <LeakCalculator />
             <div className="nv-cost-cta">
               <LiveLeak prefix="Hoje, desde as 8h, já escaparam" />
-              <a className="nv-btn nv-btn-fire" href="/login">
+              <a className="nv-btn nv-btn-fire" href="#contato">
                 Estancar isso agora <Arrow />
               </a>
+            </div>
+            <div id="contato" style={{ marginTop: 48 }}>
+              <LeadForm />
             </div>
           </div>
         </section>
@@ -282,8 +297,8 @@ export default function NovaLanding() {
             </h2>
             <LiveLeak prefix="Enquanto isso, hoje já escaparam" />
             <div className="nv-ctas">
-              <a className="nv-btn nv-btn-fire" href="/login">
-                Começar agora <Arrow />
+              <a className="nv-btn nv-btn-fire" href="#contato">
+                Quero o meu diagnóstico <Arrow />
               </a>
             </div>
           </div>

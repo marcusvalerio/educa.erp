@@ -1,11 +1,13 @@
 /* eslint-disable @next/next/no-img-element -- prints estáticos da landing (/landing/img), já otimizados em webp */
 import type { Metadata } from "next";
+import { LeakCalculator, LiveLeak } from "./Leak";
 import "./nova.css";
 
 // Landing nova (/nova): proposta comercial do ATLAS.ERP atual, ao lado da
-// landing de hoje (/), sem substituí-la. Usa as telas reais do sistema
-// (public/landing/img) e a identidade do ERP. Os valores da seção
-// "Quanto custa" são uma conta de exemplo e estão marcados como tal.
+// landing de hoje (/), sem substituí-la. Narrativa: o caos de hoje → o
+// silêncio de uma operação conectada → quanto custa para VOCÊ (calculadora
+// com a conta à mostra e o contador do dia) → como funciona → CTA.
+// Telas reais do sistema (public/landing/img); valores são estimativas.
 
 export const metadata: Metadata = {
   title: "ATLAS.ERP — a operação inteira, conectada",
@@ -31,6 +33,22 @@ const Arrow = () => (
     <path d="m13 6 6 6-6 6" />
   </svg>
 );
+
+// O barulho de uma operação desconectada: o que chega no celular do gestor.
+const NOISE = [
+  { who: "Vendas", t: "Tem 40 unidades pra entregar amanhã?", at: "08:12" },
+  { who: "Financeiro", t: "Alguém lançou o boleto da Kessler?", at: "08:31" },
+  { who: "Expedição", t: "Esse pedido já pode sair?", at: "08:47" },
+  { who: "Cliente", t: "Cadê a minha nota fiscal?", at: "09:05" },
+  { who: "Compras", t: "Qual era o preço da última cotação?", at: "09:22" },
+  { who: "Estoque", t: "No sistema tem 12, aqui tem 4.", at: "09:40" },
+  { who: "Diretoria", t: "Quanto a gente tem a receber esse mês?", at: "10:03" },
+  { who: "Fiscal", t: "Esse CFOP tá certo?", at: "10:18" },
+  { who: "Vendas", t: "Vendi, mas o estoque era de outro pedido.", at: "10:44" },
+  { who: "Financeiro", t: "Venceu ontem. Ninguém avisou.", at: "11:02" },
+  { who: "Produção", t: "Faltou matéria-prima de novo.", at: "11:27" },
+  { who: "Planilha", t: "versao_final_AGORA_vai (3).xlsx", at: "11:50" },
+];
 
 const STEPS = [
   { h: "Orçamento", p: "O comercial monta a proposta com os produtos, preços e condições do cliente.", auto: "Vira pedido com um clique" },
@@ -59,10 +77,10 @@ export default function NovaLanding() {
               <Mark /> ATLAS<span>.ERP</span>
             </a>
             <nav className="nv-nav" aria-label="Seções">
-              <a href="#pedido">Siga um pedido</a>
+              <a href="#silencio">Como é</a>
               <a href="#custo">Quanto custa</a>
+              <a href="#pedido">Siga um pedido</a>
               <a href="#areas">Áreas</a>
-              <a href="#governanca">Governança</a>
             </nav>
             <a className="nv-btn nv-btn-fire nv-btn-sm" href="/login">
               Entrar <Arrow />
@@ -72,58 +90,97 @@ export default function NovaLanding() {
       </header>
 
       <main id="inicio">
-        {/* ------------------------------------------------ hero */}
-        <section className="nv-hero" aria-labelledby="nv-title">
+        {/* ------------------------------------------------ 1. o caos */}
+        <section className="nv-hero nv-chaos" aria-labelledby="nv-title">
           <div className="nv-glow" aria-hidden="true">
             <i />
             <i />
             <i />
           </div>
-          <div className="nv-grid-lines" aria-hidden="true" />
+          <div className="nv-noise" aria-hidden="true">
+            {NOISE.map((n, i) => (
+              <div key={i} className={`nv-msg m${i}`}>
+                <span className="who">{n.who}</span>
+                <span className="t">{n.t}</span>
+                <span className="at">{n.at}</span>
+              </div>
+            ))}
+          </div>
           <div className="nv-grain" aria-hidden="true" />
           <div className="nv-wrap nv-hero-in">
-            <span className="nv-eyebrow">ERP empresarial modular</span>
+            <span className="nv-eyebrow">Segunda-feira, 11h50</span>
             <h1 id="nv-title" className="nv-display">
-              A operação inteira, <em>conectada.</em>
+              Sua empresa fala com você o dia inteiro. <em>Quase sempre tarde demais.</em>
             </h1>
             <p className="nv-lead">
-              Do orçamento à nota fiscal, do recebimento ao caixa. No ATLAS.ERP, cada registro de uma área já vira o trabalho da próxima, sem planilha, sem retrabalho e sem número perdido no caminho.
+              Pedido que ninguém sabe se saiu. Estoque que existe na planilha e não na prateleira. Boleto que venceu ontem. Não é falta de gente boa. É uma operação que não conversa.
             </p>
             <div className="nv-ctas">
-              <a className="nv-btn nv-btn-fire" href="/login">
-                Começar agora <Arrow />
+              <a className="nv-btn nv-btn-fire" href="#custo">
+                Ver quanto isso me custa <Arrow />
               </a>
-              <a className="nv-btn nv-btn-line" href="#pedido">
-                Siga um pedido
+              <a className="nv-btn nv-btn-line" href="/login">
+                Já sou cliente
               </a>
             </div>
-            <div className="nv-trust">
-              <span><b>7 áreas</b> no mesmo sistema</span>
-              <span><b>Permissões</b> por papel e por setor</span>
-              <span><b>Multiempresa</b> com a Administração Central</span>
-            </div>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------ 2. o silêncio */}
+        <section id="silencio" className="nv-quiet" aria-labelledby="nv-quiet-t">
+          <div className="nv-wrap nv-quiet-in">
+            <span className="nv-eyebrow">Agora imagine o contrário</span>
+            <h2 id="nv-quiet-t" className="nv-display">
+              Silêncio. Porque tudo <em>já aconteceu.</em>
+            </h2>
+            <p className="nv-lead">
+              O pedido aprovado reservou o estoque. A expedição baixou o saldo. A nota saiu com os impostos certos. O título já está no financeiro. Ninguém perguntou nada para ninguém.
+            </p>
           </div>
           <div className="nv-wrap nv-stage">
             <div className="nv-frame">
               <img src={`${IMG}inicio-06-painel-executivo.webp`} width={1176} height={884} alt="Painel executivo do ATLAS.ERP com indicadores de vendas, compras, estoque e financeiro." fetchPriority="high" />
               <figure className="nv-float a">
-                <span>Pedido reservado</span>
-                <img src={`${IMG}comercial-15-pedido-reservado-257-0-1183-900-760.webp`} width={760} height={578} alt="Pedido de venda com o estoque reservado." loading="lazy" />
+                <span>Estoque reservado sozinho</span>
+                <img src={`${IMG}comercial-15-pedido-reservado-257-0-1183-900-760.webp`} width={760} height={578} alt="Pedido de venda com o estoque reservado." />
               </figure>
               <figure className="nv-float b">
-                <span>NF-e emitida</span>
-                <img src={`${IMG}fiscal-02b-nfe-detalhe-257-0-1183-900-760.webp`} width={760} height={578} alt="Detalhe de uma NF-e emitida no ATLAS.ERP." loading="lazy" />
+                <span>NF-e emitida sem redigitar</span>
+                <img src={`${IMG}fiscal-02b-nfe-detalhe-257-0-1183-900-760.webp`} width={760} height={578} alt="Detalhe de uma NF-e emitida no ATLAS.ERP." />
               </figure>
             </div>
           </div>
         </section>
-        <div className="nv-hero-fade" aria-hidden="true" />
 
-        {/* ------------------------------------------------ siga um pedido */}
-        <section id="pedido" className="nv-section" aria-labelledby="nv-pedido" style={{ paddingTop: 40 }}>
+        {/* ------------------------------------------------ 3. o seu número */}
+        <section id="custo" className="nv-section nv-dark nv-cost" aria-labelledby="nv-custo">
+          <div className="nv-glow dim" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </div>
+          <div className="nv-wrap" style={{ position: "relative", zIndex: 1 }}>
+            <div className="nv-head nv-head-center">
+              <span className="nv-eyebrow">Quanto custa operar em silos</span>
+              <h2 id="nv-custo" className="nv-display">
+                Coloque os números da sua empresa. <em>Olhe para o resultado.</em>
+              </h2>
+            </div>
+            <LeakCalculator />
+            <div className="nv-cost-cta">
+              <LiveLeak prefix="Hoje, desde as 8h, já escaparam" />
+              <a className="nv-btn nv-btn-fire" href="/login">
+                Estancar isso agora <Arrow />
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------ 4. siga um pedido */}
+        <section id="pedido" className="nv-section" aria-labelledby="nv-pedido">
           <div className="nv-wrap">
             <div className="nv-head">
-              <span className="nv-eyebrow">Siga um pedido</span>
+              <span className="nv-eyebrow">Como o silêncio acontece</span>
               <h2 id="nv-pedido" className="nv-display">Seis áreas tocam o mesmo pedido. Ninguém digita nada duas vezes.</h2>
               <p className="nv-lead">Cada etapa termina disparando a seguinte: o estoque é reservado, a nota sai com os dados do cadastro e o título já nasce no financeiro.</p>
             </div>
@@ -157,35 +214,8 @@ export default function NovaLanding() {
           </div>
         </section>
 
-        {/* ------------------------------------------------ ancoragem */}
-        <section id="custo" className="nv-section nv-dark" aria-labelledby="nv-custo">
-          <div className="nv-wrap nv-anchor">
-            <div className="nv-anchor-cta">
-              <span className="nv-eyebrow">Quanto custa operar em silos</span>
-              <h2 id="nv-custo" className="nv-display">
-                Planilha e retrabalho custam <b>R$ 38 mil</b> por mês a uma empresa média.
-              </h2>
-              <p className="nv-lead">Conta de exemplo para uma distribuidora com faturamento de R$ 1,5 milhão por mês e 25 pessoas na operação. É o dinheiro que escapa entre uma área e outra.</p>
-              <div className="nv-ctas" style={{ justifyContent: "flex-start" }}>
-                <a className="nv-btn nv-btn-fire" href="/login">
-                  Fechar esse vazamento <Arrow />
-                </a>
-              </div>
-            </div>
-            <div className="nv-ledger" aria-label="Custo mensal de exemplo">
-              <div><span>Horas redigitando pedidos, notas e títulos</span><b>R$ 12.600</b></div>
-              <div><span>Vendas de produto que já estava prometido</span><b>R$ 9.800</b></div>
-              <div><span>Juros e multas de contas pagas fora do prazo</span><b>R$ 5.900</b></div>
-              <div><span>Nota fiscal refeita por erro de cadastro</span><b>R$ 4.300</b></div>
-              <div><span>Estoque parado sem ninguém ver</span><b>R$ 5.400</b></div>
-              <div className="tot"><span>Por mês</span><b>R$ 38.000</b></div>
-              <small>Mais de R$ 450 mil por ano.</small>
-            </div>
-          </div>
-        </section>
-
-        {/* ------------------------------------------------ áreas */}
-        <section id="areas" className="nv-section" aria-labelledby="nv-areas">
+        {/* ------------------------------------------------ 5. áreas */}
+        <section id="areas" className="nv-section" aria-labelledby="nv-areas" style={{ paddingTop: 0 }}>
           <div className="nv-wrap">
             <div className="nv-head">
               <span className="nv-eyebrow">As áreas</span>
@@ -213,17 +243,8 @@ export default function NovaLanding() {
                 </div>
               </article>
             </div>
-          </div>
-        </section>
 
-        {/* ------------------------------------------------ governança */}
-        <section id="governanca" className="nv-section" aria-labelledby="nv-gov" style={{ paddingTop: 0 }}>
-          <div className="nv-wrap">
-            <div className="nv-head">
-              <span className="nv-eyebrow">Governança</span>
-              <h2 id="nv-gov" className="nv-display">Uma base, três níveis. Cada pessoa vê só o que é dela.</h2>
-            </div>
-            <div className="nv-levels">
+            <div className="nv-levels" style={{ marginTop: 96 }}>
               <div className="nv-level wine">
                 <span className="who">Administração Central</span>
                 <h3>A plataforma</h3>
@@ -240,16 +261,10 @@ export default function NovaLanding() {
                 <p>Cada pessoa trabalha com o que o papel dela permite. A regra vale no banco, não só na tela.</p>
               </div>
             </div>
-            <div className="nv-facts" style={{ marginTop: 72 }}>
-              <div><b>7</b><span>áreas integradas</span></div>
-              <div><b>1</b><span>cadastro para tudo</span></div>
-              <div><b>0</b><span>planilhas entre as áreas</span></div>
-              <div><b>3</b><span>níveis de acesso</span></div>
-            </div>
           </div>
         </section>
 
-        {/* ------------------------------------------------ final */}
+        {/* ------------------------------------------------ 6. final */}
         <section className="nv-final" aria-labelledby="nv-final-t">
           <div className="nv-glow" aria-hidden="true">
             <i />
@@ -258,11 +273,10 @@ export default function NovaLanding() {
           </div>
           <div className="nv-grain" aria-hidden="true" />
           <div className="nv-wrap nv-final-in">
-            <span className="nv-eyebrow">ATLAS.ERP</span>
             <h2 id="nv-final-t" className="nv-display">
-              Sua operação não deveria funcionar <em>em silos.</em>
+              Amanhã, às 11h50, o seu celular pode estar <em>em silêncio.</em>
             </h2>
-            <p>Comece hoje e veja o primeiro pedido passar por todas as áreas sem ninguém redigitar nada.</p>
+            <LiveLeak prefix="Enquanto isso, hoje já escaparam" />
             <div className="nv-ctas">
               <a className="nv-btn nv-btn-fire" href="/login">
                 Começar agora <Arrow />
@@ -275,7 +289,7 @@ export default function NovaLanding() {
       <footer className="nv-foot">
         <div className="nv-wrap">
           <span>© ATLAS.ERP</span>
-          <span>Os valores da seção &quot;Quanto custa&quot; são uma conta de exemplo.</span>
+          <span>Os valores da calculadora são estimativas, com a conta mostrada na tela.</span>
         </div>
       </footer>
     </div>

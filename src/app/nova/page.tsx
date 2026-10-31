@@ -16,7 +16,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const IMG = "/landing/img/";
 
 const Mark = () => (
   <svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true">
@@ -61,11 +60,11 @@ const STEPS = [
 ];
 
 const AREAS = [
-  { h: "Comercial e CRM", p: "Funil, orçamentos e pedidos com aprovação, reserva e o próximo passo sempre visível.", img: "comercial-15-pedido-reservado-257-0-1183-900-760.webp", big: true },
-  { h: "Suprimentos", p: "Solicitação, cotação, pedido de compra e recebimento com NF de entrada.", img: "suprimentos-03-pedidos-compra-257-0-1183-900-760.webp" },
-  { h: "Estoque e logística", p: "Saldos por endereço, picking, expedição e transporte com estoque exato.", img: "logistica-02-estoque-257-0-1183-592-760.webp" },
-  { h: "Financeiro", p: "Contas a pagar e a receber, parcelas e fluxo de caixa a partir do que aconteceu.", img: "financeiro-03-fluxo-caixa-257-0-1183-834-760.webp" },
-  { h: "Fiscal", p: "NF-e de entrada e saída, CFOP, NCM e impostos, com o erro explicado em português.", img: "fiscal-02b-nfe-detalhe-257-0-1183-900-760.webp", big: true },
+  { h: "Comercial e CRM", p: "Funil, orçamentos e pedidos com aprovação, reserva e o próximo passo sempre visível.", img: "pedidos.jpg", big: true },
+  { h: "Suprimentos", p: "Solicitação, cotação, pedido de compra e recebimento com NF de entrada.", img: "compras.jpg" },
+  { h: "Estoque e logística", p: "Saldos por endereço, picking, expedição e transporte com estoque exato.", img: "estoque.jpg" },
+  { h: "Financeiro", p: "Contas a pagar e a receber, parcelas e fluxo de caixa a partir do que aconteceu.", img: "fluxo.jpg", big: true },
+  { h: "Fiscal", p: "NF-e de entrada e saída, CFOP, NCM e impostos, com o erro explicado em português.", img: "nota-detalhe.jpg", big: true },
 ];
 
 export default function NovaLanding() {
@@ -132,14 +131,14 @@ export default function NovaLanding() {
           </div>
           <div className="nv-wrap nv-stage">
             <div className="nv-frame">
-              <img src={`${IMG}inicio-06-painel-executivo.webp`} width={1176} height={884} alt="Painel executivo do ATLAS.ERP com indicadores de vendas, compras, estoque e financeiro." fetchPriority="high" />
+              <img src="/nova/inicio.jpg" width={2160} height={1350} alt="Painel executivo do ATLAS.ERP com indicadores de vendas, compras, estoque e financeiro." fetchPriority="high" />
               <figure className="nv-float a">
                 <span>Estoque reservado sozinho</span>
-                <img src={`${IMG}comercial-15-pedido-reservado-257-0-1183-900-760.webp`} width={760} height={578} alt="Pedido de venda com o estoque reservado." />
+                <img src="/nova/pedido-reservado.jpg" width={2160} height={1350} alt="Pedido de venda com o estoque reservado." />
               </figure>
               <figure className="nv-float b">
                 <span>NF-e emitida sem redigitar</span>
-                <img src={`${IMG}fiscal-02b-nfe-detalhe-257-0-1183-900-760.webp`} width={760} height={578} alt="Detalhe de uma NF-e emitida no ATLAS.ERP." />
+                <img src="/nova/nota-detalhe.jpg" width={2160} height={1350} alt="Detalhe de uma NF-e emitida no ATLAS.ERP." />
               </figure>
             </div>
           </div>
@@ -215,16 +214,16 @@ export default function NovaLanding() {
               </ol>
               <div className="nv-shots">
                 <figure className="nv-shot" style={{ margin: 0 }}>
-                  <img src={`${IMG}comercial-17-pedido-receber-gerado-0-80-1176-900.webp`} width={1176} height={900} alt="Pedido de venda com a conta a receber já gerada." loading="lazy" />
+                  <img src="/nova/receber.jpg" width={2160} height={1350} alt="Pedido de venda com a conta a receber já gerada." loading="lazy" />
                   <figcaption>O pedido terminou: a conta a receber já está no financeiro.</figcaption>
                 </figure>
                 <div className="nv-shots-row">
                   <figure className="nv-shot" style={{ margin: 0 }}>
-                    <img src={`${IMG}logistica-10-expedicao-257-0-1183-592-760.webp`} width={760} height={380} alt="Lista de expedições." loading="lazy" />
+                    <img src="/nova/expedicao.jpg" width={2160} height={1350} alt="Lista de expedições." loading="lazy" />
                     <figcaption>Expedição com estoque exato</figcaption>
                   </figure>
                   <figure className="nv-shot" style={{ margin: 0 }}>
-                    <img src={`${IMG}fiscal-02-nfe-257-0-1183-592-760.webp`} width={760} height={380} alt="Lista de notas fiscais eletrônicas." loading="lazy" />
+                    <img src="/nova/notas.jpg" width={2160} height={1350} alt="Lista de notas fiscais eletrônicas." loading="lazy" />
                     <figcaption>NF-e com XML guardado</figcaption>
                   </figure>
                 </div>
@@ -244,7 +243,7 @@ export default function NovaLanding() {
               {AREAS.map((a) => (
                 <article key={a.h} className={`nv-area${a.big ? " big" : ""}`}>
                   <div className="pic">
-                    <img src={`${IMG}${a.img}`} width={760} height={578} alt={`Tela de ${a.h} no ATLAS.ERP.`} loading="lazy" />
+                    <img src={`/nova/${a.img}`} width={2160} height={1350} alt={`Tela de ${a.h} no ATLAS.ERP.`} loading="lazy" />
                   </div>
                   <div className="txt">
                     <h3>{a.h}</h3>
@@ -254,7 +253,7 @@ export default function NovaLanding() {
               ))}
               <article className="nv-area">
                 <div className="pic">
-                  <img src={`${IMG}inicio-04-fluxo-do-erp-760.webp`} width={760} height={571} alt="Mapa do fluxo do ERP." loading="lazy" />
+                  <img src="/nova/producao.jpg" width={2160} height={1350} alt="Ordens de produção no ATLAS.ERP." loading="lazy" />
                 </div>
                 <div className="txt">
                   <h3>Produção, qualidade e ativos</h3>

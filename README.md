@@ -68,6 +68,27 @@ npm run manuals:pdf      # regenera os PDFs dos manuais a partir de docs/manual
 A pilha local completa (PostgreSQL descartável + dublê do Neon Auth + caixa de
 e-mail local) está descrita em `poc/neon-full/README.md`.
 
+## Integração com o ORION.WMS
+
+Contrato: [`docs/INTEGRACAO-ATLAS-ORION.md`](docs/INTEGRACAO-ATLAS-ORION.md) e fixtures em `docs/contrato/` (conferência: `node scripts/check-contract.mjs`).
+Código: migrations `0126_integracao_orion.sql` e `0127_orion_aplicar_eventos.sql`, `src/lib/integrations/orion/**`,
+`src/app/api/integrations/orion/**`, `src/app/.well-known/astraeus-jwks.json`, telas `/app/admin/integracoes/orion` e `/app/admincentral/orion`.
+
+| Variável (server-only) | Uso |
+|---|---|
+| `ORION_URL` | URL padrão da instalação do ORION (sugerida no vínculo). |
+| `ORION_INSTALL_KEY_ID`, `ORION_INSTALL_SECRET` | Credencial de instalação (HMAC) para `POST {ORION}/api/atlas/v1/links` — iguais nas duas instalações. |
+| `INTEGRATION_ENCRYPTION_KEY` | 32 bytes (base64 ou hex) para cifrar os segredos por empresa com AES-256-GCM. Gerar: `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`. Trocar a chave invalida os segredos guardados (revincule as empresas). |
+| `ATLAS_SSO_PRIVATE_JWK` | JWK privado ES256 (P-256) com `kid`, usado no launch token do SSO. Gerar: `node scripts/orion-sso-keygen.mjs atlas-sso-AAAA-MM`. |
+| `ATLAS_SSO_PREVIOUS_PUBLIC_JWKS` | Opcional: `{"keys":[…]}` com as públicas anteriores, publicadas no JWKS durante a rotação (§2.8). |
+| `CRON_SECRET` | Protege `/api/integrations/orion/v1/outbox/process` (Vercel Cron a cada minuto, `vercel.json`: `Authorization: Bearer $CRON_SECRET`). |
+| `APP_URL` | Também é o `iss` do launch token (o ORION usa `ATLAS_SSO_ISSUER` = este valor). |
+
+No ORION: `ERP_WEBHOOK_URL = {APP_URL}/api/integrations/orion/v1/events`, `ATLAS_JWKS_URL = {APP_URL}/.well-known/astraeus-jwks.json`.
+
+Ativação de uma empresa: Administração Central › ORION.WMS (contratar + vincular) → admin da empresa habilita em Módulos →
+Integrações › ORION (depósitos, etapas, acessos) → carga inicial → reconciliação zerada ativa a integração.
+
 ## Documentação
 
 | Documento | Conteúdo |

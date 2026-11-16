@@ -17,9 +17,9 @@ import {
   orionWarehouseMapSchema,
 } from "@/lib/validations/orion";
 import { decryptSecret, encryptSecret, generateKeyId, generateSecret } from "./crypto";
-import { authenticate, handleAccessCheck, handleDocumentState, handleInboundEvent } from "./inbound";
+import { authenticate, handleAccessCheck, handleDocumentState, handleInboundBatch, handleInboundEvent } from "./inbound";
 import { processOutbox } from "./outbox";
-import { linkCompany } from "./client";
+import { linkCompany, type LinkRequest } from "./client";
 import { buildJwks, buildLaunchClaims, errorPage, launchPage, safeReturnTo, signLaunchToken, validState, type AccessGrant } from "./sso";
 import type { OrionDb } from "./types";
 
@@ -65,6 +65,17 @@ export async function postEvents(request: NextRequest) {
     return NextResponse.json(r.body, { status: r.status });
   } catch (error) {
     console.error("[orion] events:", (error as Error).message);
+    return NextResponse.json({ status: "rejected", event_id: null, error: { code: "internal_error", message: "Erro interno.", retryable: true } }, { status: 500 });
+  }
+}
+
+export async function postEventsBatch(request: NextRequest) {
+  try {
+    const body = await request.text();
+    const r = await handleInboundBatch({ db: adminDb(), decrypt }, { method: "POST", pathWithQuery: pathWithQuery(request), headers: headersOf(request), body });
+    return NextResponse.json(r.body, { status: r.status });
+  } catch (error) {
+    console.error("[orion] events/batch:", (error as Error).message);
     return NextResponse.json({ status: "rejected", event_id: null, error: { code: "internal_error", message: "Erro interno.", retryable: true } }, { status: 500 });
   }
 }
@@ -427,7 +438,7 @@ export async function postPlatformCompanyOrion(request: NextRequest, context: { 
         atlas_url: appUrl(request),
         key_id: keyId,
         secret,
-        company: (company.data as { company: Record<string, unknown> }).company,
+        company: (company.data as { company: LinkRequest["company"] }).company,
         admin: firstAdmin.data ? { atlas_user_id: firstAdmin.data.id as string, email: firstAdmin.data.email as string, name: firstAdmin.data.name as string } : null,
       },
     });

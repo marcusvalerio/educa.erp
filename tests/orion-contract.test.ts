@@ -16,6 +16,10 @@ import {
   launchTokenClaimsSchema,
   launchTokenHeaderSchema,
   parseInboundEnvelope,
+  linkRequestSchema,
+  linkResponseSchema,
+  batchRequestSchema,
+  batchResponseSchema,
 } from "@/lib/validations/orion";
 import { canonicalString, signRequest, verifySignature } from "@/lib/integrations/orion/signature";
 
@@ -85,6 +89,25 @@ describe("fixtures do contrato", () => {
     assert.equal(req.method, "GET");
     assert.ok(req.path.startsWith("/api/integrations/orion/v1/access?atlas_user_id="));
     assert.deepEqual(Object.keys(req.headers).sort(), ["X-Astraeus-Key-Id", "X-Astraeus-Signature", "X-Astraeus-Timestamp"]);
+  });
+
+  test("vínculo s2s.links.* e lote s2s.events-batch.*", () => {
+    const req = json("s2s.links.request.json");
+    assert.equal(req.method, "POST");
+    assert.equal(req.path, "/api/atlas/v1/links");
+    const body = linkRequestSchema.parse(req.body);
+    const res = json("s2s.links.response.json");
+    assert.equal(res.http_status, 201);
+    const out = linkResponseSchema.parse(res.body);
+    assert.equal(out.atlas_company_id, body.atlas_company_id);
+    assert.equal(out.key_id, body.key_id);
+    const batch = json("s2s.events-batch.request.json");
+    assert.equal(batch.path, "/api/atlas/v1/events/batch");
+    const events = batchRequestSchema.parse(batch.body).events;
+    for (const e of events) assert.ok(envelopeSchema.safeParse(e).success);
+    const results = batchResponseSchema.parse(json("s2s.events-batch.response.json").body).results;
+    assert.equal(results.length, events.length);
+    for (const r of results) assert.ok(eventResponseSchema.safeParse(r.body).success);
   });
 
   test("SSO: claims, cabeçalho e JWKS das fixtures", () => {

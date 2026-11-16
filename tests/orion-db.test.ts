@@ -9,6 +9,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { PGlite } from "@electric-sql/pglite";
 import { createAtlasDb, ownerQuery, pgliteDataClient, seedCompany, type SeededCompany } from "./helpers/atlas-pglite";
+import { parseInboundEnvelope } from "@/lib/validations/orion";
 
 const id = (n: string) => `0a7a5000-0000-4000-8000-${n.padStart(12, "0")}`;
 const ORION_CO = "0410e000-0000-4000-8000-000000000001";
@@ -306,7 +307,7 @@ describe("ORION no banco do ATLAS (PGlite)", () => {
     assert.deepEqual(so, { status: "partially_shipped", wms_status: "shipped" });
     const cost = await one<{ n: string }>("select count(*) n from cost_movements cm join stock_movements sm on sm.id = cm.stock_movement_id where sm.reference_type = 'SHIPMENT' and sm.company_id = $1", [A.companyId]);
     assert.ok(num(cost.n) >= 1, "custo médio registrado na baixa");
-    // linha 512 cancelada pelo armazém (fixture usa seq 5, igual à de outbound.cancelled)
+    // linha 512 cancelada pelo armazém (origin "orion", seq 5)
     await applyOk("o2a.outbound.line_cancelled.json");
     assert.equal((await one<{ status: string }>("select status from sales_orders where id = $1", [id("501")])).status, "shipped");
   });
@@ -319,15 +320,22 @@ describe("ORION no banco do ATLAS (PGlite)", () => {
     changed.payload.carrier = "Outra";
     const conflict = await receive(changed);
     assert.deepEqual([conflict.http, conflict.body.error?.code], [400, "idempotency_conflict"]);
-    // mesmo agregado com sequência obsoleta (5 de outbound.cancelled = 5 já aplicado) ⇒ duplicate
-    const stale = await receive(fx("o2a.outbound.cancelled.json"));
-    assert.deepEqual([stale.http, stale.body.duplicate], [200, true]);
+    // mesmo agregado com sequência obsoleta (≤ 5 já aplicado) ⇒ duplicate, sem efeito
+    const stale = fx("o2a.outbound.line_cancelled.json");
+    stale.id = "0410e000-0000-4000-8000-000000900389";
+    (stale.aggregate as { sequence: number }).sequence = 4;
+    const sr = await receive(stale);
+    assert.deepEqual([sr.http, sr.body.duplicate], [200, true]);
     // lacuna ⇒ out_of_order
     const gap = fx("o2a.outbound.cancelled.json");
     gap.id = "0410e000-0000-4000-8000-000000900399";
     (gap.aggregate as { sequence: number }).sequence = 9;
     const r = await receive(gap);
     assert.deepEqual([r.http, r.body.error?.code, r.body.error?.expected_sequence], [409, "out_of_order", 6]);
+    // seq 6 (eco de cancelamento do ATLAS): aplica só o estado do armazém, sem reabrir o pedido
+    const ok6 = await receive(fx("o2a.outbound.cancelled.json"));
+    assert.equal(ok6.http, 202);
+    assert.deepEqual(await one("select status, wms_status from sales_orders where id = $1", [id("501")]), { status: "shipped", wms_status: "cancelled" });
   });
 
   test("multiempresa: envelope de A com a credencial de B é recusado; nada muda em A", async () => {
@@ -419,6 +427,8 @@ describe("ORION no banco do ATLAS (PGlite)", () => {
       (e.aggregate as { id: string; sequence: number }).id = "0410e000-0000-4000-8000-000000000502";
       (e.aggregate as { id: string; sequence: number }).sequence = 4;
       e.payload.atlas_sales_order_id = id("502");
+      e.payload.origin = "orion";
+      e.payload.atlas_event_id = null;
     });
     const so = await one<{ status: string; wms_status: string }>("select status, wms_status from sales_orders where id = $1", [id("502")]);
     assert.deepEqual(so, { status: "approved", wms_status: "cancelled" });
@@ -473,6 +483,31 @@ describe("ORION no banco do ATLAS (PGlite)", () => {
     sameShape(cancelled[0].payload, fx("a2o.sales_order.cancelled.json").payload);
     // line_cancelled avulso
     await ownerQuery(db, "update sales_order_items set cancelled_quantity = cancelled_quantity + 0 where id = $1", [id("513")]);
+  });
+
+  test("cancelamento de linha que partiu do ATLAS não conta duas vezes (origin atlas); o do armazém conta", async () => {
+    const c = A.companyId;
+    await ownerQuery(db, "insert into sales_orders (id, company_id, code, customer_id, status) values ($1, $2, 'PV-DUP', $3, 'pending_approval')", [id("504"), c, id("301")]);
+    await ownerQuery(db, "insert into sales_order_items (id, company_id, order_id, product_id, description, unit, ordered_quantity, unit_price) values ($1, $2, $3, $4, 'P', 'UN', 10, 1)", [id("514"), c, id("504"), id("201")]);
+    // o ATLAS cancelou 4 un. da linha (o próprio ATLAS já descontou)
+    await ownerQuery(db, "update sales_order_items set cancelled_quantity = 4 where id = $1", [id("514")]);
+    const echo = fx("o2a.outbound.line_cancelled.json");
+    Object.assign(echo, { id: "0410e000-0000-4000-8000-000000900501", aggregate: { type: "outbound_order", id: "0410e000-0000-4000-8000-000000000504", sequence: 7 } });
+    Object.assign(echo.payload, { atlas_sales_order_id: id("504"), atlas_line_id: id("514"), cancelled_qty: 4, origin: "atlas", atlas_event_id: "0a7a5000-0000-4000-8000-000000900014" });
+    assert.equal((await receive(echo)).http, 202, "primeiro evento do agregado aceito com qualquer sequência");
+    assert.equal(num((await one<{ q: string }>("select cancelled_quantity q from sales_order_items where id = $1", [id("514")])).q), 4);
+    const wh = fx("o2a.outbound.line_cancelled.json");
+    Object.assign(wh, { id: "0410e000-0000-4000-8000-000000900502", aggregate: { type: "outbound_order", id: "0410e000-0000-4000-8000-000000000504", sequence: 8 } });
+    Object.assign(wh.payload, { atlas_sales_order_id: id("504"), atlas_line_id: id("514"), cancelled_qty: 3, origin: "orion" });
+    assert.equal((await receive(wh)).http, 202);
+    assert.equal(num((await one<{ q: string }>("select cancelled_quantity q from sales_order_items where id = $1", [id("514")])).q), 7);
+  });
+
+  test("receipt.completed: purchaseOrderStatus (nome antigo) ainda é aceito na validação", () => {
+    const env = fx("o2a.receipt.completed.json");
+    const { purchase_order_status: st, ...rest } = env.payload;
+    env.payload = { ...rest, purchaseOrderStatus: st };
+    assert.equal(parseInboundEnvelope(env).ok, true);
   });
 
   test("suspensão: módulo desabilitado ⇒ company.deactivated, revoga acessos, status suspended", async () => {

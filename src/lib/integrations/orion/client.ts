@@ -1,4 +1,5 @@
 import { signedHeaders } from "./signature";
+import { linkRequestSchema, linkResponseSchema, type OrionLinkRequest } from "@/lib/validations/orion";
 
 // Chamadas HTTP do ATLAS ao ORION (§3.4): vínculo com a credencial de
 // instalação e eventos com o segredo da empresa.
@@ -43,17 +44,12 @@ export async function signedCall(input: {
   return { status: res.status, json, text };
 }
 
-export type LinkRequest = {
-  atlas_company_id: string;
-  atlas_url: string;
-  key_id: string;
-  secret: string;
-  company: Record<string, unknown>;
-  admin: { atlas_user_id: string; email: string; name: string } | null;
-};
+/** Corpo de POST /links — fixture docs/contrato/s2s.links.request.json. */
+export type LinkRequest = OrionLinkRequest;
 
 /** POST {ORION}/api/atlas/v1/links com a credencial de instalação (§6.1 passo 4). */
 export async function linkCompany(input: { orionUrl: string; installKeyId: string; installSecret: string; request: LinkRequest; fetchImpl?: FetchLike }): Promise<{ orionCompanyId: string }> {
+  const body = linkRequestSchema.parse(input.request);
   const res = await signedCall({
     fetchImpl: input.fetchImpl,
     baseUrl: input.orionUrl,
@@ -61,11 +57,15 @@ export async function linkCompany(input: { orionUrl: string; installKeyId: strin
     path: "/links",
     keyId: input.installKeyId,
     secret: input.installSecret,
-    body: input.request,
+    body,
   });
-  const json = res.json as { orion_company_id?: string; error?: { message?: string } } | null;
-  if (res.status < 200 || res.status >= 300 || !json?.orion_company_id) {
+  const json = res.json as { error?: { message?: string } } | null;
+  const parsed = linkResponseSchema.safeParse(res.json);
+  if (res.status < 200 || res.status >= 300 || !parsed.success) {
     throw new Error(`O ORION recusou o vínculo (HTTP ${res.status}): ${json?.error?.message ?? (res.text.slice(0, 200) || "sem detalhes")}`);
   }
-  return { orionCompanyId: json.orion_company_id };
+  if (parsed.data.atlas_company_id !== body.atlas_company_id || parsed.data.key_id !== body.key_id) {
+    throw new Error("O ORION respondeu o vínculo de outra empresa/chave.");
+  }
+  return { orionCompanyId: parsed.data.orion_company_id };
 }

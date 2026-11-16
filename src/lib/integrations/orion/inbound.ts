@@ -56,16 +56,50 @@ export async function handleInboundEvent(deps: Deps, req: Req): Promise<HandlerR
   } catch {
     return rejected(400, "invalid_envelope", "Corpo não é JSON válido.");
   }
+  const headerKey = req.headers.get("idempotency-key");
+  const eventId = typeof (json as { id?: unknown })?.id === "string" ? ((json as { id: string }).id) : null;
+  if (headerKey && eventId && headerKey !== eventId) return rejected(400, "invalid_envelope", "Idempotency-Key diferente do id do evento.", false, eventId);
+  return applyOne(deps, auth.integration, json);
+}
+
+export const MAX_BATCH_BYTES = 10 * 1024 * 1024;
+export const MAX_BATCH_EVENTS = 500;
+
+/**
+ * POST /api/integrations/orion/v1/events/batch — corpo { events: [...] } com
+ * até 500 envelopes da mesma empresa, aplicados em ordem; resposta
+ * { status: "processed", results: [{ http_status, body }] } (fixtures s2s.events-batch.*).
+ */
+export async function handleInboundBatch(deps: Deps, req: Req): Promise<HandlerResult> {
+  if (Buffer.byteLength(req.body, "utf8") > MAX_BATCH_BYTES) return rejected(413, "payload_too_large", "Lote acima de 10 MB.");
+  const auth = await authenticate(deps, req);
+  if (!auth.ok) return auth.result;
+  let json: unknown;
+  try {
+    json = JSON.parse(req.body);
+  } catch {
+    return rejected(400, "invalid_envelope", "Corpo não é JSON válido.");
+  }
+  const events = (json as { events?: unknown })?.events;
+  if (!Array.isArray(events) || events.length === 0 || events.length > MAX_BATCH_EVENTS) {
+    return rejected(400, "invalid_envelope", `O lote deve ser { events: [...] } com 1 a ${MAX_BATCH_EVENTS} envelopes.`);
+  }
+  const results: Array<{ http_status: number; body: unknown }> = [];
+  for (const item of events) {
+    const r = await applyOne(deps, auth.integration, item);
+    results.push({ http_status: r.status, body: r.body });
+  }
+  return { status: 200, body: { status: "processed", results } };
+}
+
+async function applyOne(deps: Deps, integration: IntegrationSecretsRow, json: unknown): Promise<HandlerResult> {
   const parsed = parseInboundEnvelope(json);
   const eventId = typeof (json as { id?: unknown })?.id === "string" ? ((json as { id: string }).id) : null;
   if (!parsed.ok) return rejected(400, parsed.code, parsed.message, false, eventId, parsed.details.length ? { details: parsed.details } : {});
   const env = parsed.envelope;
-  const integration = auth.integration;
   if (env.atlas_company_id !== integration.company_id || (integration.orion_company_id && env.orion_company_id !== integration.orion_company_id)) {
     return rejected(403, "company_mismatch", "A empresa do envelope não é a da credencial.", false, env.id);
   }
-  const headerKey = req.headers.get("idempotency-key");
-  if (headerKey && headerKey !== env.id) return rejected(400, "invalid_envelope", "Idempotency-Key diferente do id do evento.", false, env.id);
   const { data, error } = await deps.db.rpc("fn_orion_receive_event", { p_company_id: integration.company_id, p_envelope: env, p_reprocess: false });
   if (error) throw new Error(`fn_orion_receive_event: ${error.message}`);
   const out = data as { http: number; body: unknown };

@@ -194,12 +194,22 @@ const outboundShipped = z.object({
     atlas_line_id: uuid, atlas_product_id: uuid, sku: text, requested_qty: qty, shipped_qty: qty, lots: z.array(lot),
   })),
 });
-const outboundCancelled = z.object({ code: text, atlas_sales_order_id: uuid, reason: nText, released_reservations: z.boolean() });
+// origin "atlas": eco de sales_order.cancelled/line_cancelled do próprio ATLAS
+// (§3.6) — o ATLAS registra o estado mas não repete o efeito de quantidade.
+const cancelOrigin = z.enum(["atlas", "orion"]);
+const outboundCancelled = z.object({
+  code: text, atlas_sales_order_id: uuid, reason: nText, released_reservations: z.boolean(),
+  origin: cancelOrigin.optional(), atlas_event_id: uuid.nullable().optional(),
+});
 const outboundLineCancelled = z.object({
   code: text, atlas_sales_order_id: uuid, atlas_line_id: uuid, sku: text, cancelled_qty: qty, reason: nText,
+  origin: cancelOrigin.optional(), atlas_event_id: uuid.nullable().optional(),
 });
+// purchase_order_status (snake_case). purchaseOrderStatus (camelCase) é o nome
+// antigo, aceito temporariamente enquanto houver ORION antigo em produção.
 const receiptCompleted = z.object({
-  code: text, atlas_purchase_order_id: uuid, purchaseOrderStatus: text.optional(), invoice_number: nText,
+  code: text, atlas_purchase_order_id: uuid, purchase_order_status: nText.optional(),
+  purchaseOrderStatus: nText.optional(), invoice_number: nText,
   invoice_access_key: nText, completed_at: isoDateTime,
   items: z.array(z.object({
     atlas_line_id: uuid, atlas_product_id: uuid, sku: text, expected_qty: qty, received_qty: qty, accepted_qty: qty,
@@ -381,6 +391,35 @@ export const eventResponseSchema = z.union([
     }),
   }),
 ]);
+
+// ------------------------------------------------------------ vínculo e lote (s2s.links.*, s2s.events-batch.*)
+/** Corpo de POST {ORION}/api/atlas/v1/links (credencial de instalação, §3.4/§6.1). */
+export const linkRequestSchema = z.object({
+  atlas_company_id: uuid,
+  atlas_url: z.string().url().nullable().optional(),
+  key_id: z.string().min(3).max(120),
+  secret: z.string().min(32).max(200),
+  company: z.looseObject({
+    name: z.string().min(1).max(200), legal_name: nText.optional(), document: nText.optional(), email: nText.optional(),
+    phone: nText.optional(), address: nText.optional(), city: nText.optional(), state: nText.optional(), zip_code: nText.optional(),
+  }),
+  admin: z.object({ atlas_user_id: uuid, email: z.string().email(), name: z.string().min(1).max(120) }).nullable().optional(),
+  previous_secret_hours: z.number().int().min(0).max(168).optional(),
+});
+export type OrionLinkRequest = z.infer<typeof linkRequestSchema>;
+/** Resposta de POST /links: 201 (criado) ou 200 (atualizado/rotacionado). */
+export const linkResponseSchema = z.object({
+  status: z.enum(["activating", "active", "suspended", "disabled"]),
+  atlas_company_id: uuid,
+  orion_company_id: uuid,
+  key_id: z.string().min(3),
+});
+/** POST …/events/batch (os dois lados): até 500 envelopes da mesma empresa, em ordem. */
+export const batchRequestSchema = z.object({ events: z.array(z.unknown()).min(1).max(500) });
+export const batchResponseSchema = z.object({
+  status: z.literal("processed"),
+  results: z.array(z.object({ http_status: z.number().int(), body: z.record(z.string(), z.unknown()) })),
+});
 
 export const jwksSchema = z.object({
   keys: z.array(z.object({

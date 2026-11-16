@@ -18,7 +18,7 @@ import { signedHeaders, verifySignature } from "@/lib/integrations/orion/signatu
 import { processOutbox, classify } from "@/lib/integrations/orion/outbox";
 import { linkCompany } from "@/lib/integrations/orion/client";
 import { handleAccessCheck, handleInboundEvent } from "@/lib/integrations/orion/inbound";
-import { launchTokenClaimsSchema, accessCheckResponseSchema, envelopeSchema, atlasToOrionPayloads } from "@/lib/validations/orion";
+import { launchTokenClaimsSchema, accessCheckResponseSchema, envelopeSchema, atlasToOrionPayloads, linkRequestSchema } from "@/lib/validations/orion";
 import type { OrionDb } from "@/lib/integrations/orion/types";
 
 const KEY = parseEncryptionKey(Buffer.alloc(32, 7).toString("base64"));
@@ -126,7 +126,8 @@ describe("ATLAS ↔ ORION simulado", () => {
         if (url === "/api/atlas/v1/links") {
           const ok = verifySignature({ secrets: ["instalacao"], timestamp: h("x-astraeus-timestamp"), signature: h("x-astraeus-signature"), method: "POST", pathWithQuery: url, body });
           if (!ok.ok || h("x-astraeus-key-id") !== "install-1") return send(401, { error: { code: "invalid_signature" } });
-          return send(201, { orion_company_id: ORION_A });
+          const reqBody = linkRequestSchema.parse(JSON.parse(body));
+          return send(201, { status: "activating", atlas_company_id: reqBody.atlas_company_id, orion_company_id: ORION_A, key_id: reqBody.key_id });
         }
         const secret = h("x-astraeus-key-id") === keyA ? secretA : h("x-astraeus-key-id") === keyB ? secretB : null;
         const ok = verifySignature({ secrets: [secret], timestamp: h("x-astraeus-timestamp"), signature: h("x-astraeus-signature"), method: "POST", pathWithQuery: url, body });
@@ -150,10 +151,10 @@ describe("ATLAS ↔ ORION simulado", () => {
   test("vínculo: POST /links com a credencial de instalação e segredo cifrado no banco", async () => {
     const { orionCompanyId } = await linkCompany({
       orionUrl, installKeyId: "install-1", installSecret: "instalacao",
-      request: { atlas_company_id: A.companyId, atlas_url: "https://atlas", key_id: keyA, secret: secretA, company: {}, admin: null },
+      request: { atlas_company_id: A.companyId, atlas_url: "https://atlas.exemplo", key_id: keyA, secret: secretA, company: { name: "Alfa" }, admin: null },
     });
     assert.equal(orionCompanyId, ORION_A);
-    await assert.rejects(linkCompany({ orionUrl, installKeyId: "install-1", installSecret: "errado", request: { atlas_company_id: A.companyId, atlas_url: "x", key_id: keyA, secret: secretA, company: {}, admin: null } }), /recusou/);
+    await assert.rejects(linkCompany({ orionUrl, installKeyId: "install-1", installSecret: "errado", request: { atlas_company_id: A.companyId, atlas_url: "https://atlas.exemplo", key_id: keyA, secret: secretA, company: { name: "Alfa" }, admin: null } }), /recusou/);
     for (const [c, key, secret, orion] of [[A, keyA, secretA, ORION_A], [B, keyB, secretB, "0410e000-0000-4000-8000-0000000000b1"]] as const) {
       await ownerQuery(db, "update company_modules set contracted = true, enabled_by_company = true where company_id = $1 and module_code = 'orion'", [c.companyId]);
       const r = await svc.rpc("fn_orion_link_company", { p_company_id: c.companyId, p_orion_url: orionUrl, p_key_id: key, p_secret_ciphertext_b64: encryptSecret(secret, KEY), p_orion_company_id: orion, p_by: null });

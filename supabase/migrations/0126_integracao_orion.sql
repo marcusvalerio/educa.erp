@@ -570,9 +570,10 @@ declare
 begin
   if NEW.status is not distinct from OLD.status then
     -- Alterações de cabeçalho do pedido de venda depois de enviado.
-    if v_type = 'sales_order' and not public.fn_orion_applying()
-       and OLD.wms_status in ('queued','sent','accepted','rejected','failed')
-       and (NEW.expected_delivery_at is distinct from OLD.expected_delivery_at
+    if v_type <> 'sales_order' or public.fn_orion_applying() or OLD.wms_status not in ('queued','sent','accepted','rejected','failed') then
+      return NEW;
+    end if;
+    if (NEW.expected_delivery_at is distinct from OLD.expected_delivery_at
          or NEW.notes is distinct from OLD.notes
          or NEW.delivery_address is distinct from OLD.delivery_address
          or NEW.delivery_city is distinct from OLD.delivery_city

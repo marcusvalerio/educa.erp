@@ -464,18 +464,20 @@ begin
     if jsonb_array_length(coalesce(v_line -> 'lots', '[]'::jsonb)) = 0 then
       perform public.fn_orion_move(p_company_id, v_item.product_id, v_loc, 'ISSUE', v_qty, null, null,
         'SHIPMENT', v_shipment, p_event_id || ':' || v_item.id || ':-');
-      insert into public.shipment_items (company_id, shipment_id, sales_order_item_id, product_id, location_id, quantity, unit)
-      values (p_company_id, v_shipment, v_item.id, v_item.product_id, v_loc, v_qty, v_item.unit);
     else
       for v_lot in select * from jsonb_array_elements(v_line -> 'lots') loop
         v_lot_id := public.fn_orion_lot(p_company_id, v_item.product_id, v_lot ->> 'lot_code');
         perform public.fn_orion_move(p_company_id, v_item.product_id, v_loc, 'ISSUE', (v_lot ->> 'quantity')::numeric, v_lot_id, null,
           'SHIPMENT', v_shipment, p_event_id || ':' || v_item.id || ':' || coalesce(v_lot ->> 'lot_code', '-'));
-        insert into public.shipment_items (company_id, shipment_id, sales_order_item_id, product_id, location_id, quantity, unit, lot_id)
-        values (p_company_id, v_shipment, v_item.id, v_item.product_id, v_loc, (v_lot ->> 'quantity')::numeric, v_item.unit, v_lot_id);
       end loop;
     end if;
-    update public.sales_order_items set shipped_quantity = shipped_quantity + v_qty where id = v_item.id;
+    -- Em empresa ORION a reserva/separação física é do armazém: o ATLAS só
+    -- registra o fato (reservado = separado = expedido), respeitando os CHECKs.
+    update public.sales_order_items set
+      reserved_quantity = greatest(reserved_quantity, shipped_quantity + v_qty),
+      picked_quantity = greatest(picked_quantity, shipped_quantity + v_qty),
+      shipped_quantity = shipped_quantity + v_qty
+    where id = v_item.id;
   end loop;
 
   update public.sales_orders set wms_status = 'shipped', wms_last_error = null,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useStockManagedByOrion } from "@/components/orion/Orion";
 import { useState } from "react";
 import { CheckCheck, PackageCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -46,7 +47,13 @@ export const SHIPMENT_STEPS: WorkflowAction[] = [
   },
 ];
 
-export function ShipmentActions({ id, status, onDone, transport = false }: { id: string; status: string; onDone: () => void; transport?: boolean }) {
+/** Em empresa com ORION a operação física é do armazém: sem ações aqui. */
+export function ShipmentActions(props: Parameters<typeof ShipmentActionsInner>[0]) {
+  const orionManaged = useStockManagedByOrion();
+  return orionManaged ? null : <ShipmentActionsInner {...props} />;
+}
+
+function ShipmentActionsInner({ id, status, onDone, transport = false }: { id: string; status: string; onDone: () => void; transport?: boolean }) {
   const { can } = useSession();
   const [assigning, setAssigning] = useState(false);
   const canTransport = transport && can("shipments.update") && !["shipped", "in_transit", "delivered", "completed", "cancelled"].includes(status.toLowerCase());
@@ -177,7 +184,13 @@ function TransportDialog({ shipmentId, onClose, onSaved }: { shipmentId: string;
 }
 
 /** Separação: um toque inicia, separa o que foi pedido e conclui. */
-export function PickListActions({ id, status, onDone }: { id: string; status: string; onDone: () => void }) {
+/** Em empresa com ORION a operação física é do armazém: sem ações aqui. */
+export function PickListActions(props: Parameters<typeof PickListActionsInner>[0]) {
+  const orionManaged = useStockManagedByOrion();
+  return orionManaged ? null : <PickListActionsInner {...props} />;
+}
+
+function PickListActionsInner({ id, status, onDone }: { id: string; status: string; onDone: () => void }) {
   const { can } = useSession();
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -236,6 +249,7 @@ export function PickListActions({ id, status, onDone }: { id: string; status: st
 /** No pedido de venda: separar a reserva e gerar a expedição. */
 export function OrderFulfillmentButtons({ orderId, status, onDone }: { orderId: string; status: string; onDone: () => void }) {
   const { can } = useSession();
+  const orionManaged = useStockManagedByOrion();
   const [busy, setBusy] = useState<string | null>(null);
   const st = status.toLowerCase();
 
@@ -257,6 +271,7 @@ export function OrderFulfillmentButtons({ orderId, status, onDone }: { orderId: 
     }
   }
 
+  if (orionManaged) return null; // separação e expedição física no ORION
   return (
     <>
       {["reserved", "reservation_pending"].includes(st) && can("pick_lists.create") && (

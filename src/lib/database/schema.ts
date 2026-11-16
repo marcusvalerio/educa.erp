@@ -809,6 +809,10 @@ export type SalesOrderStatus =
 
 export type SalesOrderRow = {
   id: string;
+  /** Integração ORION (0126) */
+  wms_status?: string | null;
+  wms_sent_at?: string | null;
+  wms_last_error?: string | null;
   company_id: string;
   code: string;
   customer_id: string;

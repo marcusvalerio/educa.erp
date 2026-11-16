@@ -28,6 +28,7 @@ import {
   UserCog,
   BarChart3,
   Activity,
+  Warehouse,
 } from "lucide-react";
 
 // Registro único de navegação do ATLAS.ERP.
@@ -313,6 +314,7 @@ export const ADMIN_NAV: NavSection[] = [
       { label: "Grupos da turma", href: "/app/admin/groups", permission: "roles.manage", keywords: ["estudo", "turma", "alunos"] },
       { label: "Movimentos dos grupos", href: "/app/admin/movimentos", permission: "roles.manage", keywords: ["estudo", "turma", "atividade", "histórico"] },
       { label: "Módulos", href: "/app/admin/modules", permission: "company_modules.view" },
+      { label: "Integrações › ORION", href: "/app/admin/integracoes/orion", permission: ["orion.integration.view", "orion.access.manage"], keywords: ["wms", "armazém", "orion", "integração"] },
       { label: "Configurações", href: "/app/admin/settings", permission: ["settings.view", "dashboard.configure"] },
       { label: "Auditoria", href: "/app/admin/audit", permission: "audit_logs.read" },
     ],
@@ -329,6 +331,7 @@ export const ADMIN_ICONS: Record<string, LucideIcon> = {
   "/app/admin/groups": Users,
   "/app/admin/movimentos": Activity,
   "/app/admin/modules": Blocks,
+  "/app/admin/integracoes/orion": Warehouse,
   "/app/admin/settings": SlidersHorizontal,
   "/app/admin/audit": ScrollText,
 };
@@ -355,6 +358,7 @@ export const PLATFORM_NAV: NavSection[] = [
       { label: "Visão geral", href: "/app/admincentral" },
       { label: "Empresas", href: "/app/admincentral/companies", permission: "platform.companies.view", keywords: ["tenant", "cliente"] },
       { label: "Módulos", href: "/app/admincentral/modules", permission: "platform.modules.view" },
+      { label: "ORION.WMS", href: "/app/admincentral/orion", permission: "platform.companies.view", keywords: ["wms", "armazém", "integração"] },
       { label: "Membros da plataforma", href: "/app/admincentral/platform-members", permission: "platform.members.view", keywords: ["owner", "admin"] },
       { label: "Permissões", href: "/app/admincentral/permissions" },
       { label: "Auditoria", href: "/app/admincentral/audit", permission: "platform.audit.view" },
@@ -367,6 +371,7 @@ export const PLATFORM_ICONS: Record<string, LucideIcon> = {
   "/app/admincentral": Landmark,
   "/app/admincentral/companies": Building2,
   "/app/admincentral/modules": Blocks,
+  "/app/admincentral/orion": Warehouse,
   "/app/admincentral/platform-members": UserCog,
   "/app/admincentral/permissions": ShieldCheck,
   "/app/admincentral/audit": ScrollText,

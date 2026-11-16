@@ -1,5 +1,6 @@
 "use client";
 
+import { OrionLaunchButton, OrionStockNotice } from "@/components/orion/Orion";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -360,6 +361,7 @@ function ShellInner({ environment, children }: { environment: Environment; child
               <div className="lg:hidden">
                 <SearchTrigger onOpen={() => setCommandOpen(true)} />
               </div>
+              {environment === "erp" && <OrionLaunchButton />}
               {environment === "erp" && <NotificationsButton />}
               <ThemeToggle />
               <span aria-hidden className="mx-1 hidden h-5 w-px bg-border sm:block" />
@@ -378,6 +380,7 @@ function ShellInner({ environment, children }: { environment: Environment; child
           <main id="conteudo" className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
             <ShellSectionProvider value={section}>
               <div className="mx-auto w-full max-w-screen-2xl animate-rise-in">
+                {allowed && environment === "erp" && <OrionStockNotice pathname={pathname} />}
                 {allowed ? children : <NoAccess backHref={env.rootHref} />}
               </div>
             </ShellSectionProvider>

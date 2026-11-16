@@ -25,6 +25,7 @@ import { formatCurrencyBRL, formatDate } from "@/lib/format";
 import type { AccountsReceivableRow, FiscalDocumentRow, SalesOrderItemRow, SalesOrderRow, ShipmentRow } from "@/lib/database/schema";
 import { IssueOrderNfeButton, NfeOutputLinks } from "@/components/fiscal/NfeActions";
 import { OrderFulfillmentButtons } from "@/components/logistics/FulfillmentActions";
+import { WarehousePanel, useStockManagedByOrion } from "@/components/orion/Orion";
 
 // Detalhe do pedido de venda. As ações mostradas dependem do status
 // atual E da permissão do usuário; a regra de transição continua no
@@ -45,6 +46,7 @@ export default function PedidoVendaDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { can } = useSession();
   const order = useCached<Order>(`/api/sales-orders/${id}`);
+  const orionManaged = useStockManagedByOrion();
   const shipmentsOk = can("shipments.view");
   const receivablesOk = can("accounts_receivable.view");
   const shipments = useCached<ShipmentRow[]>(`/api/shipments?salesOrderId=${id}`, shipmentsOk);
@@ -66,6 +68,8 @@ export default function PedidoVendaDetailPage() {
     [status, can]
   );
   const canReserve = ["approved", "reservation_pending"].includes(status) && can("sales_orders.reserve");
+  // Empresa com ORION: "reservar" só libera para separação (a reserva física é do armazém).
+  const reserveLabel = orionManaged ? "Liberar para separação" : "Reservar estoque";
 
   function refresh() {
     invalidateCache(`/api/sales-orders`);
@@ -160,7 +164,7 @@ export default function PedidoVendaDetailPage() {
             {canReserve && (
               <Button size="sm" onClick={() => { setReserveError(null); setReserveOpen(true); }}>
                 <PackageCheck size={14} aria-hidden />
-                Reservar estoque
+                {reserveLabel}
               </Button>
             )}
             {available.map((key, index) => {
@@ -212,6 +216,8 @@ export default function PedidoVendaDetailPage() {
           </div>
         </DetailSection>
       </div>
+
+      <WarehousePanel type="sales_order" doc={o} onChange={refresh} />
 
       <DetailSection title="Itens" description={`${items.length} item(ns)`}>
         <MiniTable

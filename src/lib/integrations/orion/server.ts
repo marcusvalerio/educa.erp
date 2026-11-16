@@ -395,8 +395,11 @@ export async function postPlatformCompanyOrion(request: NextRequest, context: { 
   try {
     const { supabase } = await requirePlatformMember();
     const { id } = await context.params;
-    const allowed = await supabase.rpc("has_platform_permission", { p_code: "platform.modules.manage" });
-    if (allowed.error || allowed.data !== true) throw new ApiError("FORBIDDEN", "Sem permissão (platform.modules.manage).", 403);
+    const [m1, m2] = await Promise.all([
+      supabase.rpc("has_platform_permission", { p_code: "platform.modules.manage" }),
+      supabase.rpc("has_platform_permission", { p_code: "platform.company_modules.manage" }),
+    ]);
+    if (m1.data !== true && m2.data !== true) throw new ApiError("FORBIDDEN", "Sem permissão (platform.company_modules.manage).", 403);
     const body = await parseJson(request, orionLinkSchema);
     const installKeyId = process.env.ORION_INSTALL_KEY_ID;
     const installSecret = process.env.ORION_INSTALL_SECRET;

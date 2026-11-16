@@ -149,9 +149,9 @@ describe("ORION no banco do ATLAS (PGlite)", () => {
     assert.ok(cross.error, "admin de B não libera funcionário de A");
     const [ev] = await outbox("user_access.granted");
     sameShape(ev.payload, fx("a2o.user_access.granted.json").payload);
-    // Ainda em ativação: acesso SSO só com integração ativa.
+    // Em ativação o SSO já vale (a equipe ORION prepara os endereços antes da carga inicial — 0128).
     const st = await svc.rpc("fn_orion_access_status", { p_company_id: A.companyId, p_user_id: A.adminUserId });
-    assert.equal((st.data as { active: boolean }).active, false);
+    assert.equal((st.data as { active: boolean }).active, true);
     const rlsB = await adminB.from("orion_user_access").select("user_id");
     assert.deepEqual(rlsB.data, [], "B não vê acessos de A");
     const outB = await adminB.from("integration_outbox").select("id");
@@ -501,6 +501,22 @@ describe("ORION no banco do ATLAS (PGlite)", () => {
     Object.assign(wh.payload, { atlas_sales_order_id: id("504"), atlas_line_id: id("514"), cancelled_qty: 3, origin: "orion" });
     assert.equal((await receive(wh)).http, 202);
     assert.equal(num((await one<{ q: string }>("select cancelled_quantity q from sales_order_items where id = $1", [id("514")])).q), 7);
+  });
+
+  test("reentrega do mesmo evento com campos de transporte diferentes é duplicata, não conflito (teste real 6.4)", async () => {
+    const env = fx("o2a.outbound.shipped.json");
+    const again = { ...env, attempt: 7, created_at: "2026-11-16T00:00:00Z", occurred_at: "2026-11-15T13:00:00.000Z" };
+    const r = await receive(again);
+    assert.deepEqual([r.http, r.body.duplicate], [200, true]);
+  });
+
+  test("lote nulo (produto sem lote) em ready_to_invoice e receipt.completed é aceito (teste real 3.4/4.3)", () => {
+    const rti = fx("o2a.outbound.ready_to_invoice.json");
+    (rti.payload.lines as Array<{ lots: Array<{ lot_code: string | null }> }>)[0].lots[0].lot_code = null;
+    assert.equal(parseInboundEnvelope(rti).ok, true);
+    const rc = fx("o2a.receipt.completed.json");
+    (rc.payload.items as Array<{ lots: Array<{ lot_code: string | null }> }>)[0].lots[0].lot_code = null;
+    assert.equal(parseInboundEnvelope(rc).ok, true);
   });
 
   test("receipt.completed: purchaseOrderStatus (nome antigo) ainda é aceito na validação", () => {

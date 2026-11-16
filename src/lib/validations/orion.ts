@@ -172,7 +172,7 @@ export const atlasToOrionPayloads = {
 } as const;
 
 // ------------------------------------------------------------ ORION → ATLAS
-const lot = z.object({ lot_code: text, quantity: qty, expiration_date: nDate.optional() });
+const lot = z.object({ lot_code: nText, quantity: qty, expiration_date: nDate.optional() });
 
 const outboundAccepted = z.object({ code: text, atlas_sales_order_id: uuid, atlas_event_id: uuid.optional() });
 const documentRejected = z.object({
@@ -213,7 +213,7 @@ const receiptCompleted = z.object({
   invoice_access_key: nText, completed_at: isoDateTime,
   items: z.array(z.object({
     atlas_line_id: uuid, atlas_product_id: uuid, sku: text, expected_qty: qty, received_qty: qty, accepted_qty: qty,
-    rejected_qty: qty, lots: z.array(z.object({ lot_code: text, expiration_date: nDate, quantity: qty })),
+    rejected_qty: qty, lots: z.array(z.object({ lot_code: nText, expiration_date: nDate, quantity: qty })),
   })),
 });
 const divergenceRegistered = z.object({

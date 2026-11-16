@@ -75,3 +75,130 @@ begin
   end if;
 end;
 $$;
+
+-- SSO e checagem de acesso valem também em 'activating' (§6.1 passo 6–9): a
+-- equipe ORION (admin) precisa entrar para preparar endereços antes da carga
+-- inicial. O ORION já aceitava SSO com o vínculo em ativação.
+create or replace function public.fn_orion_access_status(p_company_id uuid, p_user_id uuid)
+returns jsonb language plpgsql stable security definer set search_path = public, pg_temp as $$
+declare
+  v_user public.users;
+  v_access public.orion_user_access;
+  v_int public.orion_integrations;
+  v_reason text;
+begin
+  select * into v_user from public.users where id = p_user_id and company_id = p_company_id;
+  select * into v_access from public.orion_user_access where company_id = p_company_id and user_id = p_user_id;
+  select * into v_int from public.orion_integrations where company_id = p_company_id;
+
+  if not coalesce((select cm.contracted and cm.enabled_by_company from public.company_modules cm
+                   where cm.company_id = p_company_id and cm.module_code = 'orion'), false) then
+    v_reason := 'module_disabled';
+  elsif not public.fn_company_operational(p_company_id) then
+    v_reason := 'company_suspended';
+  elsif v_int.company_id is null or v_int.status not in ('active','activating') then
+    v_reason := case when v_int.status = 'suspended' then 'company_suspended' else 'module_disabled' end;
+  elsif v_user.id is null or v_user.status <> 'active' then
+    v_reason := 'user_inactive';
+  elsif v_access.user_id is null or v_access.status <> 'active' then
+    v_reason := 'access_revoked';
+  end if;
+
+  if v_reason is not null then
+    return jsonb_build_object('atlas_user_id', p_user_id, 'atlas_company_id', p_company_id, 'active', false,
+      'reason', v_reason, 'access_version', coalesce(v_access.version, 0), 'checked_at', public.fn_orion_iso(now()));
+  end if;
+  return jsonb_build_object('atlas_user_id', p_user_id, 'atlas_company_id', p_company_id, 'active', true,
+    'orion_role', v_access.orion_role, 'access_version', v_access.version, 'email', v_user.email, 'name', v_user.name,
+    'warehouses', to_jsonb(v_access.warehouses), 'checked_at', public.fn_orion_iso(now()),
+    'orion_company_id', v_int.orion_company_id, 'orion_url', v_int.orion_url);
+end;
+$$;
+
+-- Idempotência (§3.5): o hash cobre só o conteúdo (type, version, aggregate,
+-- payload). Antes cobria o envelope inteiro e uma reentrega legítima do ORION
+-- (mesmo evento, outros campos de transporte) virava idempotency_conflict.
+create or replace function public.fn_orion_receive_event(p_company_id uuid, p_envelope jsonb, p_reprocess boolean default false)
+returns jsonb
+language plpgsql security definer set search_path = public, pg_temp as $$
+declare
+  v_id uuid := (p_envelope ->> 'id')::uuid;
+  v_type text := p_envelope ->> 'type';
+  v_agg_type text := p_envelope #>> '{aggregate,type}';
+  v_agg_id uuid := (p_envelope #>> '{aggregate,id}')::uuid;
+  v_seq bigint := (p_envelope #>> '{aggregate,sequence}')::bigint;
+  v_payload jsonb := coalesce(p_envelope -> 'payload', '{}'::jsonb);
+  v_hash text := md5(jsonb_build_object('type', p_envelope -> 'type', 'version', coalesce(p_envelope -> 'version', '1'::jsonb), 'aggregate', p_envelope -> 'aggregate', 'payload', coalesce(p_envelope -> 'payload', '{}'::jsonb))::text);
+  v_existing public.integration_inbox;
+  v_last bigint;
+  v_result text;
+  v_err text;
+begin
+  if (p_envelope ->> 'atlas_company_id')::uuid is distinct from p_company_id then
+    return jsonb_build_object('http', 403, 'body', jsonb_build_object('status', 'rejected', 'event_id', v_id,
+      'error', jsonb_build_object('code', 'company_mismatch', 'message', 'Envelope de outra empresa.', 'retryable', false)));
+  end if;
+  if public.fn_orion_integration_status(p_company_id) is null or public.fn_orion_integration_status(p_company_id) in ('pending','disabled') then
+    return jsonb_build_object('http', 403, 'body', jsonb_build_object('status', 'rejected', 'event_id', v_id,
+      'error', jsonb_build_object('code', 'company_not_linked', 'message', 'Empresa sem vínculo ativo com o ORION.', 'retryable', false)));
+  end if;
+
+  select * into v_existing from public.integration_inbox where event_id = v_id for update;
+  if found then
+    if v_existing.company_id <> p_company_id or (not p_reprocess and v_existing.envelope_hash is distinct from v_hash) then
+      return jsonb_build_object('http', 400, 'body', jsonb_build_object('status', 'rejected', 'event_id', v_id,
+        'error', jsonb_build_object('code', 'idempotency_conflict', 'message', 'Mesmo id com conteúdo diferente.', 'retryable', false)));
+    end if;
+    if v_existing.status in ('applied','ignored') then
+      return jsonb_build_object('http', 200, 'body', jsonb_build_object('status', 'accepted', 'event_id', v_id, 'duplicate', true));
+    end if;
+  end if;
+
+  -- Ordem por agregado (§3.5). O primeiro evento visto de um agregado é
+  -- aceito com qualquer sequência (o ORION numera também eventos que não
+  -- vêm ao ATLAS); depois disso, lacuna ⇒ out_of_order.
+  if v_seq is not null then
+    select max(aggregate_seq) into v_last from public.integration_inbox
+    where company_id = p_company_id and aggregate_type = v_agg_type and aggregate_id = v_agg_id
+      and status in ('applied','ignored') and event_id <> v_id;
+    if v_last is not null and v_seq <= v_last then
+      insert into public.integration_inbox (event_id, company_id, event_type, aggregate_type, aggregate_id, aggregate_seq, payload, envelope_hash, status, attempts, last_error, applied_at)
+      values (v_id, p_company_id, v_type, v_agg_type, v_agg_id, v_seq, v_payload, v_hash, 'ignored', 1, 'obsoleto: sequência ' || v_seq || ' ≤ ' || v_last, now())
+      on conflict (event_id) do update set status = 'ignored', last_error = excluded.last_error, applied_at = now();
+      return jsonb_build_object('http', 200, 'body', jsonb_build_object('status', 'accepted', 'event_id', v_id, 'duplicate', true));
+    end if;
+    if v_last is not null and v_seq > v_last + 1 and v_type not in ('stock.balance_snapshot') then
+      return jsonb_build_object('http', 409, 'body', jsonb_build_object('status', 'rejected', 'event_id', v_id,
+        'error', jsonb_build_object('code', 'out_of_order', 'message', 'Evento fora de ordem para o agregado.', 'retryable', true,
+          'expected_sequence', v_last + 1)));
+    end if;
+  end if;
+
+  insert into public.integration_inbox (event_id, company_id, event_type, aggregate_type, aggregate_id, aggregate_seq, payload, envelope_hash, status, attempts)
+  values (v_id, p_company_id, v_type, v_agg_type, v_agg_id, v_seq, v_payload, v_hash, 'received', 1)
+  on conflict (event_id) do update set attempts = public.integration_inbox.attempts + 1, status = 'received';
+
+  begin
+    perform set_config('app.orion_apply', 'on', true);
+    v_result := public.fn_orion_dispatch(p_company_id, v_id, v_type, v_payload);
+    perform set_config('app.orion_apply', '', true);
+  exception when others then
+    perform set_config('app.orion_apply', '', true);
+    v_err := sqlerrm;
+    update public.integration_inbox set status = 'failed', last_error = left(v_err, 2000) where event_id = v_id;
+    insert into public.audit_logs (company_id, actor_label, entity, entity_id, action, new_data)
+    values (p_company_id, 'orion.event_failed', 'integration_inbox', v_id, 'FAIL', jsonb_build_object('type', v_type, 'error', left(v_err, 500)));
+    return jsonb_build_object('http', 422, 'body', jsonb_build_object('status', 'rejected', 'event_id', v_id,
+      'error', jsonb_build_object('code', 'unknown_reference',
+        'message', regexp_replace(left(v_err, 500), '^ORION_UNKNOWN_REFERENCE: ', ''), 'retryable', false)));
+  end;
+
+  update public.integration_inbox set status = v_result, applied_at = now(), last_error = null where event_id = v_id;
+  update public.orion_integrations set last_inbound_success_at = now() where company_id = p_company_id;
+  perform public.fn_orion_resume_reconciliations(p_company_id, v_id);
+  if v_result = 'ignored' then
+    return jsonb_build_object('http', 200, 'body', jsonb_build_object('status', 'ignored', 'event_id', v_id, 'duplicate', false));
+  end if;
+  return jsonb_build_object('http', 202, 'body', jsonb_build_object('status', 'accepted', 'event_id', v_id, 'duplicate', false));
+end;
+$$;

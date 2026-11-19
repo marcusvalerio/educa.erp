@@ -31,7 +31,11 @@ const nextConfig: NextConfig = {
   // a pessoa vê a landing (sem sessão) ou vai para /app (com sessão).
   async rewrites() {
     return {
-      beforeFiles: [{ source: "/", destination: "/landing/index.html" }],
+      beforeFiles: [
+        { source: "/", destination: "/landing/index.html" },
+        // Home institucional (landing/home/), em endereço próprio.
+        { source: "/institucional", destination: "/landing/home/index.html" },
+      ],
       afterFiles: [],
       fallback: [],
     };

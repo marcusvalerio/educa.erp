@@ -110,8 +110,7 @@ describe("proxy × landing", () => {
 });
 
 describe("landing servida pelo app (public/landing)", () => {
-  // Tour detalhado do produto; a home institucional (index.html) é conferida abaixo.
-  const html = read("public/landing/produto.html");
+  const html = read("public/landing/index.html");
 
   test("todo arquivo citado existe (PDFs: a fonte versionada que o build copia)", () => {
     const urls = new Set<string>();
@@ -169,8 +168,8 @@ describe("landing servida pelo app (public/landing)", () => {
   });
 });
 
-describe("home institucional (public/landing/index.html)", () => {
-  const html = read("public/landing/index.html");
+describe("home institucional (/institucional → public/landing/home/index.html)", () => {
+  const html = read("public/landing/home/index.html");
 
   test("todo arquivo citado existe e a fonte versionada está em sincronia", () => {
     const urls = [...html.matchAll(/\s(?:src|href|poster|content)="(\/landing\/[^"#?]*)"/g)].map((m) => m[1]);
@@ -181,8 +180,9 @@ describe("home institucional (public/landing/index.html)", () => {
     assert.equal(html, read("landing/home/index.html"));
   });
 
-  test("leva ao login e ao tour completo do produto", () => {
+  test("servida em /institucional, pública; leva ao login e ao tour em /", () => {
+    assert.match(read("next.config.ts"), /source: "\/institucional", destination: "\/landing\/home\/index\.html"/);
     assert.match(html, /href="\/login"/);
-    assert.match(html, /href="\/landing\/produto\.html"/);
+    assert.match(html, /href="\/"/);
   });
 });

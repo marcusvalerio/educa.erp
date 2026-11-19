@@ -216,9 +216,10 @@ export async function resetPassword(config: NeonAuthConfig, token: string, newPa
 // ------------------------------------------------------------ administração (conta de serviço)
 // Exigem o cookie de sessão de um usuário com papel "admin" no Neon Auth.
 
-export async function adminCreateUser(config: NeonAuthConfig, adminCookie: string, input: { email: string; name: string }): Promise<NeonUser> {
-  // Sem senha: a pessoa cria a senha pelo link de primeiro acesso.
-  const res = await request(config, "/admin/create-user", { body: { email: input.email, name: input.name, role: "user" }, cookie: adminCookie });
+export async function adminCreateUser(config: NeonAuthConfig, adminCookie: string, input: { email: string; name: string; password?: string }): Promise<NeonUser> {
+  // Sem senha: a pessoa cria a senha pelo link de primeiro acesso. Com senha:
+  // só na migração do login antigo (a senha que a pessoa acabou de digitar).
+  const res = await request(config, "/admin/create-user", { body: { email: input.email, name: input.name, role: "user", ...(input.password ? { password: input.password } : {}) }, cookie: adminCookie });
   if (res.status !== 200) fail(res);
   const user = toUser((res.body as { user?: unknown } | null)?.user);
   if (!user) throw new NeonAuthError("UNAVAILABLE", 502, "Resposta de criação inesperada.");
@@ -242,5 +243,10 @@ export async function adminMarkEmailVerified(config: NeonAuthConfig, adminCookie
 
 export async function adminRevokeUserSessions(config: NeonAuthConfig, adminCookie: string, userId: string): Promise<void> {
   const res = await request(config, "/admin/revoke-user-sessions", { body: { userId }, cookie: adminCookie });
+  if (res.status !== 200) fail(res);
+}
+
+export async function adminSetUserPassword(config: NeonAuthConfig, adminCookie: string, userId: string, newPassword: string): Promise<void> {
+  const res = await request(config, "/admin/set-user-password", { body: { userId, newPassword }, cookie: adminCookie });
   if (res.status !== 200) fail(res);
 }

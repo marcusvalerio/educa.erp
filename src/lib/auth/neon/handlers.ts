@@ -19,7 +19,8 @@ import {
   type ClientHints,
 } from "./client";
 import { buildNeonPasswordLinkUrl } from "./links";
-import { isTrustedAccountRequest, resetPasswordFlow, resolveNeonSession, signInFlow } from "./flows";
+import { isTrustedAccountRequest, migrateLegacyLogin, resetPasswordFlow, resolveNeonSession, signInFlow } from "./flows";
+import { legacyDeps, legacyLoginEnabled } from "./legacy";
 import { appOrigin, bridgeFor, neonConfig, withServiceSession } from "./server";
 import { resolveCurrentNeonSession } from "./request";
 
@@ -84,11 +85,22 @@ export async function neonSignIn(request: NextRequest) {
     const input = await body(request, signInSchema);
     const config = neonConfig(request.nextUrl.origin);
     const hints = hintsOf(request);
-    const outcome = await signInFlow(input.email, input.password, {
-      signIn: (e, p) => signInWithPassword(config, e, p, hints),
-      resolve: (cookie) => resolveNeonSession(cookie, { getSession: (c) => getSession(config, c, hints), bridge: bridgeFor(config) }),
-      signOut: (cookie) => signOut(config, cookie, hints),
-    }).catch(neonError);
+    const deps = {
+      signIn: (e: string, p: string) => signInWithPassword(config, e, p, hints),
+      resolve: (cookie: string) => resolveNeonSession(cookie, { getSession: (c) => getSession(config, c, hints), bridge: bridgeFor(config) }),
+      signOut: (cookie: string) => signOut(config, cookie, hints),
+    };
+    const outcome = await signInFlow(input.email, input.password, deps).catch(async (error) => {
+      // Primeira entrada depois da troca de provedor: migra a conta do login antigo.
+      if (error instanceof NeonAuthError && error.code === "INVALID_CREDENTIALS" && legacyLoginEnabled()) {
+        const migrated = await migrateLegacyLogin(input.email, input.password, legacyDeps(config)).catch((e) => {
+          console.error("[auth] migração do login antigo falhou:", e instanceof Error ? e.message : "erro");
+          return false;
+        });
+        if (migrated) return signInFlow(input.email, input.password, deps).catch(neonError);
+      }
+      return neonError(error);
+    });
     if (outcome.status !== "ok") {
       throw new ApiError("ACCESS_NOT_READY", "Seu acesso ao ATLAS.ERP ainda não foi liberado. Use o link do convite enviado para o seu e-mail.", 403);
     }

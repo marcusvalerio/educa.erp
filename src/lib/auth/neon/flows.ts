@@ -176,3 +176,34 @@ export async function provisionIdentity(input: { email: string; name: string }, 
   await deps.sendFirstAccess(email);
   return { delivered: true, authUserId };
 }
+
+// ------------------------------------------------------------ migração do login antigo (Supabase Auth)
+// Na primeira entrada depois da troca de provedor: o Neon recusou porque a
+// conta ainda não existe lá. Se o e-mail e a senha conferem no Supabase Auth
+// e a conta ainda NÃO foi migrada (sem vínculo com o Neon), cria a conta no
+// Neon Auth com a mesma senha, confirma o e-mail e vincula ao mesmo
+// auth_user_id. Conta já migrada nunca volta a consultar o Supabase: uma
+// senha antiga não sobrescreve a senha atual.
+
+export type LegacyDeps = {
+  verifyLegacy: (email: string, password: string) => Promise<{ authUserId: string; name: string } | null>;
+  isMigrated: (authUserId: string) => Promise<boolean>;
+  findNeonUser: (email: string) => Promise<NeonUser | null>;
+  createNeonUser: (email: string, name: string, password: string) => Promise<NeonUser>;
+  setPassword: (userId: string, password: string) => Promise<void>;
+  markEmailVerified: (userId: string) => Promise<void>;
+  link: (neonUserId: string, email: string, authUserId: string) => Promise<void>;
+};
+
+/** true = conta migrada agora (o login pode ser repetido no Neon). */
+export async function migrateLegacyLogin(email: string, password: string, deps: LegacyDeps): Promise<boolean> {
+  const legacy = await deps.verifyLegacy(email, password);
+  if (!legacy) return false;
+  if (await deps.isMigrated(legacy.authUserId)) return false;
+  const existing = await deps.findNeonUser(email);
+  const user = existing ?? (await deps.createNeonUser(email, legacy.name, password));
+  if (existing) await deps.setPassword(existing.id, password);
+  await deps.markEmailVerified(user.id);
+  await deps.link(user.id, email, legacy.authUserId);
+  return true;
+}

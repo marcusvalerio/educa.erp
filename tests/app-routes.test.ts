@@ -110,7 +110,8 @@ describe("proxy × landing", () => {
 });
 
 describe("landing servida pelo app (public/landing)", () => {
-  const html = read("public/landing/index.html");
+  // Tour detalhado do produto; a home institucional (index.html) é conferida abaixo.
+  const html = read("public/landing/produto.html");
 
   test("todo arquivo citado existe (PDFs: a fonte versionada que o build copia)", () => {
     const urls = new Set<string>();
@@ -165,5 +166,23 @@ describe("landing servida pelo app (public/landing)", () => {
     assert.match(config, /source: "\/", destination: "\/landing\/index\.html"/);
     assert.match(config, /source: "\/landing\/index\.html", destination: "\/", permanent: true/);
     assert.match(html, /<link rel="canonical" href="https:\/\/educaerp\.vercel\.app\/">/);
+  });
+});
+
+describe("home institucional (public/landing/index.html)", () => {
+  const html = read("public/landing/index.html");
+
+  test("todo arquivo citado existe e a fonte versionada está em sincronia", () => {
+    const urls = [...html.matchAll(/\s(?:src|href|poster|content)="(\/landing\/[^"#?]*)"/g)].map((m) => m[1]);
+    assert.ok(urls.length > 8, `poucos arquivos: ${urls.length}`);
+    for (const url of urls) assert.ok(existsSync(path.join(ROOT, "public", url)), url);
+    const css = read("public/landing/home/home.css");
+    for (const m of css.matchAll(/url\((fonts\/[^)]+)\)/g)) assert.ok(existsSync(path.join(ROOT, "public/landing/home", m[1])), m[1]);
+    assert.equal(html, read("landing/home/index.html"));
+  });
+
+  test("leva ao login e ao tour completo do produto", () => {
+    assert.match(html, /href="\/login"/);
+    assert.match(html, /href="\/landing\/produto\.html"/);
   });
 });

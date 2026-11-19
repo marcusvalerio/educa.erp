@@ -15,7 +15,7 @@
 //      scripts/copy-landing-manuals.mjs);
 //   3. escreve index.html com o conteúdo, styles.css e main.js.
 
-import { mkdir, copyFile, readFile, writeFile, rm, stat } from "node:fs/promises";
+import { mkdir, copyFile, cp, readFile, writeFile, rm, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -1391,10 +1391,16 @@ ${heroPreload()}
 <link rel="preload" href="fonts/instrument-serif-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/dm-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles.css">`;
+  // O tour detalhado do produto fica em /landing/produto.html; a página
+  // servida em "/" é a home institucional (landing/home/).
   await writeFile(
-    path.join(OUT, "index.html"),
+    path.join(OUT, "produto.html"),
     atBase(`<!doctype html>\n<html lang="pt-BR">\n<head>\n${head}\n</head>\n<body>\n${html}\n${SCRIPTS.map((f) => `<script src="${f}" defer></script>`).join("\n")}\n</body>\n</html>\n`),
   );
+
+  await cp(path.join(ROOT, "landing/home"), path.join(OUT, "home"), { recursive: true });
+  await rm(path.join(OUT, "home/index.html"));
+  await copyFile(path.join(ROOT, "landing/home/index.html"), path.join(OUT, "index.html"));
 
   if (previewAt) {
     // Página única para a prévia: sem doctype/html/head/body (o publicador envolve),

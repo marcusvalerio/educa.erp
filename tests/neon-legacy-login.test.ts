@@ -12,6 +12,7 @@ function deps(over: Partial<LegacyDeps> = {}) {
     findNeonUser: async () => null,
     createNeonUser: async (email, name, password) => (calls.push(`create:${email}:${name}:${password}`), { id: "neon-1", email, emailVerified: false } as never),
     setPassword: async (id, p) => void calls.push(`set:${id}:${p}`),
+    revokeSessions: async (id) => void calls.push(`revoke:${id}`),
     markEmailVerified: async (id) => void calls.push(`verify:${id}`),
     link: async (n, e, a) => void calls.push(`link:${n}:${e}:${a}`),
     ...over,
@@ -37,8 +38,8 @@ test("conta já migrada: a senha antiga nunca sobrescreve a atual", async () => 
   assert.deepEqual(calls, []);
 });
 
-test("conta já existe no Neon sem vínculo (convite antigo): grava a senha e vincula", async () => {
+test("conta já existe no Neon sem vínculo (convite antigo ou cadastro aberto): grava a senha, derruba as sessões e vincula", async () => {
   const { d, calls } = deps({ findNeonUser: async (email) => ({ id: "neon-9", email, emailVerified: false }) as never });
   assert.equal(await migrateLegacyLogin("ana@x.com", "certa", d), true);
-  assert.deepEqual(calls, ["set:neon-9:certa", "verify:neon-9", `link:neon-9:ana@x.com:${AUTH_ID}`]);
+  assert.deepEqual(calls, ["set:neon-9:certa", "revoke:neon-9", "verify:neon-9", `link:neon-9:ana@x.com:${AUTH_ID}`]);
 });

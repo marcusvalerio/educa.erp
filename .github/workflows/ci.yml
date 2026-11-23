@@ -1,0 +1,50 @@
+# Verificação de código em todo pull request e em push na main:
+# lint, typecheck e a suíte de testes completa, incluindo os testes de banco
+# (tests/*-db.test.ts) contra um PostgreSQL descartável montado com o plano
+# equivalente à produção (scripts/ci/build-test-db.sh). Sem segredos.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Banco dos testes
+        env:
+          DATABASE_ADMIN_URL: postgres://postgres@127.0.0.1:5432
+        run: scripts/ci/build-test-db.sh educa_ci
+      - name: Testes
+        env:
+          POC_DATABASE_OWNER_URL: postgres://postgres@127.0.0.1:5432/educa_ci
+        run: npm test

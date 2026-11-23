@@ -21,6 +21,7 @@ import {
 } from "@/lib/database/pg/postgrest-compat";
 import { sessionPreamble } from "@/lib/database/pg/client";
 import { parseDataBackend } from "@/lib/database/backend";
+import { searchFilter } from "@/lib/database/search-filter";
 
 const catalog: Catalog = {
   relationships: [
@@ -130,6 +131,14 @@ describe("select → SQL", () => {
     assert.throws(() => parseLogic("code.regex.x", "or"), /Filtro não suportado/);
     assert.throws(() => parseLogic("not.code.eq.x", "or"), /Filtro não suportado/, "negação é col.not.op no PostgREST");
     assert.equal(parseLogic("not.and(a.eq.1,b.eq.2)", "or")("t0", { values: [], add() { return "$"; } } as never), 'not (t0."a" = $ and t0."b" = $)');
+  });
+
+  test("busca livre: vírgula, parênteses e aspas no termo não quebram o .or()", async () => {
+    const expr = searchFilter(["code", "name"], ' Silva, João (filial) "x"\\ 50%_* ');
+    const p = { values: [] as unknown[], add(v: unknown) { this.values.push(v); return `$${this.values.length}`; } };
+    const sql = parseLogic(expr, "or")("t0", p as never);
+    assert.equal(sql, 't0."code" ilike $1 or t0."name" ilike $2');
+    assert.deepEqual(p.values, ["%Silva, João (filial) x 50%", "%Silva, João (filial) x 50%"]);
   });
 
   test("erros de montagem ficam para o await, como no supabase-js (nada executa)", async () => {

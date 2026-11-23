@@ -56,6 +56,8 @@ export async function POST(request: NextRequest) {
       user_agent: (request.headers.get("user-agent") ?? "").slice(0, 400) || null,
     });
   if (error) {
+    // Limite de envios (0127): mesmo e-mail repetido ou excesso no minuto.
+    if ((error as { code?: string }).code === "P0429") return fail(429, "Muitos envios em pouco tempo. Tente novamente mais tarde.");
     console.error("[landing] contato não gravado:", error.message);
     return fail(500, "Não foi possível registrar agora. Tente novamente em instantes.");
   }

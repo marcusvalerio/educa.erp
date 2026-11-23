@@ -2,7 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { readTemporaryMeta } from "@/lib/auth/temporary-password";
-import { adminCreateUser, adminFindUserByEmail, adminMarkEmailVerified, adminSetUserPassword, type NeonAuthConfig } from "./client";
+import { adminCreateUser, adminFindUserByEmail, adminMarkEmailVerified, adminRevokeUserSessions, adminSetUserPassword, type NeonAuthConfig } from "./client";
 import type { LegacyDeps } from "./flows";
 import { withServiceSession } from "./server";
 
@@ -60,6 +60,7 @@ export function legacyDeps(config: NeonAuthConfig): LegacyDeps {
     findNeonUser: (email) => withServiceSession(config, (admin) => adminFindUserByEmail(config, admin, email)),
     createNeonUser: (email, name, password) => withServiceSession(config, (admin) => adminCreateUser(config, admin, { email, name, password })),
     setPassword: (userId, password) => withServiceSession(config, (admin) => adminSetUserPassword(config, admin, userId, password)),
+    revokeSessions: (userId) => withServiceSession(config, (admin) => adminRevokeUserSessions(config, admin, userId)),
     markEmailVerified: (userId) => withServiceSession(config, (admin) => adminMarkEmailVerified(config, admin, userId)),
     link,
   };

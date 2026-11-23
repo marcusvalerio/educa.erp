@@ -45,8 +45,8 @@ Nada foi alterado em produção, no Supabase ou nas branches do Neon nesta rodad
 | Item | Estado | |
 |---|---|---|
 | Owner `33e3fb0b…` | existe; sem senha, `emailVerified=false` | ⚠️ esperado: primeiro acesso por "Esqueci a senha" (runbook passo 18) |
-| `email_password.enabled` | **false** | ❌ 👤 |
-| `allow_sign_up` | **true** | ❌ 👤 |
+| `email_password.enabled` | true (conferido em 23/11/2026) | ✅ |
+| `allow_sign_up` | false (conferido em 23/11/2026) | ✅ |
 | `allow_localhost` | false | ✅ |
 | OAuth | nenhum | ✅ |
 | Trusted origins | só `https://educaerp.vercel.app` | ✅ |

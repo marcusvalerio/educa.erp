@@ -44,6 +44,7 @@ export type NeonSession = {
 
 export type NeonErrorCode =
   | "INVALID_CREDENTIALS"
+  | "INVALID_PASSWORD"
   | "BANNED"
   | "RATE_LIMITED"
   | "INVALID_TOKEN"
@@ -124,6 +125,7 @@ function fail(res: RawResponse): never {
   const retry = Number(res.headers.get("x-retry-after") ?? res.headers.get("retry-after"));
   if (res.status === 429) throw new NeonAuthError("RATE_LIMITED", 429, "Muitas tentativas. Aguarde e tente novamente.", Number.isFinite(retry) ? retry : null);
   if (code === "INVALID_EMAIL_OR_PASSWORD") throw new NeonAuthError("INVALID_CREDENTIALS", 401, "E-mail ou senha inválidos.");
+  if (code === "INVALID_PASSWORD") throw new NeonAuthError("INVALID_PASSWORD", 400, "Senha atual incorreta.");
   if (code === "BANNED_USER") throw new NeonAuthError("BANNED", 403, "Acesso bloqueado.");
   if (code === "INVALID_TOKEN") throw new NeonAuthError("INVALID_TOKEN", 400, "Link inválido ou expirado.");
   if (/PASSWORD_TOO_(SHORT|LONG)/.test(code)) throw new NeonAuthError("WEAK_PASSWORD", 400, "Senha fora da política.");
@@ -199,6 +201,16 @@ export async function signOut(config: NeonAuthConfig, cookie: string, hints?: Cl
 export async function revokeOtherSessions(config: NeonAuthConfig, cookie: string, hints?: ClientHints): Promise<void> {
   const res = await request(config, "/revoke-other-sessions", { body: {}, cookie, hints });
   if (res.status !== 200) fail(res);
+}
+
+/**
+ * Troca a senha do usuário logado (confere a senha atual) e encerra as demais
+ * sessões. Devolve o novo cookie de sessão, quando o Neon Auth o reemitiu.
+ */
+export async function changePassword(config: NeonAuthConfig, cookie: string, currentPassword: string, newPassword: string, hints?: ClientHints): Promise<string | null> {
+  const res = await request(config, "/change-password", { body: { currentPassword, newPassword, revokeOtherSessions: true }, cookie, hints });
+  if (res.status !== 200) fail(res);
+  return sessionCookieFrom(res.setCookies) || null;
 }
 
 /** Sempre a mesma resposta ao chamador (sem enumeração). Erros só de infraestrutura sobem. */

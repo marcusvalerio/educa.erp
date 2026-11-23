@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEV_ACTOR_LABEL } from "./constants";
+import { searchFilter } from "./search-filter";
 import { ApiError, blockedByDependentsError, notFoundError, translatePostgresError } from "./errors";
 import type { AuditLogRow } from "./schema";
 import type { BaseEntity, StatusCadastro } from "@/lib/cadastros/types";
@@ -119,8 +120,7 @@ export function createTableRepository<Entity extends BaseEntity, Row extends { i
       }
     }
     if (params.search && params.search.trim() && config.searchColumns.length > 0) {
-      const term = params.search.trim().replace(/[%_]/g, "");
-      query = query.or(config.searchColumns.map((col) => `${col}.ilike.%${term}%`).join(","));
+      query = query.or(searchFilter(config.searchColumns, params.search));
     }
 
     query = query.order(sortColumn, { ascending: params.order !== "desc" }).range(from, to);
@@ -253,3 +253,4 @@ export function createTableRepository<Entity extends BaseEntity, Row extends { i
 }
 
 export { ApiError };
+

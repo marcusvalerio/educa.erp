@@ -6,6 +6,23 @@ migração. **Nenhum foi corrigido** nesta branch. O E2E os trata como "linha de
 própria, com teste, depois do cutover ou antes, mas sem misturar com a troca de
 banco.
 
+**Aplicado em produção em 23/11/2026** (Neon `educa-erp-prod`, branch
+`producao-20261118`, banco `neondb`): 0125, 0126, 0127 e 0128, depois de
+testadas numa cópia da produção. Ponto de restauração anterior: LSN
+`0/8CE2BC0` (17:12 UTC). A branch `homolog` (banco `educa`) está parada por
+volta da 0095 e não recebeu essas migrations.
+
+**Atualização:** #3 corrigido em `src/lib/database/search-filter.ts` (termo
+entre aspas); #4 e #5 corrigidos pela migration 0126 (precisa ser aplicada
+em produção/homologação); #6 corrigido pelas 0113 e 0121; #7 corrigido pela
+0128 (empresas novas e o "leitura" das existentes). #11 resolvido: em 23/11/2026 o Neon Auth de produção
+(`educa-auth-prod`) já tinha login por senha ligado e cadastro público
+desligado; o cadastro público da homologação (`educa-erp-prod`/`homolog`)
+foi desligado; a migração do login
+antigo agora derruba as sessões de uma conta Neon pré-existente antes de
+vinculá-la. #8 corrigido: "Trocar senha" no menu do usuário
+(`POST /api/auth/password/change`, Supabase Auth e Neon Auth).
+
 Legenda de prova: **SQL** = conferido por leitura no Supabase de produção;
 **E2E** = reproduzido pelo app contra o esquema de produção (local e/ou Neon).
 

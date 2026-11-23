@@ -191,6 +191,8 @@ export type LegacyDeps = {
   findNeonUser: (email: string) => Promise<NeonUser | null>;
   createNeonUser: (email: string, name: string, password: string) => Promise<NeonUser>;
   setPassword: (userId: string, password: string) => Promise<void>;
+  /** Encerra todas as sessões abertas da conta no Neon Auth. */
+  revokeSessions: (userId: string) => Promise<void>;
   markEmailVerified: (userId: string) => Promise<void>;
   link: (neonUserId: string, email: string, authUserId: string) => Promise<void>;
 };
@@ -202,7 +204,14 @@ export async function migrateLegacyLogin(email: string, password: string, deps: 
   if (await deps.isMigrated(legacy.authUserId)) return false;
   const existing = await deps.findNeonUser(email);
   const user = existing ?? (await deps.createNeonUser(email, legacy.name, password));
-  if (existing) await deps.setPassword(existing.id, password);
+  if (existing) {
+    // Conta criada no Neon por outro caminho (convite antigo ou cadastro
+    // aberto). Quem a criou pode ter sessão aberta: troca a senha e derruba
+    // todas as sessões antes de vincular, para que só quem provou a senha do
+    // login antigo entre na conta vinculada.
+    await deps.setPassword(existing.id, password);
+    await deps.revokeSessions(existing.id);
+  }
   await deps.markEmailVerified(user.id);
   await deps.link(user.id, email, legacy.authUserId);
   return true;

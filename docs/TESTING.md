@@ -1,5 +1,18 @@
 # Testes — Fase 2 / 2b
 
+## 0. CI e testes de banco
+
+`.github/workflows/ci.yml` roda em todo pull request e em push na `main`:
+lint, typecheck e `npm test` completo. Os testes de banco
+(`tests/*-db.test.ts`) usam um PostgreSQL 16 descartável montado por
+`scripts/ci/build-test-db.sh` (plano equivalente à produção + migrations
+posteriores + `scripts/ci/seed-db-tests.sql`). Localmente:
+
+```bash
+DATABASE_ADMIN_URL=postgres://postgres@127.0.0.1:5432 scripts/ci/build-test-db.sh educa_ci
+POC_DATABASE_OWNER_URL=postgres://postgres@127.0.0.1:5432/educa_ci npm test
+```
+
 ## 1. Testes automatizados (não dependem de credenciais do Supabase)
 
 ```bash

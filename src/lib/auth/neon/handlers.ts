@@ -35,7 +35,7 @@ function neonOnly() {
 }
 
 /** Só aceita chamadas do próprio app (ver isTrustedAccountRequest: login CSRF). */
-function sameAppOnly(request: NextRequest) {
+export function sameAppOnly(request: NextRequest) {
   const own = request.nextUrl.origin;
   const allowed = [own];
   try {
@@ -50,7 +50,7 @@ function sameAppOnly(request: NextRequest) {
   if (!trusted) throw new ApiError("FORBIDDEN_ORIGIN", "Requisição recusada.", 403);
 }
 
-function hintsOf(request: NextRequest): ClientHints {
+export function hintsOf(request: NextRequest): ClientHints {
   return { forwardedFor: request.headers.get("x-forwarded-for"), userAgent: request.headers.get("user-agent") };
 }
 

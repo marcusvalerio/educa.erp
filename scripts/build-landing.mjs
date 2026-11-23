@@ -56,9 +56,10 @@ const MARK = { modules: [[3, 3, 16, 8], [21, 3, 8, 16], [13, 21, 16, 8], [3, 13,
 const markRects = (modCls, coreCls) =>
   MARK.modules.map(([x, y, w, h]) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${MARK.r}" ${modCls}/>`).join("") +
   `<rect x="${MARK.core[0]}" y="${MARK.core[1]}" width="${MARK.core[2]}" height="${MARK.core[3]}" rx="${MARK.r}" ${coreCls}/>`;
-// Só o símbolo (cabeçalho, rodapé): módulos em currentColor, centro em fogo.
+// Símbolo no cabeçalho e no rodapé: o mesmo da aba (placa escura, módulos
+// brancos, centro em fogo), igual sobre fundo claro ou escuro.
 const mark = (size = 22, cls = "mark") =>
-  `<svg class="${cls}" viewBox="0 0 32 32" width="${size}" height="${size}" aria-hidden="true">${markRects('class="mark-mod"', 'class="mark-core"')}</svg>`;
+  `<svg class="${cls}" viewBox="0 0 32 32" width="${size}" height="${size}" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#100c08"/><g transform="translate(16 16) scale(.64) translate(-16 -16)">${markRects('fill="#f3f4f5"', 'fill="#ff9408"')}</g></svg>`;
 // Em placa (favicon): placa escura, módulos claros, centro em fogo.
 const markTile = () =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#100c08"/><g transform="translate(16 16) scale(.64) translate(-16 -16)">${markRects('fill="#f3f4f5"', 'fill="#ff9408"')}</g></svg>`;

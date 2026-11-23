@@ -8,7 +8,11 @@ banco.
 
 **Atualização:** #3 corrigido em `src/lib/database/search-filter.ts` (termo
 entre aspas); #4 e #5 corrigidos pela migration 0126 (precisa ser aplicada
-em produção/homologação); #6 corrigido pelas 0113 e 0121.
+em produção/homologação); #6 corrigido pelas 0113 e 0121; #7 corrigido pela
+0128 (empresas novas e o "leitura" das existentes). #11 continua sendo
+configuração do Neon Auth (desligar `allow_sign_up`); a migração do login
+antigo agora derruba as sessões de uma conta Neon pré-existente antes de
+vinculá-la.
 
 Legenda de prova: **SQL** = conferido por leitura no Supabase de produção;
 **E2E** = reproduzido pelo app contra o esquema de produção (local e/ou Neon).

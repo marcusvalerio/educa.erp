@@ -12,7 +12,8 @@ em produção/homologação); #6 corrigido pelas 0113 e 0121; #7 corrigido pela
 0128 (empresas novas e o "leitura" das existentes). #11 continua sendo
 configuração do Neon Auth (desligar `allow_sign_up`); a migração do login
 antigo agora derruba as sessões de uma conta Neon pré-existente antes de
-vinculá-la.
+vinculá-la. #8 corrigido: "Trocar senha" no menu do usuário
+(`POST /api/auth/password/change`, Supabase Auth e Neon Auth).
 
 Legenda de prova: **SQL** = conferido por leitura no Supabase de produção;
 **E2E** = reproduzido pelo app contra o esquema de produção (local e/ou Neon).

@@ -9,8 +9,10 @@ banco.
 **Atualização:** #3 corrigido em `src/lib/database/search-filter.ts` (termo
 entre aspas); #4 e #5 corrigidos pela migration 0126 (precisa ser aplicada
 em produção/homologação); #6 corrigido pelas 0113 e 0121; #7 corrigido pela
-0128 (empresas novas e o "leitura" das existentes). #11 continua sendo
-configuração do Neon Auth (desligar `allow_sign_up`); a migração do login
+0128 (empresas novas e o "leitura" das existentes). #11 resolvido: em 23/11/2026 o Neon Auth de produção
+(`educa-auth-prod`) já tinha login por senha ligado e cadastro público
+desligado; o cadastro público da homologação (`educa-erp-prod`/`homolog`)
+foi desligado; a migração do login
 antigo agora derruba as sessões de uma conta Neon pré-existente antes de
 vinculá-la. #8 corrigido: "Trocar senha" no menu do usuário
 (`POST /api/auth/password/change`, Supabase Auth e Neon Auth).

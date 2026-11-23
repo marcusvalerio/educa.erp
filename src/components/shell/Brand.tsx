@@ -1,18 +1,21 @@
 import { cn } from "@/lib/cn";
 import { BRAND_MARK, PRODUCT_WORDMARK } from "@/lib/brand";
 
-// Símbolo do produto — "Núcleo": quatro módulos em torno de um centro em
-// Merin's Fire (geometria em BRAND_MARK; a mesma de src/app/icon.svg e da
-// landing). Os módulos usam currentColor, então funciona sobre claro e escuro.
+// Símbolo do produto — "Núcleo": quatro módulos brancos em torno de um centro
+// em Merin's Fire, sobre placa escura. É o mesmo desenho de src/app/icon.svg
+// (aba do navegador) e da landing, igual em tema claro e escuro.
 
 export function BrandMark({ className, size = 22 }: { className?: string; size?: number }) {
   const { modules, core, radius } = BRAND_MARK;
   return (
     <svg viewBox="0 0 32 32" width={size} height={size} aria-hidden className={cn("shrink-0", className)}>
-      {modules.map(([x, y, w, h]) => (
-        <rect key={`${x}-${y}`} x={x} y={y} width={w} height={h} rx={radius} className="fill-current" />
-      ))}
-      <rect x={core[0]} y={core[1]} width={core[2]} height={core[3]} rx={radius} className="fill-accent" />
+      <rect width="32" height="32" rx="7" fill="#100c08" />
+      <g transform="translate(16 16) scale(.64) translate(-16 -16)">
+        {modules.map(([x, y, w, h]) => (
+          <rect key={`${x}-${y}`} x={x} y={y} width={w} height={h} rx={radius} fill="#f3f4f5" />
+        ))}
+        <rect x={core[0]} y={core[1]} width={core[2]} height={core[3]} rx={radius} fill="#ff9408" />
+      </g>
     </svg>
   );
 }

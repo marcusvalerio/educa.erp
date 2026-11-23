@@ -19,11 +19,14 @@ export const metadata: Metadata = {
 
 const Mark = () => (
   <svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true">
-    <rect x="3" y="3" width="16" height="8" rx="1.4" fill="#f3f4f5" />
-    <rect x="21" y="3" width="8" height="16" rx="1.4" fill="#f3f4f5" />
-    <rect x="13" y="21" width="16" height="8" rx="1.4" fill="#f3f4f5" />
-    <rect x="3" y="13" width="8" height="16" rx="1.4" fill="#f3f4f5" />
-    <rect x="13" y="13" width="6" height="6" rx="1.4" fill="#ff9408" />
+    <rect width="32" height="32" rx="7" fill="#100c08" />
+    <g transform="translate(16 16) scale(.64) translate(-16 -16)">
+      <rect x="3" y="3" width="16" height="8" rx="1.4" fill="#f3f4f5" />
+      <rect x="21" y="3" width="8" height="16" rx="1.4" fill="#f3f4f5" />
+      <rect x="13" y="21" width="16" height="8" rx="1.4" fill="#f3f4f5" />
+      <rect x="3" y="13" width="8" height="16" rx="1.4" fill="#f3f4f5" />
+      <rect x="13" y="13" width="6" height="6" rx="1.4" fill="#ff9408" />
+    </g>
   </svg>
 );
 

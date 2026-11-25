@@ -78,6 +78,8 @@ const purchaseOrderItemSchema = z.object({
 
 export const createPurchaseOrderSchema = z.object({
   supplierId: uuidField("Selecione o fornecedor."),
+  currencyCode: z.string().trim().regex(/^[A-Z]{3}$/, "Moeda inválida.").optional(),
+  exchangeRate: z.number().positive("A taxa de câmbio deve ser maior que zero.").optional(),
   purchaseRequestId: optionalUuid,
   purchaseQuoteId: optionalUuid,
   paymentTerms: z.string().trim().optional(),

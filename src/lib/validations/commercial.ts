@@ -75,6 +75,8 @@ const salesOrderItemSchema = z.object({
 
 export const createSalesOrderSchema = z.object({
   customerId: uuidField("Selecione o cliente."),
+  currencyCode: z.string().trim().regex(/^[A-Z]{3}$/, "Moeda inválida.").optional(),
+  exchangeRate: z.number().positive("A taxa de câmbio deve ser maior que zero.").optional(),
   salesQuoteId: optionalUuid,
   salesRepresentativeId: optionalUuid,
   priceListId: optionalUuid,

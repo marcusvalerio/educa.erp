@@ -59,7 +59,22 @@ export function moneyCol<T extends Row>(key: string, header: string, opts: Opts<
     align: "right",
     value: (row) => Number(get(row, key) ?? 0),
     exportValue: (row) => (get(row, key) === null || get(row, key) === undefined ? "" : Number(get(row, key)).toFixed(2).replace(".", ",")),
-    cell: (row) => formatCurrencyBRL(get(row, key) === null || get(row, key) === undefined ? null : Number(get(row, key))),
+    cell: (row) => {
+      const raw = get(row, key);
+      const brl = formatCurrencyBRL(raw === null || raw === undefined ? null : Number(raw));
+      // Pedido/título em moeda estrangeira (0130): valor gravado em BRL;
+      // mostra também o valor na moeda original (BRL / taxa).
+      const cur = get(row, "currency_code");
+      const fx = Number(get(row, "exchange_rate") ?? 1);
+      if (typeof cur !== "string" || cur === "BRL" || !(fx > 0) || raw === null || raw === undefined) return brl;
+      const orig = (Number(raw) / fx).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return (
+        <span className="flex flex-col items-end leading-tight">
+          <span>{brl}</span>
+          <span className="text-xs text-muted-foreground" title={`Câmbio: R$ ${fx} por 1 ${cur}`}>{cur} {orig}</span>
+        </span>
+      );
+    },
     serverSortKey: key,
     width: "8.5rem",
     ...opts,

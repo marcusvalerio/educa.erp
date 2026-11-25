@@ -21,7 +21,10 @@ export const SUBCATEGORIAS_PRODUTO = [
 
 export const UNIDADES_PRODUTO = ["UN", "PC", "PAR", "KIT", "CX", "PCT", "FD", "PAL", "KG", "G", "T", "L", "ML", "M", "CM", "RL"] as const;
 
-export const TIPOS_PESSOA = ["Pessoa Física", "Pessoa Jurídica"] as const;
+export const TIPOS_PESSOA = ["Pessoa Física", "Pessoa Jurídica", "Estrangeiro"] as const;
+// País (ISO 3166-1 alfa-2) — principais parceiros; "BR" = nacional.
+export const PAISES = ["BR", "US", "CN", "AR", "CL", "UY", "PY", "MX", "CO", "PE", "DE", "IT", "ES", "PT", "FR", "GB", "NL", "JP", "KR", "IN", "CA"];
+export const MOEDAS = ["BRL", "USD", "EUR", "CNY", "GBP", "ARS", "JPY"];
 
 export const CONDICOES_PAGAMENTO = [
   "À vista",

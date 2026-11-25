@@ -90,6 +90,8 @@ const baseCustomerRow: CustomerRow = {
   name: "Cliente Teste",
   trade_name: null,
   document: "12.345.678/0001-90",
+  country_code: "BR",
+  currency_code: "BRL",
   state_registration: null,
   email: null,
   phone: null,

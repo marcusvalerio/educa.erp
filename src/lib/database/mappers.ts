@@ -56,12 +56,14 @@ function statusToDb(status: StatusCadastro | undefined): DbStatus | undefined {
   return status === "Ativo" ? "active" : "inactive";
 }
 
-function tipoFromDb(type: "individual" | "company"): TipoPessoa {
+function tipoFromDb(type: "individual" | "company" | "foreign"): TipoPessoa {
+  if (type === "foreign") return "Estrangeiro";
   return type === "individual" ? "Pessoa Física" : "Pessoa Jurídica";
 }
 
-function tipoToDb(tipo: TipoPessoa | undefined): "individual" | "company" | undefined {
+function tipoToDb(tipo: TipoPessoa | undefined): "individual" | "company" | "foreign" | undefined {
   if (tipo === undefined) return undefined;
+  if (tipo === "Estrangeiro") return "foreign";
   return tipo === "Pessoa Física" ? "individual" : "company";
 }
 
@@ -219,6 +221,8 @@ export function customerFromRow(row: CustomerRow): Cliente {
     nome: row.name,
     nomeFantasia: row.trade_name ?? "",
     documento: row.document,
+    pais: row.country_code ?? "BR",
+    moeda: row.currency_code ?? "BRL",
     inscricaoEstadual: row.state_registration ?? "",
     email: row.email ?? "",
     telefone: row.phone ?? "",
@@ -246,6 +250,8 @@ export function customerToRowFields(data: Partial<Cliente>): Partial<CustomerRow
     name: data.nome,
     trade_name: nullableText(data.nomeFantasia),
     document: data.documento,
+    country_code: data.pais,
+    currency_code: data.moeda,
     state_registration: nullableText(data.inscricaoEstadual),
     email: nullableText(data.email),
     phone: nullableText(data.telefone),
@@ -280,6 +286,8 @@ export function supplierFromRow(row: SupplierRow): Fornecedor {
     razaoSocial: row.legal_name,
     nomeFantasia: row.trade_name ?? "",
     documento: row.document,
+    pais: row.country_code ?? "BR",
+    moeda: row.currency_code ?? "BRL",
     inscricaoEstadual: row.state_registration ?? "",
     email: row.email ?? "",
     telefone: row.phone ?? "",
@@ -304,6 +312,8 @@ export function supplierToRowFields(data: Partial<Fornecedor>): Partial<Supplier
     legal_name: data.razaoSocial,
     trade_name: nullableText(data.nomeFantasia),
     document: data.documento,
+    country_code: data.pais,
+    currency_code: data.moeda,
     state_registration: nullableText(data.inscricaoEstadual),
     email: nullableText(data.email),
     phone: nullableText(data.telefone),

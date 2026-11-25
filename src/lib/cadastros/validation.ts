@@ -48,15 +48,36 @@ export function validateProduto(data: Partial<Produto>, list: Produto[], current
   return errors;
 }
 
+type ParteDoc = { tipo?: string; documento?: string; pais?: string };
+
+// Estrangeiro compara o Tax ID como texto (pode ter letras) e dentro do país.
+function sameDoc(a: ParteDoc, b: ParteDoc): boolean {
+  if (a.tipo === "Estrangeiro" || b.tipo === "Estrangeiro") {
+    const norm = (v?: string) => (v ?? "").replace(/[\s.\-/]/g, "").toUpperCase();
+    return a.tipo === b.tipo && (a.pais ?? "") === (b.pais ?? "") && norm(a.documento) === norm(b.documento);
+  }
+  return onlyDigits(a.documento ?? "") === onlyDigits(b.documento ?? "");
+}
+
+function validaPais(data: ParteDoc, errors: FieldErrors) {
+  if (data.tipo === "Estrangeiro" && (!data.pais || data.pais === "BR")) {
+    errors.pais = "Informe o país do parceiro estrangeiro.";
+  }
+  if (data.tipo !== "Estrangeiro" && data.pais && data.pais !== "BR") {
+    errors.tipo = "Parceiro fora do Brasil deve ser do tipo Estrangeiro.";
+  }
+}
+
 export function validateCliente(data: Partial<Cliente>, list: Cliente[], currentId?: string): FieldErrors {
   const errors: FieldErrors = {};
   required(data.nome, "Informe o nome ou razão social.", errors, "nome");
-  required(data.documento, "Informe o CPF/CNPJ.", errors, "documento");
+  required(data.documento, "Informe o CPF/CNPJ (ou Tax ID, se estrangeiro).", errors, "documento");
+  validaPais(data, errors);
   if (data.documento) {
     const digitsLen = onlyDigits(data.documento).length;
     if (data.tipo === "Pessoa Física" && digitsLen !== 11) errors.documento = "CPF deve conter 11 dígitos.";
     if (data.tipo === "Pessoa Jurídica" && digitsLen !== 14) errors.documento = "CNPJ deve conter 14 dígitos.";
-    duplicate(list, currentId, (c) => onlyDigits(c.documento) === onlyDigits(data.documento!), "Já existe um cliente com este documento.", errors, "documento");
+    duplicate(list, currentId, (c) => sameDoc(c, data), "Já existe um cliente com este documento.", errors, "documento");
   }
   return errors;
 }
@@ -64,9 +85,13 @@ export function validateCliente(data: Partial<Cliente>, list: Cliente[], current
 export function validateFornecedor(data: Partial<Fornecedor>, list: Fornecedor[], currentId?: string): FieldErrors {
   const errors: FieldErrors = {};
   required(data.razaoSocial, "Informe a razão social.", errors, "razaoSocial");
-  required(data.documento, "Informe o CNPJ/CPF.", errors, "documento");
+  required(data.documento, "Informe o CNPJ/CPF (ou Tax ID, se estrangeiro).", errors, "documento");
+  validaPais(data, errors);
   if (data.documento) {
-    duplicate(list, currentId, (f) => onlyDigits(f.documento) === onlyDigits(data.documento!), "Já existe um fornecedor com este documento.", errors, "documento");
+    const digitsLen = onlyDigits(data.documento).length;
+    if (data.tipo === "Pessoa Física" && digitsLen !== 11) errors.documento = "CPF deve conter 11 dígitos.";
+    if (data.tipo === "Pessoa Jurídica" && digitsLen !== 14) errors.documento = "CNPJ deve conter 14 dígitos.";
+    duplicate(list, currentId, (f) => sameDoc(f, data), "Já existe um fornecedor com este documento.", errors, "documento");
   }
   return errors;
 }

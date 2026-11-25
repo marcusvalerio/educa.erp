@@ -114,14 +114,18 @@ export type ProductSupplierRow = {
 
 export type CommercialStatus = "active" | "credit_hold" | "blocked";
 
+export type CadastroPartyType = "individual" | "company" | "foreign";
+
 export type CustomerRow = {
   id: string;
   company_id: string;
   code: string;
-  type: "individual" | "company";
+  type: CadastroPartyType;
   name: string;
   trade_name: string | null;
   document: string;
+  country_code: string;
+  currency_code: string;
   state_registration: string | null;
   email: string | null;
   phone: string | null;
@@ -150,10 +154,12 @@ export type SupplierRow = {
   id: string;
   company_id: string;
   code: string;
-  type: "individual" | "company";
+  type: CadastroPartyType;
   legal_name: string;
   trade_name: string | null;
   document: string;
+  country_code: string;
+  currency_code: string;
   state_registration: string | null;
   email: string | null;
   phone: string | null;
@@ -181,6 +187,8 @@ export type CarrierRow = {
   legal_name: string;
   trade_name: string | null;
   document: string;
+  country_code: string;
+  currency_code: string;
   state_registration: string | null;
   email: string | null;
   phone: string | null;

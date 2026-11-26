@@ -114,14 +114,18 @@ export type ProductSupplierRow = {
 
 export type CommercialStatus = "active" | "credit_hold" | "blocked";
 
+export type CadastroPartyType = "individual" | "company" | "foreign";
+
 export type CustomerRow = {
   id: string;
   company_id: string;
   code: string;
-  type: "individual" | "company";
+  type: CadastroPartyType;
   name: string;
   trade_name: string | null;
   document: string;
+  country_code: string;
+  currency_code: string;
   state_registration: string | null;
   email: string | null;
   phone: string | null;
@@ -150,10 +154,12 @@ export type SupplierRow = {
   id: string;
   company_id: string;
   code: string;
-  type: "individual" | "company";
+  type: CadastroPartyType;
   legal_name: string;
   trade_name: string | null;
   document: string;
+  country_code: string;
+  currency_code: string;
   state_registration: string | null;
   email: string | null;
   phone: string | null;
@@ -181,6 +187,8 @@ export type CarrierRow = {
   legal_name: string;
   trade_name: string | null;
   document: string;
+  country_code: string;
+  currency_code: string;
   state_registration: string | null;
   email: string | null;
   phone: string | null;
@@ -605,6 +613,8 @@ export type PurchaseOrderStatus =
   | "partially_received" | "received" | "closed" | "cancelled";
 
 export type PurchaseOrderRow = {
+  currency_code?: string;
+  exchange_rate?: number;
   id: string;
   company_id: string;
   code: string;
@@ -808,6 +818,8 @@ export type SalesOrderStatus =
   | "picking" | "ready_to_ship" | "shipped" | "completed" | "cancelled";
 
 export type SalesOrderRow = {
+  currency_code?: string;
+  exchange_rate?: number;
   id: string;
   company_id: string;
   code: string;
@@ -1219,6 +1231,8 @@ export type AccountsPayableOriginType = "manual" | "purchase_receipt";
 export type AccountsPayableStatus = "OPEN" | "PARTIALLY_PAID" | "PAID" | "OVERDUE" | "CANCELLED";
 
 export type AccountsPayableRow = {
+  currency_code?: string;
+  exchange_rate?: number;
   id: string;
   company_id: string;
   code: string;
@@ -1260,6 +1274,8 @@ export type AccountsReceivableOriginType = "manual" | "sales_order";
 export type AccountsReceivableStatus = "OPEN" | "PARTIALLY_RECEIVED" | "RECEIVED" | "OVERDUE" | "CANCELLED";
 
 export type AccountsReceivableRow = {
+  currency_code?: string;
+  exchange_rate?: number;
   id: string;
   company_id: string;
   code: string;

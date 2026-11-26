@@ -382,6 +382,16 @@ export async function createPurchaseOrder(request: NextRequest) {
       p_notes: body.notes ?? null,
     });
     if (error) throw rpcError(error);
+    if (body.currencyCode && body.currencyCode !== "BRL") {
+      const created = data as { id: string };
+      const { error: curError } = await supabase.rpc("fn_set_order_currency", {
+        p_kind: "purchase",
+        p_order_id: created.id,
+        p_currency_code: body.currencyCode,
+        p_exchange_rate: body.exchangeRate ?? null,
+      });
+      if (curError) throw rpcError(curError);
+    }
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     return jsonError(error);

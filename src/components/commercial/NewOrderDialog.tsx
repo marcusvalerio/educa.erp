@@ -19,7 +19,7 @@ import type { Cliente, Fornecedor, Produto } from "@/lib/cadastros/types";
 // pedido) é do banco — fn_create_sales_order / fn_create_purchase_order;
 // aqui só se monta o corpo de POST /api/sales-orders ou /api/purchase-orders.
 
-type Party = { id: string; status: string; label: string };
+type Party = { id: string; status: string; label: string; moeda: string };
 
 const KINDS = {
   sale: {
@@ -30,7 +30,7 @@ const KINDS = {
     partyEmpty: "Nenhum cliente ativo.",
     partyKey: "customerId",
     apiPath: "/api/sales-orders",
-    toParty: (c: Cliente): Party => ({ id: c.id, status: c.status, label: c.nome }),
+    toParty: (c: Cliente): Party => ({ id: c.id, status: c.status, label: c.nome, moeda: c.moeda || "BRL" }),
     priceOf: (p: Produto) => p.precoVenda,
   },
   quote: {
@@ -41,7 +41,7 @@ const KINDS = {
     partyEmpty: "Nenhum cliente ativo.",
     partyKey: "customerId",
     apiPath: "/api/sales-quotes",
-    toParty: (c: Cliente): Party => ({ id: c.id, status: c.status, label: c.nome }),
+    toParty: (c: Cliente): Party => ({ id: c.id, status: c.status, label: c.nome, moeda: c.moeda || "BRL" }),
     priceOf: (p: Produto) => p.precoVenda,
   },
   purchase: {
@@ -52,7 +52,7 @@ const KINDS = {
     partyEmpty: "Nenhum fornecedor ativo.",
     partyKey: "supplierId",
     apiPath: "/api/purchase-orders",
-    toParty: (f: Fornecedor): Party => ({ id: f.id, status: f.status, label: f.nomeFantasia ? `${f.razaoSocial} (${f.nomeFantasia})` : f.razaoSocial }),
+    toParty: (f: Fornecedor): Party => ({ id: f.id, status: f.status, label: f.nomeFantasia ? `${f.razaoSocial} (${f.nomeFantasia})` : f.razaoSocial, moeda: f.moeda || "BRL" }),
     priceOf: (p: Produto) => p.precoCusto,
   },
 } as const;
@@ -79,6 +79,10 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
   const [expected, setExpected] = useState("");
   const [notes, setNotes] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("");
+  // Moeda do pedido: vem do cadastro do parceiro. Preços digitados na moeda;
+  // gravados em BRL (× taxa) — estoque/financeiro/fiscal seguem em reais.
+  const [currency, setCurrency] = useState("BRL");
+  const [rate, setRate] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -117,6 +121,9 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
 
   const itemsTotal = lines.reduce((sum, l) => sum + Math.max(0, toNumber(l.quantity) * toNumber(l.unitPrice) - toNumber(l.discount)), 0);
   const total = Math.max(0, itemsTotal - toNumber(discount) + toNumber(freight));
+  const foreign = currency !== "BRL";
+  const fx = foreign ? toNumber(rate) : 1;
+  const unitLabel = foreign ? currency : "R$";
 
   function reset() {
     setCustomerId("");
@@ -126,6 +133,8 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
     setExpected("");
     setNotes("");
     setPaymentTerms("");
+    setCurrency("BRL");
+    setRate("");
     setError(null);
   }
 
@@ -137,13 +146,17 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
   function pickProduct(key: number, productId: string) {
     const product = byId.get(productId);
     const price = product ? cfg.priceOf(product) : 0;
-    updateLine(key, { productId, unitPrice: price > 0 ? String(price) : "" });
+    const fxNow = currency !== "BRL" ? toNumber(rate) : 1;
+    const converted = fxNow > 0 ? Math.round((price / fxNow) * 100) / 100 : 0;
+    updateLine(key, { productId, unitPrice: converted > 0 ? String(converted) : "" });
   }
 
   async function submit() {
     if (!customerId) return setError(`Selecione o ${cfg.partyLabel.toLowerCase()}.`);
     const filled = lines.filter((l) => l.productId);
     if (filled.length === 0) return setError("Adicione ao menos um produto.");
+    if (foreign && !(fx > 0)) return setError(`Informe a taxa de câmbio (R$ por 1 ${currency}).`);
+    const brl = (v: number) => Math.round(v * fx * 10000) / 10000;
     for (const l of filled) {
       const name = byId.get(l.productId)?.descricao ?? "item";
       if (toNumber(l.quantity) <= 0) return setError(`Informe a quantidade de ${name}.`);
@@ -157,12 +170,13 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
         ...(kind === "purchase" && initial?.purchaseRequestId ? { purchaseRequestId: initial.purchaseRequestId } : {}),
         items: filled.map((l) => {
           const p = byId.get(l.productId)!;
-          return { productId: p.id, description: p.descricao, unit: p.unidade || undefined, quantity: toNumber(l.quantity), unitPrice: toNumber(l.unitPrice), discount: toNumber(l.discount) };
+          return { productId: p.id, description: p.descricao, unit: p.unidade || undefined, quantity: toNumber(l.quantity), unitPrice: brl(toNumber(l.unitPrice)), discount: brl(toNumber(l.discount)) };
         }),
-        discount: toNumber(discount),
-        freightCost: toNumber(freight),
+        discount: brl(toNumber(discount)),
+        freightCost: brl(toNumber(freight)),
+        ...(foreign && kind !== "quote" ? { currencyCode: currency, exchangeRate: fx } : {}),
         ...(kind === "quote" ? { validUntil: expected || undefined } : { expectedDeliveryAt: expected || undefined }),
-        notes: notes.trim() || undefined,
+        notes: [notes.trim(), foreign ? `Moeda ${currency} — câmbio R$ ${fx} por 1 ${currency}.` : ""].filter(Boolean).join(" ") || undefined,
       });
       invalidateCache(cfg.apiPath);
       reset();
@@ -185,7 +199,7 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
       size="xl"
       footer={
         <>
-          <span className="mr-auto text-sm text-muted-foreground tabular-nums">Total estimado: {formatCurrencyBRL(total)}</span>
+          <span className="mr-auto text-sm text-muted-foreground tabular-nums">Total estimado: {foreign ? `${currency} ${total.toFixed(2)} ≈ ${formatCurrencyBRL(total * (fx || 0))}` : formatCurrencyBRL(total)}</span>
           <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={busy}>
             Cancelar
           </Button>
@@ -200,8 +214,19 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
         {noProducts && <Alert tone="info">Nenhum produto ativo cadastrado. Cadastre em Cadastros → Produtos.</Alert>}
 
         <FormField label={cfg.partyLabel} required>
-          <Combobox value={customerId} onValueChange={(v) => { setCustomerId(v); setError(null); }} options={customerOptions} placeholder={`Selecione o ${cfg.partyLabel.toLowerCase()}`} searchPlaceholder={`Buscar ${cfg.partyLabel.toLowerCase()}...`} emptyText={cfg.partyEmpty} />
+          <Combobox value={customerId} onValueChange={(v) => { setCustomerId(v); setCurrency(customers.find((c) => c.id === v)?.moeda || "BRL"); setError(null); }} options={customerOptions} placeholder={`Selecione o ${cfg.partyLabel.toLowerCase()}`} searchPlaceholder={`Buscar ${cfg.partyLabel.toLowerCase()}...`} emptyText={cfg.partyEmpty} />
         </FormField>
+
+        {foreign && (
+          <div className="grid grid-cols-2 gap-2">
+            <FormField label="Moeda do pedido">
+              <Input value={currency} readOnly />
+            </FormField>
+            <FormField label={`Câmbio (R$ por 1 ${currency})`} required>
+              <Input type="number" inputMode="decimal" min={0} step="0.0001" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="Ex.: 5.4321" />
+            </FormField>
+          </div>
+        )}
 
         <div className="flex flex-col gap-2">
           <span className="text-sm font-medium">Itens</span>
@@ -217,10 +242,10 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
                 <FormField label={product?.unidade ? `Qtd. (${product.unidade})` : "Qtd."}>
                   <Input type="number" inputMode="decimal" min={0} step="any" value={l.quantity} onChange={(e) => updateLine(l.key, { quantity: e.target.value })} />
                 </FormField>
-                <FormField label="Preço unit. (R$)">
+                <FormField label={`Preço unit. (${unitLabel})`}>
                   <Input type="number" inputMode="decimal" min={0} step="0.01" value={l.unitPrice} onChange={(e) => updateLine(l.key, { unitPrice: e.target.value })} />
                 </FormField>
-                <FormField label="Desconto (R$)">
+                <FormField label={`Desconto (${unitLabel})`}>
                   <Input type="number" inputMode="decimal" min={0} step="0.01" value={l.discount} onChange={(e) => updateLine(l.key, { discount: e.target.value })} />
                 </FormField>
                 <Button variant="ghost" size="sm" aria-label="Remover item" disabled={lines.length === 1} onClick={() => setLines((prev) => prev.filter((x) => x.key !== l.key))}>
@@ -237,10 +262,10 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <FormField label="Desconto do pedido (R$)">
+          <FormField label={`Desconto do pedido (${unitLabel})`}>
             <Input type="number" inputMode="decimal" min={0} step="0.01" value={discount} onChange={(e) => setDiscount(e.target.value)} />
           </FormField>
-          <FormField label="Frete (R$)">
+          <FormField label={`Frete (${unitLabel})`}>
             <Input type="number" inputMode="decimal" min={0} step="0.01" value={freight} onChange={(e) => setFreight(e.target.value)} />
           </FormField>
           <FormField label={kind === "quote" ? "Válido até" : "Entrega prevista"}>

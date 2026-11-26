@@ -44,7 +44,9 @@ export const productSchema = z.object({
 });
 
 export const customerSchema = z.object({
-  tipo: z.enum(["Pessoa Física", "Pessoa Jurídica"]),
+  tipo: z.enum(["Pessoa Física", "Pessoa Jurídica", "Estrangeiro"]),
+  pais: z.string().trim().length(2).optional().default("BR"),
+  moeda: z.string().trim().length(3).optional().default("BRL"),
   nome: z.string().trim().min(1, "Informe o nome ou razão social."),
   nomeFantasia: optionalText,
   documento: z.string().trim().min(1, "Informe o CPF/CNPJ."),
@@ -70,7 +72,9 @@ export const customerSchema = z.object({
 });
 
 export const supplierSchema = z.object({
-  tipo: z.enum(["Pessoa Física", "Pessoa Jurídica"]),
+  tipo: z.enum(["Pessoa Física", "Pessoa Jurídica", "Estrangeiro"]),
+  pais: z.string().trim().length(2).optional().default("BR"),
+  moeda: z.string().trim().length(3).optional().default("BRL"),
   razaoSocial: z.string().trim().min(1, "Informe a razão social."),
   nomeFantasia: optionalText,
   documento: z.string().trim().min(1, "Informe o CNPJ/CPF."),

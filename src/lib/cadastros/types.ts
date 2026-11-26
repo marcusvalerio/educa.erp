@@ -9,7 +9,7 @@ export type BaseEntity = {
   atualizadoEm: string;
 };
 
-export type TipoPessoa = "Pessoa Física" | "Pessoa Jurídica";
+export type TipoPessoa = "Pessoa Física" | "Pessoa Jurídica" | "Estrangeiro";
 
 export type Produto = BaseEntity & {
   codigo: string;
@@ -131,6 +131,8 @@ export type Cliente = BaseEntity & {
   nome: string;
   nomeFantasia: string;
   documento: string;
+  pais: string;
+  moeda: string;
   inscricaoEstadual: string;
   email: string;
   telefone: string;
@@ -157,6 +159,8 @@ export type Fornecedor = BaseEntity & {
   razaoSocial: string;
   nomeFantasia: string;
   documento: string;
+  pais: string;
+  moeda: string;
   inscricaoEstadual: string;
   email: string;
   telefone: string;

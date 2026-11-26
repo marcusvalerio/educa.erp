@@ -51,7 +51,8 @@ export function EntityDrawer({
   extras,
 }: EntityDrawerProps) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
-  const errorCount = Object.keys(errors).length;
+  // Só conta erros ainda presentes: corrigir um campo limpa a mensagem dele ("").
+  const errorCount = Object.values(errors).filter(Boolean).length;
 
   function requestClose() {
     if (saving) return;

@@ -10,6 +10,8 @@ import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/env";
 import { ApiError } from "@/lib/database/errors";
 import { newPasswordSchema } from "@/lib/onboarding/invitations";
 import { authProvider } from "./provider";
+import { dataBackend } from "@/lib/database/backend";
+import { createPgDataClient } from "@/lib/database/pg/client";
 import {
   changeTemporaryPasswordFlow,
   issueTemporaryPasswordFlow,
@@ -105,6 +107,21 @@ function anonClient(accessToken?: string) {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     global: accessToken ? { headers: { Authorization: `Bearer ${accessToken}` } } : undefined,
   });
+}
+
+/**
+ * Cliente das funções de convite (fn_get_invitation / fn_accept_user_invitation).
+ * No modo híbrido (login no Supabase, dados no Neon) os convites estão no Neon:
+ * consultar o Supabase não encontra o convite e a senha provisória parecia
+ * "expirada". Com DATA_BACKEND=postgres, vai ao banco de dados real.
+ */
+function invitationClient(auth?: { accessToken: string; authUserId: string }) {
+  if (dataBackend() === "postgres") {
+    return (auth ? createPgDataClient({ role: "authenticated", sub: auth.authUserId }) : createPgDataClient({ role: "anon" })) as unknown as ReturnType<
+      typeof anonClient
+    >;
+  }
+  return anonClient(auth?.accessToken);
 }
 
 // ------------------------------------------------------------ Administrador
@@ -315,23 +332,25 @@ export async function changeTemporaryPassword(request: NextRequest) {
     requireSupabaseAuth();
     const body = await parseJson(request, changeSchema);
     const admin = createAdminClient();
+    let authUserId = "";
     await changeTemporaryPasswordFlow(body, {
       signIn: async (email, password) => {
         const { data, error } = await anonClient().auth.signInWithPassword({ email, password });
         if (error || !data.session || !data.user) throw new Error("credenciais");
+        authUserId = data.user.id;
         return { accessToken: data.session.access_token, login: toLogin(data.user) };
       },
       signOut: async (accessToken) => {
         await admin.auth.admin.signOut(accessToken);
       },
       invitationStatus: async (token) => {
-        const { data, error } = await anonClient().rpc("fn_get_invitation", { p_token: token });
+        const { data, error } = await invitationClient().rpc("fn_get_invitation", { p_token: token });
         if (error) throw dbError(error);
         return String((data as { status?: string } | null)?.status ?? "invalid");
       },
       setPassword: (authUserId, password) => updateLogin(authUserId, { password }),
       accept: async (accessToken, token) => {
-        const { error } = await anonClient(accessToken).rpc("fn_accept_user_invitation", { p_token: token });
+        const { error } = await invitationClient({ accessToken, authUserId }).rpc("fn_accept_user_invitation", { p_token: token });
         if (error) throw dbError(error);
       },
       linkedTo: async (authUserId, userId) => {

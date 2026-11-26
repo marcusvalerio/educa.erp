@@ -112,9 +112,18 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
     [config.columns]
   );
 
+  // Inativos ficam escondidos por padrão (continuam no histórico): o botão
+  // "Mostrar inativos" ou um filtro de status os traz de volta.
+  const [showInactive, setShowInactive] = useState(false);
+  const inactiveCount = useMemo(() => all.filter((it) => it.item.status !== "Ativo").length, [all]);
+  const visible = useMemo(
+    () => (showInactive || state.filters.status ? all : all.filter((it) => it.item.status === "Ativo")),
+    [all, showInactive, state.filters.status]
+  );
+
   const view = useMemo(
     () =>
-      applyClientQuery(all, state, {
+      applyClientQuery(visible, state, {
         searchText: (it) => Object.values(it.row).join(" "),
         sortValue: (it, id) => it.row[id],
         predicates: Object.fromEntries(
@@ -127,7 +136,7 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
           ])
         ),
       }),
-    [all, state, config.filters]
+    [visible, state, config.filters]
   );
 
   const visibleColumns = columns.filter((c) => !prefs.hidden.has(c.id));
@@ -283,6 +292,11 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
                 className="w-40"
               />
             ) : null
+          )}
+          {inactiveCount > 0 && !state.filters.status && (
+            <Button variant="ghost" size="sm" aria-pressed={showInactive} onClick={() => setShowInactive((v) => !v)}>
+              {showInactive ? "Esconder inativos" : `Mostrar inativos (${inactiveCount})`}
+            </Button>
           )}
           {hasFilters && (
             <Button variant="ghost" size="sm" onClick={clear}>

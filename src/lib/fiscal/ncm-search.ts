@@ -66,3 +66,37 @@ export function parseNcmResponse(raw: unknown, today = new Date().toISOString().
   }
   return out;
 }
+
+const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+/**
+ * Busca na cópia local da tabela NCM (src/lib/fiscal/ncm-table.json, exportada
+ * da BrasilAPI). Não depende de serviço externo: é a fonte principal da
+ * consulta. Números: prefixo do código. Texto: todas as palavras na descrição
+ * do item ou da posição de 4 dígitos.
+ */
+export function searchNcmTable(table: [string, string][], q: string, limit = 25): NcmItem[] {
+  const digits = /^\d+$/.test(q);
+  const words = fold(q).split(" ").filter(Boolean);
+  const heads = new Map<string, string>();
+  for (const [code, desc] of table) if (ncmDigits(code).length === 4) heads.set(ncmDigits(code), fold(desc));
+  // primeiro quem tem o termo na própria descrição; depois pela posição de 4 dígitos
+  const hits: [string, string][] = [];
+  for (const pass of [0, 1]) {
+    for (const row of table) {
+      if (hits.length >= limit) break;
+      const d = ncmDigits(row[0]);
+      if (d.length !== 8 || hits.includes(row)) continue;
+      const own = fold(row[1]);
+      const head = heads.get(d.slice(0, 4)) ?? "";
+      const ok = digits
+        ? pass === 0 && d.startsWith(q)
+        : pass === 0
+          ? words.every((w) => own.includes(w))
+          : words.every((w) => own.includes(w) || head.includes(w));
+      if (ok) hits.push(row);
+    }
+  }
+  const context = table.filter(([c]) => ncmDigits(c).length === 4 && hits.some(([h]) => ncmDigits(h).startsWith(ncmDigits(c))));
+  return parseNcmResponse([...context, ...hits].map(([codigo, descricao]) => ({ codigo, descricao })), undefined, limit);
+}

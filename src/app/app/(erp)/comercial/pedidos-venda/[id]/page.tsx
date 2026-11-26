@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Ban, CheckCircle2, PackageCheck, PackageOpen, Receipt, Send } from "lucide-react";
+import { Ban, CheckCircle2, PackageCheck, PackageOpen, Receipt, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Stat, StatStrip } from "@/components/ui/Stat";
@@ -31,13 +31,14 @@ import { OrderFulfillmentButtons } from "@/components/logistics/FulfillmentActio
 // banco (fn_*_sales_order), que rejeita qualquer passo inválido.
 
 type Order = SalesOrderRow & { items: SalesOrderItemRow[] };
-type ActionId = "submit" | "approve" | "release" | "cancel" | "receivable";
+type ActionId = "submit" | "approve" | "release" | "cancel" | "receivable" | "delete";
 
 const ACTIONS: Record<ActionId, { label: string; path: string; permission: string; statuses: string[]; confirm: string; tone?: "danger"; icon: typeof Send; success: string }> = {
   submit: { label: "Enviar para aprovação", path: "submit", permission: "sales_orders.update", statuses: ["draft"], confirm: "O pedido segue para aprovação e deixa de ser editável como rascunho.", icon: Send, success: "Pedido enviado para aprovação." },
   approve: { label: "Aprovar", path: "approve", permission: "sales_orders.approve", statuses: ["pending_approval"], confirm: "Aprovar libera o pedido para reserva de estoque.", icon: CheckCircle2, success: "Pedido aprovado." },
   release: { label: "Liberar reserva", path: "release-reservation", permission: "sales_orders.update", statuses: ["reserved", "reservation_pending"], confirm: "As quantidades reservadas voltam a ficar disponíveis no estoque.", icon: PackageOpen, success: "Reserva liberada." },
   receivable: { label: "Gerar conta a receber", path: "generate-receivable", permission: "accounts_receivable.approve", statuses: ["approved", "reserved", "picking", "ready_to_ship", "partially_shipped", "shipped", "completed"], confirm: "Gera o título a receber a partir do valor do pedido e das condições de pagamento.", icon: Receipt, success: "Conta a receber gerada." },
+  delete: { label: "Excluir pedido", path: "", permission: "sales_orders.cancel", statuses: ["draft", "cancelled"], confirm: "Só é possível excluir pedido que nunca gerou separação, reserva, estoque, financeiro ou nota. A exclusão fica registrada na auditoria.", tone: "danger", icon: Trash2, success: "Pedido excluído." },
   cancel: { label: "Cancelar pedido", path: "cancel", permission: "sales_orders.cancel", statuses: ["draft", "pending_approval", "approved", "reservation_pending", "reserved"], confirm: "O cancelamento libera reservas e não pode ser desfeito.", tone: "danger", icon: Ban, success: "Pedido cancelado." },
 };
 
@@ -81,6 +82,12 @@ export default function PedidoVendaDetailPage() {
   async function run(action: ActionId) {
     setBusy(true);
     try {
+      if (action === "delete") {
+        await apiSend(`/api/sales-orders/${id}`, "DELETE");
+        toast.success(ACTIONS[action].success);
+        window.location.assign("/app/comercial/pedidos-venda");
+        return;
+      }
       await apiSend(`/api/sales-orders/${id}/${ACTIONS[action].path}`, "POST", action === "receivable" ? {} : undefined);
       toast.success(ACTIONS[action].success);
       setPending(null);

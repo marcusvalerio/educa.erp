@@ -387,6 +387,9 @@ export const releaseSalesOrderReservation = (request: NextRequest, context: Rout
   orderAction("fn_release_sales_order_reservation", "sales_orders.update", request, context);
 export const cancelSalesOrder = (request: NextRequest, context: RouteContext) =>
   orderAction("fn_cancel_sales_order", "sales_orders.cancel", request, context);
+/** Exclui pedido em rascunho/cancelado que nunca gerou separação, estoque, financeiro ou nota. */
+export const deleteSalesOrder = (request: NextRequest, context: RouteContext) =>
+  orderAction("fn_delete_sales_order", "sales_orders.cancel", request, context);
 
 export async function reserveSalesOrderStock(request: NextRequest, context: RouteContext) {
   try {

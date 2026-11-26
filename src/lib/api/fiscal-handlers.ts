@@ -1,4 +1,6 @@
 import "server-only";
+import { ncmDigits } from "@/lib/fiscal/ncm-search";
+import NCM_TABLE from "@/lib/fiscal/ncm-table.json";
 import { providedPartial } from "@/lib/validations/partial-update";
 
 import { NextRequest, NextResponse } from "next/server";
@@ -156,6 +158,7 @@ export async function updateFiscalEstablishment(request: NextRequest, context: R
     const { id } = await context.params;
     const body = await parseBody(request, providedPartial(fiscalEstablishmentSchema));
     if (Object.keys(body).length === 0) throw validationError("Nenhum dado para atualizar.");
+    if ("code" in body) assertNcmExists((body as { code?: string }).code);
     const { stateRegistration, municipalRegistration, addressNumber, zipCode, taxRegime, ...rest } = body;
     const { data, error } = await createAdminClient().from("fiscal_establishments")
       .update({
@@ -179,10 +182,20 @@ export async function updateFiscalEstablishment(request: NextRequest, context: R
 export const listFiscalNcms = cadastroListHandler("fiscal_ncms", "fiscal_ncms.view");
 export const getFiscalNcm = cadastroGetHandler("fiscal_ncms", "fiscal_ncms.view", "NCM");
 
+/** Só aceita NCM de 8 dígitos que exista na tabela oficial vigente (cópia local). */
+function assertNcmExists(code: string | undefined) {
+  if (!code) return;
+  const digits = ncmDigits(code);
+  if (digits.length !== 8 || !(NCM_TABLE as [string, string][]).some(([c]) => ncmDigits(c) === digits)) {
+    throw validationError(`NCM ${code} não existe na tabela oficial vigente. Use a busca para escolher um código válido.`);
+  }
+}
+
 export async function createFiscalNcm(request: NextRequest) {
   try {
     const { companyId } = await requireAccess("fiscal_ncms.create");
     const body = await parseBody(request, fiscalNcmSchema);
+    assertNcmExists(body.code);
     const { data, error } = await createAdminClient().from("fiscal_ncms").insert({
       company_id: companyId,
       code: body.code,

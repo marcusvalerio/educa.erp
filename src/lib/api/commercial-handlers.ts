@@ -311,6 +311,18 @@ export async function getSalesOrder(_request: NextRequest, context: RouteContext
   }
 }
 
+/** Desconto do pedido maior que o valor dos itens deixaria o total negativo. */
+function assertNonNegativeTotal(items: { quantity: number; unitPrice: number; discount?: number }[] | undefined, discount: number | undefined) {
+  if (!items?.length) return;
+  const net = items.reduce((sum, i) => sum + i.quantity * i.unitPrice - (i.discount ?? 0), 0);
+  if (items.some((i) => (i.discount ?? 0) > i.quantity * i.unitPrice)) {
+    throw validationError("O desconto de um item não pode ser maior que o valor do item.");
+  }
+  if ((discount ?? 0) > net + 0.001) {
+    throw validationError("O desconto do pedido não pode ser maior que o valor dos itens.");
+  }
+}
+
 export async function createSalesOrder(request: NextRequest) {
   try {
     await requireCommercialAccess("sales_orders.create");
@@ -319,6 +331,17 @@ export async function createSalesOrder(request: NextRequest) {
     if (!ctx) throw unauthorizedError();
 
     const supabase = await createClient();
+    // Pedido gerado do orçamento: desconto, frete e observações vêm do orçamento
+    // quando a tela não os envia (antes o pedido saía sem eles e não batia com a proposta).
+    if (body.salesQuoteId) {
+      const { data: quote } = await supabase.from("sales_quotes").select("discount, freight_cost, notes").eq("id", body.salesQuoteId).maybeSingle();
+      if (quote) {
+        body.discount ??= Number(quote.discount ?? 0);
+        body.freightCost ??= Number(quote.freight_cost ?? 0);
+        body.notes ??= (quote.notes as string | null) ?? undefined;
+      }
+    }
+    assertNonNegativeTotal(body.items, body.discount);
     const { data, error } = await supabase.rpc("fn_create_sales_order", {
       p_company_id: ctx.companyId,
       p_customer_id: body.customerId,

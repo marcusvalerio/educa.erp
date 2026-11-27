@@ -3,6 +3,8 @@
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/Dialog";
+import { Input } from "@/components/ui/Input";
+import { FormField } from "@/components/ui/FormField";
 import { toast } from "@/components/ui/Toast";
 import { useSession } from "@/components/shell/SessionProvider";
 import { apiSend } from "@/lib/api-client";
@@ -26,21 +28,30 @@ export type WorkflowAction = {
   tone?: "danger";
   icon?: ReactNode;
   body?: unknown;
+  /** Pede um motivo (mín. 5 caracteres), enviado como `reason` no corpo. */
+  requireReason?: boolean;
 };
 
 export function WorkflowActions({ base, id, status, actions, onDone, extra }: { base: string; id: string; status: string; actions: WorkflowAction[]; onDone: () => void; extra?: ReactNode }) {
   const { can } = useSession();
   const [pending, setPending] = useState<WorkflowAction | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reason, setReason] = useState("");
   const st = status.toLowerCase();
   const allowed = (p: string | string[]) => (Array.isArray(p) ? p.some((x) => can(x)) : can(p));
   const list = actions.filter((a) => (!a.statuses || a.statuses.includes(st)) && allowed(a.permission));
 
   async function run() {
     if (!pending) return;
+    if (pending.requireReason && reason.trim().length < 5) {
+      toast.error("Informe o motivo (mínimo 5 caracteres).");
+      return;
+    }
     setBusy(true);
     try {
-      await apiSend(`${base}/${id}/${pending.path}`, pending.method ?? "POST", pending.body ?? {});
+      const body = pending.requireReason ? { ...((pending.body as object | undefined) ?? {}), reason: reason.trim() } : pending.body ?? {};
+      await apiSend(`${base}/${id}/${pending.path}`, pending.method ?? "POST", body);
+      setReason("");
       invalidateCache(base);
       toast.success(pending.success);
       setPending(null);
@@ -72,8 +83,14 @@ export function WorkflowActions({ base, id, status, actions, onDone, extra }: { 
           tone={pending.tone === "danger" ? "danger" : "default"}
           loading={busy}
           onConfirm={run}
-          onCancel={() => setPending(null)}
-        />
+          onCancel={() => { setPending(null); setReason(""); }}
+        >
+          {pending.requireReason && (
+            <FormField label="Motivo" required>
+              <Input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} placeholder="Mínimo 5 caracteres" />
+            </FormField>
+          )}
+        </ConfirmDialog>
       )}
     </div>
   );

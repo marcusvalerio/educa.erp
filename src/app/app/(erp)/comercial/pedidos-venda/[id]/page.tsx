@@ -23,6 +23,11 @@ import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import { dbStatusCode } from "@/lib/status";
 import { formatCurrencyBRL, formatDate } from "@/lib/format";
 import type { AccountsReceivableRow, FiscalDocumentRow, SalesOrderItemRow, SalesOrderRow, ShipmentRow } from "@/lib/database/schema";
+import { Alert } from "@/components/ui/Feedback";
+import { Input } from "@/components/ui/Input";
+import { customerAddressWarning, formatCustomerAddress, missingCustomerAddressFields } from "@/lib/customer-address";
+import { foreignCurrencyItems } from "@/lib/currency-display";
+import type { Cliente } from "@/lib/cadastros/types";
 import { IssueOrderNfeButton, NfeOutputLinks } from "@/components/fiscal/NfeActions";
 import { OrderFulfillmentButtons } from "@/components/logistics/FulfillmentActions";
 
@@ -51,6 +56,8 @@ export default function PedidoVendaDetailPage() {
   const shipments = useCached<ShipmentRow[]>(`/api/shipments?salesOrderId=${id}`, shipmentsOk);
   const receivables = useCached<AccountsReceivableRow[]>(receivablesOk && order.data ? `/api/accounts-receivable?customerId=${order.data.customer_id}` : null, receivablesOk);
   const customers = useIdNameLookup("/api/customers");
+  const customer = useCached<Cliente>(order.data ? `/api/customers/${order.data.customer_id}` : null);
+  const [cancelReason, setCancelReason] = useState("");
   const fiscalOk = can("fiscal_documents.view");
   const fiscalDocs = useCached<FiscalDocumentRow[]>(fiscalOk ? `/api/fiscal-documents?sourceId=${id}` : null, fiscalOk);
   const locations = useIdNameLookup("/api/warehouse-locations");
@@ -88,7 +95,12 @@ export default function PedidoVendaDetailPage() {
         window.location.assign("/app/comercial/pedidos-venda");
         return;
       }
-      await apiSend(`/api/sales-orders/${id}/${ACTIONS[action].path}`, "POST", action === "receivable" ? {} : undefined);
+      if (action === "cancel" && cancelReason.trim().length < 5) {
+        toast.error("Informe o motivo do cancelamento (mínimo 5 caracteres).");
+        return;
+      }
+      await apiSend(`/api/sales-orders/${id}/${ACTIONS[action].path}`, "POST", action === "receivable" ? {} : action === "cancel" ? { reason: cancelReason.trim() } : undefined);
+      setCancelReason("");
       toast.success(ACTIONS[action].success);
       setPending(null);
       refresh();
@@ -138,6 +150,9 @@ export default function PedidoVendaDetailPage() {
   const reserved = items.reduce((a, i) => a + Number(i.reserved_quantity || 0), 0);
   const itemsTotal = items.reduce((a, i) => a + Number(i.line_total || 0), 0);
   const address = [o.delivery_address, o.delivery_address_number, o.delivery_address_complement, o.delivery_neighborhood, o.delivery_city, o.delivery_state].filter(Boolean).join(", ");
+  const customerAddress = formatCustomerAddress(customer.data);
+  const missingAddress = missingCustomerAddressFields(customer.data);
+  const showAddressWarning = missingAddress.length > 0 && ["draft", "pending_approval", "approved", "reservation_pending", "reserved"].includes(status);
   const orderReceivables = (receivables.data ?? []).filter((r) => r.origin_id === o.id);
   const customerName = customers.get(o.customer_id);
   // NF-e do pedido: a autorizada abre DANFE/XML; sem nota, pedido aprovado pode emitir.
@@ -185,6 +200,8 @@ export default function PedidoVendaDetailPage() {
         }
       />
 
+      {showAddressWarning && <Alert tone="warning" title="Endereço do cliente incompleto">{customerAddressWarning(missingAddress)}</Alert>}
+
       <StatStrip columns={4}>
         <Stat label="Total do pedido" value={formatCurrencyBRL(o.total_amount)} hint={`Itens ${formatCurrencyBRL(itemsTotal)} · frete ${formatCurrencyBRL(o.freight_cost)} · desconto ${formatCurrencyBRL(o.discount)}`} />
         <Stat label="Itens" value={items.length.toLocaleString("pt-BR")} hint={`${ordered.toLocaleString("pt-BR")} unidade(s) pedidas`} />
@@ -200,8 +217,9 @@ export default function PedidoVendaDetailPage() {
               { label: "Cliente", value: customerName ?? "—" },
               { label: "Data do pedido", value: formatDate(o.order_date) },
               { label: "Entrega prevista", value: formatDate(o.expected_delivery_at) },
-              { label: "Endereço de entrega", value: address || "—", wide: true },
-              { label: "CEP", value: o.delivery_zip_code ?? "—", mono: true },
+              { label: "Endereço de entrega", value: address || (customerAddress ? `${customerAddress} (do cadastro do cliente)` : "—"), wide: true },
+              { label: "CEP", value: o.delivery_zip_code || (!address && customer.data?.cep) || "—", mono: true },
+              ...foreignCurrencyItems(o.currency_code, o.exchange_rate, o.total_amount, "Total na moeda original"),
               { label: "Documento fiscal", value: o.fiscal_document_number ? `${o.fiscal_document_type ?? ""} ${o.fiscal_document_number}${o.fiscal_document_series ? `/${o.fiscal_document_series}` : ""}` : "—" },
               { label: "Chave de acesso", value: o.fiscal_access_key ?? "—", mono: true, wide: true },
               { label: "Observações", value: o.notes ?? "—", wide: true },
@@ -285,8 +303,14 @@ export default function PedidoVendaDetailPage() {
           tone={ACTIONS[pending].tone === "danger" ? "danger" : "default"}
           loading={busy}
           onConfirm={() => run(pending)}
-          onCancel={() => setPending(null)}
-        />
+          onCancel={() => { setPending(null); setCancelReason(""); }}
+        >
+          {pending === "cancel" && (
+            <FormField label="Motivo do cancelamento" required>
+              <Input value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} maxLength={300} placeholder="Mínimo 5 caracteres" />
+            </FormField>
+          )}
+        </ConfirmDialog>
       )}
 
       <Dialog

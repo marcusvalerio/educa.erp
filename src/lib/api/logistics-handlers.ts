@@ -323,9 +323,47 @@ export const cancelShipment = (request: NextRequest, context: RouteContext) =>
 export const completeShipment = (request: NextRequest, context: RouteContext) =>
   shipmentAction("fn_complete_shipment", "shipments.update", request, context);
 
+/**
+ * Pedido expedido (total ou parcial) sem título a receber: gera o título
+ * automaticamente pela mesma função do botão "Gerar conta a receber".
+ * Idempotente (só gera se não houver título não cancelado do pedido) e
+ * best-effort: falha aqui não desfaz a expedição; volta como aviso.
+ */
+async function autoGenerateReceivable(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  companyId: string,
+  shipmentId: string
+): Promise<{ generated: boolean; warning?: string }> {
+  const admin = createAdminClient();
+  const { data: shipment } = await admin.from("shipments").select("sales_order_id").eq("company_id", companyId).eq("id", shipmentId).maybeSingle();
+  const orderId = shipment?.sales_order_id as string | null | undefined;
+  if (!orderId) return { generated: false };
+  const { data: order } = await admin.from("sales_orders").select("status").eq("company_id", companyId).eq("id", orderId).maybeSingle();
+  const status = String(order?.status ?? "").toLowerCase();
+  if (!["shipped", "partially_shipped"].includes(status)) return { generated: false };
+  const { data: existing } = await admin
+    .from("accounts_receivable")
+    .select("id, status")
+    .eq("company_id", companyId)
+    .eq("origin_type", "sales_order")
+    .eq("origin_id", orderId);
+  if ((existing ?? []).some((r) => String(r.status).toLowerCase() !== "cancelled")) return { generated: false };
+  const { error } = await supabase.rpc("fn_generate_accounts_receivable_from_sales_order", {
+    p_sales_order_id: orderId,
+    p_category_id: null,
+    p_cost_center_id: null,
+    p_payment_terms_id: null,
+    p_issue_date: null,
+    p_due_date_base: null,
+    p_description: null,
+  });
+  if (error) return { generated: false, warning: `Expedição concluída, mas a conta a receber não foi gerada automaticamente: ${error.message ?? "erro"}. Gere pelo pedido de venda.` };
+  return { generated: true };
+}
+
 export async function shipShipment(request: NextRequest, context: RouteContext) {
   try {
-    await requireLogisticsAccess("shipments.ship");
+    const { companyId } = await requireLogisticsAccess("shipments.ship");
     const { id } = await context.params;
     const body = await request.json().catch(() => ({}));
     const parsed = shipActionSchema.safeParse(body ?? {});
@@ -336,7 +374,8 @@ export async function shipShipment(request: NextRequest, context: RouteContext) 
       p_idempotency_key: parsed.success ? parsed.data.idempotencyKey ?? null : null,
     });
     if (error) throw rpcError(error);
-    return NextResponse.json({ success: true, data });
+    const receivable = await autoGenerateReceivable(supabase, companyId, id).catch(() => ({ generated: false, warning: undefined }));
+    return NextResponse.json({ success: true, data, receivable });
   } catch (error) {
     return jsonError(error);
   }

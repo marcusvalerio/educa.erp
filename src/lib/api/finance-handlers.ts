@@ -301,6 +301,47 @@ export async function updateFinancialAccount(request: NextRequest, context: Rout
 }
 
 // ------------------------------------------------------------- accounts_payable
+/**
+ * Extras do detalhe do título: nome do centro de custo e pagamentos/recebimentos
+ * das parcelas (código, conta, data, valor). Falha aqui não derruba o detalhe.
+ */
+async function titleDetailExtras(
+  admin: ReturnType<typeof createAdminClient>,
+  companyId: string,
+  costCenterId: string | null | undefined,
+  installmentIds: string[],
+  table: "payments" | "receipts"
+) {
+  const dateField = table === "payments" ? "paid_at" : "received_at";
+  let costCenterName: string | null = null;
+  if (costCenterId) {
+    const { data } = await admin.from("cost_centers").select("code, name").eq("company_id", companyId).eq("id", costCenterId).maybeSingle();
+    if (data) costCenterName = [data.code, data.name].filter(Boolean).join(" — ");
+  }
+  let settlements: Record<string, unknown>[] = [];
+  if (installmentIds.length) {
+    const { data } = await admin.from(table).select("*").eq("company_id", companyId).in("installment_id", installmentIds).order(dateField);
+    const rows = (data ?? []) as Record<string, unknown>[];
+    const accountIds = [...new Set(rows.map((r) => String(r.financial_account_id)))];
+    const accounts = new Map<string, string>();
+    if (accountIds.length) {
+      const { data: acc } = await admin.from("financial_accounts").select("id, code, name").in("id", accountIds);
+      for (const a of (acc ?? []) as { id: string; code: string | null; name: string | null }[]) accounts.set(a.id, a.name ?? a.code ?? "");
+    }
+    settlements = rows.map((r) => ({
+      id: r.id,
+      code: r.code,
+      installment_id: r.installment_id,
+      account_name: accounts.get(String(r.financial_account_id)) ?? null,
+      date: r[dateField],
+      amount: r.amount,
+      method: r.method,
+      status: r.status,
+    }));
+  }
+  return { cost_center_name: costCenterName, settlements };
+}
+
 async function fetchPayableWithInstallments(companyId: string, id: string) {
   const admin = createAdminClient();
   const { data: header, error } = await admin.from("accounts_payable").select("*").eq("company_id", companyId).eq("id", id).maybeSingle();
@@ -308,7 +349,8 @@ async function fetchPayableWithInstallments(companyId: string, id: string) {
   if (!header) return null;
   const { data: installments, error: installmentsError } = await admin.from("accounts_payable_installments").select("*").eq("payable_id", id).order("installment_number");
   if (installmentsError) throw translatePostgresError(installmentsError);
-  return { ...header, installments: installments ?? [] };
+  const extras = await titleDetailExtras(admin, companyId, header.cost_center_id as string | null, (installments ?? []).map((i) => String(i.id)), "payments").catch(() => ({ cost_center_name: null, settlements: [] }));
+  return { ...header, installments: installments ?? [], ...extras };
 }
 
 export async function listAccountsPayable(request: NextRequest) {
@@ -495,7 +537,8 @@ async function fetchReceivableWithInstallments(companyId: string, id: string) {
   if (!header) return null;
   const { data: installments, error: installmentsError } = await admin.from("accounts_receivable_installments").select("*").eq("receivable_id", id).order("installment_number");
   if (installmentsError) throw translatePostgresError(installmentsError);
-  return { ...header, installments: installments ?? [] };
+  const extras = await titleDetailExtras(admin, companyId, header.cost_center_id as string | null, (installments ?? []).map((i) => String(i.id)), "receipts").catch(() => ({ cost_center_name: null, settlements: [] }));
+  return { ...header, installments: installments ?? [], ...extras };
 }
 
 export async function listAccountsReceivable(request: NextRequest) {

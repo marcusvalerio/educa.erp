@@ -63,13 +63,24 @@ function useIssue(path: string, onDone: (doc: Record<string, unknown>) => void) 
           <Alert tone="danger">
             <span className="whitespace-pre-line">{problems}</span>
           </Alert>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Emitente, naturezas de venda e NCM dos produtos ficam em{" "}
-            <Link className="underline" href="/app/fiscal/configuracao">
-              Fiscal › Configuração NF-e
-            </Link>
-            .
-          </p>
+          {/destinat[aá]rio|cliente/i.test(problems) && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Os dados do destinatário (CNPJ/CPF, nome e endereço: logradouro, número, bairro, cidade, UF e CEP) vêm do cadastro do cliente: corrija em{" "}
+              <Link className="underline" href="/app/cadastros/clientes">
+                Cadastros › Clientes
+              </Link>
+              .
+            </p>
+          )}
+          {(!/destinat[aá]rio|cliente/i.test(problems) || /emitente|natureza|ncm|produto/i.test(problems)) && (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Emitente, naturezas de venda e NCM dos produtos ficam em{" "}
+              <Link className="underline" href="/app/fiscal/configuracao">
+                Fiscal › Configuração NF-e
+              </Link>
+              .
+            </p>
+          )}
         </Dialog>
       )}
     </>

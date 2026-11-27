@@ -16,7 +16,7 @@ import { useCached, invalidateCache } from "@/lib/dashboard/client";
 import { apiSend } from "@/lib/api-client";
 import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import { dbStatusCode } from "@/lib/status";
-import { formatCurrencyBRL } from "@/lib/format";
+import { formatCurrencyBRL, formatDate, formatDateTime } from "@/lib/format";
 import type { PurchaseOrderItemRow, PurchaseOrderRow } from "@/lib/database/schema";
 
 // Pedidos de compra: conduzir o fluxo. O pedido nasce da solicitação
@@ -42,8 +42,22 @@ function OrderItems({ id }: { id: string }) {
   const order = useCached<Order>(`/api/purchase-orders/${id}`);
   if (order.loading && !order.data) return <p className="px-4 py-3 text-sm text-muted-foreground">Carregando itens...</p>;
   const fx = order.data ? foreignCurrencyItems(order.data.currency_code, order.data.exchange_rate, order.data.total_amount, "Total na moeda original") : [];
+  const o = order.data;
+  const itemsTotal = (o?.items ?? []).reduce((a, i) => a + Number(i.line_total || 0), 0);
+  const freight = Number(o?.freight_cost || 0);
+  const discount = Number(o?.discount || 0);
   return (
     <>
+    {o && (
+      <InfoGrid
+        columns={3}
+        items={[
+          { label: "Entrega prevista", value: formatDate(o.expected_delivery_at) },
+          { label: "Entrega agendada", value: o.delivery_scheduled_at ? formatDateTime(o.delivery_scheduled_at) : "Não agendada" },
+          { label: "Condição de pagamento", value: o.payment_terms || "—" },
+        ]}
+      />
+    )}
     {fx.length > 0 && <InfoGrid columns={3} items={fx} />}
     <MiniTable<PurchaseOrderItemRow>
       rows={order.data?.items ?? []}
@@ -56,6 +70,14 @@ function OrderItems({ id }: { id: string }) {
         { label: "Total", align: "right", cell: (i) => formatCurrencyBRL(Number(i.line_total)) },
       ]}
     />
+    {o && (
+      <dl className="flex flex-col gap-1 border-t border-border-subtle px-4 py-3 text-sm">
+        <div className="flex justify-between"><dt className="text-muted-foreground">Itens</dt><dd className="tabular-nums">{formatCurrencyBRL(itemsTotal)}</dd></div>
+        <div className="flex justify-between"><dt className="text-muted-foreground">Frete</dt><dd className="tabular-nums">{formatCurrencyBRL(freight)}</dd></div>
+        {discount > 0 && <div className="flex justify-between"><dt className="text-muted-foreground">Desconto</dt><dd className="tabular-nums">− {formatCurrencyBRL(discount)}</dd></div>}
+        <div className="flex justify-between font-semibold"><dt>Total do pedido</dt><dd className="tabular-nums">{formatCurrencyBRL(Number(o.total_amount))}</dd></div>
+      </dl>
+    )}
     </>
   );
 }

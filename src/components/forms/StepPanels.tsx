@@ -134,6 +134,7 @@ export function QuoteSuppliers({ quoteId, status, onChanged }: { quoteId: string
   const [quote, setQuote] = useState<Row | null>(null);
   const [responding, setResponding] = useState<Row | null>(null);
   const [selecting, setSelecting] = useState<Row | null>(null);
+  const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
   const [reload, setReload] = useState(0);
   const open = !["closed", "cancelled"].includes(status);
@@ -187,6 +188,9 @@ export function QuoteSuppliers({ quoteId, status, onChanged }: { quoteId: string
   };
 
   const totalOf = (s: Row) => ((s.items as Row[] | undefined) ?? []).reduce((a, i) => a + num(i.quantity) * num(i.unit_price) - num(i.discount), 0) + num(s.freight_cost);
+  const totals = responded.map(totalOf);
+  const minTotal = totals.length > 1 ? Math.min(...totals) : null;
+  const sibling = quote?.sibling_order as { code: string; quote_code: string } | null | undefined;
 
   async function select() {
     if (!selecting) return;
@@ -208,7 +212,19 @@ export function QuoteSuppliers({ quoteId, status, onChanged }: { quoteId: string
   if (!quote) return <p className="px-4 py-3 text-sm text-muted-foreground">Carregando fornecedores...</p>;
   return (
     <div className="flex flex-col gap-2 px-4 py-3">
-      <h3 className="text-sm font-semibold">Fornecedores</h3>
+      {sibling && open && (
+        <p className="rounded-lg border border-warning/40 bg-warning-soft px-3 py-2 text-sm text-warning-fg">
+          A cotação {sibling.quote_code} da mesma solicitação já gerou o pedido de compra {sibling.code}. Se esta cotação não for mais necessária, cancele-a.
+        </p>
+      )}
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold">Fornecedores</h3>
+        {open && can("purchase_quotes.update") && (
+          <Button size="sm" variant="secondary" onClick={() => setAdding(true)}>
+            Adicionar fornecedor
+          </Button>
+        )}
+      </div>
       <ul className="divide-y divide-border-subtle rounded-lg border border-border-subtle text-sm">
         {rows.map((s) => (
           <li key={String(s.id)} className="flex flex-wrap items-center gap-2 px-3 py-2">
@@ -262,8 +278,11 @@ export function QuoteSuppliers({ quoteId, status, onChanged }: { quoteId: string
                 })}
                 <tr className="text-xs text-muted-foreground">
                   <td className="px-3 py-2">Total com frete</td>
-                  {responded.map((s) => (
-                    <td key={String(s.id)} className="px-3 py-2 text-right tabular-nums">{formatCurrencyBRL(totalOf(s))}</td>
+                  {responded.map((s, n) => (
+                    <td key={String(s.id)} className={`px-3 py-2 text-right tabular-nums ${minTotal !== null && totals[n] === minTotal ? "font-semibold text-success-fg" : ""}`}>
+                      {formatCurrencyBRL(totals[n])}
+                      {minTotal !== null && totals[n] === minTotal ? " (menor total)" : ""}
+                    </td>
                   ))}
                 </tr>
               </tbody>
@@ -301,6 +320,27 @@ export function QuoteSuppliers({ quoteId, status, onChanged }: { quoteId: string
             setReload((n) => n + 1);
             onChanged();
           }}
+        />
+      )}
+      {adding && (
+        <FormDialog
+          open
+          onOpenChange={(o) => !o && setAdding(false)}
+          title="Adicionar fornecedor"
+          description="Convida mais um fornecedor para esta cotação. Depois registre a resposta dele."
+          submitLabel="Adicionar"
+          fields={[{ key: "supplierId", label: "Fornecedor", type: "lookup", source: SOURCES.suppliers, required: true }]}
+          path={`/api/purchase-quotes/${quoteId}/suppliers`}
+          validate={(v) => (rows.some((r) => String(r.supplier_id) === String(v.supplierId)) ? "Este fornecedor já está na cotação." : null)}
+          toBody={(v) => ({ supplierId: String(v.supplierId) })}
+          onCreated={() => {
+            toast.success("Fornecedor adicionado.");
+            setAdding(false);
+            invalidateCache("/api/purchase-quotes");
+            setReload((n) => n + 1);
+            onChanged();
+          }}
+          size="sm"
         />
       )}
       {selecting && (

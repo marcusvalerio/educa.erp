@@ -118,12 +118,26 @@ export function MiniTable<T>({
 }) {
   if (rows.length === 0) return <p className="px-4 py-5 text-sm text-muted-foreground">{empty}</p>;
   return (
-    <div className="relative overflow-x-auto">
+    <>
+    {/* Celular: cartões empilhados (rótulo: valor) para nenhuma coluna ficar cortada. */}
+    <ul className="flex flex-col divide-y divide-border-subtle sm:hidden">
+      {rows.map((row) => (
+        <li key={rowKey(row)} className="flex flex-col gap-1 px-4 py-3 text-sm">
+          {columns.map((c, idx) => (
+            <div key={c.label || `c${idx}`} className={cn("flex items-start justify-between gap-3", !c.label && "justify-end pt-1")}>
+              {c.label && <span className="shrink-0 text-xs text-muted-foreground">{c.label}</span>}
+              <span className={cn("min-w-0 text-right", c.align === "right" && "tabular-nums")}>{c.cell(row)}</span>
+            </div>
+          ))}
+        </li>
+      ))}
+    </ul>
+    <div className="relative hidden overflow-x-auto sm:block">
       <table className="w-full min-w-[560px] text-left text-sm">
         <thead>
           <tr className="border-b border-border-subtle bg-surface-muted">
             {columns.map((c) => (
-              <th key={c.label} scope="col" className={cn("h-9 px-4 text-xs font-medium text-muted-foreground", c.align === "right" && "text-right")}>
+              <th key={c.label || "_actions"} scope="col" className={cn("h-9 px-4 text-xs font-medium text-muted-foreground", c.align === "right" && "text-right")}>
                 {c.label}
               </th>
             ))}
@@ -133,7 +147,7 @@ export function MiniTable<T>({
           {rows.map((row) => (
             <tr key={rowKey(row)} className="h-10 border-b border-border-subtle transition-colors last:border-0 hover:bg-surface-hover">
               {columns.map((c) => (
-                <td key={c.label} className={cn("px-4", c.align === "right" && "text-right tabular-nums", c.className)}>
+                <td key={c.label || "_actions"} className={cn("px-4", c.align === "right" && "text-right tabular-nums", c.className)}>
                   {c.cell(row)}
                 </td>
               ))}
@@ -142,5 +156,6 @@ export function MiniTable<T>({
         </tbody>
       </table>
     </div>
+    </>
   );
 }

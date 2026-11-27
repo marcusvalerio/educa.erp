@@ -37,6 +37,14 @@ const FIELDS: FieldDef[] = [
   { key: "notes", label: "Motivo", type: "textarea", required: true, placeholder: "Ex.: produto com defeito" },
 ];
 
+/** Separa "PV-0090 — motivo" em pedido de origem e motivo. */
+function splitNotes(notes: string | null | undefined): { origin: string | null; reason: string | null } {
+  const text = (notes ?? "").trim();
+  const m = /^([A-Z]{2,4}-\d+)\s+—\s+([\s\S]*)$/.exec(text) ?? /^([A-Z]{2,4}-\d+)$/.exec(text);
+  if (m) return { origin: m[1], reason: m[2]?.trim() || null };
+  return { origin: null, reason: text || null };
+}
+
 export default function DevolucoesPage() {
   const products = useIdNameLookup("/api/products");
   const salesOrders = useIdNameLookup("/api/sales-orders", "code");
@@ -64,7 +72,7 @@ export default function DevolucoesPage() {
         </div>
       }
       title="Devoluções"
-      description="Movimentações de devolução (RETURN_IN/RETURN_OUT) do ledger de estoque."
+      description="Devoluções de cliente (entrada no estoque) e devoluções a fornecedor (saída do estoque)."
       apiPath="/api/stock-movements"
       baseFilter={(row) => row.movement_type === "RETURN_IN" || row.movement_type === "RETURN_OUT"}
       searchPlaceholder="Buscar produto ou origem..."
@@ -73,11 +81,12 @@ export default function DevolucoesPage() {
         textCol<StockMovementRow>("movement_type", "Tipo", { cell: (row) => (row.movement_type === "RETURN_IN" ? "Devolução de cliente" : "Devolução a fornecedor"), mobile: "title" }),
         refCol<StockMovementRow>("product_id", "Produto", products, { mobile: "meta" }),
         numberCol<StockMovementRow>("quantity", "Quantidade", { mobile: "meta" }),
-        textCol<StockMovementRow>("notes", "Motivo", { cell: (row) => row.notes ?? "—" }),
+        textCol<StockMovementRow>("origin", "Pedido de origem", { serverSortKey: undefined, value: (row) => splitNotes(row.notes).origin, cell: (row) => splitNotes(row.notes).origin ?? "—", mono: true, mobile: "meta" }),
+        textCol<StockMovementRow>("notes", "Motivo", { value: (row) => splitNotes(row.notes).reason, cell: (row) => splitNotes(row.notes).reason ?? "—", mobile: "meta" }),
       ]}
       filters={[enumFilter<StockMovementRow>("movement_type", "Tipo", [["RETURN_IN", "Devolução de cliente"], ["RETURN_OUT", "Devolução a fornecedor"]])]}
       detail={{
-        title: () => "Devolução",
+        title: (row) => (row.movement_type === "RETURN_IN" ? "Devolução de cliente" : "Devolução a fornecedor"),
         subtitle: (row) => [products.get(row.product_id), row.notes].filter(Boolean).join(" · ") || undefined,
       }}
       emptyDescription="Registre devoluções pelos botões acima."

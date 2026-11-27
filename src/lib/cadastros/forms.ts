@@ -123,8 +123,8 @@ export const clienteForm: FormSection[] = [
   {
     title: "Endereço",
     fields: [
-      { key: "cep", label: "CEP", type: "text", span: 1 },
-      { key: "estado", label: "Estado", type: "select", options: ESTADOS_UF, span: 1 },
+      { key: "cep", label: "CEP", type: "text", placeholder: "00000-000", helpText: "Preenche UF, cidade e endereço.", span: 1 },
+      { key: "estado", label: "Estado (UF)", type: "select", options: ESTADOS_UF, required: true, span: 1 },
       { key: "cidade", label: "Cidade", type: "text", span: 2 },
       { key: "bairro", label: "Bairro", type: "text", span: 2 },
       { key: "endereco", label: "Endereço", type: "text", span: 2 },
@@ -169,8 +169,8 @@ export const fornecedorForm: FormSection[] = [
   {
     title: "Endereço",
     fields: [
-      { key: "cep", label: "CEP", type: "text", span: 1 },
-      { key: "estado", label: "Estado", type: "select", options: ESTADOS_UF, span: 1 },
+      { key: "cep", label: "CEP", type: "text", placeholder: "00000-000", helpText: "Preenche UF, cidade e endereço.", span: 1 },
+      { key: "estado", label: "Estado (UF)", type: "select", options: ESTADOS_UF, required: true, span: 1 },
       { key: "cidade", label: "Cidade", type: "text", span: 2 },
       { key: "bairro", label: "Bairro", type: "text", span: 2 },
       { key: "endereco", label: "Endereço", type: "text", span: 2 },

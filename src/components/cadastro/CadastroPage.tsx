@@ -24,6 +24,7 @@ import type { CadastroConfig, Row } from "@/lib/cadastros/config-types";
 import { EntityDrawer } from "./EntityDrawer";
 import { RelatedList } from "./RelatedList";
 import type { EntityFormMode } from "./EntityForm";
+import { lookupCep, maskCep, maskCpfCnpj } from "@/lib/cadastros/masks";
 
 // Cadastros com CRUD completo (produtos, clientes, fornecedores, frota,
 // locais). Mesmo padrão visual das listas (DataTable + estado na URL),
@@ -147,6 +148,27 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
   function openCreate() {
     const values = config.defaultValues(items) as Record<string, unknown>;
     setDrawer({ mode: "create", values, initial: JSON.stringify(values), errors: {} });
+  }
+
+  // CEP completo: busca na ViaCEP e preenche UF/cidade/logradouro/bairro
+  // (só os campos que o formulário tem). Sem resposta, nada muda.
+  const formKeys = useMemo(() => new Set(config.formSections.flatMap((sec) => sec.fields.map((f) => f.key))), [config.formSections]);
+  function fillFromCep(cep: string) {
+    void lookupCep(cep).then((addr) => {
+      if (!addr) return;
+      setDrawer((prev) => {
+        if (!prev || String(prev.values.cep ?? "").replace(/\D/g, "") !== cep.replace(/\D/g, "")) return prev;
+        const values: Record<string, unknown> = { ...prev.values };
+        const errors = { ...prev.errors };
+        for (const [k, v] of Object.entries(addr)) {
+          if (v && formKeys.has(k)) {
+            values[k] = v;
+            errors[k] = "";
+          }
+        }
+        return { ...prev, values: values as typeof prev.values, errors };
+      });
+    });
   }
 
   function openItem(id: string, mode: EntityFormMode) {
@@ -418,15 +440,21 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
           sections={config.formSections}
           values={drawer.values}
           errors={drawer.errors}
-          onChange={(key, value) =>
+          onChange={(key, value) => {
             setDrawer((prev) => {
               if (!prev) return prev;
               const values = { ...prev.values, [key]: value };
               // Estrangeiro não pode ficar com país "BR": obriga escolher o país.
               if (key === "tipo" && value === "Estrangeiro" && "pais" in prev.values && (!prev.values.pais || prev.values.pais === "BR")) values.pais = "";
+              // Trocar o tipo de pessoa limpa o documento (CPF ≠ CNPJ ≠ Tax ID).
+              if (key === "tipo" && value !== prev.values.tipo && "documento" in prev.values) values.documento = "";
+              // Máscara enquanto digita (estrangeiro digita o Tax ID livre).
+              if (key === "documento" && typeof value === "string" && prev.values.tipo !== "Estrangeiro") values.documento = maskCpfCnpj(value);
+              if (key === "cep" && typeof value === "string" && prev.values.tipo !== "Estrangeiro") values.cep = maskCep(value);
               return { ...prev, values, errors: { ...prev.errors, [key]: "" } };
-            })
-          }
+            });
+            if (key === "cep" && typeof value === "string" && value.replace(/\D/g, "").length === 8 && drawer.values.tipo !== "Estrangeiro") fillFromCep(value);
+          }}
           onClose={() => setDrawer(null)}
           onSave={handleSave}
           onEdit={() => setDrawer((prev) => (prev ? { ...prev, mode: "edit" } : prev))}

@@ -217,8 +217,24 @@ async function fetchQuoteWithDetails(companyId: string, id: string) {
     .eq("company_id", companyId).eq("purchase_quote_id", id).neq("status", "cancelled")
     .order("created_at", { ascending: false }).limit(1).maybeSingle();
   if (orderError) throw translatePostgresError(orderError);
+  // Outra cotação da mesma solicitação que já gerou pedido: a tela avisa
+  // (não cancela esta automaticamente).
+  let siblingOrder: { code: string; quote_code: string } | null = null;
+  if (header.purchase_request_id) {
+    const { data: siblings, error: siblingsError } = await admin.from("purchase_quotes").select("id, code")
+      .eq("company_id", companyId).eq("purchase_request_id", header.purchase_request_id).neq("id", id);
+    if (siblingsError) throw translatePostgresError(siblingsError);
+    const siblingIds = (siblings ?? []).map((q) => q.id as string);
+    if (siblingIds.length) {
+      const { data: so, error: soError } = await admin.from("purchase_orders").select("code, purchase_quote_id")
+        .eq("company_id", companyId).in("purchase_quote_id", siblingIds).neq("status", "cancelled").limit(1).maybeSingle();
+      if (soError) throw translatePostgresError(soError);
+      if (so) siblingOrder = { code: so.code as string, quote_code: String((siblings ?? []).find((q) => q.id === so.purchase_quote_id)?.code ?? "") };
+    }
+  }
   return {
     ...header,
+    sibling_order: siblingOrder,
     request_items: requestItems ?? [],
     purchase_order_id: order?.id ?? null,
     purchase_order_code: order?.code ?? null,
@@ -308,6 +324,24 @@ export async function addQuoteSupplierResponse(request: NextRequest, context: { 
     });
     if (error) throw rpcError(error);
     return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+// POST /api/purchase-quotes/:id/suppliers — convida mais um fornecedor para
+// uma cotação aberta (fn_add_purchase_quote_supplier, migração 0138).
+export async function addPurchaseQuoteSupplier(request: NextRequest, context: RouteContext) {
+  try {
+    await requirePurchasingAccess("purchase_quotes.update");
+    const { id } = await context.params;
+    const raw = (await request.json().catch(() => null)) as { supplierId?: unknown } | null;
+    const supplierId = typeof raw?.supplierId === "string" ? raw.supplierId : "";
+    if (!/^[0-9a-f-]{36}$/i.test(supplierId)) throw validationError("Escolha o fornecedor.");
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_add_purchase_quote_supplier", { p_quote_id: id, p_supplier_id: supplierId });
+    if (error) throw rpcError(error);
+    return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     return jsonError(error);
   }

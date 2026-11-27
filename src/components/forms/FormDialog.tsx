@@ -48,6 +48,8 @@ export type FieldDef =
       source: LookupSource;
       /** Rótulo do campo de cada linha (padrão: Produto). */
       itemLabel?: string;
+      /** Texto do botão de incluir linha (padrão: Adicionar item). */
+      addLabel?: string;
       /** Colunas numéricas por item além do produto (ex.: quantidade, preço). */
       columns: { key: string; label: string; default?: string; money?: boolean; fill?: (row: Row) => string }[];
     };
@@ -125,7 +127,7 @@ function ItemsField({ field, value, onChange, open }: { field: Extract<FieldDef,
       ))}
       <div>
         <Button variant="secondary" size="sm" onClick={() => onChange([...lines, blank()])}>
-          <Plus size={14} aria-hidden /> Adicionar item
+          <Plus size={14} aria-hidden /> {field.addLabel ?? "Adicionar item"}
         </Button>
       </div>
     </div>
@@ -155,11 +157,15 @@ export type FormDialogProps = {
   /** Coleções a invalidar depois de criar. */
   invalidate?: string[];
   size?: "sm" | "md" | "lg" | "xl";
+  /** Valores iniciais (ex.: edição ou pré-preenchimento). */
+  initial?: FormValues;
+  /** Método HTTP (padrão: POST). */
+  method?: "POST" | "PATCH";
 };
 
-export function FormDialog({ open, onOpenChange, title, description, submitLabel = "Salvar", fields, path, toBody, validate, warn, onCreated, invalidate = [], size = "lg" }: FormDialogProps) {
+export function FormDialog({ open, onOpenChange, title, description, submitLabel = "Salvar", fields, path, toBody, validate, warn, onCreated, invalidate = [], size = "lg", initial, method = "POST" }: FormDialogProps) {
   const [warning, setWarning] = useState<string | null>(null);
-  const [values, setValues] = useState<FormValues>(() => initialValues(fields));
+  const [values, setValues] = useState<FormValues>(() => ({ ...initialValues(fields), ...(initial ?? {}) }));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const set = (key: string, v: string | ItemValue[]) => {
@@ -185,7 +191,7 @@ export function FormDialog({ open, onOpenChange, title, description, submitLabel
           return;
         }
       }
-      const created = await apiSend<Row>(path, "POST", toBody(values));
+      const created = await apiSend<Row>(path, method, toBody(values));
       for (const p of [path, ...invalidate]) invalidateCache(p);
       const submitted = values;
       setValues(initialValues(fields));

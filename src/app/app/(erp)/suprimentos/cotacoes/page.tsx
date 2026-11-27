@@ -52,8 +52,9 @@ export default function CotacoesPage() {
       filters={[statusFilter<PurchaseQuoteRow>("purchase_quotes", "status", { server: true })]}
       detail={{
         render: (row) => <QuoteSuppliers key={`${String(row.id)}-${refresh}`} quoteId={String(row.id)} status={dbStatusCode("purchase_quotes", String(row.status ?? "")).toLowerCase()} onChanged={reload} />,
-        actions: (row) => <WorkflowActions base="/api/purchase-quotes" id={String(row.id)} status={dbStatusCode("purchase_quotes", String(row.status ?? ""))} actions={ACTIONS} onDone={reload} />,
+        actions: (row) => <WorkflowActions base="/api/purchase-quotes" id={String(row.id)} status={dbStatusCode("purchase_quotes", String(row.status ?? ""))} actions={row.purchase_order_id ? ACTIONS.filter((a) => a.id !== "order") : ACTIONS} onDone={reload} />,
         title: (row) => row.code,
+        subtitle: (row) => (row.purchase_order_code ? `Pedido de compra gerado: ${row.purchase_order_code}` : undefined),
         badges: (row) => <StatusBadge entity="purchase_quotes" status={row.status} />,
       }}
       emptyDescription="Crie o primeiro pelo botão Nova cotação."

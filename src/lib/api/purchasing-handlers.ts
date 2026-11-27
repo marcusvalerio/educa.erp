@@ -207,7 +207,23 @@ async function fetchQuoteWithDetails(companyId: string, id: string) {
     ? await admin.from("purchase_quote_items").select("*").in("quote_supplier_id", supplierIds)
     : { data: [], error: null };
   if (itemsError) throw translatePostgresError(itemsError);
-  return { ...header, suppliers: (suppliers ?? []).map((s) => ({ ...s, items: (items ?? []).filter((i) => i.quote_supplier_id === s.id) })) };
+  // Itens da solicitação de origem (pré-preenchem a resposta do fornecedor)
+  // e o pedido de compra já gerado a partir desta cotação, se houver.
+  const { data: requestItems, error: requestItemsError } = header.purchase_request_id
+    ? await admin.from("purchase_request_items").select("*").eq("request_id", header.purchase_request_id)
+    : { data: [], error: null };
+  if (requestItemsError) throw translatePostgresError(requestItemsError);
+  const { data: order, error: orderError } = await admin.from("purchase_orders").select("id, code, status")
+    .eq("company_id", companyId).eq("purchase_quote_id", id).neq("status", "cancelled")
+    .order("created_at", { ascending: false }).limit(1).maybeSingle();
+  if (orderError) throw translatePostgresError(orderError);
+  return {
+    ...header,
+    request_items: requestItems ?? [],
+    purchase_order_id: order?.id ?? null,
+    purchase_order_code: order?.code ?? null,
+    suppliers: (suppliers ?? []).map((s) => ({ ...s, items: (items ?? []).filter((i) => i.quote_supplier_id === s.id) })),
+  };
 }
 
 export async function listPurchaseQuotes(request: NextRequest) {
@@ -215,11 +231,21 @@ export async function listPurchaseQuotes(request: NextRequest) {
     const { companyId } = await requirePurchasingAccess("purchase_quotes.view");
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
-    let query = createAdminClient().from("purchase_quotes").select("*").eq("company_id", companyId);
+    const admin = createAdminClient();
+    let query = admin.from("purchase_quotes").select("*").eq("company_id", companyId);
     if (status) query = query.eq("status", status);
     const { data, error } = await query.order("created_at", { ascending: false });
     if (error) throw translatePostgresError(error);
-    return NextResponse.json({ success: true, data: data ?? [] });
+    const ids = (data ?? []).map((q) => q.id as string);
+    const { data: orders, error: ordersError } = ids.length
+      ? await admin.from("purchase_orders").select("id, code, purchase_quote_id").eq("company_id", companyId).in("purchase_quote_id", ids).neq("status", "cancelled")
+      : { data: [], error: null };
+    if (ordersError) throw translatePostgresError(ordersError);
+    const byQuote = new Map((orders ?? []).map((o) => [o.purchase_quote_id as string, o]));
+    return NextResponse.json({
+      success: true,
+      data: (data ?? []).map((q) => ({ ...q, purchase_order_id: byQuote.get(q.id)?.id ?? null, purchase_order_code: byQuote.get(q.id)?.code ?? null })),
+    });
   } catch (error) {
     return jsonError(error);
   }
@@ -602,6 +628,40 @@ export async function registerPurchaseOrderEntryInvoices(_request: NextRequest, 
     const { data, error } = await supabase.rpc("fn_register_purchase_order_entry_invoices", { p_order_id: id });
     if (error) throw rpcError(error);
     return NextResponse.json({ success: true, data: { invoices: data } });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
+
+// POST /api/purchase-orders/:id/schedule-delivery — agenda data e hora
+// previstas de entrega de um pedido aprovado/enviado. Grava a data em
+// expected_delivery_at (coluna original) e a data/hora em
+// delivery_scheduled_at (0135); se a 0135 ainda não estiver aplicada,
+// grava só a data.
+export async function schedulePurchaseOrderDelivery(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const { companyId } = await requirePurchasingAccess("purchase_orders.update");
+    const { id } = await context.params;
+    const body = (await request.json().catch(() => null)) as { scheduledAt?: unknown; date?: unknown } | null;
+    const raw = typeof body?.scheduledAt === "string" ? body.scheduledAt.trim() : "";
+    const when = raw ? new Date(raw) : null;
+    if (!when || Number.isNaN(when.getTime())) throw validationError("Informe a data e a hora previstas da entrega.");
+    // date: data local escolhida pelo usuário (scheduledAt vem em UTC).
+    const date = typeof body?.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.date) ? body.date : raw.slice(0, 10);
+    const admin = createAdminClient();
+    const { data: order, error: orderError } = await admin.from("purchase_orders").select("id, status").eq("company_id", companyId).eq("id", id).maybeSingle();
+    if (orderError) throw translatePostgresError(orderError);
+    if (!order) throw notFoundError("Pedido de compra");
+    if (!["approved", "sent", "partially_received"].includes(String(order.status))) {
+      throw validationError("Só é possível agendar a entrega de pedidos aprovados, enviados ou parcialmente recebidos.");
+    }
+    let result = await admin.from("purchase_orders").update({ expected_delivery_at: date, delivery_scheduled_at: when.toISOString() })
+      .eq("company_id", companyId).eq("id", id).select("*").maybeSingle();
+    if (result.error && /delivery_scheduled_at/.test(result.error.message ?? "")) {
+      result = await admin.from("purchase_orders").update({ expected_delivery_at: date }).eq("company_id", companyId).eq("id", id).select("*").maybeSingle();
+    }
+    if (result.error) throw translatePostgresError(result.error);
+    return NextResponse.json({ success: true, data: result.data });
   } catch (error) {
     return jsonError(error);
   }

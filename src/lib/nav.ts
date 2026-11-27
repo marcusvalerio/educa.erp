@@ -188,6 +188,7 @@ export const ERP_NAV: NavSection[] = [
       { label: "Contas a pagar", href: "/app/financeiro/contas-pagar", permission: "accounts_payable.view" },
       { label: "Contas a receber", href: "/app/financeiro/contas-receber", permission: "accounts_receivable.view" },
       { label: "Fluxo de caixa", href: "/app/financeiro/fluxo-caixa", permission: "financial_transactions.view" },
+      { label: "Contas financeiras", href: "/app/financeiro/contas-financeiras", permission: "financial_accounts.view" },
       { label: "Centros de custo", href: "/app/financeiro/centro-custos", permission: "cost_centers.view" },
     ],
   },

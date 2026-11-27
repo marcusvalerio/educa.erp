@@ -321,7 +321,7 @@ export const SIMPLE_FORMS = {
     success: "Cotação criada.",
     size: "md",
     fields: [
-      { key: "suppliers", label: "Fornecedores convidados", type: "items", required: true, source: SOURCES.suppliers, itemLabel: "Fornecedor", columns: [] },
+      { key: "suppliers", label: "Fornecedores convidados", type: "items", required: true, source: SOURCES.suppliers, itemLabel: "Fornecedor", addLabel: "Adicionar fornecedor", columns: [] },
       { key: "purchaseRequestId", label: "Solicitação de compra", type: "lookup", source: SOURCES.purchaseRequests },
       { key: "notes", label: "Observações", type: "textarea" },
     ],

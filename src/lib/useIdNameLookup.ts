@@ -53,3 +53,43 @@ export function useIdNameLookup(apiPath: string, nameField = "name"): Map<string
 
   return lookup;
 }
+
+type LookupRow = Record<string, unknown>;
+const txt = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+
+/** "código — descrição" do produto (cadastro mapeado ou linha do banco). */
+export function productLabel(row: LookupRow): string | null {
+  const code = txt(row.codigo) || txt(row.code) || txt(row.sku);
+  const name = txt(row.descricao) || txt(row.description) || txt(row.nome) || txt(row.name);
+  return [code, name].filter(Boolean).join(" — ") || null;
+}
+
+/** "código — descrição" do local de estoque. */
+export function locationLabel(row: LookupRow): string | null {
+  const code = txt(row.codigoLocal) || txt(row.codigo) || txt(row.code);
+  const name = txt(row.descricao) || txt(row.description) || txt(row.nome) || txt(row.name);
+  return [code, name].filter(Boolean).join(" — ") || null;
+}
+
+/** Como useIdNameLookup, mas com um rótulo montado (ex.: productLabel). Passe uma função estável. */
+export function useLabelLookup(apiPath: string, label: (row: LookupRow) => string | null): Map<string, string> {
+  const [lookup, setLookup] = useState<Map<string, string>>(new Map());
+  useEffect(() => {
+    let cancelled = false;
+    cachedGet<LookupRow[]>(lookupPath(apiPath))
+      .then((rows) => {
+        if (cancelled || !Array.isArray(rows)) return;
+        const map = new Map<string, string>();
+        for (const row of rows) {
+          const name = label(row);
+          if (typeof row.id === "string" && name) map.set(row.id, name);
+        }
+        setLookup(map);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [apiPath, label]);
+  return lookup;
+}

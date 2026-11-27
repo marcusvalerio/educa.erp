@@ -12,9 +12,14 @@ import { ReceiveOrderDialog } from "@/components/forms/ReceiveOrderDialog";
 import { WorkflowActions } from "@/components/forms/WorkflowActions";
 import { RECEIPT_ACTIONS } from "@/components/forms/receipt-actions";
 import { invalidateCache } from "@/lib/dashboard/client";
+import { ReceiptItems } from "@/components/logistics/DocumentItems";
+import { Badge } from "@/components/ui/Badge";
 import { useIdNameLookup } from "@/lib/useIdNameLookup";
 import { dbStatusCode } from "@/lib/status";
-import type { PurchaseReceiptRow } from "@/lib/database/schema";
+import type { PurchaseReceiptRow as BaseReceiptRow } from "@/lib/database/schema";
+
+type PurchaseReceiptRow = BaseReceiptRow & { has_divergence?: boolean };
+const divergenceBadge = (row: PurchaseReceiptRow) => (row.has_divergence ? <Badge tone="warning">Com divergência</Badge> : null);
 
 
 
@@ -49,6 +54,7 @@ export default function RecebimentoPage() {
           dateCol<PurchaseReceiptRow>("received_at", "Recebido em", { mobile: "meta" }),
           textCol<PurchaseReceiptRow>("document_number", "Documento", { mono: true }),
           statusCol<PurchaseReceiptRow>("purchase_receipts"),
+          { id: "divergence", header: "Conferência", value: (row: PurchaseReceiptRow) => (row.has_divergence ? "Com divergência" : "Sem divergência"), cell: (row: PurchaseReceiptRow) => divergenceBadge(row) ?? <span className="text-muted-foreground">Sem divergência</span> },
         ]}
         filters={[
           statusViews<PurchaseReceiptRow>([{ value: "conferencia", label: "Em conferência", statuses: ["draft"] }]),
@@ -57,7 +63,13 @@ export default function RecebimentoPage() {
         detail={{
           title: (row) => row.code,
           subtitle: (row) => suppliers.get(row.supplier_id) ?? undefined,
-          badges: (row) => <StatusBadge entity="purchase_receipts" status={row.status} />,
+          badges: (row) => (
+            <>
+              <StatusBadge entity="purchase_receipts" status={row.status} />
+              {divergenceBadge(row)}
+            </>
+          ),
+          render: (row) => <ReceiptItems key={`${row.id}-${refresh}`} id={row.id} />,
           actions: (row) => (
             <WorkflowActions base="/api/purchase-receipts" id={row.id} status={dbStatusCode("purchase_receipts", String(row.status ?? ""))} actions={RECEIPT_ACTIONS} onDone={reload} />
           ),

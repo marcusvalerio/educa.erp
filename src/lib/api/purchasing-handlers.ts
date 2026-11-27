@@ -439,12 +439,25 @@ export async function listPurchaseReceipts(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const orderId = searchParams.get("purchaseOrderId");
-    let query = createAdminClient().from("purchase_receipts").select("*").eq("company_id", companyId);
+    const admin = createAdminClient();
+    let query = admin.from("purchase_receipts").select("*").eq("company_id", companyId);
     if (status) query = query.eq("status", status);
     if (orderId) query = query.eq("purchase_order_id", orderId);
     const { data, error } = await query.order("created_at", { ascending: false });
     if (error) throw translatePostgresError(error);
-    return NextResponse.json({ success: true, data: data ?? [] });
+    const rows = (data ?? []) as Array<Record<string, unknown>>;
+    // Marca os recebimentos com itens recusados/divergentes (só exibição).
+    const divergent = new Set<string>();
+    if (rows.length > 0) {
+      const { data: bad } = await admin
+        .from("purchase_receipt_items")
+        .select("receipt_id")
+        .eq("company_id", companyId)
+        .in("receipt_id", rows.map((r) => String(r.id)))
+        .or("rejected_quantity.gt.0,conference_status.eq.divergent");
+      for (const item of (bad ?? []) as Array<{ receipt_id: string }>) divergent.add(item.receipt_id);
+    }
+    return NextResponse.json({ success: true, data: rows.map((r) => ({ ...r, has_divergence: divergent.has(String(r.id)) })) });
   } catch (error) {
     return jsonError(error);
   }

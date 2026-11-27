@@ -149,19 +149,23 @@ export type FormDialogProps = {
   toBody: (values: FormValues) => unknown;
   /** Validação simples antes de enviar (mensagem ou null). */
   validate?: (values: FormValues) => string | null;
+  /** Aviso antes de enviar (mensagem ou null): exige um segundo clique para confirmar. */
+  warn?: (values: FormValues) => string | null | Promise<string | null>;
   onCreated: (created: Row, values: FormValues) => void | Promise<void>;
   /** Coleções a invalidar depois de criar. */
   invalidate?: string[];
   size?: "sm" | "md" | "lg" | "xl";
 };
 
-export function FormDialog({ open, onOpenChange, title, description, submitLabel = "Salvar", fields, path, toBody, validate, onCreated, invalidate = [], size = "lg" }: FormDialogProps) {
+export function FormDialog({ open, onOpenChange, title, description, submitLabel = "Salvar", fields, path, toBody, validate, warn, onCreated, invalidate = [], size = "lg" }: FormDialogProps) {
+  const [warning, setWarning] = useState<string | null>(null);
   const [values, setValues] = useState<FormValues>(() => initialValues(fields));
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const set = (key: string, v: string | ItemValue[]) => {
     setValues((prev) => ({ ...prev, [key]: v }));
     setError(null);
+    setWarning(null);
   };
 
   async function submit() {
@@ -174,10 +178,18 @@ export function FormDialog({ open, onOpenChange, title, description, submitLabel
     if (message) return setError(message);
     setBusy(true);
     try {
+      if (warn && !warning) {
+        const w = await Promise.resolve().then(() => warn(values)).catch(() => null);
+        if (w) {
+          setWarning(w);
+          return;
+        }
+      }
       const created = await apiSend<Row>(path, "POST", toBody(values));
       for (const p of [path, ...invalidate]) invalidateCache(p);
       const submitted = values;
       setValues(initialValues(fields));
+      setWarning(null);
       await onCreated(created ?? {}, submitted);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Não foi possível salvar.");
@@ -199,7 +211,7 @@ export function FormDialog({ open, onOpenChange, title, description, submitLabel
             Cancelar
           </Button>
           <Button onClick={submit} loading={busy}>
-            {submitLabel}
+            {warning ? "Confirmar mesmo assim" : submitLabel}
           </Button>
         </>
       }
@@ -208,6 +220,11 @@ export function FormDialog({ open, onOpenChange, title, description, submitLabel
         {error && (
           <div className="sm:col-span-2">
             <Alert tone="danger">{error}</Alert>
+          </div>
+        )}
+        {warning && (
+          <div className="sm:col-span-2">
+            <Alert tone="warning">{warning}</Alert>
           </div>
         )}
         {fields.map((f) => {

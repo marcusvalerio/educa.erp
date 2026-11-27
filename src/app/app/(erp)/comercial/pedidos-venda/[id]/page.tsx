@@ -19,9 +19,10 @@ import { DetailError, DetailHeader, DetailSection, DetailSkeleton, InfoGrid, Min
 import { useCached, invalidateCache } from "@/lib/dashboard/client";
 import { apiGet, apiSend } from "@/lib/api-client";
 import { reservationFeedback } from "@/lib/reservation-feedback";
-import { useIdNameLookup } from "@/lib/useIdNameLookup";
+import { useIdNameLookup, useLabelLookup, locationLabel, productLabel } from "@/lib/useIdNameLookup";
 import { dbStatusCode } from "@/lib/status";
 import { formatCurrencyBRL, formatDate } from "@/lib/format";
+import type { StockBalanceRow } from "@/lib/database/schema";
 import type { AccountsReceivableRow, FiscalDocumentRow, SalesOrderItemRow, SalesOrderRow, ShipmentRow } from "@/lib/database/schema";
 import { IssueOrderNfeButton, NfeOutputLinks } from "@/components/fiscal/NfeActions";
 import { OrderFulfillmentButtons } from "@/components/logistics/FulfillmentActions";
@@ -53,12 +54,14 @@ export default function PedidoVendaDetailPage() {
   const customers = useIdNameLookup("/api/customers");
   const fiscalOk = can("fiscal_documents.view");
   const fiscalDocs = useCached<FiscalDocumentRow[]>(fiscalOk ? `/api/fiscal-documents?sourceId=${id}` : null, fiscalOk);
-  const locations = useIdNameLookup("/api/warehouse-locations");
+  const locations = useLabelLookup("/api/warehouse-locations", locationLabel);
+  const products = useLabelLookup("/api/products", productLabel);
   const [pending, setPending] = useState<ActionId | null>(null);
   const [busy, setBusy] = useState(false);
   const [reserveOpen, setReserveOpen] = useState(false);
   const [locationId, setLocationId] = useState("");
   const [reserveError, setReserveError] = useState<string | null>(null);
+  const balances = useCached<StockBalanceRow[]>(reserveOpen ? "/api/stock-balances" : null, reserveOpen);
   useBreadcrumbTail(order.data?.code);
 
   const status = order.data ? dbStatusCode("sales_orders", String(order.data.status ?? "")).toLowerCase() : "";
@@ -226,12 +229,13 @@ export default function PedidoVendaDetailPage() {
           rowKey={(i) => i.id}
           empty="Pedido sem itens."
           columns={[
-            { label: "Descrição", cell: (i) => <span className="line-clamp-1">{i.description}</span> },
+            { label: "Produto", cell: (i) => <span className="line-clamp-1">{(i.product_id && products.get(i.product_id)) || i.description}</span> },
             { label: "Un.", cell: (i) => i.unit ?? "—" },
             { label: "Pedida", align: "right", cell: (i) => Number(i.ordered_quantity).toLocaleString("pt-BR") },
             { label: "Reservada", align: "right", cell: (i) => Number(i.reserved_quantity).toLocaleString("pt-BR") },
             { label: "Expedida", align: "right", cell: (i) => Number(i.shipped_quantity).toLocaleString("pt-BR") },
             { label: "Preço unit.", align: "right", cell: (i) => formatCurrencyBRL(i.unit_price) },
+            { label: "Desconto", align: "right", cell: (i) => (Number(i.discount) ? formatCurrencyBRL(i.discount) : "—") },
             { label: "Total", align: "right", cell: (i) => <span className="font-medium">{formatCurrencyBRL(i.line_total)}</span> },
           ]}
         />
@@ -311,7 +315,11 @@ export default function PedidoVendaDetailPage() {
             value={locationId}
             onValueChange={(v) => { setLocationId(v); setReserveError(null); }}
             placeholder={locations.size === 0 ? "Nenhum local disponível" : "Selecione o local"}
-            options={[...locations.entries()].map(([value, label]) => ({ value, label }))}
+            options={[...locations.entries()].map(([value, label]) => {
+              const productIds = new Set((order.data?.items ?? []).map((i) => i.product_id).filter(Boolean));
+              const avail = (balances.data ?? []).filter((b) => b.location_id === value && productIds.has(b.product_id)).reduce((a, b) => a + Number(b.available || 0), 0);
+              return { value, label: balances.data ? `${label} · disponível ${avail.toLocaleString("pt-BR")}` : label };
+            })}
           />
         </FormField>
       </Dialog>

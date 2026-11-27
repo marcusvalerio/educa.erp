@@ -13,6 +13,7 @@ import { Select } from "@/components/ui/Controls";
 import { useCached } from "@/lib/dashboard/client";
 import { apiSend } from "@/lib/api-client";
 import { invalidateCache } from "@/lib/dashboard/client";
+import { dbStatusCode } from "@/lib/status";
 
 // Passos da separação e da expedição na tela. O banco decide cada passo
 // (fn_start_picking, fn_pick_item, fn_*_shipment); a saída do estoque
@@ -238,6 +239,10 @@ export function OrderFulfillmentButtons({ orderId, status, onDone }: { orderId: 
   const { can } = useSession();
   const [busy, setBusy] = useState<string | null>(null);
   const st = status.toLowerCase();
+  // Expedição em aberto (ainda não saiu) para o pedido: não oferece gerar outra.
+  const shipments = useCached<Row[]>(`/api/shipments?salesOrderId=${orderId}`, can("shipments.view"));
+  const CLOSED = ["shipped", "in_transit", "delivered", "completed", "cancelled"];
+  const hasOpenShipment = (shipments.data ?? []).some((s) => !CLOSED.includes(dbStatusCode("shipments", String(s.status ?? "")).toLowerCase()));
 
   async function run(kind: "pick" | "ship") {
     setBusy(kind);
@@ -245,6 +250,7 @@ export function OrderFulfillmentButtons({ orderId, status, onDone }: { orderId: 
       await apiSend(`/api/sales-orders/${orderId}/${kind === "pick" ? "pick-auto" : "ship-auto"}`, "POST", {});
       invalidateCache("/api/sales-orders");
       invalidateCache(kind === "pick" ? "/api/pick-lists" : "/api/shipments");
+      if (kind === "ship") shipments.reload();
       toast.success(
         kind === "pick" ? "Separação criada." : "Expedição criada.",
         kind === "pick" ? "Conclua em Logística › Picking." : "Siga os passos em Logística › Expedição: embalar, aprovar e expedir (baixa do estoque)."
@@ -264,7 +270,7 @@ export function OrderFulfillmentButtons({ orderId, status, onDone }: { orderId: 
           <PackageCheck size={14} aria-hidden /> Separar estoque
         </Button>
       )}
-      {["reserved", "ready_to_ship", "partially_shipped"].includes(st) && can("shipments.create") && (
+      {["reserved", "ready_to_ship", "partially_shipped"].includes(st) && can("shipments.create") && !hasOpenShipment && !shipments.loading && (
         <Button size="sm" variant="secondary" loading={busy === "ship"} disabled={busy !== null} onClick={() => run("ship")}>
           <Truck size={14} aria-hidden /> Gerar expedição
         </Button>

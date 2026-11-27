@@ -2,12 +2,12 @@
 
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { dateTimeCol, numberCol, refCol } from "@/components/data-table/columns";
-import { useIdNameLookup } from "@/lib/useIdNameLookup";
+import { useLabelLookup, locationLabel, productLabel } from "@/lib/useIdNameLookup";
 import type { StockBalanceRow } from "@/lib/database/schema";
 
 export default function EstoquePage() {
-  const products = useIdNameLookup("/api/products");
-  const locations = useIdNameLookup("/api/warehouse-locations");
+  const products = useLabelLookup("/api/products", productLabel);
+  const locations = useLabelLookup("/api/warehouse-locations", locationLabel);
 
   return (
     <ResourceListPage<StockBalanceRow>

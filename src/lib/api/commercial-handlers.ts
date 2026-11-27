@@ -1,4 +1,5 @@
 import "server-only";
+import { recordCancelAudit } from "@/lib/audit/cancel";
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -263,12 +264,14 @@ export const expireSalesQuote = (request: NextRequest, context: RouteContext) =>
 export async function cancelSalesQuote(request: NextRequest, context: RouteContext) {
   try {
     const { companyId } = await requireCommercialAccess("sales_quotes.cancel");
+    const ctx = await getAuthContext();
     const { id } = await context.params;
     const reason = await readCancelReason(request);
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("fn_cancel_sales_quote", { p_quote_id: id });
     if (error) throw rpcError(error);
     await appendCancelReason("sales_quotes", companyId, id, reason);
+    if (ctx) await recordCancelAudit(ctx, "sales_quotes", id, reason);
     return NextResponse.json({ success: true, data });
   } catch (error) {
     return jsonError(error);
@@ -458,12 +461,14 @@ async function appendCancelReason(table: "sales_orders" | "sales_quotes", compan
 export async function cancelSalesOrder(request: NextRequest, context: RouteContext) {
   try {
     const { companyId } = await requireCommercialAccess("sales_orders.cancel");
+    const ctx = await getAuthContext();
     const { id } = await context.params;
     const reason = await readCancelReason(request);
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("fn_cancel_sales_order", { p_order_id: id });
     if (error) throw rpcError(error);
     await appendCancelReason("sales_orders", companyId, id, reason);
+    if (ctx) await recordCancelAudit(ctx, "sales_orders", id, reason);
     return NextResponse.json({ success: true, data });
   } catch (error) {
     return jsonError(error);

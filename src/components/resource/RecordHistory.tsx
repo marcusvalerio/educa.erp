@@ -11,22 +11,24 @@ type AuditEntry = { id: string; data: string; usuario: string | null; entidade: 
 
 // Histórico real do registro (audit_logs via /api/audit-logs). Sem
 // permissão audit_logs.read, a seção explica o motivo em vez de sumir.
-export function RecordHistory({ entityId }: { entityId: string }) {
+export function RecordHistory({ entityId, relatedIds }: { entityId: string; relatedIds?: string[] }) {
   const { can } = useSession();
   const allowed = can("audit_logs.read");
   const [entries, setEntries] = useState<AuditEntry[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const relatedKey = (relatedIds ?? []).join(",");
 
   useEffect(() => {
     if (!allowed) return;
     let cancelled = false;
-    apiGet<AuditEntry[]>(`/api/audit-logs?entityId=${encodeURIComponent(entityId)}`)
+    const extra = relatedKey ? `&entityIds=${encodeURIComponent(relatedKey)}` : "";
+    apiGet<AuditEntry[]>(`/api/audit-logs?entityId=${encodeURIComponent(entityId)}${extra}`)
       .then((data) => !cancelled && setEntries(Array.isArray(data) ? data : []))
       .catch(() => !cancelled && setFailed(true));
     return () => {
       cancelled = true;
     };
-  }, [allowed, entityId]);
+  }, [allowed, entityId, relatedKey]);
 
   if (!allowed) return <p className="text-sm text-subtle-foreground">O histórico de alterações exige a permissão de auditoria.</p>;
   if (failed) return <p className="text-sm text-danger-fg">Não foi possível carregar o histórico.</p>;

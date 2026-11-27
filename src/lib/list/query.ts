@@ -80,6 +80,8 @@ export function compareValues(a: unknown, b: unknown): number {
 export type ClientQueryConfig<T> = {
   /** Valores pesquisáveis por linha (busca textual sem acento/caixa). */
   searchText: (row: T) => string;
+  /** Regra própria de busca para alguns termos; `undefined` = busca textual padrão. */
+  searchMatch?: (row: T, query: string) => boolean | undefined;
   /** Valor ordenável por id de coluna. */
   sortValue: (row: T, columnId: string) => unknown;
   /** Predicados de filtro locais por id de filtro. */
@@ -89,7 +91,10 @@ export type ClientQueryConfig<T> = {
 export function applyClientQuery<T>(rows: T[], state: ListState, config: ClientQueryConfig<T>): { rows: T[]; total: number; filtered: T[] } {
   const term = normalize(state.q.trim());
   let result = rows;
-  if (term) result = result.filter((row) => normalize(config.searchText(row)).includes(term));
+  if (term) {
+    const raw = state.q.trim();
+    result = result.filter((row) => config.searchMatch?.(row, raw) ?? normalize(config.searchText(row)).includes(term));
+  }
   for (const [id, value] of Object.entries(state.filters)) {
     const predicate = config.predicates[id];
     if (predicate && value) result = result.filter((row) => predicate(row, value));

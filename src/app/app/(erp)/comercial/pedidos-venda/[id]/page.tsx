@@ -27,7 +27,7 @@ import type { AccountsReceivableRow, FiscalDocumentRow, SalesOrderItemRow, Sales
 import { Alert } from "@/components/ui/Feedback";
 import { Input } from "@/components/ui/Input";
 import { customerAddressWarning, formatCustomerAddress, missingCustomerAddressFields } from "@/lib/customer-address";
-import { foreignCurrencyItems } from "@/lib/currency-display";
+import { foreignAmountHint, foreignCurrencyItems } from "@/lib/currency-display";
 import type { Cliente } from "@/lib/cadastros/types";
 import { IssueOrderNfeButton, NfeOutputLinks } from "@/components/fiscal/NfeActions";
 import { OrderFulfillmentButtons } from "@/components/logistics/FulfillmentActions";
@@ -72,9 +72,11 @@ export default function PedidoVendaDetailPage() {
   useBreadcrumbTail(order.data?.code);
 
   const status = order.data ? dbStatusCode("sales_orders", String(order.data.status ?? "")).toLowerCase() : "";
+  // Pedido que já tem título a receber válido não oferece "Gerar conta a receber".
+  const hasReceivable = (receivables.data ?? []).some((r) => r.origin_id === id && String(r.status).toUpperCase() !== "CANCELLED");
   const available = useMemo(
-    () => (Object.keys(ACTIONS) as ActionId[]).filter((key) => ACTIONS[key].statuses.includes(status) && can(ACTIONS[key].permission)),
-    [status, can]
+    () => (Object.keys(ACTIONS) as ActionId[]).filter((key) => ACTIONS[key].statuses.includes(status) && can(ACTIONS[key].permission) && !(key === "receivable" && hasReceivable)),
+    [status, can, hasReceivable]
   );
   const canReserve = ["approved", "reservation_pending"].includes(status) && can("sales_orders.reserve");
 
@@ -102,9 +104,10 @@ export default function PedidoVendaDetailPage() {
         toast.error("Informe o motivo do cancelamento (mínimo 5 caracteres).");
         return;
       }
-      await apiSend(`/api/sales-orders/${id}/${ACTIONS[action].path}`, "POST", action === "receivable" ? {} : action === "cancel" ? { reason: cancelReason.trim() } : undefined);
+      const result = await apiSend<{ code?: string; already_existed?: boolean } | null>(`/api/sales-orders/${id}/${ACTIONS[action].path}`, "POST", action === "receivable" ? {} : action === "cancel" ? { reason: cancelReason.trim() } : undefined);
       setCancelReason("");
-      toast.success(ACTIONS[action].success);
+      if (action === "receivable" && result?.already_existed) toast.info(`Já existe o título ${result.code ?? ""}`.trim());
+      else toast.success(ACTIONS[action].success);
       setPending(null);
       refresh();
     } catch (error) {
@@ -252,9 +255,9 @@ export default function PedidoVendaDetailPage() {
             { label: "Pedida", align: "right", cell: (i) => Number(i.ordered_quantity).toLocaleString("pt-BR") },
             { label: "Reservada", align: "right", cell: (i) => Number(i.reserved_quantity).toLocaleString("pt-BR") },
             { label: "Expedida", align: "right", cell: (i) => Number(i.shipped_quantity).toLocaleString("pt-BR") },
-            { label: "Preço unit.", align: "right", cell: (i) => formatCurrencyBRL(i.unit_price) },
+            { label: "Preço unit.", align: "right", cell: (i) => <MoneyWithForeign brl={i.unit_price} code={o.currency_code} rate={o.exchange_rate} /> },
             { label: "Desconto", align: "right", cell: (i) => (Number(i.discount) ? formatCurrencyBRL(i.discount) : "—") },
-            { label: "Total", align: "right", cell: (i) => <span className="font-medium">{formatCurrencyBRL(i.line_total)}</span> },
+            { label: "Total", align: "right", cell: (i) => <MoneyWithForeign brl={i.line_total} code={o.currency_code} rate={o.exchange_rate} strong /> },
           ]}
         />
       </DetailSection>
@@ -306,11 +309,12 @@ export default function PedidoVendaDetailPage() {
           cancelLabel="Voltar"
           tone={ACTIONS[pending].tone === "danger" ? "danger" : "default"}
           loading={busy}
+          confirmDisabled={pending === "cancel" && cancelReason.trim().length < 5}
           onConfirm={() => run(pending)}
           onCancel={() => { setPending(null); setCancelReason(""); }}
         >
           {pending === "cancel" && (
-            <FormField label="Motivo do cancelamento" required>
+            <FormField label="Motivo do cancelamento" required help={cancelReason.trim().length < 5 ? "Informe o motivo (mínimo 5 caracteres)" : undefined}>
               <Input value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} maxLength={300} placeholder="Mínimo 5 caracteres" />
             </FormField>
           )}
@@ -348,6 +352,16 @@ export default function PedidoVendaDetailPage() {
         </FormField>
       </Dialog>
     </div>
+  );
+}
+
+function MoneyWithForeign({ brl, code, rate, strong }: { brl: number | string | null | undefined; code: string | null | undefined; rate: number | string | null | undefined; strong?: boolean }) {
+  const foreign = foreignAmountHint(code, brl, rate);
+  return (
+    <span className="inline-flex flex-col items-end">
+      <span className={strong ? "font-medium" : undefined}>{formatCurrencyBRL(Number(brl ?? 0))}</span>
+      {foreign && <span className="text-xs text-muted-foreground">{foreign}</span>}
+    </span>
   );
 }
 

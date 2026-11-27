@@ -1,4 +1,5 @@
 import "server-only";
+import { recordCancelAudit } from "@/lib/audit/cancel";
 import { assertSameCompany } from "./same-company";
 import { providedPartial } from "@/lib/validations/partial-update";
 
@@ -436,6 +437,7 @@ export async function updateAccountsPayable(request: NextRequest, context: Route
 export async function cancelAccountsPayable(request: NextRequest, context: RouteContext) {
   try {
     await requireAccess("accounts_payable.cancel");
+    const ctx = await getAuthContext();
     const { id } = await context.params;
     const body = await request.json().catch(() => ({}));
     const parsed = cancelAccountsPayableSchema.safeParse(body ?? {});
@@ -446,6 +448,7 @@ export async function cancelAccountsPayable(request: NextRequest, context: Route
       p_reason: parsed.success ? parsed.data.reason ?? null : null,
     });
     if (error) throw rpcError(error);
+    if (ctx) await recordCancelAudit(ctx, "accounts_payable", id, parsed.success ? parsed.data.reason ?? null : null);
     return NextResponse.json({ success: true, data });
   } catch (error) {
     return jsonError(error);
@@ -624,6 +627,7 @@ export async function updateAccountsReceivable(request: NextRequest, context: Ro
 export async function cancelAccountsReceivable(request: NextRequest, context: RouteContext) {
   try {
     await requireAccess("accounts_receivable.cancel");
+    const ctx = await getAuthContext();
     const { id } = await context.params;
     const body = await request.json().catch(() => ({}));
     const parsed = cancelAccountsReceivableSchema.safeParse(body ?? {});
@@ -634,6 +638,7 @@ export async function cancelAccountsReceivable(request: NextRequest, context: Ro
       p_reason: parsed.success ? parsed.data.reason ?? null : null,
     });
     if (error) throw rpcError(error);
+    if (ctx) await recordCancelAudit(ctx, "accounts_receivable", id, parsed.success ? parsed.data.reason ?? null : null);
     return NextResponse.json({ success: true, data });
   } catch (error) {
     return jsonError(error);
@@ -654,10 +659,21 @@ export async function refreshOverdueReceivables() {
 
 export async function generateAccountsReceivableFromSalesOrder(request: NextRequest, context: RouteContext) {
   try {
-    await requireAccess("accounts_receivable.approve");
+    const { companyId } = await requireAccess("accounts_receivable.approve");
     const { id } = await context.params;
     const body = await request.json().catch(() => ({}));
     const parsed = generateAccountsReceivableFromSalesOrderSchema.safeParse(body ?? {});
+    // O banco devolve o título já existente em vez de gerar outro: avisamos a tela.
+    const { data: existing } = await createAdminClient()
+      .from("accounts_receivable")
+      .select("*")
+      .eq("company_id", companyId)
+      .eq("origin_type", "sales_order")
+      .eq("origin_id", id)
+      .neq("status", "CANCELLED")
+      .limit(1)
+      .maybeSingle();
+    if (existing) return NextResponse.json({ success: true, data: { ...existing, already_existed: true } });
     const data_ = parsed.success ? parsed.data : undefined;
 
     const supabase = await createClient();

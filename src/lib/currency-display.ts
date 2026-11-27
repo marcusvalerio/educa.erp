@@ -19,6 +19,17 @@ export function formatForeignAmount(code: string, amountBRL: number | string | n
   }
 }
 
+/** Taxa de câmbio com 2 a 4 casas: 5,4 → "5,40"; 5,12345 → "5,1235". */
+export function formatExchangeRate(rate: number | string | null | undefined): string {
+  return Number(rate ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+}
+
+/** Valor em BRL seguido do equivalente na moeda estrangeira, quando houver. */
+export function foreignAmountHint(code: string | null | undefined, amountBRL: number | string | null | undefined, rate: number | string | null | undefined): string | null {
+  if (!isForeignCurrency(code)) return null;
+  return formatForeignAmount(String(code), amountBRL, rate);
+}
+
 /** Itens de detalhe (moeda, câmbio, valor na moeda); vazio quando a moeda é BRL. */
 export function foreignCurrencyItems(
   code: string | null | undefined,
@@ -30,7 +41,7 @@ export function foreignCurrencyItems(
   const c = String(code).toUpperCase();
   return [
     { label: "Moeda", value: c, mono: true },
-    { label: "Câmbio", value: `R$ ${Number(rate ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 6 })} por 1 ${c}`, mono: true },
+    { label: "Câmbio", value: `R$ ${formatExchangeRate(rate)} por 1 ${c}`, mono: true },
     { label: amountLabel, value: formatForeignAmount(c, amountBRL, rate), mono: true },
   ];
 }

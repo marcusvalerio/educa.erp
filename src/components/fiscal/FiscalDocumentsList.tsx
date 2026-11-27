@@ -41,6 +41,20 @@ function supplierInvoice(row: FiscalDocumentRow): string | undefined {
   return m && m[1].trim() ? `NF do fornecedor ${m[1].trim()}` : undefined;
 }
 
+/**
+ * Busca só com dígitos: número da nota (exato ou começo, sem zeros à esquerda)
+ * ou chave de acesso (começo) — não qualquer trecho de valores e datas.
+ */
+export function fiscalNumberMatch(row: Pick<FiscalDocumentRow, "number" | "access_key">, query: string): boolean | undefined {
+  const q = query.replace(/[\s.\-/]/g, "");
+  if (!/^\d+$/.test(q)) return undefined;
+  const strip = (v: string) => v.replace(/^0+/, "") || "0";
+  const num = row.number === null || row.number === undefined ? "" : String(row.number).replace(/\D/g, "");
+  if (num && strip(num).startsWith(strip(q))) return true;
+  const key = String(row.access_key ?? "").replace(/\D/g, "");
+  return q.length >= 6 && key.startsWith(q);
+}
+
 export function FiscalDocumentsList({ title, apiPath, typeFilter = true }: { title: string; apiPath: string; typeFilter?: boolean }) {
   const customers = useIdNameLookup("/api/customers");
   const suppliers = useIdNameLookup("/api/suppliers", "legal_name");
@@ -59,6 +73,7 @@ export function FiscalDocumentsList({ title, apiPath, typeFilter = true }: { tit
       refreshToken={refresh}
       searchPlaceholder="Buscar por cliente, fornecedor, número ou chave..."
       extraSearchText={(row) => [party(row), row.number, row.series, row.access_key].filter(Boolean).join(" ")}
+      searchMatch={fiscalNumberMatch}
       columns={[
         codeCol<FiscalDocumentRow>("code", "Documento"),
         textCol<FiscalDocumentRow>("direction", "Entrada/Saída", { width: "7rem", cell: (row) => (row.direction === "ENTRADA" ? "Entrada" : "Saída") }),

@@ -57,6 +57,8 @@ export default function ContasReceberPage() {
         title: (row) => row.code,
         subtitle: (row) => customers.get(row.customer_id) ?? row.description ?? undefined,
         badges: (row) => <StatusBadge entity="accounts_receivable" status={row.status} />,
+        // O histórico completo (com pagamentos/recebimentos) vem de TitleInstallments.
+        history: false,
         render: (row) => <TitleInstallments key={`${row.id}-${refresh}`} kind="receivable" id={row.id} onChanged={reload} />,
         actions: (row) => <WorkflowActions base="/api/accounts-receivable" id={row.id} status={String(row.status ?? "")} actions={[titleCancelAction("receivable")]} onDone={reload} />,
       }}

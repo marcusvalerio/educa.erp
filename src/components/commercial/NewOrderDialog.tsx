@@ -14,6 +14,7 @@ import { cachedGet, invalidateCache } from "@/lib/dashboard/client";
 import { lookupPath } from "@/lib/useIdNameLookup";
 import { formatCurrencyBRL } from "@/lib/format";
 import type { Cliente, Fornecedor, Produto } from "@/lib/cadastros/types";
+import { formatExchangeRate } from "@/lib/currency-display";
 
 // Novo pedido (venda ou compra) com itens do cadastro de produtos. A regra
 // (cliente/fornecedor da empresa, permissão *.create, totais, código do
@@ -177,7 +178,7 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
         freightCost: brl(toNumber(freight)),
         ...(foreign ? { currencyCode: currency, exchangeRate: fx } : {}),
         ...(kind === "quote" ? { validUntil: expected || undefined } : { expectedDeliveryAt: expected || undefined }),
-        notes: [notes.trim(), foreign ? `Moeda ${currency} — câmbio R$ ${fx} por 1 ${currency}.` : ""].filter(Boolean).join(" ") || undefined,
+        notes: [notes.trim(), foreign ? `Moeda ${currency} — câmbio R$ ${formatExchangeRate(fx)} por 1 ${currency}.` : ""].filter(Boolean).join(" ") || undefined,
       });
       invalidateCache(cfg.apiPath);
       reset();

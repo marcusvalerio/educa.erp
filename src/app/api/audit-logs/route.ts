@@ -33,6 +33,15 @@ const ACTION_LABELS: Record<string, string> = {
   AUTHORIZE: "Autorizado",
 };
 
+// Títulos gerados a partir de um pedido são gravados como APPROVE sem
+// estado anterior: na tela isso é a criação do título, não uma aprovação.
+const TITLE_ENTITIES = new Set(["accounts_receivable", "accounts_payable"]);
+function actionOf(row: AuditLogRow): string {
+  const action = String(row.action);
+  if (action === "APPROVE" && !row.old_data && TITLE_ENTITIES.has(row.entity)) return "CREATE";
+  return action;
+}
+
 function toAuditEntry(row: AuditLogRow, names: Map<string, string>): AuditEntry {
   const userId = (row as { user_id?: string | null }).user_id ?? null;
   // As funções do banco gravam "system" em actor_label, mas guardam o user_id certo.
@@ -43,8 +52,8 @@ function toAuditEntry(row: AuditLogRow, names: Map<string, string>): AuditEntry 
     usuario,
     entidade: row.entity,
     registro: row.entity_id,
-    acao: (ACTION_LABELS[String(row.action)] ?? String(row.action)) as AuditAcao,
-    mudancas: auditChanges(row.old_data as Record<string, unknown> | null, row.new_data as Record<string, unknown> | null),
+    acao: (ACTION_LABELS[actionOf(row)] ?? String(row.action)) as AuditAcao,
+    mudancas: auditChanges(row.old_data as Record<string, unknown> | null, row.new_data as Record<string, unknown> | null, 30, row.entity),
   };
 }
 
@@ -76,7 +85,10 @@ export async function GET(request: NextRequest) {
       .range((page - 1) * limit, page * limit - 1);
 
     if (entity) query = query.eq("entity", entity);
-    if (entityId) query = query.eq("entity_id", entityId);
+    // entityIds: registro + relacionados (ex.: título e seus pagamentos/recebimentos).
+    const entityIds = (searchParams.get("entityIds") ?? "").split(",").map((v) => v.trim()).filter((v) => /^[0-9a-f-]{36}$/i.test(v)).slice(0, 100);
+    if (entityId && entityIds.length) query = query.in("entity_id", [entityId, ...entityIds]);
+    else if (entityId) query = query.eq("entity_id", entityId);
 
     const { data, error } = await query;
     if (error) throw error;

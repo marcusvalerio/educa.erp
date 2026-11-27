@@ -59,6 +59,8 @@ export type ResourceListPageProps<T> = {
   searchPlaceholder?: string;
   /** Texto extra considerado na busca local (ex.: nome do cliente, chave de acesso). */
   extraSearchText?: (row: T) => string;
+  /** Regra própria de busca (ex.: número exato); `undefined` = busca textual padrão. */
+  searchMatch?: (row: T, query: string) => boolean | undefined;
   rowId?: (row: T) => string;
   detail?: DetailConfig<T>;
   /** Linha abre uma rota dedicada em vez do painel de detalhe. */
@@ -99,6 +101,7 @@ function ResourceListInner<T>({
   filters = [],
   searchPlaceholder = "Buscar...",
   extraSearchText,
+  searchMatch,
   rowId = defaultRowId,
   detail,
   rowHref,
@@ -151,10 +154,11 @@ function ResourceListInner<T>({
     for (const f of filters) if (f.predicate && !f.serverParam) predicates[f.id] = f.predicate;
     return applyClientQuery(base, state, {
       searchText: (row) => [...columns.map((c) => defaultCellText(c.exportValue?.(row) ?? c.value?.(row))), extraSearchText?.(row) ?? ""].join(" "),
+      searchMatch,
       sortValue: (row, id) => byId.get(id)?.value?.(row),
       predicates,
     });
-  }, [resource.mode, resource.rows, resource.total, state, columns, filters, baseFilter, extraSearchText]);
+  }, [resource.mode, resource.rows, resource.total, state, columns, filters, baseFilter, extraSearchText, searchMatch]);
 
   const hasFilters = !!state.q || Object.keys(state.filters).length > 0;
   const selectedRows = view.filtered.filter((row) => selected.has(rowId(row)));

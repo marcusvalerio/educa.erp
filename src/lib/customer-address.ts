@@ -10,7 +10,17 @@ export type CustomerAddressFields = {
   cidade?: string | null;
   estado?: string | null;
   cep?: string | null;
+  tipo?: string | null;
+  pais?: string | null;
 };
+
+/** Cliente do exterior: sem UF/CEP brasileiros. */
+export function isForeignCustomer(c: CustomerAddressFields | null | undefined): boolean {
+  if (!c) return false;
+  if (c.tipo === "Estrangeiro") return true;
+  const pais = (c.pais ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return !!pais && !["brasil", "brazil", "br", "bra", "1058"].includes(pais);
+}
 
 /** Campos obrigatórios para a NF-e que estão vazios no cadastro do cliente. */
 export function missingCustomerAddressFields(c: CustomerAddressFields | null | undefined): string[] {
@@ -18,6 +28,7 @@ export function missingCustomerAddressFields(c: CustomerAddressFields | null | u
   const missing: string[] = [];
   if (!c.endereco?.trim()) missing.push("logradouro");
   if (!c.cidade?.trim()) missing.push("cidade");
+  if (isForeignCustomer(c)) return missing;
   if (!c.estado?.trim()) missing.push("UF");
   if (!c.cep?.replace(/\D/g, "")) missing.push("CEP");
   return missing;

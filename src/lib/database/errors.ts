@@ -12,12 +12,26 @@ export function formatDecimalsPtBr(message: string): string {
   });
 }
 
+/**
+ * Valores monetários de mensagens do banco ("Pagamento (150) excede o saldo
+ * da parcela (100.00).") viram R$ no formato brasileiro.
+ */
+export function formatMoneyInMessage(message: string): string {
+  if (!/excede o saldo/i.test(message)) return message;
+  return message.replace(/\((-?\d+(?:\.\d+)?)\)/g, (_m, raw: string) => {
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return _m;
+    return `(${n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })})`;
+  });
+}
+
 export class ApiError extends Error {
   code: string;
   status: number;
 
   constructor(code: string, message: string, status = 400) {
-    super(formatDecimalsPtBr(message));
+    const withMoney = formatMoneyInMessage(message);
+    super(withMoney !== message ? withMoney : formatDecimalsPtBr(message));
     this.code = code;
     this.status = status;
   }

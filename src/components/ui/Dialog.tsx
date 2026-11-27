@@ -64,6 +64,8 @@ type ConfirmDialogProps = {
   cancelLabel?: string;
   tone?: "danger" | "default";
   loading?: boolean;
+  /** Desabilita o botão de confirmar (ex.: motivo obrigatório ainda vazio). */
+  confirmDisabled?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 };
@@ -77,6 +79,7 @@ export function ConfirmDialog({
   cancelLabel = "Cancelar",
   tone = "default",
   loading = false,
+  confirmDisabled = false,
   onConfirm,
   onCancel,
   children,
@@ -98,8 +101,10 @@ export function ConfirmDialog({
             <Button
               variant={tone === "danger" ? "danger" : "primary"}
               loading={loading}
+              disabled={confirmDisabled}
               onClick={(event) => {
                 event.preventDefault();
+                if (confirmDisabled) return;
                 onConfirm();
               }}
             >

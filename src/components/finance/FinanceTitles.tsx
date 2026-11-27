@@ -347,7 +347,7 @@ export function TitleInstallments({ kind, id, onChanged }: { kind: TitleKind; id
         </ul>
       )}
       <h3 className="text-sm font-semibold">Histórico</h3>
-      <RecordHistory entityId={id} />
+      <RecordHistory entityId={id} relatedIds={settlements.map((p) => String(p.id))} />
       {settling && (
         <SettleDialog
           kind={kind}

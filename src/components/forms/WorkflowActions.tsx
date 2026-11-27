@@ -41,6 +41,8 @@ export function WorkflowActions({ base, id, status, actions, onDone, extra }: { 
   const allowed = (p: string | string[]) => (Array.isArray(p) ? p.some((x) => can(x)) : can(p));
   const list = actions.filter((a) => (!a.statuses || a.statuses.includes(st)) && allowed(a.permission));
 
+  const reasonMissing = !!pending?.requireReason && reason.trim().length < 5;
+
   async function run() {
     if (!pending) return;
     if (pending.requireReason && reason.trim().length < 5) {
@@ -82,11 +84,12 @@ export function WorkflowActions({ base, id, status, actions, onDone, extra }: { 
           cancelLabel="Voltar"
           tone={pending.tone === "danger" ? "danger" : "default"}
           loading={busy}
+          confirmDisabled={reasonMissing}
           onConfirm={run}
           onCancel={() => { setPending(null); setReason(""); }}
         >
           {pending.requireReason && (
-            <FormField label="Motivo" required>
+            <FormField label="Motivo" required help={reasonMissing ? "Informe o motivo (mínimo 5 caracteres)" : undefined}>
               <Input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} placeholder="Mínimo 5 caracteres" />
             </FormField>
           )}

@@ -4,6 +4,7 @@ import { formatCurrencyBRL, formatDate, formatDateTime } from "@/lib/format";
 import { isOverdue } from "@/lib/list/query";
 import { statusMeta, statusOptions, type StatusEntity } from "@/lib/status";
 import type { ColumnDef, FilterDef } from "./types";
+import { formatExchangeRate } from "@/lib/currency-display";
 
 // Fábricas de coluna/filtro: cada tela declara O QUE mostrar; o COMO
 // (alinhamento, dígitos tabulares, badge de status, CSV) é padronizado.
@@ -71,7 +72,7 @@ export function moneyCol<T extends Row>(key: string, header: string, opts: Opts<
       return (
         <span className="flex flex-col items-end leading-tight">
           <span>{brl}</span>
-          <span className="text-xs text-muted-foreground" title={`Câmbio: R$ ${fx} por 1 ${cur}`}>{cur} {orig}</span>
+          <span className="text-xs text-muted-foreground" title={`Câmbio: R$ ${formatExchangeRate(fx)} por 1 ${cur}`}>{cur} {orig}</span>
         </span>
       );
     },

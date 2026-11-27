@@ -57,7 +57,8 @@ export function FiscalDocumentsList({ title, apiPath, typeFilter = true }: { tit
       description="Saídas: notas que a empresa emite nas vendas. Entradas: notas dos fornecedores, lançadas ao confirmar o recebimento da compra."
       apiPath={apiPath}
       refreshToken={refresh}
-      searchPlaceholder="Buscar documento, número, cliente ou fornecedor..."
+      searchPlaceholder="Buscar por cliente, fornecedor, número ou chave..."
+      extraSearchText={(row) => [party(row), row.number, row.series, row.access_key].filter(Boolean).join(" ")}
       columns={[
         codeCol<FiscalDocumentRow>("code", "Documento"),
         textCol<FiscalDocumentRow>("direction", "Entrada/Saída", { width: "7rem", cell: (row) => (row.direction === "ENTRADA" ? "Entrada" : "Saída") }),

@@ -224,6 +224,17 @@ export async function createSalesQuote(request: NextRequest) {
       p_notes: body.notes ?? null,
     });
     if (error) throw rpcError(error);
+    if (body.currencyCode && body.currencyCode !== "BRL") {
+      if (!body.exchangeRate || body.exchangeRate <= 0) throw validationError("Informe a taxa de câmbio (maior que zero).");
+      const created = data as { id: string };
+      // Orçamento recém-criado (rascunho) da própria empresa: grava moeda e taxa (migration 0134).
+      const { error: curError } = await createAdminClient()
+        .from("sales_quotes")
+        .update({ currency_code: body.currencyCode, exchange_rate: body.exchangeRate })
+        .eq("company_id", ctx.companyId)
+        .eq("id", created.id);
+      if (curError) throw rpcError(curError);
+    }
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     return jsonError(error);
@@ -249,8 +260,20 @@ export const approveSalesQuote = (request: NextRequest, context: RouteContext) =
   quoteAction("fn_approve_sales_quote", "sales_quotes.approve", request, context);
 export const expireSalesQuote = (request: NextRequest, context: RouteContext) =>
   quoteAction("fn_expire_sales_quote", "sales_quotes.update", request, context);
-export const cancelSalesQuote = (request: NextRequest, context: RouteContext) =>
-  quoteAction("fn_cancel_sales_quote", "sales_quotes.cancel", request, context);
+export async function cancelSalesQuote(request: NextRequest, context: RouteContext) {
+  try {
+    const { companyId } = await requireCommercialAccess("sales_quotes.cancel");
+    const { id } = await context.params;
+    const reason = await readCancelReason(request);
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_cancel_sales_quote", { p_quote_id: id });
+    if (error) throw rpcError(error);
+    await appendCancelReason("sales_quotes", companyId, id, reason);
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
 
 export async function rejectSalesQuote(request: NextRequest, context: RouteContext) {
   try {
@@ -334,8 +357,13 @@ export async function createSalesOrder(request: NextRequest) {
     // Pedido gerado do orçamento: desconto, frete e observações vêm do orçamento
     // quando a tela não os envia (antes o pedido saía sem eles e não batia com a proposta).
     if (body.salesQuoteId) {
-      const { data: quote } = await supabase.from("sales_quotes").select("discount, freight_cost, notes").eq("id", body.salesQuoteId).maybeSingle();
+      const { data: quote } = await supabase.from("sales_quotes").select("discount, freight_cost, notes, currency_code, exchange_rate").eq("id", body.salesQuoteId).maybeSingle();
       if (quote) {
+        const quoteCurrency = (quote.currency_code as string | null) ?? "BRL";
+        if (!body.currencyCode && quoteCurrency !== "BRL") {
+          body.currencyCode = quoteCurrency;
+          body.exchangeRate ??= Number(quote.exchange_rate ?? 0) || undefined;
+        }
         body.discount ??= Number(quote.discount ?? 0);
         body.freightCost ??= Number(quote.freight_cost ?? 0);
         body.notes ??= (quote.notes as string | null) ?? undefined;
@@ -408,8 +436,39 @@ export const approveSalesOrder = (request: NextRequest, context: RouteContext) =
   orderAction("fn_approve_sales_order", "sales_orders.approve", request, context);
 export const releaseSalesOrderReservation = (request: NextRequest, context: RouteContext) =>
   orderAction("fn_release_sales_order_reservation", "sales_orders.update", request, context);
-export const cancelSalesOrder = (request: NextRequest, context: RouteContext) =>
-  orderAction("fn_cancel_sales_order", "sales_orders.cancel", request, context);
+/** Lê o motivo opcional do corpo; se vier, precisa ter ao menos 5 caracteres. */
+async function readCancelReason(request: NextRequest): Promise<string | null> {
+  const body = (await request.json().catch(() => null)) as { reason?: unknown } | null;
+  const reason = typeof body?.reason === "string" ? body.reason.trim() : "";
+  if (!reason) return null;
+  if (reason.length < 5) throw validationError("O motivo do cancelamento precisa ter ao menos 5 caracteres.");
+  return reason.slice(0, 300);
+}
+
+/** Acrescenta o motivo do cancelamento às observações do documento. */
+async function appendCancelReason(table: "sales_orders" | "sales_quotes", companyId: string, id: string, reason: string | null) {
+  if (!reason) return;
+  const admin = createAdminClient();
+  const { data } = await admin.from(table).select("notes").eq("company_id", companyId).eq("id", id).maybeSingle();
+  const prev = ((data?.notes as string | null) ?? "").trim();
+  const line = `Cancelado em ${new Date().toLocaleDateString("pt-BR")}: ${reason}`;
+  await admin.from(table).update({ notes: prev ? `${prev}\n${line}` : line }).eq("company_id", companyId).eq("id", id);
+}
+
+export async function cancelSalesOrder(request: NextRequest, context: RouteContext) {
+  try {
+    const { companyId } = await requireCommercialAccess("sales_orders.cancel");
+    const { id } = await context.params;
+    const reason = await readCancelReason(request);
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("fn_cancel_sales_order", { p_order_id: id });
+    if (error) throw rpcError(error);
+    await appendCancelReason("sales_orders", companyId, id, reason);
+    return NextResponse.json({ success: true, data });
+  } catch (error) {
+    return jsonError(error);
+  }
+}
 /** Exclui pedido em rascunho/cancelado que nunca gerou separação, estoque, financeiro ou nota. */
 export const deleteSalesOrder = (request: NextRequest, context: RouteContext) =>
   orderAction("fn_delete_sales_order", "sales_orders.cancel", request, context);

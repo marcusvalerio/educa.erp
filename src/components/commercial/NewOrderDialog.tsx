@@ -1,5 +1,6 @@
 "use client";
 
+import { customerAddressWarning, missingCustomerAddressFields } from "@/lib/customer-address";
 import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -19,7 +20,7 @@ import type { Cliente, Fornecedor, Produto } from "@/lib/cadastros/types";
 // pedido) é do banco — fn_create_sales_order / fn_create_purchase_order;
 // aqui só se monta o corpo de POST /api/sales-orders ou /api/purchase-orders.
 
-type Party = { id: string; status: string; label: string; moeda: string };
+type Party = { id: string; status: string; label: string; moeda: string; addressMissing?: string[] };
 
 const KINDS = {
   sale: {
@@ -30,7 +31,7 @@ const KINDS = {
     partyEmpty: "Nenhum cliente ativo.",
     partyKey: "customerId",
     apiPath: "/api/sales-orders",
-    toParty: (c: Cliente): Party => ({ id: c.id, status: c.status, label: c.nome, moeda: c.moeda || "BRL" }),
+    toParty: (c: Cliente): Party => ({ id: c.id, status: c.status, label: c.nome, moeda: c.moeda || "BRL", addressMissing: missingCustomerAddressFields(c) }),
     priceOf: (p: Produto) => p.precoVenda,
   },
   quote: {
@@ -41,7 +42,7 @@ const KINDS = {
     partyEmpty: "Nenhum cliente ativo.",
     partyKey: "customerId",
     apiPath: "/api/sales-quotes",
-    toParty: (c: Cliente): Party => ({ id: c.id, status: c.status, label: c.nome, moeda: c.moeda || "BRL" }),
+    toParty: (c: Cliente): Party => ({ id: c.id, status: c.status, label: c.nome, moeda: c.moeda || "BRL", addressMissing: missingCustomerAddressFields(c) }),
     priceOf: (p: Produto) => p.precoVenda,
   },
   purchase: {
@@ -174,7 +175,7 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
         }),
         discount: brl(toNumber(discount)),
         freightCost: brl(toNumber(freight)),
-        ...(foreign && kind !== "quote" ? { currencyCode: currency, exchangeRate: fx } : {}),
+        ...(foreign ? { currencyCode: currency, exchangeRate: fx } : {}),
         ...(kind === "quote" ? { validUntil: expected || undefined } : { expectedDeliveryAt: expected || undefined }),
         notes: [notes.trim(), foreign ? `Moeda ${currency} — câmbio R$ ${fx} por 1 ${currency}.` : ""].filter(Boolean).join(" ") || undefined,
       });
@@ -211,6 +212,9 @@ export function NewOrderDialog({ kind, open, onOpenChange, onCreated, initial }:
     >
       <div className="flex flex-col gap-4">
         {(error || loadError) && <Alert tone="danger">{error ?? loadError}</Alert>}
+        {kind === "sale" && (customers.find((c) => c.id === customerId)?.addressMissing?.length ?? 0) > 0 && (
+          <Alert tone="warning">{customerAddressWarning(customers.find((c) => c.id === customerId)!.addressMissing!)}</Alert>
+        )}
         {noProducts && <Alert tone="info">Nenhum produto ativo cadastrado. Cadastre em Cadastros → Produtos.</Alert>}
 
         <FormField label={cfg.partyLabel} required>

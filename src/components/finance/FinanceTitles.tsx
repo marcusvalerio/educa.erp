@@ -18,6 +18,8 @@ import { apiGet, apiSend } from "@/lib/api-client";
 import { cachedGet, invalidateCache } from "@/lib/dashboard/client";
 import { lookupPath } from "@/lib/useIdNameLookup";
 import { formatCurrencyBRL, formatDate } from "@/lib/format";
+import { foreignCurrencyItems } from "@/lib/currency-display";
+import { RecordHistory } from "@/components/resource/RecordHistory";
 import { splitInstallments } from "@/lib/finance/installments";
 
 // Contas a pagar e a receber: lançar título (com parcelamento), pagar/receber
@@ -290,8 +292,22 @@ export function TitleInstallments({ kind, id, onChanged }: { kind: TitleKind; id
 
   const items = (data?.installments as Row[] | undefined) ?? null;
   if (!items) return <p className="px-4 py-3 text-sm text-muted-foreground">Carregando parcelas...</p>;
+  const settlements = (data?.settlements as Row[] | undefined) ?? [];
+  const info = [
+    { label: "Centro de custo", value: data?.cost_center_name ? String(data.cost_center_name) : "—" },
+    { label: "Documento / nota", value: data?.document_reference ? String(data.document_reference) : "—" },
+    ...foreignCurrencyItems(data?.currency_code as string | undefined, data?.exchange_rate as number | undefined, (data?.updated_amount ?? data?.original_amount) as number | undefined),
+  ];
   return (
     <div className="flex flex-col gap-2 px-4 py-3">
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+        {info.map((it) => (
+          <div key={it.label} className="min-w-0">
+            <dt className="text-xs text-muted-foreground">{it.label}</dt>
+            <dd className="truncate">{it.value}</dd>
+          </div>
+        ))}
+      </dl>
       <h3 className="text-sm font-semibold">Parcelas</h3>
       <ul className="divide-y divide-border-subtle rounded-lg border border-border-subtle">
         {items.map((i) => {
@@ -314,6 +330,24 @@ export function TitleInstallments({ kind, id, onChanged }: { kind: TitleKind; id
           );
         })}
       </ul>
+      <h3 className="text-sm font-semibold">{kind === "payable" ? "Pagamentos" : "Recebimentos"}</h3>
+      {settlements.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{kind === "payable" ? "Nenhum pagamento registrado." : "Nenhum recebimento registrado."}</p>
+      ) : (
+        <ul className="divide-y divide-border-subtle rounded-lg border border-border-subtle">
+          {settlements.map((p) => (
+            <li key={String(p.id)} className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm">
+              <span className="font-mono text-xs">{String(p.code ?? "")}</span>
+              <span className="text-muted-foreground">{p.account_name ? String(p.account_name) : "—"}</span>
+              <span className="tabular-nums">{formatDate(String(p.date))}</span>
+              <span className="ml-auto tabular-nums">{formatCurrencyBRL(num(p.amount))}</span>
+              {String(p.status) === "REVERSED" && <span className="text-xs text-danger-fg">Estornado</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+      <h3 className="text-sm font-semibold">Histórico</h3>
+      <RecordHistory entityId={id} />
       {settling && (
         <SettleDialog
           kind={kind}
@@ -339,6 +373,7 @@ export const titleCancelAction = (kind: TitleKind) => ({
   confirm: "O título e as parcelas em aberto são cancelados. Não vale para títulos com pagamento registrado.",
   success: "Título cancelado.",
   tone: "danger" as const,
+  requireReason: true,
 });
 
 export const titlePerm = (kind: TitleKind) => CFG[kind].perm;

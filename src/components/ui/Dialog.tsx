@@ -79,7 +79,8 @@ export function ConfirmDialog({
   loading = false,
   onConfirm,
   onCancel,
-}: ConfirmDialogProps) {
+  children,
+}: ConfirmDialogProps & { children?: ReactNode }) {
   return (
     <AD.Root open={open} onOpenChange={(next) => !next && !loading && onCancel()}>
       <AD.Portal>
@@ -87,6 +88,7 @@ export function ConfirmDialog({
         <AD.Content className="fixed top-1/2 left-1/2 z-50 w-[calc(100vw-32px)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-surface-raised p-5 shadow-dialog outline-none animate-pop-in">
           <AD.Title className="text-md font-semibold tracking-title text-foreground">{title}</AD.Title>
           <AD.Description className="mt-2 text-sm text-muted-foreground">{description}</AD.Description>
+          {children && <div className="mt-4">{children}</div>}
           <div className="mt-5 flex flex-wrap justify-end gap-2">
             <AD.Cancel asChild>
               <Button variant="secondary" disabled={loading}>

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Ban, CheckCircle2, FileText, Lock, PackagePlus, Send, Truck } from "lucide-react";
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, dateCol, moneyCol, statusCol, refCol, statusFilter, overdueView, isRowOverdue, statusViews, combineViews } from "@/components/data-table/columns";
-import { MiniTable } from "@/components/resource/DetailLayout";
+import { InfoGrid, MiniTable } from "@/components/resource/DetailLayout";
+import { foreignCurrencyItems } from "@/lib/currency-display";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/Dialog";
@@ -40,7 +41,10 @@ type Order = PurchaseOrderRow & { items: PurchaseOrderItemRow[] };
 function OrderItems({ id }: { id: string }) {
   const order = useCached<Order>(`/api/purchase-orders/${id}`);
   if (order.loading && !order.data) return <p className="px-4 py-3 text-sm text-muted-foreground">Carregando itens...</p>;
+  const fx = order.data ? foreignCurrencyItems(order.data.currency_code, order.data.exchange_rate, order.data.total_amount, "Total na moeda original") : [];
   return (
+    <>
+    {fx.length > 0 && <InfoGrid columns={3} items={fx} />}
     <MiniTable<PurchaseOrderItemRow>
       rows={order.data?.items ?? []}
       rowKey={(i) => i.id}
@@ -52,6 +56,7 @@ function OrderItems({ id }: { id: string }) {
         { label: "Total", align: "right", cell: (i) => formatCurrencyBRL(Number(i.line_total)) },
       ]}
     />
+    </>
   );
 }
 

@@ -22,7 +22,7 @@ const QUOTE_ACTIONS: WorkflowAction[] = [
   { id: "approve", label: "Cliente aprovou", path: "approve", permission: "sales_quotes.approve", statuses: ["sent"], confirm: "O orçamento fica aprovado e pode virar pedido de venda.", success: "Orçamento aprovado." },
   { id: "reject", label: "Cliente recusou", path: "reject", permission: "sales_quotes.approve", statuses: ["sent"], confirm: "O orçamento fica recusado.", success: "Orçamento recusado.", tone: "danger" },
   { id: "expire", label: "Marcar como expirado", path: "expire", permission: "sales_quotes.update", statuses: ["sent"], confirm: "A validade venceu sem resposta.", success: "Orçamento expirado." },
-  { id: "cancel", label: "Cancelar", path: "cancel", permission: "sales_quotes.cancel", statuses: ["draft", "sent", "rejected", "expired"], confirm: "O orçamento é cancelado.", success: "Orçamento cancelado.", tone: "danger" },
+  { id: "cancel", label: "Cancelar", path: "cancel", permission: "sales_quotes.cancel", statuses: ["draft", "sent", "rejected", "expired"], confirm: "O orçamento é cancelado.", success: "Orçamento cancelado.", tone: "danger", requireReason: true },
 ];
 
 export default function OrcamentosPage() {

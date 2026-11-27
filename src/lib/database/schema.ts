@@ -791,6 +791,9 @@ export type SalesQuoteRow = {
   status: SalesQuoteStatus;
   issued_at: string;
   valid_until: string | null;
+  /** 0134: moeda e taxa (BRL por 1 unidade); valores seguem em BRL. */
+  currency_code?: string;
+  exchange_rate?: number;
   discount: number;
   freight_cost: number;
   total_amount: number;

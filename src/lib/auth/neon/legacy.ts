@@ -43,7 +43,7 @@ async function verifyLegacy(email: string, password: string): Promise<{ authUser
 }
 
 async function isMigrated(authUserId: string): Promise<boolean> {
-  const { data, error } = await createAdminClient().from("auth_identity_links").select("id").eq("auth_user_id", authUserId).eq("provider", "neon").limit(1);
+  const { data, error } = await createAdminClient().from("auth_identity_links").select("auth_user_id").eq("auth_user_id", authUserId).eq("provider", "neon").limit(1);
   if (error) throw new Error("Falha ao consultar o vínculo de identidade.");
   return (data ?? []).length > 0;
 }

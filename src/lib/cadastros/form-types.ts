@@ -16,6 +16,8 @@ export type FormField = {
   type: FormFieldType;
   required?: boolean;
   options?: readonly string[];
+  /** Rótulo exibido por valor (ex.: "CN — China"); o valor salvo continua o da lista. */
+  optionLabels?: Record<string, string>;
   optionsSource?: OptionsSourceKey;
   span?: 1 | 2 | 3 | 4;
   placeholder?: string;

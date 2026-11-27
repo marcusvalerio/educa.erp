@@ -37,7 +37,7 @@ function FieldControl({
   onChange: (key: string, value: string | number | boolean) => void;
 }) {
   if (field.type === "select") {
-    const opts = options ?? field.options?.map((o) => ({ value: o, label: o })) ?? [];
+    const opts = options ?? field.options?.map((o) => ({ value: o, label: field.optionLabels?.[o] ?? o })) ?? [];
     // Listas longas (clientes, transportadoras...) ganham busca.
     return opts.length > 8 ? (
       <Combobox value={(value as string) ?? ""} onValueChange={(v) => onChange(field.key, v)} options={opts} disabled={readOnly} />

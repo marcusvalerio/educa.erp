@@ -1,3 +1,4 @@
+import { formatDocument } from "@/lib/fiscal/nfe/format";
 import type { ColumnConfig, FilterConfig, Row } from "./config-types";
 import type {
   Produto,
@@ -98,7 +99,7 @@ export function clienteToRow(c: Cliente): Row {
     id: c.id,
     codigo: c.codigo,
     cliente: c.nome,
-    documento: c.documento,
+    documento: c.tipo === "Estrangeiro" ? c.documento : formatDocument(c.documento),
     tipo: c.tipo,
     cidadeUf: `${c.cidade}/${c.estado}`,
     telefone: c.telefone || c.celular,
@@ -130,7 +131,7 @@ export function fornecedorToRow(f: Fornecedor): Row {
     id: f.id,
     codigo: f.codigo,
     fornecedor: f.razaoSocial,
-    documento: f.documento,
+    documento: f.tipo === "Estrangeiro" ? f.documento : formatDocument(f.documento),
     cidadeUf: `${f.cidade}/${f.estado}`,
     categoriaFornecimento: f.categoriaFornecimento,
     telefone: f.telefone,

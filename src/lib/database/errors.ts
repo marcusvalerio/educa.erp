@@ -1,9 +1,23 @@
+/**
+ * Converte números decimais vindos do banco (ex.: "10.0000", "1500.2500")
+ * para o formato pt-BR sem zeros à direita ("10", "1.500,25"). Só afeta
+ * números com ponto decimal e 1–4 casas; códigos, IPs e versões com mais
+ * de um ponto ficam intactos.
+ */
+export function formatDecimalsPtBr(message: string): string {
+  return message.replace(/(?<![\d.,])(-?\d+)\.(\d{1,4})(?![\d.])/g, (_m, int: string, dec: string) => {
+    const n = Number(`${int}.${dec}`);
+    if (!Number.isFinite(n)) return _m;
+    return n.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 4 });
+  });
+}
+
 export class ApiError extends Error {
   code: string;
   status: number;
 
   constructor(code: string, message: string, status = 400) {
-    super(message);
+    super(formatDecimalsPtBr(message));
     this.code = code;
     this.status = status;
   }

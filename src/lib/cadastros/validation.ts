@@ -68,11 +68,20 @@ function validaPais(data: ParteDoc, errors: FieldErrors) {
   }
 }
 
+type ParteEndereco = ParteDoc & { cep?: string; cidade?: string; endereco?: string; estado?: string };
+
+function validaUf(data: ParteEndereco, errors: FieldErrors) {
+  if (data.tipo === "Estrangeiro") return;
+  const temEndereco = [data.cep, data.cidade, data.endereco].some((v) => (v ?? "").trim() !== "");
+  if (temEndereco && !(data.estado ?? "").trim()) errors.estado = "Informe o Estado (UF) do endereço.";
+}
+
 export function validateCliente(data: Partial<Cliente>, list: Cliente[], currentId?: string): FieldErrors {
   const errors: FieldErrors = {};
   required(data.nome, "Informe o nome ou razão social.", errors, "nome");
   required(data.documento, "Informe o CPF/CNPJ (ou Tax ID, se estrangeiro).", errors, "documento");
   validaPais(data, errors);
+  validaUf(data, errors);
   if (data.documento) {
     const digitsLen = onlyDigits(data.documento).length;
     if (data.tipo === "Pessoa Física" && digitsLen !== 11) errors.documento = "CPF deve conter 11 dígitos.";
@@ -87,6 +96,7 @@ export function validateFornecedor(data: Partial<Fornecedor>, list: Fornecedor[]
   required(data.razaoSocial, "Informe a razão social.", errors, "razaoSocial");
   required(data.documento, "Informe o CNPJ/CPF (ou Tax ID, se estrangeiro).", errors, "documento");
   validaPais(data, errors);
+  validaUf(data, errors);
   if (data.documento) {
     const digitsLen = onlyDigits(data.documento).length;
     if (data.tipo === "Pessoa Física" && digitsLen !== 11) errors.documento = "CPF deve conter 11 dígitos.";

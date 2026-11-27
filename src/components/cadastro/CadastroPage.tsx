@@ -418,7 +418,15 @@ function CadastroInner<T extends BaseEntity>({ config }: { config: CadastroConfi
           sections={config.formSections}
           values={drawer.values}
           errors={drawer.errors}
-          onChange={(key, value) => setDrawer((prev) => (prev ? { ...prev, values: { ...prev.values, [key]: value }, errors: { ...prev.errors, [key]: "" } } : prev))}
+          onChange={(key, value) =>
+            setDrawer((prev) => {
+              if (!prev) return prev;
+              const values = { ...prev.values, [key]: value };
+              // Estrangeiro não pode ficar com país "BR": obriga escolher o país.
+              if (key === "tipo" && value === "Estrangeiro" && "pais" in prev.values && (!prev.values.pais || prev.values.pais === "BR")) values.pais = "";
+              return { ...prev, values, errors: { ...prev.errors, [key]: "" } };
+            })
+          }
           onClose={() => setDrawer(null)}
           onSave={handleSave}
           onEdit={() => setDrawer((prev) => (prev ? { ...prev, mode: "edit" } : prev))}

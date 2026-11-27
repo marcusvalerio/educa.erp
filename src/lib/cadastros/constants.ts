@@ -24,6 +24,15 @@ export const UNIDADES_PRODUTO = ["UN", "PC", "PAR", "KIT", "CX", "PCT", "FD", "P
 export const TIPOS_PESSOA = ["Pessoa Física", "Pessoa Jurídica", "Estrangeiro"] as const;
 // País (ISO 3166-1 alfa-2) — principais parceiros; "BR" = nacional.
 export const PAISES = ["BR", "US", "CN", "AR", "CL", "UY", "PY", "MX", "CO", "PE", "DE", "IT", "ES", "PT", "FR", "GB", "NL", "JP", "KR", "IN", "CA"];
+export const PAIS_NOMES: Record<string, string> = {
+  BR: "Brasil", US: "Estados Unidos", CN: "China", AR: "Argentina", CL: "Chile", UY: "Uruguai", PY: "Paraguai",
+  MX: "México", CO: "Colômbia", PE: "Peru", DE: "Alemanha", IT: "Itália", ES: "Espanha", PT: "Portugal",
+  FR: "França", GB: "Reino Unido", NL: "Países Baixos", JP: "Japão", KR: "Coreia do Sul", IN: "Índia", CA: "Canadá",
+};
+/** Rótulos "CN — China" para busca por nome; o valor continua sendo a sigla. */
+export const PAISES_LABELS: Record<string, string> = Object.fromEntries(
+  PAISES.map((sigla) => [sigla, `${sigla} — ${PAIS_NOMES[sigla] ?? sigla}`])
+);
 export const MOEDAS = ["BRL", "USD", "EUR", "CNY", "GBP", "ARS", "JPY"];
 
 export const CONDICOES_PAGAMENTO = [

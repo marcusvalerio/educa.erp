@@ -10,7 +10,7 @@ import { DetailSection, MiniTable } from "@/components/resource/DetailLayout";
 import { useCached } from "@/lib/dashboard/client";
 import { toIso } from "@/lib/dashboard/periods";
 import { formatCurrencyBRL, formatDate } from "@/lib/format";
-import type { CashFlowProjectionRow, CashFlowSummaryRow } from "@/lib/database/schema";
+import type { CashFlowProjectionRow, CashFlowSummaryRow, FinancialTransactionRow } from "@/lib/database/schema";
 
 // Fluxo de caixa a partir de v_cash_flow_summary / v_cash_flow_projection:
 // saldo atual das contas + títulos em aberto por vencimento. A projeção
@@ -47,7 +47,28 @@ function buildBuckets(opening: number, rows: CashFlowProjectionRow[]): Bucket[] 
     });
 }
 
+type Realized = { date: string; inflow: number; outflow: number };
+
+// Realizado: lançamentos de financial_transactions (baixas e lançamentos
+// manuais), agrupados pela data de ocorrência. CREDIT = entrada, DEBIT = saída.
+function buildRealized(rows: FinancialTransactionRow[]): Realized[] {
+  const map = new Map<string, Realized>();
+  for (const row of rows) {
+    const date = String(row.occurred_at ?? "").slice(0, 10);
+    if (!date) continue;
+    const r = map.get(date) ?? { date, inflow: 0, outflow: 0 };
+    if (row.type === "CREDIT") r.inflow += Number(row.amount) || 0;
+    else r.outflow += Number(row.amount) || 0;
+    map.set(date, r);
+  }
+  return [...map.values()].sort((a, b) => b.date.localeCompare(a.date));
+}
+
 export default function FluxoCaixaPage() {
+  const transactions = useCached<FinancialTransactionRow[]>("/api/financial-transactions");
+  const realized = useMemo(() => buildRealized(transactions.data ?? []), [transactions.data]);
+  const realizedIn = realized.reduce((a, r) => a + r.inflow, 0);
+  const realizedOut = realized.reduce((a, r) => a + r.outflow, 0);
   const summary = useCached<CashFlowSummaryRow | null>("/api/cash-flow-summary");
   const projection = useCached<CashFlowProjectionRow[]>("/api/cash-flow-projection");
   const opening = Number(summary.data?.current_balance_total ?? 0);
@@ -60,7 +81,7 @@ export default function FluxoCaixaPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Fluxo de caixa" description="Saldo das contas financeiras e projeção pelos vencimentos dos títulos em aberto." />
+      <PageHeader title="Fluxo de caixa" description="Saldo das contas financeiras, projeção pelos vencimentos dos títulos em aberto e o realizado pelas baixas." />
 
       {error ? (
         <EmptyState framed kind="error" title="Não foi possível carregar o fluxo de caixa" description={error} onRetry={() => { summary.reload(); projection.reload(); }} />
@@ -108,6 +129,23 @@ export default function FluxoCaixaPage() {
                 { label: "Entradas", align: "right", cell: (b) => formatCurrencyBRL(b.inflow) },
                 { label: "Saídas", align: "right", cell: (b) => formatCurrencyBRL(b.outflow) },
                 { label: "Saldo acumulado", align: "right", cell: (b) => <span className={b.balance < 0 ? "font-medium text-danger-fg" : "font-medium"}>{formatCurrencyBRL(b.balance)}</span> },
+              ]}
+            />
+          </DetailSection>
+
+          <DetailSection
+            title="Realizado por data"
+            description={transactions.error ? `Não foi possível carregar o realizado: ${transactions.error}` : `Entradas e saídas efetivas das baixas e lançamentos. Total: ${formatCurrencyBRL(realizedIn)} de entradas e ${formatCurrencyBRL(realizedOut)} de saídas.`}
+          >
+            <MiniTable
+              rows={realized}
+              rowKey={(r) => r.date}
+              empty={transactions.loading ? "Carregando…" : "Nenhuma baixa ou lançamento registrado."}
+              columns={[
+                { label: "Data", cell: (r) => formatDate(r.date) },
+                { label: "Entradas", align: "right", cell: (r) => formatCurrencyBRL(r.inflow) },
+                { label: "Saídas", align: "right", cell: (r) => formatCurrencyBRL(r.outflow) },
+                { label: "Resultado do dia", align: "right", cell: (r) => <span className={r.inflow - r.outflow < 0 ? "font-medium text-danger-fg" : "font-medium"}>{formatCurrencyBRL(r.inflow - r.outflow)}</span> },
               ]}
             />
           </DetailSection>

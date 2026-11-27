@@ -570,6 +570,9 @@ export type PurchaseQuoteRow = {
   code: string;
   purchase_request_id: string | null;
   status: PurchaseQuoteStatus;
+  /** Pedido de compra já gerado da cotação (anexado pela API). */
+  purchase_order_id?: string | null;
+  purchase_order_code?: string | null;
   notes: string | null;
   created_by: string | null;
   closed_at: string | null;
@@ -624,6 +627,7 @@ export type PurchaseOrderRow = {
   status: PurchaseOrderStatus;
   issued_at: string;
   expected_delivery_at: string | null;
+  delivery_scheduled_at?: string | null;
   payment_terms: string | null;
   freight_cost: number;
   discount: number;

@@ -12,7 +12,7 @@ import { cachedGet, invalidateCache } from "@/lib/dashboard/client";
 import { lookupPath } from "@/lib/useIdNameLookup";
 import { ACCURACY_TARGET, computeCountAccuracy, type CountItemInput } from "@/lib/inventory/accuracy";
 import { formatCurrencyBRL } from "@/lib/format";
-import { FormDialog, filledItems, num, opt } from "./FormDialog";
+import { FormDialog, filledItems, num, opt, type FormValues } from "./FormDialog";
 import { SOURCES } from "./sources";
 
 // Passos internos que pedem dados por item: digitar a contagem de
@@ -144,6 +144,43 @@ export function QuoteSuppliers({ quoteId, status, onChanged }: { quoteId: string
   }, [quoteId, reload]);
 
   const rows = useMemo(() => ((quote?.suppliers as Row[] | undefined) ?? []), [quote]);
+  const requestItems = useMemo(() => ((quote?.request_items as Row[] | undefined) ?? []), [quote]);
+  // Pré-preenchimento da resposta: a resposta anterior do fornecedor, se
+  // houver; senão os itens da solicitação (ou de outra proposta já
+  // registrada), com a quantidade e o preço em branco.
+  const prefillFor = (s: Row): FormValues => {
+    const own = (s.items as Row[] | undefined) ?? [];
+    if (own.length) {
+      return {
+        items: own.map((i, n) => ({ id: 100000 + n, ref: String(i.product_id ?? ""), quantity: String(num(i.quantity)), unitPrice: String(num(i.unit_price)) })),
+        freightCost: s.freight_cost != null ? String(num(s.freight_cost)) : "",
+        deliveryDays: s.delivery_days != null ? String(s.delivery_days) : "",
+        paymentTerms: String(s.payment_terms ?? ""),
+        validUntil: String(s.valid_until ?? "").slice(0, 10),
+      };
+    }
+    const base = requestItems.length
+      ? requestItems.filter((i) => i.product_id).map((i) => ({ ref: String(i.product_id), quantity: num(i.quantity_approved ?? i.quantity_requested) }))
+      : ((rows.find((r) => ((r.items as Row[] | undefined) ?? []).length)?.items as Row[] | undefined) ?? []).filter((i) => i.product_id).map((i) => ({ ref: String(i.product_id), quantity: num(i.quantity) }));
+    return { items: base.map((i, n) => ({ id: 100000 + n, ref: i.ref, quantity: String(i.quantity || 1), unitPrice: "" })) };
+  };
+
+  // Quadro comparativo: item × fornecedor que respondeu, menor preço destacado.
+  const responded = rows.filter((s) => s.status !== "invited" && ((s.items as Row[] | undefined) ?? []).length);
+  const compareKeys = [...new Set(responded.flatMap((s) => ((s.items as Row[] | undefined) ?? []).map((i) => String(i.product_id ?? i.description ?? ""))))];
+  const priceOf = (s: Row, key: string) => {
+    const it = ((s.items as Row[] | undefined) ?? []).find((i) => String(i.product_id ?? i.description ?? "") === key);
+    return it ? num(it.unit_price) : null;
+  };
+  const labelOf = (key: string) => {
+    if (products.get(key)) return products.get(key)!;
+    for (const s of responded) {
+      const it = ((s.items as Row[] | undefined) ?? []).find((i) => String(i.product_id ?? i.description ?? "") === key);
+      if (it?.description) return String(it.description);
+    }
+    return "Item";
+  };
+
   const totalOf = (s: Row) => ((s.items as Row[] | undefined) ?? []).reduce((a, i) => a + num(i.quantity) * num(i.unit_price) - num(i.discount), 0) + num(s.freight_cost);
 
   async function select() {
@@ -188,9 +225,51 @@ export function QuoteSuppliers({ quoteId, status, onChanged }: { quoteId: string
           </li>
         ))}
       </ul>
+      {responded.length > 0 && compareKeys.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <h3 className="text-sm font-semibold">Comparativo de preços</h3>
+          <div className="overflow-x-auto rounded-lg border border-border-subtle">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border-subtle text-left text-xs text-muted-foreground">
+                  <th className="px-3 py-2 font-medium">Item</th>
+                  {responded.map((s) => (
+                    <th key={String(s.id)} className="px-3 py-2 text-right font-medium">{suppliers.get(String(s.supplier_id)) ?? "Fornecedor"}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {compareKeys.map((key) => {
+                  const prices = responded.map((s) => priceOf(s, key));
+                  const valid = prices.filter((p): p is number => p !== null && p > 0);
+                  const min = valid.length ? Math.min(...valid) : null;
+                  return (
+                    <tr key={key} className="border-b border-border-subtle last:border-0">
+                      <td className="px-3 py-2">{labelOf(key)}</td>
+                      {prices.map((p, n) => (
+                        <td key={String(responded[n].id)} className={`px-3 py-2 text-right tabular-nums ${p !== null && min !== null && p === min && valid.length > 1 ? "font-semibold text-success-fg" : ""}`}>
+                          {p === null ? "—" : formatCurrencyBRL(p)}
+                          {p !== null && min !== null && p === min && valid.length > 1 ? " (menor)" : ""}
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+                <tr className="text-xs text-muted-foreground">
+                  <td className="px-3 py-2">Total com frete</td>
+                  {responded.map((s) => (
+                    <td key={String(s.id)} className="px-3 py-2 text-right tabular-nums">{formatCurrencyBRL(totalOf(s))}</td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
       {responding && (
         <FormDialog
           open
+          initial={prefillFor(responding)}
           onOpenChange={(o) => !o && setResponding(null)}
           title={`Resposta de ${suppliers.get(String(responding.supplier_id)) ?? "fornecedor"}`}
           description="Preços e condições que o fornecedor mandou."

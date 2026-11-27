@@ -8,9 +8,9 @@ import { toast } from "@/components/ui/Toast";
 import { useSession } from "@/components/shell/SessionProvider";
 import { FormDialog, num, opt, type FieldDef } from "@/components/forms/FormDialog";
 import { SOURCES } from "@/components/forms/sources";
-import { invalidateCache } from "@/lib/dashboard/client";
+import { cachedGet, invalidateCache } from "@/lib/dashboard/client";
 import { textCol, dateTimeCol, numberCol, refCol, enumFilter } from "@/components/data-table/columns";
-import { useIdNameLookup } from "@/lib/useIdNameLookup";
+import { lookupPath, useIdNameLookup } from "@/lib/useIdNameLookup";
 import type { StockMovementRow } from "@/lib/database/schema";
 import { MOVEMENT_TYPE_OPTIONS, movementTypeLabel, referenceTypeLabel } from "@/lib/stock-labels";
 
@@ -25,6 +25,15 @@ const ENTRY: FieldDef[] = [
 ];
 const EXIT: FieldDef[] = ENTRY.filter((f) => f.key !== "unitCost").map((f) => (f.key === "notes" ? { ...f, placeholder: "Ex.: consumo interno, perda, amostra" } : f));
 const body = (v: Record<string, unknown>) => ({ productId: v.productId, locationId: v.locationId, quantity: num(v.quantity), unitCost: opt(v.unitCost) ? num(v.unitCost) : undefined, notes: opt(v.notes) });
+/** Entrada manual em local "Bloqueado": pede confirmação. */
+async function blockedLocationWarning(v: Record<string, unknown>): Promise<string | null> {
+  const rows = await cachedGet<Record<string, unknown>[]>(lookupPath(SOURCES.locations.path));
+  const loc = (rows ?? []).find((r) => String(r.id) === String(v.locationId ?? ""));
+  const tipo = String(loc?.tipo ?? loc?.location_type ?? "").toLowerCase();
+  return tipo === "bloqueado" || tipo === "blocked"
+    ? "O local escolhido é do tipo Bloqueado: o produto que entrar aqui não fica disponível para venda/separação. Confirme se é isso mesmo."
+    : null;
+}
 const positive = (v: Record<string, unknown>) => (num(v.quantity) > 0 ? null : "A quantidade deve ser maior que zero.");
 
 export default function MovimentacoesPage() {
@@ -88,6 +97,7 @@ export default function MovimentacoesPage() {
       path="/api/stock-movements/receive"
       toBody={body}
       validate={positive}
+      warn={blockedLocationWarning}
       invalidate={["/api/stock-balances"]}
       onCreated={() => done("Entrada registrada.")}
       size="md"

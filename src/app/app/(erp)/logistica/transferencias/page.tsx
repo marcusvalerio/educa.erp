@@ -14,10 +14,11 @@ const ACTIONS: WorkflowAction[] = [
   { id: "receive", label: "Receber no destino", path: "receive", permission: "stock.transfer", statuses: ["in_transit"], confirm: "Os produtos entram no local de destino.", success: "Transferência recebida." },
   { id: "cancel", label: "Cancelar", path: "cancel", permission: "stock.transfer", statuses: ["draft"], confirm: "A transferência é cancelada.", success: "Transferência cancelada.", tone: "danger" },
 ];
+import { TransferItems } from "@/components/logistics/DocumentItems";
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, dateTimeCol, statusCol, refCol, statusFilter, statusViews } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { useIdNameLookup } from "@/lib/useIdNameLookup";
+import { useLabelLookup, locationLabel } from "@/lib/useIdNameLookup";
 import type { StockTransferRow } from "@/lib/database/schema";
 
 export default function TransferenciasPage() {
@@ -28,7 +29,7 @@ export default function TransferenciasPage() {
     invalidateCache("/api/stock-transfers");
     setRefresh((n) => n + 1);
   };
-  const locations = useIdNameLookup("/api/warehouse-locations");
+  const locations = useLabelLookup("/api/warehouse-locations", locationLabel);
 
   return (
     <>
@@ -61,6 +62,7 @@ export default function TransferenciasPage() {
         actions: (row) => <WorkflowActions base="/api/stock-transfers" id={String(row.id)} status={dbStatusCode("stock_transfers", String(row.status ?? ""))} actions={ACTIONS} onDone={reload} />,
         title: (row) => row.code,
         badges: (row) => <StatusBadge entity="stock_transfers" status={row.status} />,
+        render: (row) => <TransferItems key={`${String(row.id)}-${refresh}`} id={String(row.id)} fromLocationId={row.from_location_id} toLocationId={row.to_location_id} />,
       }}
       emptyDescription="Crie o primeiro pelo botão Nova transferência."
     />

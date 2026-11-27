@@ -38,6 +38,7 @@ function useNames(path: string, label: (r: Row) => string) {
 export function CountItems({ countId, status, onChanged }: { countId: string; status: string; onChanged: () => void }) {
   const { can } = useSession();
   const products = useNames(SOURCES.products.path, SOURCES.products.label!);
+  const locations = useNames(SOURCES.locations.path, SOURCES.locations.label!);
   const [items, setItems] = useState<Row[] | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -96,8 +97,12 @@ export function CountItems({ countId, status, onChanged }: { countId: string; st
             const diff = counted === null ? null : counted - num(i.expected_quantity);
             return (
               <li key={id} className="flex flex-wrap items-center gap-2 px-3 py-2">
-                <span className="min-w-0 flex-1 truncate">{products.get(String(i.product_id)) ?? "Produto"}</span>
-                <span className="text-xs text-muted-foreground tabular-nums">sistema {num(i.expected_quantity)}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate">{products.get(String(i.product_id)) ?? "Produto"}</span>
+                  <span className="block truncate text-xs text-muted-foreground">Local {locations.get(String(i.location_id)) ?? "—"}</span>
+                </span>
+                {/* Contagem cega: a quantidade do sistema só aparece depois de contado ou com a contagem encerrada. */}
+                {(counted !== null || status !== "counting") && <span className="text-xs text-muted-foreground tabular-nums">sistema {num(i.expected_quantity)}</span>}
                 {counted !== null && (
                   <Badge tone={diff === 0 ? "success" : "warning"}>
                     contado {counted}

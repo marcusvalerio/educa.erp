@@ -73,6 +73,10 @@ export function ReceiveOrderDialog({ open, onOpenChange, orderId, onDone }: { op
 
   // Pedido carregado só vale se for o selecionado agora.
   const current = order && order.id === selected ? order : null;
+  const pendingOf = (i: PurchaseOrderItemRow) => Math.max(0, num(i.ordered_quantity) - num(i.received_quantity) - num(i.cancelled_quantity));
+  const excess = (current?.items ?? [])
+    .map((i) => ({ item: i, extra: num(qty[i.id]) - pendingOf(i) }))
+    .filter((x) => x.extra > 0);
   const orderOptions = useMemo(() => orders.map((o) => ({ value: o.id, label: `${o.code} · ${String(o.status).toLowerCase() === "partially_received" ? "recebido parcial" : "aguardando"}` })), [orders]);
 
   async function submit() {
@@ -135,11 +139,21 @@ export function ReceiveOrderDialog({ open, onOpenChange, orderId, onDone }: { op
             <Combobox value={selected} onValueChange={setSelected} options={orderOptions} placeholder="Selecione o pedido" searchPlaceholder="Buscar pedido..." emptyText="Nenhum pedido." />
           </FormField>
         )}
+        {excess.length > 0 && (
+          <Alert tone="warning">
+            {excess.map(({ item, extra }) => (
+              <span key={item.id} className="block">
+                {item.description}: você está recebendo {extra.toLocaleString("pt-BR")}
+                {item.unit ? ` ${item.unit}` : ""} a mais que o pendente; o excesso será recusado.
+              </span>
+            ))}
+          </Alert>
+        )}
         {current && (
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium">Itens do pedido {current.code}</span>
             {(current.items ?? []).map((i) => {
-              const pending = Math.max(0, num(i.ordered_quantity) - num(i.received_quantity) - num(i.cancelled_quantity));
+              const pending = pendingOf(i);
               return (
                 <div key={i.id} className="flex flex-wrap items-end gap-2 rounded-lg border border-border-subtle p-2">
                   <div className="min-w-0 flex-1">
@@ -151,7 +165,7 @@ export function ReceiveOrderDialog({ open, onOpenChange, orderId, onDone }: { op
                   </div>
                   <div className="w-28">
                     <FormField label="Recebendo">
-                      <Input type="number" inputMode="decimal" min={0} step="any" value={qty[i.id] ?? ""} onChange={(e) => setQty((q) => ({ ...q, [i.id]: e.target.value }))} />
+                      <Input type="number" inputMode="decimal" min={0} max={pending} step="any" aria-invalid={num(qty[i.id]) > pending || undefined} value={qty[i.id] ?? ""} onChange={(e) => setQty((q) => ({ ...q, [i.id]: e.target.value }))} />
                     </FormField>
                   </div>
                 </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { invalidateCache } from "@/lib/dashboard/client";
 import { PickListActions } from "@/components/logistics/FulfillmentActions";
+import { PickListItems } from "@/components/logistics/DocumentItems";
 import { ResourceListPage } from "@/components/resource/ResourceListPage";
 import { codeCol, dateCol, dateTimeCol, statusCol, statusFilter, statusViews } from "@/components/data-table/columns";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -37,6 +38,7 @@ export default function PickingPage() {
       detail={{
         title: (row) => row.code,
         badges: (row) => <StatusBadge entity="pick_lists" status={row.status} />,
+        render: (row) => <PickListItems key={`${row.id}-${refresh}`} id={row.id} />,
         actions: (row) => <PickListActions id={row.id} status={String(row.status ?? "")} onDone={reload} />,
       }}
       emptyDescription="Quando houver registros, eles aparecem aqui."

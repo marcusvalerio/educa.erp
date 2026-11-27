@@ -3,6 +3,9 @@
 import { toast } from "@/components/ui/Toast";
 import { FormDialog, filledItems, num, opt, type FieldDef, type FormValues } from "./FormDialog";
 import { SOURCES } from "./sources";
+import { apiGet } from "@/lib/api-client";
+import { cachedGet } from "@/lib/dashboard/client";
+import { lookupPath, productLabel } from "@/lib/useIdNameLookup";
 
 // Formulários de criação das telas de cadastro/registro simples. Cada um só
 // monta o corpo do POST; validação de negócio e permissão são do servidor.
@@ -15,6 +18,7 @@ type SimpleForm = {
   fields: FieldDef[];
   toBody: (v: FormValues) => unknown;
   validate?: (v: FormValues) => string | null;
+  warn?: (v: FormValues) => string | null | Promise<string | null>;
   success: string;
   invalidate?: string[];
   size?: "sm" | "md" | "lg";
@@ -46,6 +50,26 @@ const today = () => new Date().toISOString().slice(0, 10);
 const txt = (v: unknown) => String(v ?? "").trim();
 const lines = (v: FormValues, key: string) => filledItems(v, key).map((i) => ({ productId: i.ref, quantity: num(i.quantity) }));
 const itemsOk = (v: FormValues, key: string) => (filledItems(v, key).every((i) => num(i.quantity) > 0) ? null : "Informe a quantidade de cada item.");
+/** Transferência com quantidade acima do disponível na origem: avisa já na criação. */
+async function transferBalanceWarning(v: FormValues): Promise<string | null> {
+  const from = String(v.fromLocationId ?? "");
+  if (!from) return null;
+  const balances = await apiGet<Array<{ product_id: string; available: number }>>(`/api/stock-balances?locationId=${encodeURIComponent(from)}`);
+  const products = await cachedGet<Record<string, unknown>[]>(lookupPath(SOURCES.products.path)).catch(() => []);
+  const name = (id: string) => {
+    const row = (products ?? []).find((p) => String(p.id) === id);
+    return (row && productLabel(row)) || "Produto";
+  };
+  const wanted = new Map<string, number>();
+  for (const l of lines(v, "items")) wanted.set(String(l.productId), (wanted.get(String(l.productId)) ?? 0) + l.quantity);
+  const short: string[] = [];
+  for (const [id, qty] of wanted) {
+    const avail = (balances ?? []).filter((b) => b.product_id === id).reduce((a, b) => a + Number(b.available || 0), 0);
+    if (qty > avail) short.push(`${name(id)}: pedido ${qty.toLocaleString("pt-BR")}, disponível ${avail.toLocaleString("pt-BR")}`);
+  }
+  return short.length ? `Quantidade acima do saldo disponível na origem — o despacho será recusado. ${short.join("; ")}.` : null;
+}
+
 const stockItems = (label = "Itens"): FieldDef => ({ key: "items", label, type: "items", required: true, source: SOURCES.products, columns: [{ key: "quantity", label: "Quantidade", default: "1" }] });
 
 export const SIMPLE_FORMS = {
@@ -258,6 +282,7 @@ export const SIMPLE_FORMS = {
     ],
     validate: (v) => (v.fromLocationId === v.toLocationId ? "Origem e destino precisam ser diferentes." : itemsOk(v, "items")),
     toBody: (v) => ({ fromLocationId: v.fromLocationId, toLocationId: v.toLocationId, items: lines(v, "items"), notes: opt(v.notes) }),
+    warn: transferBalanceWarning,
     invalidate: ["/api/stock-balances"],
   },
   materialRequests: {
@@ -374,6 +399,7 @@ export function SimpleCreateDialog({ form, open, onOpenChange, onCreated }: { fo
       path={f.path}
       toBody={f.toBody}
       validate={f.validate}
+      warn={f.warn}
       invalidate={f.invalidate}
       size={f.size ?? "lg"}
       onCreated={() => {

@@ -15,6 +15,7 @@ import { NewOrderDialog, type OrderInitial } from "@/components/commercial/NewOr
 import { useCached, invalidateCache } from "@/lib/dashboard/client";
 import { apiGet, apiSend } from "@/lib/api-client";
 import { dbStatusCode } from "@/lib/status";
+import { useLabelLookup, productLabel } from "@/lib/useIdNameLookup";
 import type { PurchaseRequestItemRow, PurchaseRequestRow } from "@/lib/database/schema";
 
 // Solicitações de compra: criar e conduzir até virar pedido. As ações
@@ -34,6 +35,7 @@ type RequestWithItems = PurchaseRequestRow & { items: PurchaseRequestItemRow[] }
 
 function RequestItems({ id }: { id: string }) {
   const req = useCached<RequestWithItems>(`/api/purchase-requests/${id}`);
+  const products = useLabelLookup("/api/products", productLabel);
   if (req.loading && !req.data) return <p className="px-4 py-3 text-sm text-muted-foreground">Carregando itens...</p>;
   return (
     <MiniTable<PurchaseRequestItemRow>
@@ -41,7 +43,7 @@ function RequestItems({ id }: { id: string }) {
       rowKey={(i) => i.id}
       empty="Sem itens."
       columns={[
-        { label: "Item", cell: (i) => i.description },
+        { label: "Produto", cell: (i) => (i.product_id && products.get(i.product_id)) || i.description },
         { label: "Pedida", align: "right", cell: (i) => `${Number(i.quantity_requested)}${i.unit ? ` ${i.unit}` : ""}` },
         { label: "Aprovada", align: "right", cell: (i) => (i.quantity_approved === null ? "—" : Number(i.quantity_approved)) },
       ]}

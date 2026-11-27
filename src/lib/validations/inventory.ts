@@ -124,6 +124,7 @@ export const createMaterialRequestSchema = z.object({
 
 export const startCountSchema = z.object({
   warehouseId: uuidField("Selecione o depósito."),
+  locationId: z.string().uuid().optional().nullable(),
   notes: z.string().trim().optional(),
 });
 

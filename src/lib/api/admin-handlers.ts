@@ -552,6 +552,31 @@ export async function setAdminModuleEnabled(request: NextRequest, context: CodeR
 // Leitura crua de audit_logs via RLS (audit_logs.read): inclui as ações
 // administrativas novas (GRANT, ASSIGN, ENABLE...) que a rota legada
 // /api/audit-logs não rotula.
+// Tabelas gravadas pelas funções do banco, com o nome que o usuário conhece.
+const AUDIT_ENTITY_LABELS: Record<string, string> = {
+  accounts_payable: "Conta a pagar",
+  accounts_receivable: "Conta a receber",
+  payments: "Pagamento",
+  receipts: "Recebimento",
+  financial_accounts: "Conta financeira",
+  sales_quotes: "Orçamento de venda",
+  sales_orders: "Pedido de venda",
+  purchase_requests: "Solicitação de compra",
+  purchase_quotes: "Cotação de compra",
+  purchase_orders: "Pedido de compra",
+  purchase_receipts: "Recebimento de compra",
+  purchase_returns: "Devolução de compra",
+  fiscal_documents: "Documento fiscal",
+  shipments: "Expedição",
+  picking_orders: "Separação",
+  stock_movements: "Movimentação de estoque",
+  stock_transfers: "Transferência de estoque",
+  stock_counts: "Inventário",
+  material_requisitions: "Requisição de material",
+  cost_centers: "Centro de custo",
+  users: "Usuário",
+};
+
 export async function listAdminAudit(request: NextRequest) {
   try {
     const { supabase, companyId } = await requireCompanyUser();
@@ -560,7 +585,7 @@ export async function listAdminAudit(request: NextRequest) {
     const pageSize = Math.min(100, Math.max(10, Number(params.get("pageSize") ?? 25) || 25));
     let query = supabase
       .from("audit_logs")
-      .select("id, actor_label, entity, entity_id, action, old_data, new_data, created_at", { count: "exact" })
+      .select("id, user_id, actor_label, entity, entity_id, action, old_data, new_data, created_at", { count: "exact" })
       .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .range((page - 1) * pageSize, page * pageSize - 1);
@@ -572,7 +597,20 @@ export async function listAdminAudit(request: NextRequest) {
     if (search) query = query.ilike("actor_label", `%${search}%`);
     const { data, error, count } = await query;
     if (error) throw dbError(error);
-    return NextResponse.json({ success: true, data: data ?? [], meta: { total: count ?? 0, page, pageSize } });
+    // As funções do banco gravam "system" em actor_label, mas guardam o user_id certo.
+    const rows = (data ?? []) as Array<Record<string, unknown> & { user_id?: string | null; actor_label?: string | null; entity?: string | null }>;
+    const ids = [...new Set(rows.map((r) => r.user_id).filter((v): v is string => !!v))];
+    const names = new Map<string, string>();
+    if (ids.length) {
+      const { data: users } = await supabase.from("users").select("id, name").eq("company_id", companyId).in("id", ids);
+      for (const u of (users ?? []) as { id: string; name: string | null }[]) if (u.name) names.set(u.id, u.name);
+    }
+    const out = rows.map((r) => ({
+      ...r,
+      actor_label: (r.user_id && names.get(r.user_id)) || r.actor_label,
+      entity: AUDIT_ENTITY_LABELS[String(r.entity)] ?? r.entity,
+    }));
+    return NextResponse.json({ success: true, data: out, meta: { total: count ?? 0, page, pageSize } });
   } catch (error) {
     return jsonError(error);
   }

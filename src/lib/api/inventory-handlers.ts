@@ -532,6 +532,7 @@ export async function startCount(request: NextRequest) {
       p_company_id: ctx.companyId,
       p_warehouse_id: body.warehouseId,
       p_notes: body.notes ?? null,
+      p_location_id: body.locationId ?? null,
     });
     if (error) throw rpcError(error);
     return NextResponse.json({ success: true, data }, { status: 201 });

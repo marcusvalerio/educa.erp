@@ -302,16 +302,17 @@ export const SIMPLE_FORMS = {
   },
   stockCounts: {
     title: "Nova contagem de inventário",
-    description: "Abre a contagem do depósito com os saldos atuais; conte e informe as quantidades no detalhe.",
+    description: "Abre a contagem do depósito (ou de um só local) com os saldos atuais; conte e informe as quantidades no detalhe.",
     submitLabel: "Abrir contagem",
     path: "/api/stock-counts",
     success: "Contagem aberta.",
     size: "sm",
     fields: [
       { key: "warehouseId", label: "Depósito", type: "lookup", source: SOURCES.depots, required: true },
+      { key: "locationId", label: "Local (vazio = depósito inteiro)", type: "lookup", source: SOURCES.locations },
       { key: "notes", label: "Observações", type: "textarea" },
     ],
-    toBody: (v) => ({ warehouseId: v.warehouseId, notes: opt(v.notes) }),
+    toBody: (v) => ({ warehouseId: v.warehouseId, locationId: opt(v.locationId), notes: opt(v.notes) }),
   },
   purchaseQuotes: {
     title: "Nova cotação de compra",

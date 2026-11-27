@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/Controls";
 import { useSession } from "@/components/shell/SessionProvider";
 import { apiGet, apiSend } from "@/lib/api-client";
 import { cachedGet, invalidateCache } from "@/lib/dashboard/client";
-import { lookupPath } from "@/lib/useIdNameLookup";
+import { lookupPath, productLabel, useLabelLookup } from "@/lib/useIdNameLookup";
 import { SOURCES } from "./sources";
 import { num } from "./FormDialog";
 import type { PurchaseOrderItemRow, PurchaseOrderRow } from "@/lib/database/schema";
@@ -77,6 +77,13 @@ export function ReceiveOrderDialog({ open, onOpenChange, orderId, onDone }: { op
   const excess = (current?.items ?? [])
     .map((i) => ({ item: i, extra: num(qty[i.id]) - pendingOf(i) }))
     .filter((x) => x.extra > 0);
+  // Recebendo menos que o pendente: não é erro (o pedido fica "recebido parcial"),
+  // mas quem confere precisa ver antes de confirmar.
+  const short = (current?.items ?? [])
+    .map((i) => ({ item: i, missing: pendingOf(i) - num(qty[i.id]) }))
+    .filter((x) => x.missing > 0);
+  const products = useLabelLookup(SOURCES.products.path, productLabel);
+  const itemName = (i: PurchaseOrderItemRow) => (i.product_id && products.get(String(i.product_id))) || i.description;
   const orderOptions = useMemo(() => orders.map((o) => ({ value: o.id, label: `${o.code} · ${String(o.status).toLowerCase() === "partially_received" ? "recebido parcial" : "aguardando"}` })), [orders]);
 
   async function submit() {
@@ -143,8 +150,18 @@ export function ReceiveOrderDialog({ open, onOpenChange, orderId, onDone }: { op
           <Alert tone="warning">
             {excess.map(({ item, extra }) => (
               <span key={item.id} className="block">
-                {item.description}: você está recebendo {extra.toLocaleString("pt-BR")}
+                {itemName(item)}: você está recebendo {extra.toLocaleString("pt-BR")}
                 {item.unit ? ` ${item.unit}` : ""} a mais que o pendente; o excesso será recusado.
+              </span>
+            ))}
+          </Alert>
+        )}
+        {short.length > 0 && (
+          <Alert tone="info">
+            {short.map(({ item, missing }) => (
+              <span key={item.id} className="block">
+                {itemName(item)}: faltam {missing.toLocaleString("pt-BR")}
+                {item.unit ? ` ${item.unit}` : ""} em relação ao pendente; o pedido ficará como recebido parcial.
               </span>
             ))}
           </Alert>
@@ -157,7 +174,7 @@ export function ReceiveOrderDialog({ open, onOpenChange, orderId, onDone }: { op
               return (
                 <div key={i.id} className="flex flex-wrap items-end gap-2 rounded-lg border border-border-subtle p-2">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm">{i.description}</p>
+                    <p className="truncate text-sm">{itemName(i)}</p>
                     <p className="text-xs text-muted-foreground tabular-nums">
                       Pedido {num(i.ordered_quantity)} · recebido {num(i.received_quantity)} · pendente {pending}
                       {i.unit ? ` ${i.unit}` : ""}
